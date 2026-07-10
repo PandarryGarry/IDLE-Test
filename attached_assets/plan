@@ -1,0 +1,111 @@
+Техническое задание (ТЗ) на разработку детальной копии Melvor Idle (версия 2026 / Melvor Idle 2)
+1. Общая информация
+  •	Название проекта: Melvor Idle Clone 2026 (или “Melvor Idle 2 Replica”).
+  •	Цель: Создать полностью функциональную, детальную веб-копию игры Melvor Idle с учётом всех механик оригинала (на 2026 год, включая контент Melvor Idle 2).
+  •	Технологический стек:
+  ◦	Frontend: React 18+ + Vite (для быстрой разработки и сборки).
+  ◦	State management: Zustand или Redux Toolkit (Zustand предпочтительнее для производительности idle-игр).
+  ◦	Хранение данных: IndexedDB (dexie.js) + локальное сохранение в JSON (с возможностью экспорта/импорта). Поддержка Cloud Save (симуляция через localStorage + опциональный backend позже).
+  ◦	UI: Tailwind CSS + Headless UI / Radix UI + custom компоненты для прогресс-баров, модалок и т.д.
+  ◦	Производительность: Всё должно работать быстро и идеально даже при длительном афк (offline progression). Использовать requestAnimationFrame / Web Workers для тиков, минимизировать re-renders.
+  ◦	Дополнительно: TypeScript (строгая типизация), ESLint + Prettier, Vitest для тестов.
+2. Основные требования
+  •	100% точная механика: Все формулы XP, дропы, расчёты урона, пассивки, модификаторы — должны совпадать с оригиналом (использовать данные из wiki + community spreadsheets).
+  •	Offline progression: Полный расчёт прогресса за время отсутствия игрока (с учётом всех бонусов, лимитов и событий).
+  •	Производительность: 60 FPS в UI, мгновенные действия, плавные прогресс-бары. Нет лагов при 1000+ предметах в банке.
+  •	Мобильная адаптивность: Responsive дизайн (sidebar для навыков, bottom nav на мобильных).
+  •	Сохранения: Автосохранение каждые 30 сек + ручное. Поддержка нескольких слотов.
+3. Ключевые системы и механики (все должны быть реализованы)
+Core Engine
+  •	Глобальный таймер тиков (game tick ~0.5–1 сек).
+  •	Система опыта (стандартный + Abyssal levels в MI2).
+  •	Mastery / Mastery Guilds (task-based в MI2).
+  •	Глобальные модификаторы (XP multipliers, resource preservation, doubling и т.д.).
+  •	Astrology constellations, synergies, pets.
+  •	Game Modes (Standard, Hardcore, Adventure и т.д.).
+Навыки (Skills)
+Реализовать все навыки с их уникальными механиками:
+Non-Combat:
+  •	Woodcutting, Fishing, Firemaking, Cooking, Mining, Smithing.
+  •	Thieving, Fletching, Crafting, Runecrafting, Herblore.
+  •	Farming (passive + plots).
+  •	Agility (obstacle course).
+  •	Summoning (marks, tablets, synergies).
+  •	Township (город, здания, пассивный доход).
+  •	Astrology, Cartography, Archaeology, Harvesting и все новые из MI2.
+Combat (8+ навыков):
+  •	Attack, Strength, Defence, Hitpoints.
+  •	Ranged, Magic (включая Alt. Magic), Prayer, Slayer.
+  •	Полная боевая система: accuracy, max hit, evasion, special attacks, corruption (MI2).
+  •	Dungeons, bosses, monsters (135+ в MI2).
+  •	Equipment slots, gear sets.
+Каждый навык — отдельный экран/вкладка с:
+  •	Action selector (что тренировать).
+  •	Прогресс-бар + XP/час.
+  •	Уникальными UI-элементами (например, карты в Cartography, obstacle builder в Agility).
+Банк / Инвентарь
+  •	Более 1100+ предметов.
+  •	Категории, поиск, сортировка, продажа, перемещение.
+  •	Стекование, locked items.
+  •	Быстрый доступ к еде/зельям в бою.
+Combat System
+  •	Реальное время боя (tick-based).
+  •	Авто-атака + Auto Eat + Auto Loot.
+  •	Prayer + Spell selection.
+  •	Специальные атаки оружия.
+  •	Dungeons с несколькими комнатами.
+  •	Slayer tasks.
+Дополнительные системы
+  •	Quests / Lore.
+  •	Achievements.
+  •	Shop (GP + Marks of Mastery).
+  •	Pets collection.
+  •	Statistics / Highscores-like панель.
+  •	Notifications (level up, milestone и т.д.).
+4. Архитектура (React + Vite)
+src/
+├── assets/ (icons, images — placeholder или извлечённые из игры)
+├── components/ (ui-kit: ProgressBar, SkillCard, Modal и т.д.)
+├── features/ (по доменам: skills/, combat/, bank/, player/)
+│   ├── store/ (Zustand slices)
+│   ├── types.ts
+│   └── hooks/
+├── gameEngine/ (core: tickManager, offlineCalc, formulas/)
+├── data/ (json с items, monsters, actions — генерировать или импортировать)
+├── pages/ (SkillPage, CombatPage, BankPage, TownshipPage и т.д.)
+├── lib/ (utils, calculations)
+└── App.tsx + Router
+  •	Data-driven подход: Все действия, предметы, монстры — в JSON/TS-объектах. Легко расширять.
+  •	Модульность: Каждый навык — отдельный модуль с reducer/actions.
+5. Технические требования к производительности
+  •	Web Worker для offline calculation и тяжёлых вычислений.
+  •	Memoization (React.memo, useMemo) везде.
+  •	Virtualized списки для банка и таблиц.
+  •	Lazy loading навыков/страниц.
+  •	Сжатие сохранений (JSON + compression).
+6. Этапы разработки (рекомендуемый порядок)
+  1	Core Engine + Player stats + Save/Load + Offline.
+  2	Базовые gathering skills (Woodcutting → Mining → Smithing → Cooking).
+  3	Банк + Inventory.
+  4	Combat system (самая сложная часть).
+  5	Остальные навыки (по приоритету: Farming, Township, Summoning и т.д.).
+  6	Polishing: UI/UX, animations (лёгкие), achievements, settings.
+  7	Testing & Balance (сравнение с оригиналом).
+7. UI/UX требования
+  •	Тёмная тема в стиле оригинала (зелёно-чёрная гамма).
+  •	Sidebar с навыками (иконки + уровни).
+  •	Главный экран — текущий активный навык.
+  •	Прогресс-бары с XP/час и ETA до уровня.
+  •	Красивые иконки предметов (использовать placeholder или community assets).
+  •	Tooltips с детальной информацией.
+8. Тестирование
+  •	Unit-тесты на все формулы расчёта XP/урона.
+  •	Интеграционные тесты на offline progression.
+  •	Ручное сравнение с оригиналом по ключевым метрикам.
+9. Дополнительно
+  •	Возможность моддинга (позже).
+  •	Экспорт/импорт сохранений.
+  •	Настройки (tick rate, theme, notifications).
+  •	Локализация (русский + английский).
+Результат: Игра должна быть неотличима от оригинала по механикам, работать быстрее и стабильнее, с чистым современным React-кодом.
+Готов к доработкам ТЗ или генерации структуры проекта/конкретных модулей.

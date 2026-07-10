@@ -1,0 +1,1 @@
+- [Melvor Idle Clone Architecture](melvor-idle-arch.md) — timing clock, offline calc rules, equip transactions, store layout, cn() location.
