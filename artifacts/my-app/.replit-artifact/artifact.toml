@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "My App"
+version = "1.0.0"
+id = "artifacts/my-app"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19621
+
+[services.development]
+run = "pnpm --filter @workspace/my-app run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/my-app", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/my-app/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19621"
+BASE_PATH = "/"
