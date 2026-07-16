@@ -6,6 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { tickManager } from '@/gameEngine/tickManager';
 import { initGame } from '@/lib/saveManager';
 import { Sidebar } from '@/components/Sidebar';
+import { MobileNav } from '@/components/MobileNav';
 import { NotificationToast } from '@/components/NotificationToast';
 
 import { DashboardPage } from '@/pages/DashboardPage';
@@ -21,10 +22,10 @@ import { SettingsPage } from '@/pages/SettingsPage';
 
 function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center space-y-4">
-        <h1 className="text-6xl font-black text-destructive drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]">404</h1>
-        <p className="text-muted-foreground font-mono">Area not found</p>
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="text-center space-y-3">
+        <h1 className="text-5xl font-black text-destructive">404</h1>
+        <p className="text-muted-foreground font-mono text-sm">Area not found</p>
       </div>
     </div>
   );
@@ -33,12 +34,14 @@ function NotFound() {
 function Router() {
   return (
     <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/30">
-      {/* Sidebar fixed left */}
-      <Sidebar />
-      
-      {/* Main Content Area */}
-      <main className="flex-1 ml-64 min-h-screen overflow-x-hidden">
-        <div className="p-8">
+      {/* Desktop sidebar — hidden on mobile */}
+      <div className="hidden md:block">
+        <Sidebar />
+      </div>
+
+      {/* Main content — 240px offset on desktop, full-width on mobile */}
+      <main className="flex-1 md:ml-60 min-h-screen overflow-x-hidden">
+        <div className="px-3 py-4 pb-20 md:pb-8 md:px-6 lg:px-8 max-w-5xl mx-auto">
           <Switch>
             <Route path="/" component={DashboardPage} />
             <Route path="/woodcutting" component={WoodcuttingPage} />
@@ -55,6 +58,9 @@ function Router() {
         </div>
       </main>
 
+      {/* Mobile bottom nav — hidden on desktop */}
+      <MobileNav className="md:hidden" />
+
       <NotificationToast />
       <Toaster />
     </div>
@@ -63,14 +69,9 @@ function Router() {
 
 function App() {
   useEffect(() => {
-    // Initialize game state (load save, auto-save interval)
     initGame();
-    // Start game loop
     tickManager.start();
-    
-    // Ensure dark mode is active
     document.documentElement.classList.add('dark');
-    
     return () => {
       tickManager.stop();
     };

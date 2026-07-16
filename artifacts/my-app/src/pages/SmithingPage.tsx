@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { SkillHeader } from '@/components/SkillHeader';
 import { ActionGrid } from '@/components/ActionGrid';
-import { ProgressBar } from '@/components/ProgressBar';
+import { ActionProgressBar } from '@/components/ActionProgressBar';
 import { SMELTING_RECIPES, SMITHING_RECIPES } from '@/data/smithing';
 import { useGameStore } from '@/store/gameStore';
 import { useBankStore } from '@/store/bankStore';
 import { ItemIcon } from '@/components/ItemIcon';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function SmithingPage() {
-  const { startSkillAction, stopAction, activeSkill, activeActionId, actionProgress } = useGameStore();
+  const { t } = useTranslation();
+  const { startSkillAction, stopAction, activeSkill, activeActionId } = useGameStore();
   const bankStore = useBankStore();
   const [tab, setTab] = useState<'smelting' | 'equipment'>('smelting');
 
@@ -22,85 +24,86 @@ export function SmithingPage() {
 
   const allRecipes = [...SMELTING_RECIPES, ...SMITHING_RECIPES];
   const activeRecipe = allRecipes.find(r => r.id === activeActionId);
-  const isTraining = activeSkill === 'smithing' && activeRecipe;
-
+  const isTraining = activeSkill === 'smithing' && !!activeRecipe;
   const currentList = tab === 'smelting' ? SMELTING_RECIPES : SMITHING_RECIPES;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      <SkillHeader skillId="smithing" skillName="Smithing" skillIcon="🔨" />
+    <div className="space-y-4">
+      <SkillHeader skillId="smithing" skillName={t('skill.smithing')} skillIcon="🔨" />
 
       {/* Active Action Panel */}
-      <div className="bg-card border border-border rounded-xl p-6 shadow-sm min-h-[140px] flex flex-col justify-center">
-        {isTraining ? (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
+      <div className="bg-card border border-border rounded-2xl p-4 md:p-5 shadow-sm">
+        {isTraining && activeRecipe ? (
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <span className="text-2xl">🔨</span> Smithing {activeRecipe.name}
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  <span className="text-xl">🔨</span> {t('smithing.smithing')} {activeRecipe.name}
                 </h3>
-                <p className="text-muted-foreground text-sm mt-1 font-mono">
-                  {((activeRecipe.interval) / 1000).toFixed(1)}s per action
+                <p className="text-muted-foreground text-sm font-mono mt-0.5">
+                  {(activeRecipe.interval / 1000).toFixed(1)}{t('ui.seconds.abbr')} {t('ui.per.action')}
                 </p>
               </div>
-              <button 
+              <button
                 onClick={stopAction}
-                className="px-6 py-2 bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive hover:text-white font-bold rounded-lg transition-colors"
+                className="shrink-0 w-full sm:w-auto px-5 py-2.5 bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive hover:text-white font-bold rounded-xl transition-all text-sm"
               >
-                Stop Smithing
+                {t('smithing.stop')}
               </button>
             </div>
-            
-            <ProgressBar value={actionProgress} className="h-8" colorClass="bg-slate-400 shadow-[0_0_10px_rgba(148,163,184,0.5)]" />
+            <ActionProgressBar height="h-5" color="green" />
           </div>
         ) : (
-          <div className="text-center text-muted-foreground flex flex-col items-center gap-3">
-            <div className="text-4xl opacity-50">⚒️</div>
-            <p className="font-medium">Select a recipe below to start smithing.</p>
+          <div className="text-center text-muted-foreground flex flex-col items-center gap-2 py-4">
+            <div className="text-4xl opacity-40">⚒️</div>
+            <p className="text-sm font-medium">{t('smithing.selectRecipe')}</p>
           </div>
         )}
       </div>
 
-      <div className="flex gap-2 mt-8 mb-4">
-        <button 
+      {/* Tabs */}
+      <div className="flex gap-2">
+        <button
           onClick={() => setTab('smelting')}
-          className={`px-4 py-2 rounded-lg font-bold transition-colors ${tab === 'smelting' ? 'bg-primary text-primary-foreground' : 'bg-accent text-muted-foreground hover:text-foreground'}`}
+          className={`flex-1 sm:flex-none px-4 py-2 rounded-xl font-bold text-sm transition-all ${
+            tab === 'smelting' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+          }`}
         >
-          Smelting (Bars)
+          {t('smithing.smelting')}
         </button>
-        <button 
+        <button
           onClick={() => setTab('equipment')}
-          className={`px-4 py-2 rounded-lg font-bold transition-colors ${tab === 'equipment' ? 'bg-primary text-primary-foreground' : 'bg-accent text-muted-foreground hover:text-foreground'}`}
+          className={`flex-1 sm:flex-none px-4 py-2 rounded-xl font-bold text-sm transition-all ${
+            tab === 'equipment' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+          }`}
         >
-          Smithing (Equipment)
+          {t('smithing.equipment')}
         </button>
       </div>
 
-      <ActionGrid 
-        skillId="smithing" 
-        actions={currentList} 
+      <ActionGrid
+        skillId="smithing"
+        actions={currentList}
         onActionClick={handleActionClick}
-        renderExtra={(action) => {
-          return (
-            <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-border/50">
-              <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Requires:</span>
-              <div className="flex flex-wrap gap-3">
-                {action.ingredients.map((ing: any, i: number) => {
-                  const qty = bankStore.getItemQty(ing.itemId);
-                  const hasEnough = qty >= ing.quantity;
-                  return (
-                    <div key={i} className="flex items-center gap-1.5 bg-background p-1.5 rounded border border-border">
-                      <ItemIcon itemId={ing.itemId} size="sm" />
-                      <span className={`text-xs font-mono font-bold ${hasEnough ? 'text-foreground' : 'text-destructive'}`}>
-                        {qty} / {ing.quantity}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+        renderExtra={(action) => (
+          <div className="flex flex-col gap-1.5 mt-2 pt-2 border-t border-border/50">
+            <span className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">{t('smithing.ingredients')}:</span>
+            <div className="flex flex-wrap gap-2">
+              {action.ingredients.map((ing: any, i: number) => {
+                const qty = bankStore.getItemQty(ing.itemId);
+                const hasEnough = qty >= ing.quantity;
+                return (
+                  <div key={i} className="flex items-center gap-1 bg-background px-1.5 py-1 rounded border border-border">
+                    <ItemIcon itemId={ing.itemId} size="sm" />
+                    <span className={`text-xs font-mono font-bold ${hasEnough ? 'text-foreground' : 'text-destructive'}`}>
+                      {qty}/{ing.quantity}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-          );
-        }}
+          </div>
+        )}
       />
     </div>
   );

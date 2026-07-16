@@ -2,9 +2,10 @@ import React from 'react';
 import { SkillId } from '@/data/types';
 import { usePlayerStore } from '@/store/playerStore';
 import { ProgressBar } from './ProgressBar';
-import { getLevelProgress, getXpForLevel, getLevelForXp } from '@/gameEngine/xpTable';
+import { getXpForLevel } from '@/gameEngine/xpTable';
 import { useGameStore } from '@/store/gameStore';
 import { formatNumber } from '@/lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SkillHeaderProps {
   skillId: SkillId;
@@ -13,45 +14,58 @@ interface SkillHeaderProps {
 }
 
 export function SkillHeader({ skillId, skillName, skillIcon }: SkillHeaderProps) {
+  const { t } = useTranslation();
   const xp = usePlayerStore(s => s.skills[skillId]?.xp ?? 0);
   const level = usePlayerStore(s => s.skills[skillId]?.level ?? 1);
   const xpGainedSession = useGameStore(s => s.xpGainedThisSession[skillId] ?? 0);
   const sessionStartTime = useGameStore(s => s.sessionStartTime);
-  
+
   const currentLevelXp = getXpForLevel(level);
   const nextLevelXp = getXpForLevel(level + 1);
   const xpIntoLevel = Math.max(0, xp - currentLevelXp);
   const xpRequiredForLevel = Math.max(1, nextLevelXp - currentLevelXp);
   const progress = level >= 99 ? 1 : xpIntoLevel / xpRequiredForLevel;
-  
-  // Calculate rolling XP/hr for session
+
   const elapsedMs = Date.now() - sessionStartTime;
   const xpPerHour = elapsedMs > 0 ? (xpGainedSession / elapsedMs) * 3_600_000 : 0;
 
   return (
-    <div className="bg-card border border-border p-6 rounded-xl flex flex-col gap-4 mb-6 shadow-sm">
-      <div className="flex items-center gap-4">
-        <div className="w-16 h-16 bg-accent rounded-xl flex items-center justify-center text-4xl border border-border shadow-inner">
+    <div className="bg-card border border-border p-4 md:p-5 rounded-2xl shadow-sm">
+      <div className="flex items-center gap-3 md:gap-4 mb-3">
+        {/* Icon */}
+        <div className="w-12 h-12 md:w-14 md:h-14 shrink-0 bg-accent rounded-xl flex items-center justify-center text-3xl md:text-4xl border border-border shadow-inner">
           {skillIcon}
         </div>
-        <div className="flex-grow">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">{skillName}</h1>
-          <div className="text-muted-foreground flex gap-4 mt-1 font-mono text-sm">
-            <span>XP: <span className="text-amber-400">{formatNumber(Math.floor(xp))}</span></span>
-            {xpPerHour > 0 && <span><span className="text-amber-400">{formatNumber(Math.floor(xpPerHour))}</span> XP/hr</span>}
+
+        {/* Name + XP */}
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl md:text-2xl font-black tracking-tight text-foreground leading-none mb-0.5">{skillName}</h1>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-xs text-muted-foreground">
+            <span>{t('ui.xp')}: <span className="text-amber-400 font-bold">{formatNumber(Math.floor(xp))}</span></span>
+            {xpPerHour > 0 && (
+              <span><span className="text-amber-400 font-bold">{formatNumber(Math.floor(xpPerHour))}</span> XP{t('ui.per.hour')}</span>
+            )}
           </div>
         </div>
-        <div className="text-right">
-          <div className="text-5xl font-black text-primary drop-shadow-[0_0_10px_rgba(34,197,94,0.3)]">{level}</div>
-          <div className="text-sm text-muted-foreground uppercase tracking-widest font-bold">Level</div>
+
+        {/* Level */}
+        <div className="shrink-0 text-right">
+          <div className="text-4xl md:text-5xl font-black text-primary leading-none drop-shadow-[0_0_10px_rgba(34,197,94,0.3)]">
+            {level}
+          </div>
+          <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-widest font-bold mt-0.5">{t('ui.level')}</div>
         </div>
       </div>
-      
+
+      {/* XP bar */}
       <div className="space-y-1">
-        <ProgressBar 
-          value={progress} 
-          label={level >= 99 ? 'MAX LEVEL' : `${formatNumber(Math.floor(xpIntoLevel))} / ${formatNumber(Math.floor(xpRequiredForLevel))} XP`} 
-          className="h-5"
+        <ProgressBar
+          value={progress}
+          label={level >= 99
+            ? t('ui.maxLevel')
+            : `${formatNumber(Math.floor(xpIntoLevel))} / ${formatNumber(Math.floor(xpRequiredForLevel))} XP`
+          }
+          className="h-4"
         />
       </div>
     </div>

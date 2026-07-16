@@ -1,14 +1,16 @@
 import React from 'react';
 import { SkillHeader } from '@/components/SkillHeader';
 import { ActionGrid } from '@/components/ActionGrid';
-import { ProgressBar } from '@/components/ProgressBar';
+import { ActionProgressBar } from '@/components/ActionProgressBar';
 import { FIREMAKING_LOGS } from '@/data/firemaking';
 import { useGameStore } from '@/store/gameStore';
 import { useBankStore } from '@/store/bankStore';
 import { ItemIcon } from '@/components/ItemIcon';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function FiremakingPage() {
-  const { startSkillAction, stopAction, activeSkill, activeActionId, actionProgress } = useGameStore();
+  const { t } = useTranslation();
+  const { startSkillAction, stopAction, activeSkill, activeActionId } = useGameStore();
   const bankStore = useBankStore();
 
   const handleActionClick = (actionId: string) => {
@@ -20,51 +22,49 @@ export function FiremakingPage() {
   };
 
   const activeLog = FIREMAKING_LOGS.find(l => l.id === activeActionId);
-  const isTraining = activeSkill === 'firemaking' && activeLog;
+  const isTraining = activeSkill === 'firemaking' && !!activeLog;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      <SkillHeader skillId="firemaking" skillName="Firemaking" skillIcon="🔥" />
+    <div className="space-y-4">
+      <SkillHeader skillId="firemaking" skillName={t('skill.firemaking')} skillIcon="🔥" />
 
       {/* Active Action Panel */}
-      <div className="bg-card border border-border rounded-xl p-6 shadow-sm min-h-[140px] flex flex-col justify-center relative overflow-hidden">
+      <div className="relative bg-card border border-border rounded-2xl p-4 md:p-5 shadow-sm overflow-hidden">
         {isTraining && (
-          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-64 h-32 bg-orange-500/20 blur-3xl rounded-full" />
+          <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 w-48 h-24 bg-orange-500/15 blur-3xl rounded-full" />
         )}
-        
-        {isTraining ? (
-          <div className="space-y-4 relative z-10">
-            <div className="flex justify-between items-center">
+        {isTraining && activeLog ? (
+          <div className="space-y-3 relative z-10">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <span className="text-2xl animate-pulse">🔥</span> Burning {activeLog.name}
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  <span className="text-xl animate-pulse">🔥</span> {t('firemaking.burning')} {activeLog.name}
                 </h3>
-                <p className="text-muted-foreground text-sm mt-1 font-mono">
-                  {((activeLog.interval) / 1000).toFixed(1)}s per action
+                <p className="text-muted-foreground text-sm font-mono mt-0.5">
+                  {(activeLog.interval / 1000).toFixed(1)}{t('ui.seconds.abbr')} {t('ui.per.action')}
                 </p>
               </div>
-              <button 
+              <button
                 onClick={stopAction}
-                className="px-6 py-2 bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive hover:text-white font-bold rounded-lg transition-colors"
+                className="shrink-0 w-full sm:w-auto px-5 py-2.5 bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive hover:text-white font-bold rounded-xl transition-all text-sm"
               >
-                Stop Burning
+                {t('firemaking.stop')}
               </button>
             </div>
-            
-            <ProgressBar value={actionProgress} className="h-8" colorClass="bg-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.8)]" />
+            <ActionProgressBar height="h-5" color="red" />
           </div>
         ) : (
-          <div className="text-center text-muted-foreground flex flex-col items-center gap-3">
-            <div className="text-4xl opacity-50">🪵</div>
-            <p className="font-medium">Select a log below to start a fire.</p>
+          <div className="text-center text-muted-foreground flex flex-col items-center gap-2 py-4">
+            <div className="text-4xl opacity-40">🪵</div>
+            <p className="text-sm font-medium">{t('firemaking.selectLog')}</p>
           </div>
         )}
       </div>
 
-      <h2 className="text-xl font-bold px-1 mt-8 mb-4">Logs</h2>
-      <ActionGrid 
-        skillId="firemaking" 
-        actions={FIREMAKING_LOGS} 
+      <h2 className="text-base font-black uppercase tracking-widest text-muted-foreground px-1">{t('firemaking.availableLogs')}</h2>
+      <ActionGrid
+        skillId="firemaking"
+        actions={FIREMAKING_LOGS}
         onActionClick={handleActionClick}
         renderExtra={(action) => {
           const qty = bankStore.getItemQty(action.logId);
