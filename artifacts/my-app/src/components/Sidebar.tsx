@@ -3,9 +3,10 @@ import { usePlayerStore } from '@/store/playerStore';
 import { useGameStore } from '@/store/gameStore';
 import { SkillId } from '@/data/types';
 import { Link, useLocation } from 'wouter';
-import { Shield, Pickaxe, Flame, Hammer, Sword, Coins, Settings, Save, Heart, Skull } from 'lucide-react';
+import { Settings, Save, Sword, Coins, Backpack } from 'lucide-react';
 import { manualSave } from '@/lib/saveManager';
 import { useNotificationsStore } from '@/store/notificationsStore';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SidebarItemProps {
   href: string;
@@ -52,12 +53,13 @@ function SidebarItem({ href, icon, label, skillId }: SidebarItemProps) {
 }
 
 export function Sidebar() {
+  const { t } = useTranslation();
   const combatLevel = usePlayerStore(s => s.combatLevel);
   const notifyInfo = useNotificationsStore(s => s.notifyInfo);
   
   const handleSave = () => {
     manualSave();
-    notifyInfo("Game saved successfully.");
+    notifyInfo(t('notif.gameSaved'));
   };
 
   return (
@@ -75,42 +77,43 @@ export function Sidebar() {
         
         {/* COMBAT */}
         <div>
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">Combat</h3>
-          <SidebarItem href="/combat" icon="⚔️" label="Combat" />
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">{t('group.combat')}</h3>
+          <SidebarItem href="/combat" icon="⚔️" label={t('nav.combat')} />
         </div>
 
         {/* GATHERING */}
         <div>
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">Gathering</h3>
-          <SidebarItem href="/woodcutting" icon="🪓" label="Woodcutting" skillId="woodcutting" />
-          <SidebarItem href="/fishing" icon="🎣" label="Fishing" skillId="fishing" />
-          <SidebarItem href="/mining" icon="⛏️" label="Mining" skillId="mining" />
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">{t('group.gathering')}</h3>
+          <SidebarItem href="/woodcutting" icon="🪓" label={t('skill.woodcutting')} skillId="woodcutting" />
+          <SidebarItem href="/fishing"     icon="🎣" label={t('skill.fishing')}     skillId="fishing" />
+          <SidebarItem href="/mining"      icon="⛏️" label={t('skill.mining')}      skillId="mining" />
         </div>
 
         {/* ARTISAN */}
         <div>
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">Artisan</h3>
-          <SidebarItem href="/firemaking" icon="🔥" label="Firemaking" skillId="firemaking" />
-          <SidebarItem href="/cooking" icon="🍳" label="Cooking" skillId="cooking" />
-          <SidebarItem href="/smithing" icon="🔨" label="Smithing" skillId="smithing" />
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">{t('group.artisan')}</h3>
+          <SidebarItem href="/firemaking" icon="🔥" label={t('skill.firemaking')} skillId="firemaking" />
+          <SidebarItem href="/cooking"    icon="🍳" label={t('skill.cooking')}    skillId="cooking" />
+          <SidebarItem href="/smithing"   icon="🔨" label={t('skill.smithing')}   skillId="smithing" />
         </div>
       </div>
 
       <div className="p-4 border-t border-border bg-sidebar/50 space-y-2">
-        <SidebarItem href="/bank" icon={<Coins className="w-5 h-5 text-amber-400" />} label="Bank" />
-        <SidebarItem href="/settings" icon={<Settings className="w-5 h-5" />} label="Settings" />
+        <SidebarItem href="/inventory" icon={<Backpack className="w-5 h-5 text-sky-400" />}   label={t('nav.inventory')} />
+        <SidebarItem href="/bank"      icon={<Coins    className="w-5 h-5 text-amber-400" />} label={t('nav.bank')} />
+        <SidebarItem href="/settings"  icon={<Settings className="w-5 h-5" />}               label={t('nav.settings')} />
         
         <button 
           onClick={handleSave}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground border border-transparent transition-colors mt-2"
         >
           <Save className="w-5 h-5 flex-shrink-0" />
-          <span className="font-medium text-sm">Save Game</span>
+          <span className="font-medium text-sm">{t('nav.save')}</span>
         </button>
 
         <div className="mt-4 pt-3 border-t border-border flex items-center justify-between px-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Sword className="w-4 h-4 text-destructive" /> Combat Lvl:
+            <Sword className="w-4 h-4 text-destructive" /> {t('combat.combatLevel')}:
           </div>
           <span className="font-mono font-bold text-foreground bg-accent px-2 py-0.5 rounded border border-border">
             {combatLevel}

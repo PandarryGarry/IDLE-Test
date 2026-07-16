@@ -16,8 +16,10 @@ export function CombatPage() {
   const bankStore = useBankStore();
   const combatLogEndRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll the combat log div only — not the page
   useEffect(() => {
-    combatLogEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = combatLogEndRef.current?.parentElement;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [combatStore.combatLog]);
 
   const handleAreaClick = (areaId: string, minLevel = 1) => {
@@ -115,7 +117,7 @@ export function CombatPage() {
                 <div className="flex flex-col sm:flex-row gap-4 items-center justify-center flex-grow py-2">
                   {/* Player */}
                   <div className="flex-1 w-full text-center space-y-2">
-                    <div className="font-bold text-sm text-muted-foreground">You (Lvl {playerStore.combatLevel})</div>
+                    <div className="font-bold text-sm text-muted-foreground">{t('combat.you')} (Lvl {playerStore.combatLevel})</div>
                     <div className="text-4xl md:text-5xl">🧑‍🌾</div>
                     <ProgressBar
                       value={combatStore.playerHp / combatStore.playerMaxHp}
@@ -204,7 +206,7 @@ export function CombatPage() {
           {/* Food */}
           {combatStore.inCombat && (
             <div className="bg-card border border-border rounded-2xl p-3 shadow-sm">
-              <h3 className="font-black text-[11px] uppercase tracking-widest text-muted-foreground mb-2 px-1">Food</h3>
+              <h3 className="font-black text-[11px] uppercase tracking-widest text-muted-foreground mb-2 px-1">{t('combat.food')}</h3>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {bankStore.items
                   .map(s => ({ slot: s, item: getItem(s.itemId) }))
@@ -224,7 +226,7 @@ export function CombatPage() {
                   ))
                 }
                 {bankStore.items.filter(s => getItem(s.itemId)?.healAmount).length === 0 && (
-                  <p className="text-sm text-muted-foreground py-1 px-1">No food in bank.</p>
+                  <p className="text-sm text-muted-foreground py-1 px-1">{t('combat.noFood')}</p>
                 )}
               </div>
             </div>

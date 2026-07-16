@@ -1,36 +1,47 @@
 ---
 name: Melvor Idle Clone Architecture
-description: Key decisions and gotchas for the Melvor Idle clone in artifacts/my-app
+description: Key architectural decisions, patterns, and gotchas for the Melvor Idle clone in artifacts/my-app
 ---
 
-## Timing clock — use performance.now() everywhere
-All game-loop timing (startSkillAction, tick, nextActionTime, actionStartTime) uses `performance.now()` (monotonic). `Date.now()` is only used for persistence metadata (savedAt timestamps). Mixing the two clocks causes action completion checks to never fire.
+## Routing
+- `/inventory` — item storage (InventoryPage.tsx, uses bankStore for items/gp)
+- `/bank` — GP management / slot upgrades (BankPage.tsx)
+- `/combat`, `/woodcutting`, `/fishing`, `/mining`, `/cooking`, `/smithing`, `/firemaking`
+- Uses `wouter` for routing with `WouterRouter base={import.meta.env.BASE_URL}`
 
-**Why:** tickManager passes performance.now() from rAF into gameStore.tick(). If startSkillAction used Date.now(), nextActionTime would be in epoch ms while the tick clock is in monotonic ms — mismatched by billions.
+## Stores
+- `bankStore` — items[], gp, maxSlots. Methods: `addItem`, `removeItem`, `removeItems`, `addGp`, `spendGp` (NOT `removeGp`), `sellItem`, `upgradeSlots()` (no args, adds 12 slots), `lockItem`, `setSort`, `setSearch`
+- `combatStore`, `playerStore`, `gameStore`, `notificationsStore`, `settingsStore`
 
-**How to apply:** Any new action scheduling must use performance.now(). Only saveManager/offlineCalc may use Date.now() for wall-clock purposes.
+## Timing rule
+- Game loop: `performance.now()` everywhere
+- Save/offline calc: `Date.now()` for wall-clock
 
-## Offline calc — gathering skills only get items
-offlineCalc.ts grants items offline only for gathering skills (woodcutting, mining, fishing). Artisan skills (cooking, smithing, firemaking) get XP only — their offline item grants would violate game economy (output without consuming inputs).
+## Progress bars
+- `ActionProgressBar` — CSS animation, zero React re-renders during fill, used for skill actions
+- `ProgressBar` — static width with CSS transition, used for HP and XP bars
 
-**Why:** Artisan skills consume inputs that may not have been present during the offline period. Granting 50% output as a "shortcut" creates items from nothing.
+## Combat scroll fix
+- Remove `scrollIntoView` on the page — scroll ONLY the combat log div itself via `el.scrollTop = el.scrollHeight` on `el.parentElement` of `combatLogEndRef`
 
-## Equip/unequip — transactional
-unequipItem() adds the item to bank FIRST, then removes from equipment. If bank is full, it returns null without unequipping. equipItem() checks bank capacity before displacing a previously equipped item. Never remove from equipment first.
+## Notifications
+- `notificationsStore`: auto-dismiss all types (levelup: 6s, others: 4s)
+- `NotificationToast`: glassmorphism `bg-black/50 backdrop-blur-xl`, MAX_VISIBLE=4, `flex-col-reverse` so newest at bottom, progress bar via `toast-shrink` CSS keyframe in index.css
 
-## Combat tick — capped at 10 iterations/frame
-tickManager caps combat catch-up to MAX_COMBAT_TICKS_PER_FRAME=10 to prevent frame-freeze after tab suspension. Excess accumulator is drained (reset to 0) to prevent future runaway.
+## i18n
+- `src/lib/i18n.ts`: flat key→string, `Partial<typeof en>` for ru, falls back to en
+- ALL UI strings must use `t('key')` — no hardcoded English/Russian
+- Renamed `cooking.inBank` → `cooking.inInventory`, `notif.bankFull` → `notif.inventoryFull`
+- Bank keys now split: `inventory.*` for item storage page, `bank.*` for GP management page
 
-## Store structure
-- playerStore: skills + equipment + prayer points
-- bankStore: items + GP + slots
-- gameStore: active skill/action + tick loop
-- combatStore: combat state + log
-- notificationsStore: toast queue
-- settingsStore: user preferences
+## Sidebar / MobileNav
+- Sidebar: `hidden md:block` wrapper in App.tsx
+- MobileNav: fixed bottom-0 h-14, `md:hidden`
+- Skills tab opens slide-up panel with GATHERING + ARTISAN skill chips + Inventory/Bank/Save shortcuts
+- Bottom nav tabs: Home / Combat / Skills(toggle) / Inventory / Settings
 
-## cn() utility
-cn() (clsx + tailwind-merge) is exported from @/lib/utils. All shadcn/ui components import it from there. This must remain — removing it breaks all UI components.
+## cn() location
+- `import { cn } from '@/lib/utils'`
 
-## ALL_SKILL_IDS constant
-Exported from @/data/types.ts as a flat union of COMBAT_SKILLS + GATHERING_SKILLS + CRAFTING_SKILLS + OTHER_SKILLS. Pages that need to iterate all skills import it from there.
+## CSS keyframes
+- `toast-shrink` keyframe in `src/index.css` for notification progress bar animation

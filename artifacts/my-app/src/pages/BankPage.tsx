@@ -1,153 +1,169 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useBankStore } from '@/store/bankStore';
-import { ItemIcon } from '@/components/ItemIcon';
-import { getItem } from '@/data/items';
-import { Search } from 'lucide-react';
+import { useNotificationsStore } from '@/store/notificationsStore';
 import { formatNumber } from '@/lib/utils';
-import { usePlayerStore } from '@/store/playerStore';
 import { useTranslation } from '@/hooks/useTranslation';
+import { TrendingUp, Package, Coins, ShoppingBag } from 'lucide-react';
+
+const SLOT_UPGRADE_COST = 200; // GP per 5 slots
+
+interface GpTransaction {
+  id: string;
+  amount: number;
+  desc: string;
+  ts: number;
+}
 
 export function BankPage() {
   const { t } = useTranslation();
   const bankStore = useBankStore();
-  const playerStore = usePlayerStore();
+  const notify = useNotificationsStore();
+  const [log, setLog] = useState<GpTransaction[]>([]);
 
-  const filteredItems = bankStore.getFilteredItems();
-  const totalItems = bankStore.items.filter(i => i.quantity > 0).length;
+  const totalSlots = bankStore.maxSlots;
+  const usedSlots  = bankStore.items.filter(i => i.quantity > 0).length;
+  const slotCost   = SLOT_UPGRADE_COST * Math.floor(totalSlots / 5); // scales with upgrades
 
-  const handleSell = (itemId: string, qty: number) => {
-    bankStore.sellItem(itemId, qty);
-  };
-
-  const handleEquip = (itemId: string) => {
-    const item = getItem(itemId);
-    if (item && item.equipSlot) {
-      const oldEquip = playerStore.equipItem(itemId, item.equipSlot);
-      bankStore.removeItem(itemId, 1);
-      if (oldEquip) bankStore.addItem(oldEquip, 1);
+  const handleBuySlots = () => {
+    if (bankStore.gp < slotCost) {
+      notify.notifyInfo(t('bank.notEnoughGp'));
+      return;
     }
+    const ok = bankStore.spendGp(slotCost);
+    if (!ok) { notify.notifyInfo(t('bank.notEnoughGp')); return; }
+    // upgradeSlots adds SLOTS_PER_UPGRADE (12) by default; call it once
+    bankStore.upgradeSlots();
+    setLog(prev => [{
+      id: Date.now().toString(),
+      amount: -slotCost,
+      desc: t('bank.upgradeSlots'),
+      ts: Date.now(),
+    }, ...prev].slice(0, 30));
+    notify.notifyInfo(t('bank.slotsUpgraded'));
   };
-
-  const SORT_MODES = [
-    { key: 'default', label: t('bank.sort.default') },
-    { key: 'name', label: t('bank.sort.name') },
-    { key: 'value', label: t('bank.sort.value') },
-    { key: 'quantity', label: t('bank.sort.quantity') },
-  ] as const;
 
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="bg-card border border-border p-4 md:p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm">
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="w-12 h-12 shrink-0 bg-amber-500/10 rounded-xl flex items-center justify-center text-3xl border border-amber-500/20 shadow-inner">
-            🪙
+      <div className="bg-card border border-border rounded-2xl p-4 md:p-5 shadow-sm">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center border border-amber-500/20">
+            <Coins className="w-6 h-6 text-amber-400" />
           </div>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-foreground">{t('bank.title')}</h1>
-            <div className="text-2xl font-black text-amber-400 font-mono leading-tight drop-shadow-[0_0_8px_rgba(251,191,36,0.25)]">
-              {formatNumber(bankStore.gp)} <span className="text-sm text-amber-500/70">{t('bank.gp')}</span>
-            </div>
+            <h1 className="text-xl font-black tracking-tight">{t('bank.title')}</h1>
+            <p className="text-xs text-muted-foreground">{t('bank.gpBalance')}</p>
           </div>
         </div>
 
-        <div className="bg-background border border-border px-4 py-3 rounded-xl shadow-inner text-center w-full sm:w-auto">
-          <div className="text-[11px] text-muted-foreground uppercase tracking-widest font-bold mb-0.5">{t('bank.slots')}</div>
-          <div className="text-xl font-black font-mono">
-            <span className={totalItems >= bankStore.maxSlots ? 'text-destructive' : 'text-foreground'}>{totalItems}</span>
-            <span className="text-muted-foreground"> / {bankStore.maxSlots}</span>
+        {/* GP Balance big display */}
+        <div className="bg-background rounded-xl p-5 border border-border text-center mb-4">
+          <div className="text-4xl md:text-5xl font-black font-mono text-amber-400 drop-shadow-[0_0_16px_rgba(251,191,36,0.3)]">
+            {formatNumber(bankStore.gp)}
           </div>
+          <div className="text-sm text-amber-500/70 font-bold mt-1">{t('inventory.gp')}</div>
         </div>
-      </div>
 
-      {/* Controls */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 sm:max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-          <input
-            type="text"
-            placeholder={t('ui.search') + '...'}
-            value={bankStore.searchQuery}
-            onChange={(e) => bankStore.setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 bg-card border border-border rounded-xl focus:outline-none focus:border-primary transition-colors text-sm"
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-3">
+          <StatCard
+            icon={<Package className="w-4 h-4 text-sky-400" />}
+            label={t('bank.currentSlots')}
+            value={`${usedSlots} / ${totalSlots}`}
+            sub={`${Math.round(usedSlots / totalSlots * 100)}%`}
+          />
+          <StatCard
+            icon={<ShoppingBag className="w-4 h-4 text-emerald-400" />}
+            label={t('inventory.quantity')}
+            value={`${bankStore.items.reduce((acc, s) => acc + s.quantity, 0)}`}
+            sub="items"
+          />
+          <StatCard
+            icon={<TrendingUp className="w-4 h-4 text-violet-400" />}
+            label={t('bank.interest')}
+            value="0.5%"
+            sub="/day"
           />
         </div>
+      </div>
 
-        {/* Sort — scrollable on mobile */}
-        <div className="flex gap-1.5 bg-card p-1 rounded-xl border border-border overflow-x-auto shrink-0">
-          {SORT_MODES.map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => bankStore.setSort(key as any)}
-              className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
-                bankStore.sortMode === key
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+      {/* Slot Upgrade */}
+      <div className="bg-card border border-border rounded-2xl p-4 md:p-5 shadow-sm">
+        <h2 className="font-black text-sm uppercase tracking-widest text-muted-foreground mb-4">{t('bank.upgradeSlots')}</h2>
+
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="space-y-1">
+            <div className="text-sm text-muted-foreground">
+              {t('bank.currentSlots')}: <span className="font-bold text-foreground font-mono">{usedSlots} / {totalSlots}</span>
+            </div>
+            {/* Capacity bar */}
+            <div className="h-2 w-48 max-w-full bg-background rounded-full overflow-hidden border border-border">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  usedSlots / totalSlots > 0.85 ? 'bg-destructive' : 'bg-primary'
+                }`}
+                style={{ width: `${Math.min(100, (usedSlots / totalSlots) * 100)}%` }}
+              />
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {t('bank.slotCost')}: <span className="text-amber-400 font-bold">{formatNumber(slotCost)} GP</span>
+            </div>
+          </div>
+
+          <button
+            onClick={handleBuySlots}
+            disabled={bankStore.gp < slotCost}
+            className="shrink-0 flex items-center gap-2 px-5 py-3 bg-primary text-primary-foreground font-bold rounded-xl text-sm hover:brightness-110 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_16px_rgba(34,197,94,0.2)]"
+          >
+            <Package className="w-4 h-4" />
+            {t('bank.buySlots')}
+          </button>
         </div>
       </div>
 
-      {/* Grid */}
-      <div className="bg-card border border-border rounded-2xl p-3 md:p-5 shadow-sm min-h-[400px]">
-        {filteredItems.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-muted-foreground py-16">
-            <div className="text-5xl mb-3 opacity-20">🫙</div>
-            <p className="font-bold text-sm">{t('bank.empty')}</p>
+      {/* Interest info */}
+      <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+        <div className="flex items-start gap-3">
+          <TrendingUp className="w-5 h-5 text-violet-400 mt-0.5 shrink-0" />
+          <div>
+            <h3 className="font-bold text-sm mb-0.5">{t('bank.interest')}</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">{t('bank.interestDesc')}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* GP Transaction log */}
+      <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+        <h2 className="font-black text-sm uppercase tracking-widest text-muted-foreground mb-3">{t('bank.gpLog')}</h2>
+        {log.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Coins className="w-8 h-8 mx-auto mb-2 opacity-20" />
+            <p className="text-sm">{t('bank.noLog')}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2">
-            {filteredItems.map(slot => {
-              const item = getItem(slot.itemId);
-              if (!item) return null;
-              return (
-                <div key={slot.itemId} className="group relative flex flex-col items-center">
-                  <ItemIcon
-                    itemId={slot.itemId}
-                    quantity={slot.quantity}
-                    size="lg"
-                    className="w-full h-auto aspect-square mb-1 cursor-pointer hover:border-primary hover:shadow-[0_0_12px_rgba(34,197,94,0.15)] transition-all"
-                  />
-                  <span className="text-[10px] text-muted-foreground font-medium truncate w-full text-center px-0.5 block">
-                    {item.name}
-                  </span>
-
-                  {/* Hover context menu */}
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-popover border border-border rounded-xl shadow-xl p-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-30 flex flex-col gap-0.5 min-w-[90px]">
-                    {item.equipSlot && (
-                      <button
-                        onClick={() => handleEquip(slot.itemId)}
-                        className="text-xs text-left px-2 py-1.5 hover:bg-accent hover:text-primary rounded-lg font-bold"
-                      >
-                        {t('bank.equip')}
-                      </button>
-                    )}
-                    {item.canSell && (
-                      <>
-                        <button
-                          onClick={() => handleSell(slot.itemId, 1)}
-                          className="text-xs text-left px-2 py-1.5 hover:bg-accent hover:text-amber-400 rounded-lg"
-                        >
-                          {t('bank.sell1')}
-                        </button>
-                        <button
-                          onClick={() => handleSell(slot.itemId, slot.quantity)}
-                          className="text-xs text-left px-2 py-1.5 hover:bg-accent hover:text-amber-400 rounded-lg"
-                        >
-                          {t('bank.sellAll')}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+          <div className="space-y-1.5 max-h-60 overflow-y-auto">
+            {log.map(tx => (
+              <div key={tx.id} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-accent/50 transition-colors">
+                <span className="text-xs text-muted-foreground">{tx.desc}</span>
+                <span className={`text-xs font-bold font-mono ${tx.amount < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                  {tx.amount < 0 ? '' : '+'}{formatNumber(tx.amount)} GP
+                </span>
+              </div>
+            ))}
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub: string }) {
+  return (
+    <div className="bg-background border border-border rounded-xl p-3 text-center">
+      <div className="flex justify-center mb-1.5">{icon}</div>
+      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{label}</div>
+      <div className="font-black text-sm font-mono">{value}</div>
+      <div className="text-[10px] text-muted-foreground">{sub}</div>
     </div>
   );
 }

@@ -2,8 +2,9 @@ import { create } from 'zustand';
 import type { GameNotification, NotificationType, SkillId } from '../data/types';
 import { generateId } from '../lib/utils';
 
-const MAX_NOTIFICATIONS = 50;
+const MAX_NOTIFICATIONS = 20;
 const AUTO_DISMISS_MS = 4000;
+const LEVELUP_DISMISS_MS = 6000;
 
 export interface NotificationsStore {
   notifications: GameNotification[];
@@ -43,10 +44,9 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
     set(s => ({
       notifications: [notification, ...s.notifications].slice(0, MAX_NOTIFICATIONS),
     }));
-    // Auto-dismiss for non-level-up notifications
-    if (type !== 'levelup' && type !== 'mastery_levelup') {
-      setTimeout(() => get().dismissNotification(id), AUTO_DISMISS_MS);
-    }
+    // Auto-dismiss all notifications (level-ups stay longer)
+    const delay = (type === 'levelup' || type === 'mastery_levelup') ? LEVELUP_DISMISS_MS : AUTO_DISMISS_MS;
+    setTimeout(() => get().dismissNotification(id), delay);
   },
 
   dismissNotification: (id) => {

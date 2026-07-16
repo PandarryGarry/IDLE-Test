@@ -17,6 +17,7 @@ import { CookingPage } from '@/pages/CookingPage';
 import { SmithingPage } from '@/pages/SmithingPage';
 import { FiremakingPage } from '@/pages/FiremakingPage';
 import { CombatPage } from '@/pages/CombatPage';
+import { InventoryPage } from '@/pages/InventoryPage';
 import { BankPage } from '@/pages/BankPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 
@@ -51,6 +52,7 @@ function Router() {
             <Route path="/smithing" component={SmithingPage} />
             <Route path="/firemaking" component={FiremakingPage} />
             <Route path="/combat" component={CombatPage} />
+            <Route path="/inventory" component={InventoryPage} />
             <Route path="/bank" component={BankPage} />
             <Route path="/settings" component={SettingsPage} />
             <Route component={NotFound} />

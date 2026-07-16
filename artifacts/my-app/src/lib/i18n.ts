@@ -24,7 +24,8 @@ const en = {
 
   // ── Navigation ─────────────────────────────────────────────────
   'nav.home': 'Home', 'nav.skills': 'Skills', 'nav.combat': 'Combat',
-  'nav.bank': 'Bank', 'nav.settings': 'Settings', 'nav.save': 'Save Game',
+  'nav.inventory': 'Inventory', 'nav.bank': 'Bank',
+  'nav.settings': 'Settings', 'nav.save': 'Save Game',
 
   // ── Generic UI ─────────────────────────────────────────────────
   'ui.start': 'Start', 'ui.stop': 'Stop', 'ui.level': 'Level',
@@ -56,7 +57,7 @@ const en = {
   'cooking.cooking': 'Cooking', 'cooking.selectRecipe': 'Select a recipe to cook.',
   'cooking.stop': 'Stop Cooking', 'cooking.availableRecipes': 'Recipes',
   'cooking.requires': 'Requires', 'cooking.burns': 'Burn chance',
-  'cooking.inBank': 'In bank',
+  'cooking.inInventory': 'In inventory',
 
   // ── Smithing ───────────────────────────────────────────────────
   'smithing.smithing': 'Smithing', 'smithing.selectRecipe': 'Select a recipe to smith.',
@@ -77,16 +78,34 @@ const en = {
   'combat.prayerPoints': 'Prayer Points', 'combat.drain': 'Drain',
   'combat.selectArea': 'Select an area to fight.',
   'combat.selectMonster': 'Select a monster to fight.',
+  'combat.food': 'Food', 'combat.noFood': 'No food in inventory.',
+  'combat.you': 'You', 'combat.combatLevel': 'Combat Lvl',
+
+  // ── Inventory ──────────────────────────────────────────────────
+  'inventory.title': 'Inventory', 'inventory.slots': 'Slots', 'inventory.gp': 'GP',
+  'inventory.sell': 'Sell', 'inventory.sellAll': 'Sell All', 'inventory.sell1': 'Sell 1',
+  'inventory.lock': 'Lock', 'inventory.unlock': 'Unlock', 'inventory.equip': 'Equip',
+  'inventory.sort.default': 'Default', 'inventory.sort.name': 'Name',
+  'inventory.sort.value': 'Value', 'inventory.sort.quantity': 'Quantity',
+  'inventory.value': 'Value', 'inventory.quantity': 'Quantity',
+  'inventory.empty': 'Your inventory is empty. Start skilling to collect items!',
+  'inventory.upgradeSlots': 'Upgrade Slots',
+  'inventory.unequip': 'Unequip',
 
   // ── Bank ───────────────────────────────────────────────────────
-  'bank.title': 'Bank', 'bank.slots': 'Slots', 'bank.gp': 'GP',
-  'bank.sell': 'Sell', 'bank.sellAll': 'Sell All', 'bank.sell1': 'Sell 1',
-  'bank.lock': 'Lock', 'bank.unlock': 'Unlock', 'bank.equip': 'Equip',
-  'bank.sort.default': 'Default', 'bank.sort.name': 'Name',
-  'bank.sort.value': 'Value', 'bank.sort.quantity': 'Quantity',
-  'bank.value': 'Value', 'bank.quantity': 'Quantity',
-  'bank.empty': 'Your bank is empty. Start skilling to collect items!',
-  'bank.upgradeSlots': 'Upgrade Slots',
+  'bank.title': 'Bank', 'bank.gpBalance': 'Gold Pieces',
+  'bank.upgradeSlots': 'Upgrade Inventory Slots',
+  'bank.slotCost': 'Cost per slot',
+  'bank.currentSlots': 'Current capacity',
+  'bank.buySlots': 'Buy +5 Slots',
+  'bank.gpLog': 'Recent Transactions',
+  'bank.noLog': 'No transactions yet. Sell items to earn GP!',
+  'bank.totalEarned': 'Total Earned',
+  'bank.slotsUpgraded': 'Slots expanded!',
+  'bank.notEnoughGp': 'Not enough GP!',
+  'bank.deposit': 'Deposit', 'bank.withdraw': 'Withdraw',
+  'bank.interest': 'Daily Interest',
+  'bank.interestDesc': 'Earn 0.5% interest on deposited GP per day of play.',
 
   // ── Settings ───────────────────────────────────────────────────
   'settings.title': 'Settings', 'settings.general': 'General',
@@ -96,13 +115,16 @@ const en = {
   'settings.numberFormat': 'Number Format', 'settings.numberFormat.full': 'Full (1,234,567)',
   'settings.numberFormat.abbreviated': 'Abbreviated (1.2M)',
   'settings.autoSave': 'Auto Save', 'settings.autoSaveInterval': 'Auto-Save Interval',
+  'settings.autoSaveDesc': 'Save the game automatically in the background',
   'settings.maxOfflineHours': 'Max Offline Hours',
   'settings.confirmSell': 'Confirm Sell',
+  'settings.confirmSellDesc': 'Require confirmation before selling valuable items',
+  'settings.darkModeDesc': 'Toggle between dark and light theme',
   'settings.showXpDrops': 'Show XP Drops',
   'settings.showLootDrops': 'Show Loot Drops',
   'settings.showCombatSplats': 'Show Combat Numbers',
   'settings.manualSave': 'Save Now', 'settings.exportSave': 'Export Save',
-  'settings.importSave': 'Import Save', 'settings.importPlaceholder': 'Paste save data here…',
+  'settings.importSave': 'Import Save (Base64)', 'settings.importPlaceholder': 'Paste save data here…',
   'settings.importBtn': 'Import', 'settings.resetGame': 'Reset Game',
   'settings.resetWarning': 'This will delete ALL progress. This cannot be undone!',
   'settings.resetConfirm': 'Yes, delete everything',
@@ -112,7 +134,7 @@ const en = {
 
   // ── Notifications ─────────────────────────────────────────────
   'notif.levelUp': 'Level up!', 'notif.masteryUp': 'Mastery level up!',
-  'notif.gameSaved': 'Game saved.', 'notif.bankFull': 'Bank is full!',
+  'notif.gameSaved': 'Game saved.', 'notif.inventoryFull': 'Inventory is full!',
   'notif.noResources': 'Not enough resources. Action stopped.',
   'notif.offline.gained': 'Offline gains applied.',
 } as const;
@@ -138,7 +160,8 @@ const ru: Partial<typeof en> = {
 
   // ── Navigation ────────────────────────────────────────────────
   'nav.home': 'Главная', 'nav.skills': 'Навыки', 'nav.combat': 'Бой',
-  'nav.bank': 'Банк', 'nav.settings': 'Настройки', 'nav.save': 'Сохранить',
+  'nav.inventory': 'Инвентарь', 'nav.bank': 'Банк',
+  'nav.settings': 'Настройки', 'nav.save': 'Сохранить',
 
   // ── Generic UI ────────────────────────────────────────────────
   'ui.start': 'Начать', 'ui.stop': 'Остановить', 'ui.level': 'Уровень',
@@ -171,7 +194,7 @@ const ru: Partial<typeof en> = {
   'cooking.cooking': 'Готовка', 'cooking.selectRecipe': 'Выберите рецепт для приготовления.',
   'cooking.stop': 'Остановить', 'cooking.availableRecipes': 'Рецепты',
   'cooking.requires': 'Нужно', 'cooking.burns': 'Шанс сжечь',
-  'cooking.inBank': 'В банке',
+  'cooking.inInventory': 'В инвентаре',
 
   // ── Smithing ──────────────────────────────────────────────────
   'smithing.smithing': 'Кузнечное дело', 'smithing.selectRecipe': 'Выберите рецепт.',
@@ -192,16 +215,34 @@ const ru: Partial<typeof en> = {
   'combat.prayerPoints': 'Очки молитвы', 'combat.drain': 'Расход',
   'combat.selectArea': 'Выберите зону для боя.',
   'combat.selectMonster': 'Выберите существо для боя.',
+  'combat.food': 'Еда', 'combat.noFood': 'В инвентаре нет еды.',
+  'combat.you': 'Вы', 'combat.combatLevel': 'Уровень боя',
+
+  // ── Inventory ─────────────────────────────────────────────────
+  'inventory.title': 'Инвентарь', 'inventory.slots': 'Ячейки', 'inventory.gp': 'ЗМ',
+  'inventory.sell': 'Продать', 'inventory.sellAll': 'Продать всё', 'inventory.sell1': 'Продать 1',
+  'inventory.lock': 'Закрыть', 'inventory.unlock': 'Открыть', 'inventory.equip': 'Надеть',
+  'inventory.sort.default': 'По умолчанию', 'inventory.sort.name': 'По имени',
+  'inventory.sort.value': 'По цене', 'inventory.sort.quantity': 'По количеству',
+  'inventory.value': 'Цена', 'inventory.quantity': 'Количество',
+  'inventory.empty': 'Инвентарь пуст. Начни прокачивать навыки!',
+  'inventory.upgradeSlots': 'Расширить инвентарь',
+  'inventory.unequip': 'Снять',
 
   // ── Bank ──────────────────────────────────────────────────────
-  'bank.title': 'Банк', 'bank.slots': 'Ячейки', 'bank.gp': 'ЗМ',
-  'bank.sell': 'Продать', 'bank.sellAll': 'Продать всё', 'bank.sell1': 'Продать 1',
-  'bank.lock': 'Закрыть', 'bank.unlock': 'Открыть', 'bank.equip': 'Надеть',
-  'bank.sort.default': 'По умолчанию', 'bank.sort.name': 'По имени',
-  'bank.sort.value': 'По цене', 'bank.sort.quantity': 'По количеству',
-  'bank.value': 'Цена', 'bank.quantity': 'Количество',
-  'bank.empty': 'Ваш банк пуст. Начните прокачивать навыки!',
-  'bank.upgradeSlots': 'Расширить банк',
+  'bank.title': 'Банк', 'bank.gpBalance': 'Золотые монеты',
+  'bank.upgradeSlots': 'Расширить инвентарь',
+  'bank.slotCost': 'Цена за ячейку',
+  'bank.currentSlots': 'Текущий объём',
+  'bank.buySlots': 'Купить +5 ячеек',
+  'bank.gpLog': 'Последние транзакции',
+  'bank.noLog': 'Транзакций пока нет. Продавайте предметы!',
+  'bank.totalEarned': 'Всего заработано',
+  'bank.slotsUpgraded': 'Ячейки расширены!',
+  'bank.notEnoughGp': 'Недостаточно золота!',
+  'bank.deposit': 'Вклад', 'bank.withdraw': 'Снять',
+  'bank.interest': 'Дневной процент',
+  'bank.interestDesc': 'Зарабатывайте 0.5% на вложенное золото каждый день игры.',
 
   // ── Settings ──────────────────────────────────────────────────
   'settings.title': 'Настройки', 'settings.general': 'Основные',
@@ -211,13 +252,16 @@ const ru: Partial<typeof en> = {
   'settings.numberFormat': 'Формат чисел', 'settings.numberFormat.full': 'Полный (1 234 567)',
   'settings.numberFormat.abbreviated': 'Сокращённый (1.2М)',
   'settings.autoSave': 'Автосохранение', 'settings.autoSaveInterval': 'Интервал автосохранения',
+  'settings.autoSaveDesc': 'Автоматически сохранять игру в фоне',
   'settings.maxOfflineHours': 'Макс. оффлайн-часов',
   'settings.confirmSell': 'Подтверждать продажу',
+  'settings.confirmSellDesc': 'Запрашивать подтверждение перед продажей предметов',
+  'settings.darkModeDesc': 'Переключить тёмную и светлую тему',
   'settings.showXpDrops': 'Показывать получение ОП',
   'settings.showLootDrops': 'Показывать получение предметов',
   'settings.showCombatSplats': 'Показывать урон в бою',
   'settings.manualSave': 'Сохранить сейчас', 'settings.exportSave': 'Экспорт сохранения',
-  'settings.importSave': 'Импорт сохранения', 'settings.importPlaceholder': 'Вставьте данные сохранения…',
+  'settings.importSave': 'Импорт сохранения (Base64)', 'settings.importPlaceholder': 'Вставьте данные сохранения…',
   'settings.importBtn': 'Импортировать', 'settings.resetGame': 'Сбросить игру',
   'settings.resetWarning': 'Это удалит ВЕСЬ прогресс без возможности отмены!',
   'settings.resetConfirm': 'Да, удалить всё',
@@ -227,7 +271,7 @@ const ru: Partial<typeof en> = {
 
   // ── Notifications ─────────────────────────────────────────────
   'notif.levelUp': 'Уровень повышен!', 'notif.masteryUp': 'Мастерство повышено!',
-  'notif.gameSaved': 'Игра сохранена.', 'notif.bankFull': 'Банк полон!',
+  'notif.gameSaved': 'Игра сохранена.', 'notif.inventoryFull': 'Инвентарь полон!',
   'notif.noResources': 'Недостаточно ресурсов. Действие остановлено.',
   'notif.offline.gained': 'Оффлайн-прогресс применён.',
 };

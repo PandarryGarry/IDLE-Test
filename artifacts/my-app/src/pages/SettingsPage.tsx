@@ -75,7 +75,7 @@ export function SettingsPage() {
 
           <ToggleSetting
             label={t('settings.autoSave')}
-            description="Save the game automatically in the background"
+            description={t('settings.autoSaveDesc')}
             checked={settings.autoSaveEnabled}
             onChange={(v) => settings.updateSetting('autoSaveEnabled', v)}
           />
@@ -95,7 +95,7 @@ export function SettingsPage() {
 
           <ToggleSetting
             label={t('settings.confirmSell')}
-            description="Require confirmation for valuable items"
+            description={t('settings.confirmSellDesc')}
             checked={settings.confirmSell}
             onChange={(v) => settings.updateSetting('confirmSell', v)}
           />
@@ -107,7 +107,7 @@ export function SettingsPage() {
 
           <ToggleSetting
             label={t('settings.darkMode')}
-            description="Toggle dark/light theme"
+            description={t('settings.darkModeDesc')}
             checked={settings.darkMode}
             onChange={(v) => {
               settings.toggleDarkMode();
