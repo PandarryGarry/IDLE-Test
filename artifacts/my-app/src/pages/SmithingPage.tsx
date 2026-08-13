@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { SkillHeader } from '@/components/SkillHeader';
 import { ActionGrid } from '@/components/ActionGrid';
 import { ActionProgressBar } from '@/components/ActionProgressBar';
-import { SMELTING_RECIPES, SMITHING_RECIPES } from '@/data/smithing';
+import { SMELTING_RECIPES, SMITHING_RECIPES, SMITHING_MAP } from '@/data/smithing';
 import { useGameStore } from '@/store/gameStore';
 import { useBankStore } from '@/store/bankStore';
 import { ItemIcon } from '@/components/ItemIcon';
@@ -10,8 +10,16 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 export function SmithingPage() {
   const { t } = useTranslation();
-  const { startSkillAction, stopAction, activeSkill, activeActionId } = useGameStore();
-  const bankStore = useBankStore();
+  
+  // Селекторы: компонент перерисовывается ТОЛЬКО при изменении этих значений
+  const startSkillAction = useGameStore(s => s.startSkillAction);
+  const stopAction = useGameStore(s => s.stopAction);
+  const activeSkill = useGameStore(s => s.activeSkill);
+  const activeActionId = useGameStore(s => s.activeActionId);
+  
+  // Подписка только на items, а не на весь bankStore
+  const bankItems = useBankStore(s => s.items);
+  
   const [tab, setTab] = useState<'smelting' | 'equipment'>('smelting');
 
   const handleActionClick = (actionId: string) => {
@@ -22,10 +30,15 @@ export function SmithingPage() {
     }
   };
 
-  const allRecipes = [...SMELTING_RECIPES, ...SMITHING_RECIPES];
-  const activeRecipe = allRecipes.find(r => r.id === activeActionId);
+  // O(1) lookup вместо allRecipes.find() — быстрее
+  const activeRecipe = activeActionId ? SMITHING_MAP[activeActionId] : undefined;
   const isTraining = activeSkill === 'smithing' && !!activeRecipe;
   const currentList = tab === 'smelting' ? SMELTING_RECIPES : SMITHING_RECIPES;
+
+  // Локальная функция для получения количества предмета из банка
+  const getItemQty = (itemId: string): number => {
+    return bankItems.find(s => s.itemId === itemId)?.quantity ?? 0;
+  };
 
   return (
     <div className="space-y-4">
@@ -90,7 +103,7 @@ export function SmithingPage() {
             <span className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider">{t('smithing.ingredients')}:</span>
             <div className="flex flex-wrap gap-2">
               {action.ingredients.map((ing: any, i: number) => {
-                const qty = bankStore.getItemQty(ing.itemId);
+                const qty = getItemQty(ing.itemId);
                 const hasEnough = qty >= ing.quantity;
                 return (
                   <div key={i} className="flex items-center gap-1 bg-background px-1.5 py-1 rounded border border-border">
