@@ -4,8 +4,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePlayerStore } from '@/store/playerStore';
 import { useGameStore } from '@/store/gameStore';
-import { manualSave } from '@/lib/saveManager';
-import { useNotificationsStore } from '@/store/notificationsStore';
 import { SkillId } from '@/data/types';
 import { cn } from '@/lib/utils';
 
@@ -70,9 +68,6 @@ export function MobileNav({ className }: MobileNavProps) {
   const [location] = useLocation();
   const { t } = useTranslation();
   const activeSkill = useGameStore(s => s.activeSkill);
-  const notifyInfo = useNotificationsStore(s => s.notifyInfo);
-  const notifyGameSaved = useNotificationsStore(s => s.notifyInfo);
-
   const isSkillRoute = ALL_SKILL_HREFS.includes(location);
   const hasTrainingSkill = activeSkill && !COMBAT_SKILLS_IDS.has(activeSkill);
 
@@ -99,7 +94,7 @@ export function MobileNav({ className }: MobileNavProps) {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-              className="fixed bottom-14 inset-x-0 z-50 bg-card border-t border-border rounded-t-2xl p-4 pb-6 max-h-[75vh] overflow-y-auto"
+              className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] inset-x-0 z-50 bg-card border-t border-border rounded-t-2xl p-4 pb-5 max-h-[75vh] overflow-y-auto overscroll-contain"
             >
               {/* Drag handle */}
               <div className="w-10 h-1 bg-border rounded-full mx-auto mb-5" />
@@ -118,32 +113,6 @@ export function MobileNav({ className }: MobileNavProps) {
                 ))}
               </div>
 
-              {/* Bottom utility links */}
-              <div className="grid grid-cols-3 gap-2 pt-3 border-t border-border">
-                <Link href="/inventory" onClick={closeSkills}>
-                  <div className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-background border border-border active:scale-95 transition-all">
-                    <span className="text-xl">🎒</span>
-                    <span className="text-[11px] font-bold">{t('nav.inventory')}</span>
-                  </div>
-                </Link>
-                <Link href="/bank" onClick={closeSkills}>
-                  <div className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-background border border-border active:scale-95 transition-all">
-                    <span className="text-xl">🪙</span>
-                    <span className="text-[11px] font-bold">{t('nav.bank')}</span>
-                  </div>
-                </Link>
-                <button
-                  onClick={() => {
-                    manualSave();
-                    notifyInfo(t('notif.gameSaved'));
-                    closeSkills();
-                  }}
-                  className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-background border border-border active:scale-95 transition-all"
-                >
-                  <span className="text-xl">💾</span>
-                  <span className="text-[11px] font-bold">{t('nav.save')}</span>
-                </button>
-              </div>
             </motion.div>
           </>
         )}
@@ -152,7 +121,7 @@ export function MobileNav({ className }: MobileNavProps) {
       {/* Bottom bar */}
       <nav className={cn(
         'fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-md border-t border-border flex items-stretch',
-        'h-14',
+        'h-[calc(3.5rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]',
         className
       )}>
         <NavTab href="/" icon="🏠" label={t('nav.home')} />

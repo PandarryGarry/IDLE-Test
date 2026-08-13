@@ -63,8 +63,8 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-sidebar border-r border-border h-screen flex flex-col fixed left-0 top-0 overflow-hidden">
-      <div className="p-5 border-b border-border bg-sidebar/50 backdrop-blur-sm z-10 flex items-center justify-between">
+    <aside className="w-60 bg-sidebar border-r border-border h-screen flex flex-col fixed left-0 top-0 overflow-hidden">
+      <div className="p-4 border-b border-border bg-sidebar/50 backdrop-blur-sm z-10 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 cursor-pointer">
           <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center border border-primary/50 text-primary shadow-[0_0_10px_rgba(34,197,94,0.3)]">
             <Sword className="w-5 h-5" />
@@ -73,7 +73,7 @@ export function Sidebar() {
         </Link>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-6 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-5 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
         
         {/* COMBAT */}
         <div>
@@ -98,7 +98,7 @@ export function Sidebar() {
         </div>
       </div>
 
-      <div className="p-4 border-t border-border bg-sidebar/50 space-y-2">
+      <div className="p-3 border-t border-border bg-sidebar/50 space-y-1">
         <SidebarItem href="/inventory" icon={<Backpack className="w-5 h-5 text-sky-400" />}   label={t('nav.inventory')} />
         <SidebarItem href="/bank"      icon={<Coins    className="w-5 h-5 text-amber-400" />} label={t('nav.bank')} />
         <SidebarItem href="/settings"  icon={<Settings className="w-5 h-5" />}               label={t('nav.settings')} />

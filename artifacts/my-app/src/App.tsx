@@ -42,7 +42,7 @@ function Router() {
 
       {/* Main content — 240px offset on desktop, full-width on mobile */}
       <main className="flex-1 md:ml-60 min-h-screen overflow-x-hidden">
-        <div className="px-3 py-4 pb-20 md:pb-8 md:px-6 lg:px-8 max-w-5xl mx-auto">
+        <div className="w-full max-w-[1440px] mx-auto px-3 py-4 pb-20 sm:px-4 md:pb-8 md:px-6 lg:px-8">
           <Switch>
             <Route path="/" component={DashboardPage} />
             <Route path="/woodcutting" component={WoodcuttingPage} />

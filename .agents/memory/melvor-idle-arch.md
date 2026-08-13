@@ -37,7 +37,7 @@ description: Key architectural decisions, patterns, and gotchas for the Melvor I
 ## Sidebar / MobileNav
 - Sidebar: `hidden md:block` wrapper in App.tsx
 - MobileNav: fixed bottom-0 h-14, `md:hidden`
-- Skills tab opens slide-up panel with GATHERING + ARTISAN skill chips + Inventory/Bank/Save shortcuts
+- Skills tab opens slide-up panel with only GATHERING + ARTISAN skill chips; Inventory ↔ Bank links live in their page headers
 - Bottom nav tabs: Home / Combat / Skills(toggle) / Inventory / Settings
 
 ## cn() location
@@ -45,3 +45,4 @@ description: Key architectural decisions, patterns, and gotchas for the Melvor I
 
 ## CSS keyframes
 - `toast-shrink` keyframe in `src/index.css` for notification progress bar animation
+- Combat stop preserves the combat log for review; CombatPage renders chronological entries, pauses auto-follow when scrolled up, and offers a latest-entry button

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useCombatStore } from '@/store/combatStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { COMBAT_AREAS, MONSTERS_MAP } from '@/data/monsters';
@@ -14,13 +14,39 @@ export function CombatPage() {
   const combatStore = useCombatStore();
   const playerStore = usePlayerStore();
   const bankStore = useBankStore();
-  const combatLogEndRef = useRef<HTMLDivElement>(null);
+  const combatLogRef = useRef<HTMLDivElement>(null);
+  const shouldStickToBottomRef = useRef(true);
+  const [showLatest, setShowLatest] = useState(false);
 
-  // Auto-scroll the combat log div only — not the page
+  const scrollLogToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    const el = combatLogRef.current;
+    if (!el) return;
+    shouldStickToBottomRef.current = true;
+    setShowLatest(false);
+    el.scrollTo({ top: el.scrollHeight, behavior });
+  }, []);
+
+  // Keep the local log pinned only while the player is already at the bottom.
+  // Scrolling up pauses the pin so the player can inspect older hits and misses.
   useEffect(() => {
-    const el = combatLogEndRef.current?.parentElement;
-    if (el) el.scrollTop = el.scrollHeight;
+    const el = combatLogRef.current;
+    if (!el) return;
+    if (shouldStickToBottomRef.current) {
+      requestAnimationFrame(() => {
+        el.scrollTop = el.scrollHeight;
+      });
+    } else {
+      setShowLatest(true);
+    }
   }, [combatStore.combatLog]);
+
+  const handleLogScroll = () => {
+    const el = combatLogRef.current;
+    if (!el) return;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
+    shouldStickToBottomRef.current = atBottom;
+    if (atBottom) setShowLatest(false);
+  };
 
   const handleAreaClick = (areaId: string, minLevel = 1) => {
     if (playerStore.combatLevel < minLevel) return;
@@ -44,9 +70,11 @@ export function CombatPage() {
                 const isLocked = playerStore.combatLevel < (area.combatLevelRequired ?? 1);
                 const isActive = combatStore.activeAreaId === area.id;
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={area.id}
                     onClick={() => handleAreaClick(area.id, area.combatLevelRequired ?? 1)}
+                    disabled={isLocked}
                     className={`p-3 rounded-xl border transition-all ${
                       isLocked
                         ? 'opacity-50 grayscale cursor-not-allowed bg-background border-border/50'
@@ -71,7 +99,7 @@ export function CombatPage() {
                         </span>
                       ))}
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -185,10 +213,20 @@ export function CombatPage() {
           </div>
 
           {/* Combat Log */}
-          <div className="bg-card border border-border rounded-2xl p-3 shadow-sm flex flex-col h-48 md:h-56">
-            <h3 className="font-black text-[11px] uppercase tracking-widest text-muted-foreground mb-2 px-1">{t('combat.log')}</h3>
-            <div className="flex-1 overflow-y-auto space-y-0.5 font-mono text-[11px] p-2 bg-background rounded-xl border border-border/50 shadow-inner">
-              {combatStore.combatLog.map((log) => (
+          <div className="bg-card border border-border rounded-2xl p-3 shadow-sm flex flex-col h-56 md:h-64 min-h-0">
+            <div className="flex items-center justify-between gap-2 mb-2 px-1">
+              <h3 className="font-black text-[11px] uppercase tracking-widest text-muted-foreground">{t('combat.log')}</h3>
+              <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground">
+                <span>{t('combat.damage')}: <b className="text-green-400">{combatStore.totalDamageDealt}</b></span>
+                <span className="hidden sm:inline">{t('combat.taken')}: <b className="text-red-400">{combatStore.totalDamageTaken}</b></span>
+              </div>
+            </div>
+            <div
+              ref={combatLogRef}
+              onScroll={handleLogScroll}
+              className="relative flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-0.5 font-mono text-[11px] p-2 bg-background rounded-xl border border-border/50 shadow-inner scrollbar-thin"
+            >
+              {combatStore.combatLog.slice().reverse().map((log) => (
                 <div key={log.id} className={`py-px leading-relaxed ${
                   log.type === 'player_attack' ? (log.damage && log.damage > 0 ? 'text-green-400' : 'text-slate-500') :
                   log.type === 'enemy_attack' ? (log.damage && log.damage > 0 ? 'text-red-400' : 'text-slate-500') :
@@ -199,8 +237,16 @@ export function CombatPage() {
                   {log.message}
                 </div>
               ))}
-              <div ref={combatLogEndRef} />
             </div>
+            {showLatest && (
+              <button
+                type="button"
+                onClick={() => scrollLogToBottom()}
+                className="self-center -mt-8 mb-2 z-10 rounded-full border border-primary/30 bg-card/90 px-3 py-1 text-[10px] font-bold text-primary shadow-lg backdrop-blur-md transition-colors hover:bg-primary/10"
+              >
+                {t('combat.latest')}
+              </button>
+            )}
           </div>
 
           {/* Food */}
@@ -250,7 +296,8 @@ function EquipSlotBox({ slot }: { slot: EquipSlot }) {
   };
 
   return (
-    <div
+    <button
+      type="button"
       onClick={handleUnequip}
       className={`w-12 h-12 rounded-xl border flex items-center justify-center relative transition-all ${
         itemId
@@ -264,6 +311,6 @@ function EquipSlotBox({ slot }: { slot: EquipSlot }) {
       ) : (
         <span className="text-[10px] text-muted-foreground font-mono leading-tight text-center">{slot.substring(0, 3)}</span>
       )}
-    </div>
+    </button>
   );
 }

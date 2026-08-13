@@ -4,6 +4,7 @@ import { useNotificationsStore } from '@/store/notificationsStore';
 import { formatNumber } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TrendingUp, Package, Coins, ShoppingBag } from 'lucide-react';
+import { Link } from 'wouter';
 
 const SLOT_UPGRADE_COST = 200; // GP per 5 slots
 
@@ -50,8 +51,17 @@ export function BankPage() {
           <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center border border-amber-500/20">
             <Coins className="w-6 h-6 text-amber-400" />
           </div>
-          <div>
-            <h1 className="text-xl font-black tracking-tight">{t('bank.title')}</h1>
+           <div>
+             <div className="flex items-center gap-2">
+               <h1 className="text-xl font-black tracking-tight">{t('bank.title')}</h1>
+               <Link
+                 href="/inventory"
+                 className="inline-flex items-center gap-1 rounded-md border border-sky-400/20 bg-sky-400/5 px-1.5 py-0.5 text-[10px] font-bold text-sky-400 transition-colors hover:bg-sky-400/10"
+               >
+                 <Package className="h-3 w-3" />
+                 {t('nav.inventory')}
+               </Link>
+             </div>
             <p className="text-xs text-muted-foreground">{t('bank.gpBalance')}</p>
           </div>
         </div>

@@ -3,9 +3,11 @@ import { useBankStore } from '@/store/bankStore';
 import { ItemIcon } from '@/components/ItemIcon';
 import { getItem } from '@/data/items';
 import { Search } from 'lucide-react';
+import { Coins } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 import { usePlayerStore } from '@/store/playerStore';
 import { useTranslation } from '@/hooks/useTranslation';
+import { Link } from 'wouter';
 
 export function InventoryPage() {
   const { t } = useTranslation();
@@ -45,8 +47,17 @@ export function InventoryPage() {
           <div className="w-12 h-12 shrink-0 bg-sky-500/10 rounded-xl flex items-center justify-center text-3xl border border-sky-500/20 shadow-inner">
             🎒
           </div>
-          <div>
-            <h1 className="text-xl font-black tracking-tight text-foreground">{t('inventory.title')}</h1>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-black tracking-tight text-foreground">{t('inventory.title')}</h1>
+              <Link
+                href="/bank"
+                className="inline-flex items-center gap-1 rounded-md border border-amber-400/20 bg-amber-400/5 px-1.5 py-0.5 text-[10px] font-bold text-amber-400 transition-colors hover:bg-amber-400/10"
+              >
+                <Coins className="h-3 w-3" />
+                {t('nav.bank')}
+              </Link>
+            </div>
             <div className="text-2xl font-black text-amber-400 font-mono leading-tight drop-shadow-[0_0_8px_rgba(251,191,36,0.25)]">
               {formatNumber(bankStore.gp)} <span className="text-sm text-amber-500/70">{t('inventory.gp')}</span>
             </div>
@@ -148,11 +159,9 @@ export function InventoryPage() {
                         </button>
                       </>
                     )}
-                    {item.value !== undefined && (
-                      <div className="text-[10px] text-muted-foreground px-2 py-1 border-t border-border mt-0.5">
-                        {formatNumber(item.value ?? 0)} GP {t('inventory.value').toLowerCase()}
-                      </div>
-                    )}
+                    <div className="text-[10px] text-muted-foreground px-2 py-1 border-t border-border mt-0.5">
+                      {formatNumber(item.sellValue)} GP {t('inventory.value').toLowerCase()}
+                    </div>
                   </div>
                 </div>
               );

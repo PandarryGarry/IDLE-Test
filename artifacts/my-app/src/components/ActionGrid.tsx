@@ -32,7 +32,7 @@ export function ActionGrid({ skillId, actions, onActionClick, renderExtra }: Act
         return (
           <div
             key={action.id}
-            className={`relative flex flex-col p-4 rounded-2xl border transition-all overflow-hidden active:scale-[0.98] ${
+               className={`relative flex flex-col p-3 rounded-xl border transition-all overflow-hidden active:scale-[0.98] ${
               isLocked
                 ? 'bg-card/50 border-border/50 opacity-55 grayscale cursor-not-allowed'
                 : isActive

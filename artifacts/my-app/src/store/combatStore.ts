@@ -102,7 +102,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   },
 
   stopCombat: () => {
-    set({ inCombat: false, activeMonsterId: null, currentMonster: null, enemyHp: 0, combatLog: [] });
+    // Keep the finished log visible so the player can inspect hits, misses,
+    // damage and the final result after stopping the encounter.
+    set({ inCombat: false, activeMonsterId: null, currentMonster: null, enemyHp: 0 });
   },
 
   tickCombat: (deltaMs) => {

@@ -70,7 +70,7 @@ function SkillCard({ skillId }: { skillId: string }) {
 
   return (
     <Link href={linkPath} className="block">
-      <div className={`bg-card border rounded-xl p-3 flex flex-col items-center gap-2.5 transition-all active:scale-95 hover:-translate-y-0.5 hover:shadow-md ${
+      <div className={`bg-card border rounded-xl p-2.5 flex flex-col items-center gap-2 transition-all active:scale-95 hover:-translate-y-0.5 hover:shadow-md ${
         isActive
           ? 'border-primary ring-1 ring-primary/40 shadow-[0_0_12px_rgba(34,197,94,0.08)]'
           : 'border-border hover:border-primary/40'

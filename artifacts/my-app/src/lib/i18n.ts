@@ -79,6 +79,7 @@ const en = {
   'combat.selectArea': 'Select an area to fight.',
   'combat.selectMonster': 'Select a monster to fight.',
   'combat.food': 'Food', 'combat.noFood': 'No food in inventory.',
+  'combat.damage': 'Damage', 'combat.taken': 'Taken', 'combat.latest': 'Latest',
   'combat.you': 'You', 'combat.combatLevel': 'Combat Lvl',
 
   // ── Inventory ──────────────────────────────────────────────────
@@ -97,7 +98,7 @@ const en = {
   'bank.upgradeSlots': 'Upgrade Inventory Slots',
   'bank.slotCost': 'Cost per slot',
   'bank.currentSlots': 'Current capacity',
-  'bank.buySlots': 'Buy +5 Slots',
+  'bank.buySlots': 'Buy +12 Slots',
   'bank.gpLog': 'Recent Transactions',
   'bank.noLog': 'No transactions yet. Sell items to earn GP!',
   'bank.totalEarned': 'Total Earned',
@@ -139,7 +140,7 @@ const en = {
   'notif.offline.gained': 'Offline gains applied.',
 } as const;
 
-const ru: Partial<typeof en> = {
+const ru: Partial<Record<keyof typeof en, string>> = {
   // ── Skill names ───────────────────────────────────────────────
   'skill.attack': 'Атака', 'skill.strength': 'Сила',
   'skill.defence': 'Защита', 'skill.hitpoints': 'Очки здоровья',
@@ -216,6 +217,7 @@ const ru: Partial<typeof en> = {
   'combat.selectArea': 'Выберите зону для боя.',
   'combat.selectMonster': 'Выберите существо для боя.',
   'combat.food': 'Еда', 'combat.noFood': 'В инвентаре нет еды.',
+  'combat.damage': 'Урон', 'combat.taken': 'Получено', 'combat.latest': 'К последним',
   'combat.you': 'Вы', 'combat.combatLevel': 'Уровень боя',
 
   // ── Inventory ─────────────────────────────────────────────────
@@ -234,7 +236,7 @@ const ru: Partial<typeof en> = {
   'bank.upgradeSlots': 'Расширить инвентарь',
   'bank.slotCost': 'Цена за ячейку',
   'bank.currentSlots': 'Текущий объём',
-  'bank.buySlots': 'Купить +5 ячеек',
+  'bank.buySlots': 'Купить +12 ячеек',
   'bank.gpLog': 'Последние транзакции',
   'bank.noLog': 'Транзакций пока нет. Продавайте предметы!',
   'bank.totalEarned': 'Всего заработано',
@@ -278,7 +280,7 @@ const ru: Partial<typeof en> = {
 
 export type TranslationKey = keyof typeof en;
 
-const dicts: Record<Lang, Partial<typeof en>> = { en, ru };
+const dicts: Record<Lang, Partial<Record<keyof typeof en, string>>> = { en, ru };
 
 export function translate(key: TranslationKey, lang: Lang): string {
   return (dicts[lang]?.[key] ?? dicts.en[key] ?? key) as string;

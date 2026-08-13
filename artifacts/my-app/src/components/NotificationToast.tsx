@@ -13,8 +13,8 @@ export function NotificationToast() {
 
   return (
     <>
-      {/* Desktop: fixed bottom-right stack */}
-      <div className="hidden md:flex fixed bottom-5 right-5 z-50 flex-col-reverse gap-1.5 w-72 pointer-events-none">
+      {/* Desktop: compact top-right stack */}
+      <div className="hidden md:flex fixed top-4 right-4 z-50 flex-col items-end gap-1.5 pointer-events-none">
         <AnimatePresence initial={false}>
           {visible.map(n => (
             <ToastItem key={n.id} n={n} onDismiss={dismiss} />
@@ -22,8 +22,8 @@ export function NotificationToast() {
         </AnimatePresence>
       </div>
 
-      {/* Mobile: fixed bottom-center, above bottom nav */}
-      <div className="md:hidden fixed bottom-[60px] inset-x-3 z-50 flex flex-col-reverse gap-1.5 pointer-events-none">
+      {/* Mobile: compact top-right stack, clear of the bottom navigation */}
+      <div className="md:hidden fixed top-3 right-3 z-50 flex flex-col items-end gap-1.5 max-w-[calc(100vw-1.5rem)] pointer-events-none">
         <AnimatePresence initial={false}>
           {visible.map(n => (
             <ToastItem key={n.id} n={n} onDismiss={dismiss} mobile />
@@ -57,7 +57,7 @@ function ToastItem({
   }, [n.id, isLevelUp, onDismiss]);
 
   const glassBase =
-    'pointer-events-auto flex items-center gap-2 px-3 py-2 rounded-xl border shadow-2xl backdrop-blur-xl transition-shadow';
+      'relative pointer-events-auto flex items-center gap-2 px-2.5 py-2 rounded-lg border shadow-2xl backdrop-blur-xl transition-shadow w-fit max-w-[18rem]';
 
   const colorClass = isLevelUp
     ? 'bg-amber-950/60 border-amber-400/25 text-amber-100 ring-1 ring-amber-400/20 shadow-amber-900/40'
@@ -77,7 +77,7 @@ function ToastItem({
       className={`${glassBase} ${colorClass}`}
     >
       {n.icon && <span className="text-base shrink-0 leading-none">{n.icon}</span>}
-      <p className={`flex-1 text-xs font-semibold leading-snug min-w-0 truncate ${isLevelUp ? 'font-bold' : ''}`}>
+        <p className={`text-xs font-semibold leading-snug min-w-0 max-w-[16rem] truncate ${isLevelUp ? 'font-bold' : ''}`}>
         {n.message}
       </p>
       <button
