@@ -130,9 +130,11 @@ export const useBankStore = create<BankStore>((set, get) => ({
     
     if (!item) return false;
 
+    // Определяем, можно ли стакать предмет
     const canStack = item.stackable && !item.equipSlot;
 
     if (canStack) {
+      // Стакающиеся предметы — ищем существующий слот
       const existingIdx = items.findIndex(s => s.itemId === itemId);
       
       if (existingIdx >= 0) {
@@ -146,6 +148,7 @@ export const useBankStore = create<BankStore>((set, get) => ({
       }
     }
 
+    // Нестакающиеся предметы или новый стакающийся предмет
     const usedSlots = items.filter(s => s.quantity > 0).length;
     const requiredSlots = canStack ? 1 : qty;
     
@@ -154,8 +157,10 @@ export const useBankStore = create<BankStore>((set, get) => ({
     }
 
     if (canStack) {
+      // Новый стакающийся предмет
       set({ items: [...items, { itemId, quantity: qty, locked: false, tab: 0 }] });
     } else {
+      // Нестакающиеся предметы — добавляем по одному
       const newItems = [...items];
       for (let i = 0; i < qty; i++) {
         newItems.push({ itemId, quantity: 1, locked: false, tab: 0 });
@@ -175,6 +180,7 @@ export const useBankStore = create<BankStore>((set, get) => ({
     const canStack = item.stackable && !item.equipSlot;
 
     if (canStack) {
+      // Стакающиеся предметы
       const idx = items.findIndex(s => s.itemId === itemId);
       if (idx < 0 || items[idx].quantity < qty) return false;
       
@@ -189,6 +195,7 @@ export const useBankStore = create<BankStore>((set, get) => ({
       
       set({ items: newItems });
     } else {
+      // Нестакающиеся предметы — удаляем по одному
       let remaining = qty;
       const newItems = [...items];
       
@@ -233,6 +240,10 @@ export const useBankStore = create<BankStore>((set, get) => ({
   sellItem: (itemId, qty) => {
     const item = getItem(itemId);
     if (!item || !item.canSell) return 0;
+    
+    // Проверяем, не заблокирован ли предмет
+    const slot = get().getSlot(itemId);
+    if (slot?.locked) return 0;
     
     const available = get().getItemQty(itemId);
     const sellQty = Math.min(qty, available);
