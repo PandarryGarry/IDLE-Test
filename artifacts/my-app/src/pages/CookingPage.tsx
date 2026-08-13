@@ -2,7 +2,7 @@ import React from 'react';
 import { SkillHeader } from '@/components/SkillHeader';
 import { ActionGrid } from '@/components/ActionGrid';
 import { ActionProgressBar } from '@/components/ActionProgressBar';
-import { COOKING_RECIPES } from '@/data/cooking';
+import { COOKING_RECIPES, COOKING_RECIPES_MAP } from '@/data/cooking';
 import { useGameStore } from '@/store/gameStore';
 import { useBankStore } from '@/store/bankStore';
 import { ItemIcon } from '@/components/ItemIcon';
@@ -12,8 +12,16 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 export function CookingPage() {
   const { t } = useTranslation();
-  const { startSkillAction, stopAction, activeSkill, activeActionId } = useGameStore();
-  const bankStore = useBankStore();
+  
+  // Селекторы: компонент перерисовывается ТОЛЬКО при изменении этих значений
+  const startSkillAction = useGameStore(s => s.startSkillAction);
+  const stopAction = useGameStore(s => s.stopAction);
+  const activeSkill = useGameStore(s => s.activeSkill);
+  const activeActionId = useGameStore(s => s.activeActionId);
+  
+  // Подписка только на items, а не на весь bankStore
+  const bankItems = useBankStore(s => s.items);
+  
   const playerLevel = usePlayerStore(s => s.skills.cooking?.level ?? 1);
 
   const handleActionClick = (actionId: string) => {
@@ -24,8 +32,14 @@ export function CookingPage() {
     }
   };
 
-  const activeRecipe = COOKING_RECIPES.find(r => r.id === activeActionId);
+  // O(1) lookup вместо COOKING_RECIPES.find() — быстрее
+  const activeRecipe = activeActionId ? COOKING_RECIPES_MAP[activeActionId] : undefined;
   const isTraining = activeSkill === 'cooking' && !!activeRecipe;
+
+  // Локальная функция для получения количества предмета из банка
+  const getItemQty = (itemId: string): number => {
+    return bankItems.find(s => s.itemId === itemId)?.quantity ?? 0;
+  };
 
   return (
     <div className="space-y-4">
@@ -70,7 +84,7 @@ export function CookingPage() {
         actions={COOKING_RECIPES}
         onActionClick={handleActionClick}
         renderExtra={(action) => {
-          const qty = bankStore.getItemQty(action.rawItemId);
+          const qty = getItemQty(action.rawItemId);
           const hasEnough = qty >= 1;
           const burnChance = calcBurnChance(playerLevel, action.levelRequired, action.burnChanceBase ?? 0.3);
           return (
