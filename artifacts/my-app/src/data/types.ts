@@ -60,6 +60,7 @@ export interface SkillState {
 export interface SkillAction {
   id: string;
   name: string;
+  description?: string;
   levelRequired: number;
   xp: number;
   masteryXp?: number;

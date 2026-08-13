@@ -6,12 +6,22 @@ import { getXpForLevel } from '@/gameEngine/xpTable';
 import { useGameStore } from '@/store/gameStore';
 import { formatNumber } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
+import type { TranslationKey } from '@/lib/i18n';
 
 interface SkillHeaderProps {
   skillId: SkillId;
   skillName: string;
   skillIcon: string;
 }
+
+const SKILL_DESCRIPTION_KEYS: Partial<Record<SkillId, TranslationKey>> = {
+  woodcutting: 'skill.woodcuttingDesc',
+  fishing: 'skill.fishingDesc',
+  mining: 'skill.miningDesc',
+  firemaking: 'skill.firemakingDesc',
+  cooking: 'skill.cookingDesc',
+  smithing: 'skill.smithingDesc',
+};
 
 export function SkillHeader({ skillId, skillName, skillIcon }: SkillHeaderProps) {
   const { t } = useTranslation();
@@ -25,6 +35,7 @@ export function SkillHeader({ skillId, skillName, skillIcon }: SkillHeaderProps)
   const xpIntoLevel = Math.max(0, xp - currentLevelXp);
   const xpRequiredForLevel = Math.max(1, nextLevelXp - currentLevelXp);
   const progress = level >= 99 ? 1 : xpIntoLevel / xpRequiredForLevel;
+  const descriptionKey = SKILL_DESCRIPTION_KEYS[skillId];
 
   const elapsedMs = Date.now() - sessionStartTime;
   const xpPerHour = elapsedMs > 0 ? (xpGainedSession / elapsedMs) * 3_600_000 : 0;
@@ -40,6 +51,11 @@ export function SkillHeader({ skillId, skillName, skillIcon }: SkillHeaderProps)
         {/* Name + XP */}
         <div className="flex-1 min-w-0">
           <h1 className="text-xl md:text-2xl font-black tracking-tight text-foreground leading-none mb-0.5">{skillName}</h1>
+          {descriptionKey && (
+            <p className="mb-1 line-clamp-1 text-xs leading-relaxed text-muted-foreground">
+              {t(descriptionKey)}
+            </p>
+          )}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-xs text-muted-foreground">
             <span>{t('ui.xp')}: <span className="text-amber-400 font-bold">{formatNumber(Math.floor(xp))}</span></span>
             {xpPerHour > 0 && (

@@ -1,10 +1,10 @@
 import type { FishingSpot } from './types';
 
 export const FISHING_SPOTS: FishingSpot[] = [
-  { id: 'shrimp_spot',    name: 'Shrimp',     levelRequired: 1,  xp: 10,   masteryXp: 2,  interval: 4000,  fishId: 'raw_shrimp'    },
-  { id: 'sardine_spot',   name: 'Sardine',    levelRequired: 5,  xp: 15,   masteryXp: 2,  interval: 5000,  fishId: 'raw_sardine'   },
-  { id: 'herring_spot',   name: 'Herring',    levelRequired: 10, xp: 20,   masteryXp: 3,  interval: 5000,  fishId: 'raw_herring'   },
-  { id: 'mackerel_spot',  name: 'Mackerel',   levelRequired: 16, xp: 25,   masteryXp: 3,  interval: 5000,  fishId: 'raw_mackerel'  },
+  { id: 'shrimp_spot',    name: 'Shrimp',     description: 'A calm spot for catching small shrimp.', levelRequired: 1,  xp: 10,   masteryXp: 2,  interval: 4000,  fishId: 'raw_shrimp'    },
+  { id: 'sardine_spot',   name: 'Sardine',    description: 'Common fish that cooks quickly.', levelRequired: 5,  xp: 15,   masteryXp: 2,  interval: 5000,  fishId: 'raw_sardine'   },
+  { id: 'herring_spot',   name: 'Herring',    description: 'A dependable catch for growing anglers.', levelRequired: 10, xp: 20,   masteryXp: 3,  interval: 5000,  fishId: 'raw_herring'   },
+  { id: 'mackerel_spot',  name: 'Mackerel',   description: 'A heartier fish worth taking to the kitchen.', levelRequired: 16, xp: 25,   masteryXp: 3,  interval: 5000,  fishId: 'raw_mackerel'  },
   { id: 'trout_spot',     name: 'Trout',      levelRequired: 25, xp: 50,   masteryXp: 4,  interval: 6000,  fishId: 'raw_trout'     },
   { id: 'salmon_spot',    name: 'Salmon',     levelRequired: 30, xp: 70,   masteryXp: 5,  interval: 6000,  fishId: 'raw_salmon'    },
   { id: 'lobster_spot',   name: 'Lobster',    levelRequired: 40, xp: 95,   masteryXp: 6,  interval: 7000,  fishId: 'raw_lobster'   },

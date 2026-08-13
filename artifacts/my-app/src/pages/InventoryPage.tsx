@@ -1,6 +1,7 @@
 import React from 'react';
 import { useBankStore } from '@/store/bankStore';
 import { ItemIcon } from '@/components/ItemIcon';
+import { ItemInfoPopover } from '@/components/ItemInfoPopover';
 import { getItem } from '@/data/items';
 import { Search } from 'lucide-react';
 import { Coins } from 'lucide-react';
@@ -122,47 +123,59 @@ export function InventoryPage() {
               const item = getItem(slot.itemId);
               if (!item) return null;
               return (
-                <div key={slot.itemId} className="group relative flex flex-col items-center">
-                  <ItemIcon
-                    itemId={slot.itemId}
-                    quantity={slot.quantity}
-                    size="lg"
-                    className="w-full h-auto aspect-square mb-1 cursor-pointer hover:border-primary hover:shadow-[0_0_12px_rgba(34,197,94,0.15)] transition-all"
-                  />
+                  <div key={slot.itemId} className="relative flex flex-col items-center">
+                    <ItemInfoPopover
+                      itemId={slot.itemId}
+                      quantity={slot.quantity}
+                      actions={
+                        <div className="flex flex-col gap-1">
+                          {item.equipSlot && (
+                            <button
+                              type="button"
+                              onClick={() => handleEquip(slot.itemId)}
+                              className="rounded-md px-2 py-1.5 text-left text-xs font-bold transition-colors hover:bg-accent hover:text-primary"
+                            >
+                              {t('inventory.equip')}
+                            </button>
+                          )}
+                          {item.canSell && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleSell(slot.itemId, 1)}
+                                className="rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-accent hover:text-amber-400"
+                              >
+                                {t('inventory.sell1')} ({formatNumber(item.sellValue)} GP)
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleSell(slot.itemId, slot.quantity)}
+                                className="rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-accent hover:text-amber-400"
+                              >
+                                {t('inventory.sellAll')} ({formatNumber(item.sellValue * slot.quantity)} GP)
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      }
+                    >
+                      <button
+                        type="button"
+                        aria-label={item.name}
+                        className="rounded-lg transition-all active:scale-95 hover:shadow-[0_0_12px_rgba(34,197,94,0.15)]"
+                      >
+                        <ItemIcon
+                          itemId={slot.itemId}
+                          quantity={slot.quantity}
+                          size="lg"
+                          showTooltip={false}
+                          className="aspect-square h-auto w-full cursor-pointer hover:border-primary"
+                        />
+                      </button>
+                    </ItemInfoPopover>
                   <span className="text-[10px] text-muted-foreground font-medium truncate w-full text-center px-0.5 block">
                     {item.name}
                   </span>
-
-                  {/* Hover context menu */}
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-popover/95 backdrop-blur-sm border border-border rounded-xl shadow-xl p-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-30 flex flex-col gap-0.5 min-w-[96px]">
-                    {item.equipSlot && (
-                      <button
-                        onClick={() => handleEquip(slot.itemId)}
-                        className="text-xs text-left px-2 py-1.5 hover:bg-accent hover:text-primary rounded-lg font-bold"
-                      >
-                        {t('inventory.equip')}
-                      </button>
-                    )}
-                    {item.canSell && (
-                      <>
-                        <button
-                          onClick={() => handleSell(slot.itemId, 1)}
-                          className="text-xs text-left px-2 py-1.5 hover:bg-accent hover:text-amber-400 rounded-lg"
-                        >
-                          {t('inventory.sell1')} ({formatNumber(item.sellValue ?? 0)} GP)
-                        </button>
-                        <button
-                          onClick={() => handleSell(slot.itemId, slot.quantity)}
-                          className="text-xs text-left px-2 py-1.5 hover:bg-accent hover:text-amber-400 rounded-lg"
-                        >
-                          {t('inventory.sellAll')} ({formatNumber((item.sellValue ?? 0) * slot.quantity)} GP)
-                        </button>
-                      </>
-                    )}
-                    <div className="text-[10px] text-muted-foreground px-2 py-1 border-t border-border mt-0.5">
-                      {formatNumber(item.sellValue)} GP {t('inventory.value').toLowerCase()}
-                    </div>
-                  </div>
                 </div>
               );
             })}

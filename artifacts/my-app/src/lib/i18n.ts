@@ -17,6 +17,12 @@ const en = {
   'skill.farming': 'Farming', 'skill.agility': 'Agility',
   'skill.thieving': 'Thieving', 'skill.summoning': 'Summoning',
   'skill.astrology': 'Astrology', 'skill.township': 'Township',
+  'skill.woodcuttingDesc': 'Gather logs for firemaking, crafting and trade.',
+  'skill.fishingDesc': 'Catch raw fish for cooking, food and profit.',
+  'skill.miningDesc': 'Extract ores and rare gems from the earth.',
+  'skill.firemakingDesc': 'Burn logs for experience and useful ash.',
+  'skill.cookingDesc': 'Turn raw ingredients into healing food.',
+  'skill.smithingDesc': 'Smelt bars and forge equipment.',
 
   // ── Skill groups ───────────────────────────────────────────────
   'group.combat': 'Combat', 'group.gathering': 'Gathering',
@@ -36,6 +42,7 @@ const en = {
   'ui.back': 'Back', 'ui.mastery': 'Mastery', 'ui.interval': 'Interval',
   'ui.rate': 'Rate', 'ui.experience': 'Experience', 'ui.level.required': 'Level required',
   'ui.per.action': 'per action', 'ui.per.hour': '/hr', 'ui.seconds.abbr': 's',
+  'ui.yields': 'Yields',
 
   // ── Dashboard ──────────────────────────────────────────────────
   'dashboard.welcome': 'Welcome Back', 'dashboard.subtitle': 'Continue your adventure.',
@@ -89,6 +96,9 @@ const en = {
   'inventory.sort.default': 'Default', 'inventory.sort.name': 'Name',
   'inventory.sort.value': 'Value', 'inventory.sort.quantity': 'Quantity',
   'inventory.value': 'Value', 'inventory.quantity': 'Quantity',
+  'inventory.type': 'Type', 'inventory.sellsFor': 'Sells for',
+  'inventory.heals': 'Heals', 'inventory.equipSlot': 'Equip slot',
+  'inventory.stats': 'Combat stats', 'inventory.noDescription': 'No description available yet.',
   'inventory.empty': 'Your inventory is empty. Start skilling to collect items!',
   'inventory.upgradeSlots': 'Upgrade Slots',
   'inventory.unequip': 'Unequip',
@@ -154,6 +164,12 @@ const ru: Partial<Record<keyof typeof en, string>> = {
   'skill.farming': 'Фермерство', 'skill.agility': 'Ловкость',
   'skill.thieving': 'Воровство', 'skill.summoning': 'Призыв',
   'skill.astrology': 'Астрология', 'skill.township': 'Управление городом',
+  'skill.woodcuttingDesc': 'Добывай брёвна для огня, ремесла и продажи.',
+  'skill.fishingDesc': 'Лови рыбу для готовки, еды и заработка.',
+  'skill.miningDesc': 'Добывай руду и редкие самоцветы.',
+  'skill.firemakingDesc': 'Сжигай брёвна, получая опыт и полезную золу.',
+  'skill.cookingDesc': 'Превращай сырые ингредиенты в лечебную еду.',
+  'skill.smithingDesc': 'Плавь слитки и создавай снаряжение.',
 
   // ── Skill groups ──────────────────────────────────────────────
   'group.combat': 'Бой', 'group.gathering': 'Добыча',
@@ -173,6 +189,7 @@ const ru: Partial<Record<keyof typeof en, string>> = {
   'ui.back': 'Назад', 'ui.mastery': 'Мастерство', 'ui.interval': 'Интервал',
   'ui.rate': 'Темп', 'ui.experience': 'Опыт', 'ui.level.required': 'Нужен уровень',
   'ui.per.action': 'за действие', 'ui.per.hour': '/ч',
+  'ui.yields': 'Добыча',
   'ui.seconds.abbr': 'с',
 
   // ── Dashboard ─────────────────────────────────────────────────
@@ -227,6 +244,9 @@ const ru: Partial<Record<keyof typeof en, string>> = {
   'inventory.sort.default': 'По умолчанию', 'inventory.sort.name': 'По имени',
   'inventory.sort.value': 'По цене', 'inventory.sort.quantity': 'По количеству',
   'inventory.value': 'Цена', 'inventory.quantity': 'Количество',
+  'inventory.type': 'Тип', 'inventory.sellsFor': 'Продажа',
+  'inventory.heals': 'Лечение', 'inventory.equipSlot': 'Слот',
+  'inventory.stats': 'Боевые характеристики', 'inventory.noDescription': 'Описание пока не добавлено.',
   'inventory.empty': 'Инвентарь пуст. Начни прокачивать навыки!',
   'inventory.upgradeSlots': 'Расширить инвентарь',
   'inventory.unequip': 'Снять',

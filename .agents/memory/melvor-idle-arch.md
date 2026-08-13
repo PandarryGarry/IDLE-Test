@@ -27,6 +27,7 @@ description: Key architectural decisions, patterns, and gotchas for the Melvor I
 ## Notifications
 - `notificationsStore`: auto-dismiss all types (levelup: 6s, others: 4s)
 - `NotificationToast`: glassmorphism `bg-black/50 backdrop-blur-xl`, MAX_VISIBLE=4, `flex-col-reverse` so newest at bottom, progress bar via `toast-shrink` CSS keyframe in index.css
+- `ItemInfoPopover` is the shared click-friendly item detail surface; `ItemIcon` supports `showTooltip={false}` for nested popovers
 
 ## i18n
 - `src/lib/i18n.ts`: flat key→string, `Partial<typeof en>` for ru, falls back to en
@@ -46,3 +47,4 @@ description: Key architectural decisions, patterns, and gotchas for the Melvor I
 ## CSS keyframes
 - `toast-shrink` keyframe in `src/index.css` for notification progress bar animation
 - Combat stop preserves the combat log for review; CombatPage renders chronological entries, pauses auto-follow when scrolled up, and offers a latest-entry button
+- `SkillAction.description` is optional metadata rendered in `ActionGrid`; action output IDs are inferred from typed action fields and open `ItemInfoPopover`

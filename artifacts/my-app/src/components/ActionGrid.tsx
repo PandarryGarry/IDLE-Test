@@ -5,6 +5,9 @@ import { SkillId } from '@/data/types';
 import { formatNumber, xpPerHour } from '@/lib/utils';
 import { getLevelForXp, getLevelProgress } from '@/gameEngine/xpTable';
 import { useTranslation } from '@/hooks/useTranslation';
+import { getItem } from '@/data/items';
+import { ItemIcon } from '@/components/ItemIcon';
+import { ItemInfoPopover } from '@/components/ItemInfoPopover';
 
 interface ActionGridProps {
   skillId: SkillId;
@@ -28,6 +31,8 @@ export function ActionGrid({ skillId, actions, onActionClick, renderExtra }: Act
         const masteryXp = mastery[action.id] ?? 0;
         const masteryLevel = getLevelForXp(masteryXp);
         const masteryProgress = getLevelProgress(masteryXp);
+        const outputItemId = action.logId ?? action.oreId ?? action.fishId ?? action.cookedItemId ?? action.outputItemId;
+        const outputItem = outputItemId ? getItem(outputItemId) : undefined;
 
         return (
           <div
@@ -69,6 +74,31 @@ export function ActionGrid({ skillId, actions, onActionClick, renderExtra }: Act
 
             {/* Stats */}
             <div className="space-y-1.5 text-sm text-muted-foreground flex-grow">
+              {outputItem && (
+                <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-2">
+                  <span>{t('ui.yields')}:</span>
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <ItemInfoPopover itemId={outputItem.id}>
+                      <button
+                        type="button"
+                        aria-label={outputItem.name}
+                        onClick={(event) => event.stopPropagation()}
+                        className="rounded-md transition-transform active:scale-95"
+                      >
+                        <ItemIcon itemId={outputItem.id} size="sm" showTooltip={false} />
+                      </button>
+                    </ItemInfoPopover>
+                    <span className="truncate text-xs font-bold text-foreground">
+                      {outputItem.name}
+                    </span>
+                  </div>
+                </div>
+              )}
+              {action.description && (
+                <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground/80">
+                  {action.description}
+                </p>
+              )}
               <div className="flex justify-between gap-2">
                 <span className="truncate">{t('ui.experience')}:</span>
                 <span className="text-amber-400 font-mono font-bold shrink-0">{formatNumber(action.xp)}</span>
