@@ -2,13 +2,19 @@ import React from 'react';
 import { SkillHeader } from '@/components/SkillHeader';
 import { ActionGrid } from '@/components/ActionGrid';
 import { ActionProgressBar } from '@/components/ActionProgressBar';
-import { FISHING_SPOTS } from '@/data/fishing';
+import { FISHING_SPOTS, FISHING_SPOTS_MAP } from '@/data/fishing';
 import { useGameStore } from '@/store/gameStore';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export function FishingPage() {
   const { t } = useTranslation();
-  const { startSkillAction, stopAction, activeSkill, activeActionId } = useGameStore();
+  
+  // Селекторы: компонент перерисовывается ТОЛЬКО при изменении этих значений,
+  // а не при каждом тике gameStore (actionProgress обновляется 60 раз/сек)
+  const startSkillAction = useGameStore(s => s.startSkillAction);
+  const stopAction = useGameStore(s => s.stopAction);
+  const activeSkill = useGameStore(s => s.activeSkill);
+  const activeActionId = useGameStore(s => s.activeActionId);
 
   const handleActionClick = (actionId: string) => {
     if (activeSkill === 'fishing' && activeActionId === actionId) {
@@ -18,7 +24,8 @@ export function FishingPage() {
     }
   };
 
-  const activeSpot = FISHING_SPOTS.find(s => s.id === activeActionId);
+  // O(1) lookup вместо FISHING_SPOTS.find() — быстрее
+  const activeSpot = activeActionId ? FISHING_SPOTS_MAP[activeActionId] : undefined;
   const isTraining = activeSkill === 'fishing' && !!activeSpot;
 
   return (
