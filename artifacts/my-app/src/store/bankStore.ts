@@ -53,8 +53,8 @@ export const useBankStore = create<BankStore>((set, get) => ({
   activeCategory: 'all',
 
   getItemQty: (itemId) => {
-    const slots = get().items.filter(s => s.itemId === itemId);
-    return slots.reduce((sum, s) => sum + s.quantity, 0);
+    const slot = get().items.find(s => s.itemId === itemId);
+    return slot?.quantity ?? 0;
   },
 
   hasItem: (itemId, qty = 1) => get().getItemQty(itemId) >= qty,
@@ -130,87 +130,37 @@ export const useBankStore = create<BankStore>((set, get) => ({
     
     if (!item) return false;
 
-    // Определяем, можно ли стакать предмет
-    const canStack = item.stackable && !item.equipSlot;
+    // Все предметы стакаются — ищем существующий слот
+    const existingIdx = items.findIndex(s => s.itemId === itemId);
 
-    if (canStack) {
-      // Стакающиеся предметы — ищем существующий слот
-      const existingIdx = items.findIndex(s => s.itemId === itemId);
-      
-      if (existingIdx >= 0) {
-        const newItems = [...items];
-        newItems[existingIdx] = { 
-          ...newItems[existingIdx], 
-          quantity: newItems[existingIdx].quantity + qty 
-        };
-        set({ items: newItems });
-        return true;
-      }
-    }
-
-    // Нестакающиеся предметы или новый стакающийся предмет
-    const usedSlots = items.filter(s => s.quantity > 0).length;
-    const requiredSlots = canStack ? 1 : qty;
-    
-    if (usedSlots + requiredSlots > maxSlots) {
-      return false;
-    }
-
-    if (canStack) {
-      // Новый стакающийся предмет
-      set({ items: [...items, { itemId, quantity: qty, locked: false, tab: 0 }] });
-    } else {
-      // Нестакающиеся предметы — добавляем по одному
+    if (existingIdx >= 0) {
+      // Item exists — just increase quantity
       const newItems = [...items];
-      for (let i = 0; i < qty; i++) {
-        newItems.push({ itemId, quantity: 1, locked: false, tab: 0 });
-      }
+      newItems[existingIdx] = { ...newItems[existingIdx], quantity: newItems[existingIdx].quantity + qty };
       set({ items: newItems });
+      return true;
     }
-    
+
+    // New item — check slot availability
+    const usedSlots = items.filter(s => s.quantity > 0).length;
+    if (usedSlots >= maxSlots) return false;
+
+    set({ items: [...items, { itemId, quantity: qty, locked: false, tab: 0 }] });
     return true;
   },
 
   removeItem: (itemId, qty) => {
     const { items } = get();
-    const item = getItem(itemId);
-    
-    if (!item) return false;
-
-    const canStack = item.stackable && !item.equipSlot;
-
-    if (canStack) {
-      // Стакающиеся предметы
-      const idx = items.findIndex(s => s.itemId === itemId);
-      if (idx < 0 || items[idx].quantity < qty) return false;
-      
-      const newItems = [...items];
-      const newQty = newItems[idx].quantity - qty;
-      
-      if (newQty <= 0) {
-        newItems.splice(idx, 1);
-      } else {
-        newItems[idx] = { ...newItems[idx], quantity: newQty };
-      }
-      
-      set({ items: newItems });
+    const idx = items.findIndex(s => s.itemId === itemId);
+    if (idx < 0 || items[idx].quantity < qty) return false;
+    const newItems = [...items];
+    const newQty = newItems[idx].quantity - qty;
+    if (newQty <= 0) {
+      newItems.splice(idx, 1);
     } else {
-      // Нестакающиеся предметы — удаляем по одному
-      let remaining = qty;
-      const newItems = [...items];
-      
-      for (let i = newItems.length - 1; i >= 0 && remaining > 0; i--) {
-        if (newItems[i].itemId === itemId) {
-          newItems.splice(i, 1);
-          remaining--;
-        }
-      }
-      
-      if (remaining > 0) return false;
-      
-      set({ items: newItems });
+      newItems[idx] = { ...newItems[idx], quantity: newQty };
     }
-    
+    set({ items: newItems });
     return true;
   },
 
@@ -289,4 +239,3 @@ export const useBankStore = create<BankStore>((set, get) => ({
     activeCategory: 'all'
   }),
 }));
-
