@@ -17,30 +17,38 @@ interface GpTransaction {
 
 export function BankPage() {
   const { t } = useTranslation();
-  const bankStore = useBankStore();
-  const notify = useNotificationsStore();
+  
+  // Точечные селекторы: компонент перерисовывается только при изменении этих значений
+  const gp = useBankStore(s => s.gp);
+  const maxSlots = useBankStore(s => s.maxSlots);
+  const items = useBankStore(s => s.items);
+  const spendGp = useBankStore(s => s.spendGp);
+  const upgradeSlots = useBankStore(s => s.upgradeSlots);
+  
+  const notifyInfo = useNotificationsStore(s => s.notifyInfo);
+  
   const [log, setLog] = useState<GpTransaction[]>([]);
 
-  const totalSlots = bankStore.maxSlots;
-  const usedSlots  = bankStore.items.filter(i => i.quantity > 0).length;
+  const totalSlots = maxSlots;
+  const usedSlots  = items.filter(i => i.quantity > 0).length;
   const slotCost   = SLOT_UPGRADE_COST * Math.floor(totalSlots / 5); // scales with upgrades
 
   const handleBuySlots = () => {
-    if (bankStore.gp < slotCost) {
-      notify.notifyInfo(t('bank.notEnoughGp'));
+    if (gp < slotCost) {
+      notifyInfo(t('bank.notEnoughGp'));
       return;
     }
-    const ok = bankStore.spendGp(slotCost);
-    if (!ok) { notify.notifyInfo(t('bank.notEnoughGp')); return; }
+    const ok = spendGp(slotCost);
+    if (!ok) { notifyInfo(t('bank.notEnoughGp')); return; }
     // upgradeSlots adds SLOTS_PER_UPGRADE (12) by default; call it once
-    bankStore.upgradeSlots();
+    upgradeSlots();
     setLog(prev => [{
       id: Date.now().toString(),
       amount: -slotCost,
       desc: t('bank.upgradeSlots'),
       ts: Date.now(),
     }, ...prev].slice(0, 30));
-    notify.notifyInfo(t('bank.slotsUpgraded'));
+    notifyInfo(t('bank.slotsUpgraded'));
   };
 
   return (
@@ -69,7 +77,7 @@ export function BankPage() {
         {/* GP Balance big display */}
         <div className="bg-background rounded-xl p-5 border border-border text-center mb-4">
           <div className="text-4xl md:text-5xl font-black font-mono text-amber-400 drop-shadow-[0_0_16px_rgba(251,191,36,0.3)]">
-            {formatNumber(bankStore.gp)}
+            {formatNumber(gp)}
           </div>
           <div className="text-sm text-amber-500/70 font-bold mt-1">{t('inventory.gp')}</div>
         </div>
@@ -85,7 +93,7 @@ export function BankPage() {
           <StatCard
             icon={<ShoppingBag className="w-4 h-4 text-emerald-400" />}
             label={t('inventory.quantity')}
-            value={`${bankStore.items.reduce((acc, s) => acc + s.quantity, 0)}`}
+            value={`${items.reduce((acc, s) => acc + s.quantity, 0)}`}
             sub="items"
           />
           <StatCard
@@ -122,7 +130,7 @@ export function BankPage() {
 
           <button
             onClick={handleBuySlots}
-            disabled={bankStore.gp < slotCost}
+            disabled={gp < slotCost}
             className="shrink-0 flex items-center gap-2 px-5 py-3 bg-primary text-primary-foreground font-bold rounded-xl text-sm hover:brightness-110 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_16px_rgba(34,197,94,0.2)]"
           >
             <Package className="w-4 h-4" />
