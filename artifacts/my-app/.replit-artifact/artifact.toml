@@ -1,6 +1,7 @@
 kind = "web"
 previewPath = "/"
-title = "My App"
+title = "Melvor Idle Clone"
+description = "A responsive idle game inspired by Melvor Idle with skill progression, combat, inventory, banking, offline progress, and local save management."
 version = "1.0.0"
 id = "artifacts/my-app"
 router = "path"
