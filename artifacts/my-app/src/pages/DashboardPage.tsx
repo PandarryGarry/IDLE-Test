@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { usePlayerStore } from '@/store/playerStore';
 import { useGameStore } from '@/store/gameStore';
 import type { SkillId } from '@/data/types';
@@ -59,7 +59,8 @@ function CircularProgress({ progress, level, icon, isActive }: {
   );
 }
 
-function SkillCard({ skillId }: { skillId: string }) {
+// Обёрнут в memo для избежания лишних ре-рендеров
+const SkillCard = memo(function SkillCard({ skillId }: { skillId: string }) {
   const state = usePlayerStore(s => s.skills[skillId as SkillId]);
   const activeSkill = useGameStore(s => s.activeSkill);
   if (!state) return null;
@@ -80,7 +81,7 @@ function SkillCard({ skillId }: { skillId: string }) {
       </div>
     </Link>
   );
-}
+});
 
 export function DashboardPage() {
   const { t } = useTranslation();
