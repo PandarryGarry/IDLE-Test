@@ -12,22 +12,35 @@ import { Link } from 'wouter';
 
 export function InventoryPage() {
   const { t } = useTranslation();
-  const bankStore = useBankStore();
-  const playerStore = usePlayerStore();
+  
+  // Точечные селекторы: компонент перерисовывается только при изменении этих значений
+  const getFilteredItems = useBankStore(s => s.getFilteredItems);
+  const items = useBankStore(s => s.items);
+  const gp = useBankStore(s => s.gp);
+  const maxSlots = useBankStore(s => s.maxSlots);
+  const searchQuery = useBankStore(s => s.searchQuery);
+  const setSearch = useBankStore(s => s.setSearch);
+  const sortMode = useBankStore(s => s.sortMode);
+  const setSort = useBankStore(s => s.setSort);
+  const sellItem = useBankStore(s => s.sellItem);
+  const removeItem = useBankStore(s => s.removeItem);
+  const addItem = useBankStore(s => s.addItem);
+  
+  const equipItem = usePlayerStore(s => s.equipItem);
 
-  const filteredItems = bankStore.getFilteredItems();
-  const totalItems = bankStore.items.filter(i => i.quantity > 0).length;
+  const filteredItems = getFilteredItems();
+  const totalItems = items.filter(i => i.quantity > 0).length;
 
   const handleSell = (itemId: string, qty: number) => {
-    bankStore.sellItem(itemId, qty);
+    sellItem(itemId, qty);
   };
 
   const handleEquip = (itemId: string) => {
     const item = getItem(itemId);
     if (item && item.equipSlot) {
-      const oldEquip = playerStore.equipItem(itemId, item.equipSlot);
-      bankStore.removeItem(itemId, 1);
-      if (oldEquip) bankStore.addItem(oldEquip, 1);
+      const oldEquip = equipItem(itemId, item.equipSlot);
+      removeItem(itemId, 1);
+      if (oldEquip) addItem(oldEquip, 1);
     }
   };
 
@@ -38,7 +51,7 @@ export function InventoryPage() {
     { key: 'quantity', label: t('inventory.sort.quantity') },
   ] as const;
 
-  const isFull = totalItems >= bankStore.maxSlots;
+  const isFull = totalItems >= maxSlots;
 
   return (
     <div className="space-y-4">
@@ -60,7 +73,7 @@ export function InventoryPage() {
               </Link>
             </div>
             <div className="text-2xl font-black text-amber-400 font-mono leading-tight drop-shadow-[0_0_8px_rgba(251,191,36,0.25)]">
-              {formatNumber(bankStore.gp)} <span className="text-sm text-amber-500/70">{t('inventory.gp')}</span>
+              {formatNumber(gp)} <span className="text-sm text-amber-500/70">{t('inventory.gp')}</span>
             </div>
           </div>
         </div>
@@ -71,7 +84,7 @@ export function InventoryPage() {
           <div className="text-[11px] text-muted-foreground uppercase tracking-widest font-bold mb-0.5">{t('inventory.slots')}</div>
           <div className="text-xl font-black font-mono">
             <span className={isFull ? 'text-destructive' : 'text-foreground'}>{totalItems}</span>
-            <span className="text-muted-foreground"> / {bankStore.maxSlots}</span>
+            <span className="text-muted-foreground"> / {maxSlots}</span>
           </div>
           {isFull && (
             <p className="text-[10px] text-destructive font-bold mt-0.5">FULL</p>
@@ -86,8 +99,8 @@ export function InventoryPage() {
           <input
             type="text"
             placeholder={t('ui.search') + '...'}
-            value={bankStore.searchQuery}
-            onChange={(e) => bankStore.setSearch(e.target.value)}
+            value={searchQuery}
+            onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2.5 bg-card border border-border rounded-xl focus:outline-none focus:border-primary transition-colors text-sm"
           />
         </div>
@@ -97,9 +110,9 @@ export function InventoryPage() {
           {SORT_MODES.map(({ key, label }) => (
             <button
               key={key}
-              onClick={() => bankStore.setSort(key as any)}
+              onClick={() => setSort(key as any)}
               className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
-                bankStore.sortMode === key
+                sortMode === key
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               }`}
