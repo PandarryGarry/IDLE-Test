@@ -42,8 +42,8 @@ export interface PlayerStore {
 
   addXp: (skillId: SkillId, amount: number) => { leveledUp: boolean; newLevel: number };
   addMasteryXp: (skillId: SkillId, actionId: string, amount: number) => void;
-  equipItem: (itemId: string, slot: EquipSlot) => string | null; // returns previous item
-  unequipItem: (slot: EquipSlot) => string | null; // returns unequipped item
+  equipItem: (itemId: string, slot: EquipSlot) => string | null;
+  unequipItem: (slot: EquipSlot) => string | null;
   drainPrayerPoints: (amount: number) => void;
   restorePrayerPoints: (amount: number) => void;
   setSkillXp: (skillId: SkillId, xp: number) => void;
@@ -54,7 +54,7 @@ export interface PlayerStore {
 }
 
 function computeMaxPrayerPoints(prayerLevel: number): number {
-  return prayerLevel; // 1 PP per prayer level
+  return prayerLevel;
 }
 
 function computeCombatLevel(skills: Record<SkillId, SkillState>): number {
@@ -120,7 +120,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     // first — but only proceed if there's space (or the bank already has the item).
     if (previous !== null) {
       const hasStack = bankStore.getItemQty(previous) > 0;
-      const hasSlot = bankStore.items.filter((s: { quantity: number }) => s.quantity > 0).length < bankStore.maxSlots;
+      const hasSlot = bankStore.items.filter(s => s.quantity > 0).length < bankStore.maxSlots;
       if (!hasStack && !hasSlot) {
         // No space to return the displaced item — abort silently
         return previous;
