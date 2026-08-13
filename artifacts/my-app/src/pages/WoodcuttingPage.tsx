@@ -1,14 +1,19 @@
-import React from 'react';
-import { SkillHeader } from '@/components/SkillHeader';
-import { ActionGrid } from '@/components/ActionGrid';
-import { ActionProgressBar } from '@/components/ActionProgressBar';
-import { TREES } from '@/data/woodcutting';
 import { useGameStore } from '@/store/gameStore';
+import { TREES, WOODCUTTING_TREES_MAP } from '@/data/woodcutting';
+import { SkillHeader } from '@/components/SkillHeader';
+import { ActionProgressBar } from '@/components/ActionProgressBar';
+import { ActionGrid } from '@/components/ActionGrid';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export function WoodcuttingPage() {
   const { t } = useTranslation();
-  const { startSkillAction, stopAction, activeSkill, activeActionId } = useGameStore();
+  
+  // Селекторы: компонент перерисовывается ТОЛЬКО при изменении этих значений,
+  // а не при каждом тике gameStore (actionProgress обновляется 60 раз/сек)
+  const startSkillAction = useGameStore(s => s.startSkillAction);
+  const stopAction = useGameStore(s => s.stopAction);
+  const activeSkill = useGameStore(s => s.activeSkill);
+  const activeActionId = useGameStore(s => s.activeActionId);
 
   const handleActionClick = (actionId: string) => {
     if (activeSkill === 'woodcutting' && activeActionId === actionId) {
@@ -18,7 +23,8 @@ export function WoodcuttingPage() {
     }
   };
 
-  const activeTree = TREES.find(t => t.id === activeActionId);
+  // O(1) lookup вместо TREES.find() — быстрее
+  const activeTree = activeActionId ? WOODCUTTING_TREES_MAP[activeActionId] : undefined;
   const isTraining = activeSkill === 'woodcutting' && !!activeTree;
 
   return (
