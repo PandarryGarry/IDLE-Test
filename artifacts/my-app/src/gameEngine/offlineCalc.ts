@@ -8,18 +8,15 @@
 //   - All skills: capped at MAX_OFFLINE_MS.
 
 import type { SkillId } from '../data/types';
-import { WOODCUTTING_TREES_MAP } from '../data/woodcutting';
-import { MINING_ROCKS_MAP } from '../data/mining';
-import { FISHING_SPOTS_MAP } from '../data/fishing';
-import { COOKING_RECIPES_MAP } from '../data/cooking';
-import { SMITHING_MAP } from '../data/smithing';
-import { FIREMAKING_MAP } from '../data/firemaking';
 import { usePlayerStore } from '../store/playerStore';
 import { useBankStore } from '../store/bankStore';
 import { useNotificationsStore } from '../store/notificationsStore';
-
-/** Gathering skills give both XP and items offline */
-const GATHERING_SKILLS = new Set<SkillId>(['woodcutting', 'mining', 'fishing']);
+import {
+  getActionInterval,
+  getXpPerAction,
+  isGatheringSkill,
+  getGatheringOutputItem,
+} from './skillRegistry';
 
 const MAX_OFFLINE_MS = 24 * 60 * 60 * 1000; // 24 hours cap
 
@@ -29,50 +26,6 @@ export interface OfflineResult {
   xpGained: number;
   itemsGained: { itemId: string; quantity: number }[];
   levelUps: { skillId: SkillId; newLevel: number }[];
-}
-
-function getActionInterval(skillId: SkillId, actionId: string): number {
-  switch (skillId) {
-    case 'woodcutting': return WOODCUTTING_TREES_MAP[actionId]?.interval ?? 3000;
-    case 'mining':      return MINING_ROCKS_MAP[actionId]?.interval ?? 3000;
-    case 'fishing':     return FISHING_SPOTS_MAP[actionId]?.interval ?? 7000;
-    case 'cooking':     return COOKING_RECIPES_MAP[actionId]?.interval ?? 3000;
-    case 'smithing':    return SMITHING_MAP[actionId]?.interval ?? 3000;
-    case 'firemaking':  return FIREMAKING_MAP[actionId]?.interval ?? 3000;
-    default: return 3000;
-  }
-}
-
-function getActionXp(skillId: SkillId, actionId: string): number {
-  switch (skillId) {
-    case 'woodcutting': return WOODCUTTING_TREES_MAP[actionId]?.xp ?? 0;
-    case 'mining':      return MINING_ROCKS_MAP[actionId]?.xp ?? 0;
-    case 'fishing':     return FISHING_SPOTS_MAP[actionId]?.xp ?? 0;
-    case 'cooking':     return COOKING_RECIPES_MAP[actionId]?.xp ?? 0;
-    case 'smithing':    return SMITHING_MAP[actionId]?.xp ?? 0;
-    case 'firemaking':  return FIREMAKING_MAP[actionId]?.xp ?? 0;
-    default: return 0;
-  }
-}
-
-/** Returns the primary output item for gathering skills only. Returns null for artisan skills. */
-function getGatheringItem(skillId: SkillId, actionId: string): { itemId: string; qty: number } | null {
-  if (!GATHERING_SKILLS.has(skillId)) return null;
-  switch (skillId) {
-    case 'woodcutting': {
-      const t = WOODCUTTING_TREES_MAP[actionId];
-      return t ? { itemId: t.logId, qty: 1 } : null;
-    }
-    case 'mining': {
-      const r = MINING_ROCKS_MAP[actionId];
-      return r ? { itemId: r.oreId, qty: 1 } : null;
-    }
-    case 'fishing': {
-      const s = FISHING_SPOTS_MAP[actionId];
-      return s ? { itemId: s.fishId, qty: 1 } : null;
-    }
-    default: return null;
-  }
 }
 
 export function calculateOfflineProgress(
@@ -89,8 +42,7 @@ export function calculateOfflineProgress(
   }
 
   const interval = getActionInterval(skillId, actionId);
-  const xpPerAction = getActionXp(skillId, actionId);
-  const itemPerAction = getGatheringItem(skillId, actionId); // null for artisan skills
+  const xpPerAction = getXpPerAction(skillId, actionId);
   const totalActions = Math.floor(offlineMs / interval);
 
   if (totalActions === 0) {
@@ -112,11 +64,14 @@ export function calculateOfflineProgress(
   }
 
   // Apply items — gathering only, respecting bank capacity
-  if (itemPerAction && itemPerAction.qty > 0) {
-    const totalQty = itemPerAction.qty * totalActions;
-    const added = bankStore.addItem(itemPerAction.itemId, totalQty);
-    if (added) {
-      itemsGained.push({ itemId: itemPerAction.itemId, quantity: totalQty });
+  if (isGatheringSkill(skillId)) {
+    const itemPerAction = getGatheringOutputItem(skillId, actionId);
+    if (itemPerAction && itemPerAction.qty > 0) {
+      const totalQty = itemPerAction.qty * totalActions;
+      const added = bankStore.addItem(itemPerAction.itemId, totalQty);
+      if (added) {
+        itemsGained.push({ itemId: itemPerAction.itemId, quantity: totalQty });
+      }
     }
   }
 
