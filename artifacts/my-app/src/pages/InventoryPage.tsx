@@ -13,7 +13,6 @@ import { Link } from 'wouter';
 export function InventoryPage() {
   const { t } = useTranslation();
   
-  // Точечные селекторы: компонент перерисовывается только при изменении этих значений
   const getFilteredItems = useBankStore(s => s.getFilteredItems);
   const items = useBankStore(s => s.items);
   const gp = useBankStore(s => s.gp);
@@ -25,6 +24,8 @@ export function InventoryPage() {
   const sellItem = useBankStore(s => s.sellItem);
   const removeItem = useBankStore(s => s.removeItem);
   const addItem = useBankStore(s => s.addItem);
+  const activeCategory = useBankStore(s => s.activeCategory);
+  const setCategory = useBankStore(s => s.setCategory);
   
   const equipItem = usePlayerStore(s => s.equipItem);
 
@@ -49,6 +50,14 @@ export function InventoryPage() {
     { key: 'name',     label: t('inventory.sort.name') },
     { key: 'value',    label: t('inventory.sort.value') },
     { key: 'quantity', label: t('inventory.sort.quantity') },
+  ] as const;
+
+  const CATEGORIES = [
+    { key: 'all',       label: t('inventory.category.all'),       icon: '📦' },
+    { key: 'equipment', label: t('inventory.category.equipment'), icon: '⚔️' },
+    { key: 'resources', label: t('inventory.category.resources'), icon: '🪵' },
+    { key: 'food',      label: t('inventory.category.food'),      icon: '🍖' },
+    { key: 'misc',      label: t('inventory.category.misc'),      icon: '✨' },
   ] as const;
 
   const isFull = totalItems >= maxSlots;
@@ -90,6 +99,24 @@ export function InventoryPage() {
             <p className="text-[10px] text-destructive font-bold mt-0.5">FULL</p>
           )}
         </div>
+      </div>
+
+      {/* Category Filters */}
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        {CATEGORIES.map(({ key, label, icon }) => (
+          <button
+            key={key}
+            onClick={() => setCategory(key as any)}
+            className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all ${
+              activeCategory === key
+                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25'
+                : 'bg-card border border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
+            }`}
+          >
+            <span className="text-lg">{icon}</span>
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Controls */}
