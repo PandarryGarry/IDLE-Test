@@ -2,7 +2,7 @@ import React from 'react';
 import { SkillHeader } from '@/components/SkillHeader';
 import { ActionGrid } from '@/components/ActionGrid';
 import { ActionProgressBar } from '@/components/ActionProgressBar';
-import { FIREMAKING_LOGS } from '@/data/firemaking';
+import { FIREMAKING_LOGS, FIREMAKING_MAP } from '@/data/firemaking';
 import { useGameStore } from '@/store/gameStore';
 import { useBankStore } from '@/store/bankStore';
 import { ItemIcon } from '@/components/ItemIcon';
@@ -10,8 +10,15 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 export function FiremakingPage() {
   const { t } = useTranslation();
-  const { startSkillAction, stopAction, activeSkill, activeActionId } = useGameStore();
-  const bankStore = useBankStore();
+  
+  // Селекторы: компонент перерисовывается ТОЛЬКО при изменении этих значений
+  const startSkillAction = useGameStore(s => s.startSkillAction);
+  const stopAction = useGameStore(s => s.stopAction);
+  const activeSkill = useGameStore(s => s.activeSkill);
+  const activeActionId = useGameStore(s => s.activeActionId);
+  
+  // Подписка только на items, а не на весь bankStore
+  const bankItems = useBankStore(s => s.items);
 
   const handleActionClick = (actionId: string) => {
     if (activeSkill === 'firemaking' && activeActionId === actionId) {
@@ -21,8 +28,14 @@ export function FiremakingPage() {
     }
   };
 
-  const activeLog = FIREMAKING_LOGS.find(l => l.id === activeActionId);
+  // O(1) lookup вместо FIREMAKING_LOGS.find() — быстрее
+  const activeLog = activeActionId ? FIREMAKING_MAP[activeActionId] : undefined;
   const isTraining = activeSkill === 'firemaking' && !!activeLog;
+
+  // Локальная функция для получения количества предмета из банка
+  const getItemQty = (itemId: string): number => {
+    return bankItems.find(s => s.itemId === itemId)?.quantity ?? 0;
+  };
 
   return (
     <div className="space-y-4">
@@ -67,7 +80,7 @@ export function FiremakingPage() {
         actions={FIREMAKING_LOGS}
         onActionClick={handleActionClick}
         renderExtra={(action) => {
-          const qty = bankStore.getItemQty(action.logId);
+          const qty = getItemQty(action.logId);
           const hasEnough = qty >= 1;
           return (
             <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
