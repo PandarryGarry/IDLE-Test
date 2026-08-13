@@ -290,3 +290,4 @@ export const useGameStore = create<GameStore>((set, get) => ({
     isRunning: false, isPaused: false, xpGainedThisSession: {},
   }),
 }));
+
