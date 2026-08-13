@@ -289,3 +289,4 @@ export const useBankStore = create<BankStore>((set, get) => ({
     activeCategory: 'all'
   }),
 }));
+
