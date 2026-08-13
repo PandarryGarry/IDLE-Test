@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { SkillId, SkillState, Equipment, EquipSlot } from '../data/types';
 import { getLevelForXp, getXpForLevel, XP_TABLE, MAX_LEVEL } from '../gameEngine/xpTable';
 import { calcCombatLevel } from '../gameEngine/formulas';
+import { useBankStore } from './bankStore';
 
 const ALL_SKILL_IDS: SkillId[] = [
   'attack', 'strength', 'defence', 'hitpoints',
@@ -111,8 +112,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   },
 
   equipItem: (itemId, slot) => {
-    // Imported lazily to avoid circular deps at module load time
-    const { useBankStore } = require('./bankStore');
     const bankStore = useBankStore.getState();
     const { equipment } = get();
     const previous = equipment[slot];
@@ -133,7 +132,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   },
 
   unequipItem: (slot) => {
-    const { useBankStore } = require('./bankStore');
     const bankStore = useBankStore.getState();
     const { equipment } = get();
     const previous = equipment[slot];
