@@ -3,8 +3,7 @@ import { useBankStore } from '@/store/bankStore';
 import { ItemIcon } from '@/components/ItemIcon';
 import { ItemInfoPopover } from '@/components/ItemInfoPopover';
 import { getItem } from '@/data/items';
-import { Search } from 'lucide-react';
-import { Coins } from 'lucide-react';
+import { Search, Coins, Lock } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 import { usePlayerStore } from '@/store/playerStore';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -33,6 +32,11 @@ export function InventoryPage() {
   const totalItems = items.filter(i => i.quantity > 0).length;
 
   const handleSell = (itemId: string, qty: number) => {
+    // Проверяем, не заблокирован ли предмет
+    const slot = useBankStore.getState().getSlot(itemId);
+    if (slot?.locked) {
+      return; // Заблокированные предметы нельзя продавать
+    }
     sellItem(itemId, qty);
   };
 
@@ -164,12 +168,18 @@ export function InventoryPage() {
               if (!item) return null;
               return (
                 <div key={slot.itemId} className="relative flex flex-col items-center">
+                  {/* Lock indicator on item */}
+                  {slot.locked && (
+                    <div className="absolute top-1 right-1 z-10 w-5 h-5 bg-amber-500/90 rounded-full flex items-center justify-center shadow-md">
+                      <Lock className="w-3 h-3 text-white" />
+                    </div>
+                  )}
                   <ItemInfoPopover
                     itemId={slot.itemId}
                     quantity={slot.quantity}
                     actions={
                       <div className="flex flex-col gap-1.5 min-w-[140px]">
-                        {item.equipSlot && (
+                        {item.equipSlot && !slot.locked && (
                           <button
                             type="button"
                             onClick={() => handleEquip(slot.itemId)}
@@ -178,7 +188,7 @@ export function InventoryPage() {
                             {t('inventory.equip')}
                           </button>
                         )}
-                        {item.canSell && (
+                        {item.canSell && !slot.locked && (
                           <>
                             <button
                               type="button"
@@ -198,13 +208,20 @@ export function InventoryPage() {
                             )}
                           </>
                         )}
+                        {slot.locked && (
+                          <p className="text-[10px] text-amber-400 font-bold text-center py-1">
+                            🔒 {t('inventory.locked') ?? 'Locked — cannot sell'}
+                          </p>
+                        )}
                       </div>
                     }
                   >
                     <button
                       type="button"
                       aria-label={item.name}
-                      className="rounded-lg transition-all active:scale-95 hover:shadow-[0_0_12px_rgba(34,197,94,0.15)] min-h-[44px] min-w-[44px]"
+                      className={`rounded-lg transition-all active:scale-95 hover:shadow-[0_0_12px_rgba(34,197,94,0.15)] min-h-[44px] min-w-[44px] ${
+                        slot.locked ? 'opacity-80' : ''
+                      }`}
                     >
                       <ItemIcon
                         itemId={slot.itemId}
