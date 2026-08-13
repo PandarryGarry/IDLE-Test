@@ -5,6 +5,8 @@ import { getItem } from '../data/items';
 const DEFAULT_MAX_SLOTS = 12;
 const SLOTS_PER_UPGRADE = 12;
 
+export type CategoryFilter = 'all' | 'equipment' | 'resources' | 'food' | 'misc';
+
 export interface BankStore {
   items: BankSlot[];
   gp: number;
@@ -12,6 +14,7 @@ export interface BankStore {
   sortMode: 'default' | 'name' | 'value' | 'quantity' | 'category';
   searchQuery: string;
   activeTab: number;
+  activeCategory: CategoryFilter;
 
   // Queries
   getItemQty: (itemId: string) => number;
@@ -34,6 +37,7 @@ export interface BankStore {
   setSearch: (query: string) => void;
   setSort: (mode: BankStore['sortMode']) => void;
   setActiveTab: (tab: number) => void;
+  setCategory: (category: CategoryFilter) => void;
 
   loadFromSave: (items: BankSlot[], gp: number, maxSlots: number) => void;
   reset: () => void;
@@ -46,6 +50,7 @@ export const useBankStore = create<BankStore>((set, get) => ({
   sortMode: 'default',
   searchQuery: '',
   activeTab: 0,
+  activeCategory: 'all',
 
   getItemQty: (itemId) => {
     const slots = get().items.filter(s => s.itemId === itemId);
@@ -59,7 +64,7 @@ export const useBankStore = create<BankStore>((set, get) => ({
   getUsedSlots: () => get().items.filter(s => s.quantity > 0).length,
 
   getFilteredItems: () => {
-    const { items, searchQuery, sortMode, activeTab } = get();
+    const { items, searchQuery, sortMode, activeTab, activeCategory } = get();
     let result = items.filter(s => s.quantity > 0);
     
     if (activeTab > 0) {
@@ -71,6 +76,30 @@ export const useBankStore = create<BankStore>((set, get) => ({
       result = result.filter(s => {
         const item = getItem(s.itemId);
         return item?.name.toLowerCase().includes(q) || s.itemId.includes(q);
+      });
+    }
+
+    // Фильтр по категории
+    if (activeCategory !== 'all') {
+      result = result.filter(s => {
+        const item = getItem(s.itemId);
+        if (!item) return false;
+        
+        const category = item.category;
+        
+        switch (activeCategory) {
+          case 'equipment':
+            return ['weapon', 'helm', 'platebody', 'platelegs', 'boots', 'gloves', 
+                    'amulet', 'ring', 'shield', 'cape', 'quiver', 'passive'].includes(category);
+          case 'resources':
+            return ['ore', 'log', 'raw_fish', 'bar', 'gem', 'herb', 'seed'].includes(category);
+          case 'food':
+            return ['food', 'cooked_fish', 'potion'].includes(category);
+          case 'misc':
+            return ['misc', 'bone', 'ash', 'rune', 'tablet', 'arrow'].includes(category);
+          default:
+            return true;
+        }
       });
     }
     
@@ -101,11 +130,9 @@ export const useBankStore = create<BankStore>((set, get) => ({
     
     if (!item) return false;
 
-    // Определяем, можно ли стакать предмет
     const canStack = item.stackable && !item.equipSlot;
 
     if (canStack) {
-      // Стакающиеся предметы — ищем существующий слот
       const existingIdx = items.findIndex(s => s.itemId === itemId);
       
       if (existingIdx >= 0) {
@@ -119,19 +146,16 @@ export const useBankStore = create<BankStore>((set, get) => ({
       }
     }
 
-    // Нестакающиеся предметы или новый стакающийся предмет
     const usedSlots = items.filter(s => s.quantity > 0).length;
-    const requiredSlots = canStack ? 1 : qty; // Если не стакается, каждый предмет = 1 слот
+    const requiredSlots = canStack ? 1 : qty;
     
     if (usedSlots + requiredSlots > maxSlots) {
-      return false; // Не хватает слотов
+      return false;
     }
 
     if (canStack) {
-      // Новый стакающийся предмет
       set({ items: [...items, { itemId, quantity: qty, locked: false, tab: 0 }] });
     } else {
-      // Нестакающиеся предметы — добавляем по одному
       const newItems = [...items];
       for (let i = 0; i < qty; i++) {
         newItems.push({ itemId, quantity: 1, locked: false, tab: 0 });
@@ -151,7 +175,6 @@ export const useBankStore = create<BankStore>((set, get) => ({
     const canStack = item.stackable && !item.equipSlot;
 
     if (canStack) {
-      // Стакающиеся предметы
       const idx = items.findIndex(s => s.itemId === itemId);
       if (idx < 0 || items[idx].quantity < qty) return false;
       
@@ -166,7 +189,6 @@ export const useBankStore = create<BankStore>((set, get) => ({
       
       set({ items: newItems });
     } else {
-      // Нестакающиеся предметы — удаляем по одному
       let remaining = qty;
       const newItems = [...items];
       
@@ -177,7 +199,7 @@ export const useBankStore = create<BankStore>((set, get) => ({
         }
       }
       
-      if (remaining > 0) return false; // Не хватило предметов
+      if (remaining > 0) return false;
       
       set({ items: newItems });
     }
@@ -188,12 +210,10 @@ export const useBankStore = create<BankStore>((set, get) => ({
   removeItems: (itemList) => {
     const state = get();
     
-    // Проверяем доступность всех предметов
     for (const { itemId, quantity } of itemList) {
       if (!state.hasItem(itemId, quantity)) return false;
     }
     
-    // Удаляем все
     for (const { itemId, quantity } of itemList) {
       state.removeItem(itemId, quantity);
     }
@@ -244,6 +264,7 @@ export const useBankStore = create<BankStore>((set, get) => ({
   setSearch: (query) => set({ searchQuery: query }),
   setSort: (mode) => set({ sortMode: mode }),
   setActiveTab: (tab) => set({ activeTab: tab }),
+  setCategory: (category) => set({ activeCategory: category }),
 
   loadFromSave: (items, gp, maxSlots) => set({ items, gp, maxSlots }),
 
@@ -253,6 +274,7 @@ export const useBankStore = create<BankStore>((set, get) => ({
     maxSlots: DEFAULT_MAX_SLOTS, 
     searchQuery: '', 
     sortMode: 'default', 
-    activeTab: 0 
+    activeTab: 0,
+    activeCategory: 'all'
   }),
 }));
