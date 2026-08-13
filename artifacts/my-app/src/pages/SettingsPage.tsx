@@ -6,7 +6,17 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 export function SettingsPage() {
   const { t } = useTranslation();
-  const settings = useSettingsStore();
+  
+  // Точечные селекторы: компонент перерисовывается только при изменении этих значений
+  const language = useSettingsStore(s => s.language);
+  const autoSaveEnabled = useSettingsStore(s => s.autoSaveEnabled);
+  const autoSaveInterval = useSettingsStore(s => s.autoSaveInterval);
+  const confirmSell = useSettingsStore(s => s.confirmSell);
+  const darkMode = useSettingsStore(s => s.darkMode);
+  const numberFormat = useSettingsStore(s => s.numberFormat);
+  const updateSetting = useSettingsStore(s => s.updateSetting);
+  const toggleDarkMode = useSettingsStore(s => s.toggleDarkMode);
+  
   const notifyInfo = useNotificationsStore(s => s.notifyInfo);
   const [importString, setImportString] = useState('');
 
@@ -46,9 +56,9 @@ export function SettingsPage() {
         <h2 className="font-black text-sm uppercase tracking-widest text-muted-foreground">{t('settings.language')}</h2>
         <div className="flex gap-2">
           <button
-            onClick={() => settings.updateSetting('language', 'en')}
+            onClick={() => updateSetting('language', 'en')}
             className={`flex-1 py-3 rounded-xl font-black text-lg tracking-wide transition-all ${
-              settings.language === 'en'
+              language === 'en'
                 ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25'
                 : 'bg-background border border-border text-muted-foreground hover:border-primary/50'
             }`}
@@ -56,9 +66,9 @@ export function SettingsPage() {
             🇬🇧 EN
           </button>
           <button
-            onClick={() => settings.updateSetting('language', 'ru')}
+            onClick={() => updateSetting('language', 'ru')}
             className={`flex-1 py-3 rounded-xl font-black text-lg tracking-wide transition-all ${
-              settings.language === 'ru'
+              language === 'ru'
                 ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25'
                 : 'bg-background border border-border text-muted-foreground hover:border-primary/50'
             }`}
@@ -76,17 +86,17 @@ export function SettingsPage() {
           <ToggleSetting
             label={t('settings.autoSave')}
             description={t('settings.autoSaveDesc')}
-            checked={settings.autoSaveEnabled}
-            onChange={(v) => settings.updateSetting('autoSaveEnabled', v)}
+            checked={autoSaveEnabled}
+            onChange={(v) => updateSetting('autoSaveEnabled', v)}
           />
 
-          {settings.autoSaveEnabled && (
+          {autoSaveEnabled && (
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">{t('settings.autoSaveInterval')} (s)</span>
               <input
                 type="number"
-                value={settings.autoSaveInterval}
-                onChange={(e) => settings.updateSetting('autoSaveInterval', Math.max(10, parseInt(e.target.value) || 30))}
+                value={autoSaveInterval}
+                onChange={(e) => updateSetting('autoSaveInterval', Math.max(10, parseInt(e.target.value) || 30))}
                 className="bg-background border border-border rounded-lg px-3 py-1.5 w-20 text-right font-mono text-sm focus:outline-none focus:border-primary"
                 min="10"
               />
@@ -96,8 +106,8 @@ export function SettingsPage() {
           <ToggleSetting
             label={t('settings.confirmSell')}
             description={t('settings.confirmSellDesc')}
-            checked={settings.confirmSell}
-            onChange={(v) => settings.updateSetting('confirmSell', v)}
+            checked={confirmSell}
+            onChange={(v) => updateSetting('confirmSell', v)}
           />
         </div>
 
@@ -108,9 +118,9 @@ export function SettingsPage() {
           <ToggleSetting
             label={t('settings.darkMode')}
             description={t('settings.darkModeDesc')}
-            checked={settings.darkMode}
+            checked={darkMode}
             onChange={(v) => {
-              settings.toggleDarkMode();
+              toggleDarkMode();
               document.documentElement.classList.toggle('dark', v);
             }}
           />
@@ -118,8 +128,8 @@ export function SettingsPage() {
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">{t('settings.numberFormat')}</span>
             <select
-              value={settings.numberFormat}
-              onChange={(e) => settings.updateSetting('numberFormat', e.target.value as any)}
+              value={numberFormat}
+              onChange={(e) => updateSetting('numberFormat', e.target.value as any)}
               className="bg-background border border-border rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none focus:border-primary"
             >
               <option value="abbreviated">{t('settings.numberFormat.abbreviated')}</option>
