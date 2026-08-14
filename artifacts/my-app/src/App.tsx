@@ -7,7 +7,10 @@ import { tickManager } from '@/gameEngine/tickManager';
 import { initGame } from '@/lib/saveManager';
 import { Sidebar } from '@/components/Sidebar';
 import { MobileNav } from '@/components/MobileNav';
+import { TopBar } from '@/components/TopBar';
+import { SideMenu } from '@/components/SideMenu';
 import { NotificationToast } from '@/components/NotificationToast';
+import { useUIStore } from '@/store/uiStore';
 
 import { DashboardPage } from '@/pages/DashboardPage';
 import { WoodcuttingPage } from '@/pages/WoodcuttingPage';
@@ -33,6 +36,25 @@ function NotFound() {
 }
 
 function Router() {
+  const updateScrollPosition = useUIStore(s => s.updateScrollPosition);
+
+  useEffect(() => {
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateScrollPosition(window.scrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [updateScrollPosition]);
+
   return (
     <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/30">
       {/* Desktop sidebar — hidden on mobile */}
@@ -40,8 +62,17 @@ function Router() {
         <Sidebar />
       </div>
 
+      {/* SideMenu — выдвижное меню для мобильных */}
+      <SideMenu />
+
       {/* Main content — 240px offset on desktop, full-width on mobile */}
       <main className="flex-1 md:ml-60 min-h-screen overflow-x-hidden">
+        {/* TopBar — новая верхняя панель */}
+        <TopBar />
+
+        {/* NotificationToast — размещаем сразу под TopBar */}
+        <NotificationToast />
+
         <div className="w-full max-w-[1440px] mx-auto px-3 py-4 pb-20 sm:px-4 md:pb-8 md:px-6 lg:px-8">
           <Switch>
             <Route path="/" component={DashboardPage} />
@@ -54,6 +85,7 @@ function Router() {
             <Route path="/combat" component={CombatPage} />
             <Route path="/inventory" component={InventoryPage} />
             <Route path="/bank" component={BankPage} />
+            <Route path="/shop" component={() => <div className="text-center py-10">🏪 Магазин скоро откроется!</div>} />
             <Route path="/settings" component={SettingsPage} />
             <Route component={NotFound} />
           </Switch>
@@ -63,7 +95,6 @@ function Router() {
       {/* Mobile bottom nav — hidden on desktop */}
       <MobileNav className="md:hidden" />
 
-      <NotificationToast />
       <Toaster />
     </div>
   );

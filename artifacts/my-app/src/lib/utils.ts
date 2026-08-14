@@ -98,3 +98,18 @@ export async function decompressJson<T>(str: string): Promise<T> {
 export function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
+
+
+/** Компактный формат чисел: 4021 → "4 тыс", 4000000 → "4 млн" */
+export function formatCompact(n: number): string {
+  const abs = Math.abs(n);
+  const fmt = (v: number) => {
+    const x = Math.floor(v * 10) / 10;
+    return x % 1 === 0 ? x.toFixed(0) : x.toFixed(1);
+  };
+  if (abs >= 1e12) return `${fmt(n / 1e12)} трлн`;
+  if (abs >= 1e9)  return `${fmt(n / 1e9)} млрд`;
+  if (abs >= 1e6)  return `${fmt(n / 1e6)} млн`;
+  if (abs >= 1e3)  return `${fmt(n / 1e3)} тыс`;
+  return Math.floor(n).toString();
+}

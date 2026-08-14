@@ -61,6 +61,7 @@ export interface SkillAction {
   id: string;
   name: string;
   description?: string;
+  icon?: string; // emoji для карточки действия
   levelRequired: number;
   xp: number;
   masteryXp?: number;
@@ -202,6 +203,16 @@ export interface GameNotification {
 }
 
 export type GameMode = 'standard' | 'hardcore' | 'adventure';
+
+/** Информация о добываемом ресурсе для панели CurrentAction */
+export interface ResourceInfo {
+  icon: string;
+  name: string;
+  sellValue: number;      // GP за штуку
+  xp: number;             // XP за действие
+  qtyPerAction: string;   // "1" или "1-2"
+  inInventory: number;    // сколько сейчас в инвентаре
+}
 
 export interface SaveData {
   version: string;

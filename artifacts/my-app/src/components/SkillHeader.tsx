@@ -3,7 +3,6 @@ import { SkillId } from '@/data/types';
 import { usePlayerStore } from '@/store/playerStore';
 import { ProgressBar } from './ProgressBar';
 import { getXpForLevel } from '@/gameEngine/xpTable';
-import { useGameStore } from '@/store/gameStore';
 import { formatNumber } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { TranslationKey } from '@/lib/i18n';
@@ -27,8 +26,6 @@ export function SkillHeader({ skillId, skillName, skillIcon }: SkillHeaderProps)
   const { t } = useTranslation();
   const xp = usePlayerStore(s => s.skills[skillId]?.xp ?? 0);
   const level = usePlayerStore(s => s.skills[skillId]?.level ?? 1);
-  const xpGainedSession = useGameStore(s => s.xpGainedThisSession[skillId] ?? 0);
-  const sessionStartTime = useGameStore(s => s.sessionStartTime);
 
   const currentLevelXp = getXpForLevel(level);
   const nextLevelXp = getXpForLevel(level + 1);
@@ -36,9 +33,6 @@ export function SkillHeader({ skillId, skillName, skillIcon }: SkillHeaderProps)
   const xpRequiredForLevel = Math.max(1, nextLevelXp - currentLevelXp);
   const progress = level >= 99 ? 1 : xpIntoLevel / xpRequiredForLevel;
   const descriptionKey = SKILL_DESCRIPTION_KEYS[skillId];
-
-  const elapsedMs = Date.now() - sessionStartTime;
-  const xpPerHour = elapsedMs > 0 ? (xpGainedSession / elapsedMs) * 3_600_000 : 0;
 
   return (
     <div className="bg-card border border-border p-4 md:p-5 rounded-2xl shadow-sm">
@@ -58,9 +52,6 @@ export function SkillHeader({ skillId, skillName, skillIcon }: SkillHeaderProps)
           )}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-xs text-muted-foreground">
             <span>{t('ui.xp')}: <span className="text-amber-400 font-bold">{formatNumber(Math.floor(xp))}</span></span>
-            {xpPerHour > 0 && (
-              <span><span className="text-amber-400 font-bold">{formatNumber(Math.floor(xpPerHour))}</span> XP{t('ui.per.hour')}</span>
-            )}
           </div>
         </div>
 
