@@ -5,17 +5,12 @@
 //   - Artisan skills (cooking, smithing, firemaking): XP only — items require resources the
 //     player may not have had. Granting output items without consuming inputs would violate
 //     game economy integrity, so we skip item grants for these skills offline.
-//   - Gathering skills with stockLimit/respawnMs: simulate harvest → deplete → respawn → harvest cycles.
 //   - All skills: capped at MAX_OFFLINE_MS.
 
 import type { SkillId } from '../data/types';
-import { WOODCUTTING_TREES_MAP } from '../data/woodcutting';
-import { MINING_ROCKS_MAP } from '../data/mining';
-import { FISHING_SPOTS_MAP } from '../data/fishing';
 import { usePlayerStore } from '../store/playerStore';
 import { useBankStore } from '../store/bankStore';
 import { useNotificationsStore } from '../store/notificationsStore';
-import { useResourceStore } from '../store/resourceStore';
 import {
   getActionInterval,
   getXpPerAction,
@@ -33,62 +28,6 @@ export interface OfflineResult {
   levelUps: { skillId: SkillId; newLevel: number }[];
 }
 
-// ── Получение лимитов ноды (gathering skills only) ──
-
-function getNodeLimits(actionId: string): { stockLimit?: number; respawnMs?: number } | null {
-  const action = WOODCUTTING_TREES_MAP[actionId]
-    ?? MINING_ROCKS_MAP[actionId]
-    ?? FISHING_SPOTS_MAP[actionId];
-  if (!action) return null;
-  return { stockLimit: action.stockLimit, respawnMs: action.respawnMs };
-}
-
-// ── Симуляция циклов добычи/восстановления ──
-
-interface CycleResult {
-  actionsDone: number;
-  // Состояние ноды после симуляции
-  harvested: number;
-  depletedAt: number | null;
-}
-
-function simulateCycles(
-  offlineMs: number,
-  interval: number,
-  stockLimit: number,
-  respawnMs: number,
-): CycleResult {
-  const harvestPhaseMs = stockLimit * interval;
-  const cycleDuration = harvestPhaseMs + respawnMs;
-
-  // Полные циклы "добыча+респаун"
-  const fullCycles = Math.floor(offlineMs / cycleDuration);
-  const remainingMs = offlineMs - fullCycles * cycleDuration;
-
-  let actionsInLastCycle: number;
-  let harvested: number;
-  let depletedAt: number | null = null;
-
-  if (remainingMs < harvestPhaseMs) {
-    // Не полностью сфармили в последнем цикле — нода НЕ истощена
-    actionsInLastCycle = Math.floor(remainingMs / interval);
-    harvested = actionsInLastCycle;
-  } else {
-    // Полностью сфармили, сейчас в фазе респауна — нода ИСТОЩЕНА
-    actionsInLastCycle = stockLimit;
-    harvested = stockLimit;
-    // depletedAt = момент когда нода истощилась = now - (время в респауне)
-    const timeInRespawn = remainingMs - harvestPhaseMs;
-    depletedAt = Date.now() - timeInRespawn;
-  }
-
-  return {
-    actionsDone: fullCycles * stockLimit + actionsInLastCycle,
-    harvested,
-    depletedAt,
-  };
-}
-
 export function calculateOfflineProgress(
   skillId: SkillId,
   actionId: string,
@@ -104,42 +43,19 @@ export function calculateOfflineProgress(
 
   const interval = getActionInterval(skillId, actionId);
   const xpPerAction = getXpPerAction(skillId, actionId);
-
-  const playerStore = usePlayerStore.getState();
-  const bankStore = useBankStore.getState();
-  const notifs = useNotificationsStore.getState();
-  const resourceStore = useResourceStore.getState();
-
-  const levelUps: { skillId: SkillId; newLevel: number }[] = [];
-  const itemsGained: { itemId: string; quantity: number }[] = [];
-
-  let totalActions: number;
-
-  // Gathering skill с лимитами? → используем симуляцию циклов
-  const isGathering = isGatheringSkill(skillId);
-  const limits = getNodeLimits(actionId);
-
-  if (isGathering && limits?.stockLimit && limits?.respawnMs) {
-    const cycleResult = simulateCycles(
-      offlineMs, interval, limits.stockLimit, limits.respawnMs
-    );
-    totalActions = cycleResult.actionsDone;
-
-    // Обновляем состояние ноды в resourceStore
-    resourceStore.setNodeState(actionId, {
-      harvested: cycleResult.harvested,
-      depletedAt: cycleResult.depletedAt,
-    });
-  } else {
-    // Старая логика: без лимитов
-    totalActions = Math.floor(offlineMs / interval);
-  }
+  const totalActions = Math.floor(offlineMs / interval);
 
   if (totalActions === 0) {
     return { offlineMs, actions: 0, xpGained: 0, itemsGained: [], levelUps: [] };
   }
 
+  const playerStore = usePlayerStore.getState();
+  const bankStore = useBankStore.getState();
+  const notifs = useNotificationsStore.getState();
+
   const totalXp = xpPerAction * totalActions;
+  const levelUps: { skillId: SkillId; newLevel: number }[] = [];
+  const itemsGained: { itemId: string; quantity: number }[] = [];
 
   // Apply XP (both gathering and artisan)
   if (totalXp > 0) {
@@ -148,7 +64,7 @@ export function calculateOfflineProgress(
   }
 
   // Apply items — gathering only, respecting bank capacity
-  if (isGathering) {
+  if (isGatheringSkill(skillId)) {
     const itemPerAction = getGatheringOutputItem(skillId, actionId);
     if (itemPerAction && itemPerAction.qty > 0) {
       const totalQty = itemPerAction.qty * totalActions;

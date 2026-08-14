@@ -32,8 +32,8 @@ const en = {
   'nav.home': 'Home', 'nav.skills': 'Skills', 'nav.combat': 'Combat',
   'nav.inventory': 'Inventory', 'nav.bank': 'Bank',
   'nav.settings': 'Settings', 'nav.save': 'Save Game',
-  'nav.shop': 'Shop',
- //─────────────────────────────────────────────────
+
+  // ── Generic UI ─────────────────────────────────────────────────
   'ui.start': 'Start', 'ui.stop': 'Stop', 'ui.level': 'Level',
   'ui.xp': 'XP', 'ui.maxLevel': 'MAX', 'ui.locked': 'Locked',
   'ui.select': 'Select', 'ui.cancel': 'Cancel', 'ui.confirm': 'Confirm',
@@ -179,7 +179,7 @@ const ru: Partial<Record<keyof typeof en, string>> = {
   'nav.home': 'Главная', 'nav.skills': 'Навыки', 'nav.combat': 'Бой',
   'nav.inventory': 'Инвентарь', 'nav.bank': 'Банк',
   'nav.settings': 'Настройки', 'nav.save': 'Сохранить',
-  'nav.shop': 'Магазин',
+
   // ── Generic UI ────────────────────────────────────────────────
   'ui.start': 'Начать', 'ui.stop': 'Остановить', 'ui.level': 'Уровень',
   'ui.xp': 'ОП', 'ui.maxLevel': 'МАКС', 'ui.locked': 'Закрыто',

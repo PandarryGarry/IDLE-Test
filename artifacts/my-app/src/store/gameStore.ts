@@ -9,7 +9,6 @@ import { FIREMAKING_MAP } from '../data/firemaking';
 import { usePlayerStore } from './playerStore';
 import { useBankStore } from './bankStore';
 import { useNotificationsStore } from './notificationsStore';
-import { useResourceStore } from './resourceStore';
 import { calcBurnChance, calcXpPerHour } from '../gameEngine/formulas';
 import { getItem } from '../data/items';
 import { chance, randomRange } from '../lib/utils';
@@ -31,9 +30,6 @@ export interface GameStore {
   nextActionTime: number;
   currentActionInterval: number; // ms
 
-  // ── НОВОЕ: режим ожидания восстановления ноды ──
-  waitingForRespawn: boolean;
-
   // Meta
   gameMode: GameMode;
   totalPlayTime: number;
@@ -50,20 +46,10 @@ export interface GameStore {
   stopAction: () => void;
   pauseGame: () => void;
   resumeGame: () => void;
-  tick: (now: number) => void;
+  tick: (now: number) => void; // called by tickManager
   setGameMode: (mode: GameMode) => void;
   reset: () => void;
   loadFromSave: (data: Partial<GameStore>) => void;
-}
-
-// ── Получение данных о ноде (stockLimit, respawnMs) ──
-
-function getNodeLimits(actionId: string): { stockLimit?: number; respawnMs?: number } | null {
-  const action = WOODCUTTING_TREES_MAP[actionId]
-    ?? MINING_ROCKS_MAP[actionId]
-    ?? FISHING_SPOTS_MAP[actionId];
-  if (!action) return null;
-  return { stockLimit: action.stockLimit, respawnMs: action.respawnMs };
 }
 
 // ── Skill action processors ───────────────────────────────────
@@ -83,6 +69,7 @@ function processMining(actionId: string): ActionResult | null {
   const playerLevel = usePlayerStore.getState().getSkillLevel('mining');
   if (playerLevel < rock.levelRequired) return null;
   const items: { itemId: string; quantity: number }[] = [{ itemId: rock.oreId, quantity: 1 }];
+  // Gem chance
   if (rock.gemChance && chance(rock.gemChance)) {
     const totalWeight = GEM_DROPS.reduce((sum, g) => sum + g.weight, 0);
     let rng = Math.random() * totalWeight;
@@ -122,9 +109,11 @@ function processSmithing(actionId: string): ActionResult | null {
   const bankStore = useBankStore.getState();
   const playerLevel = usePlayerStore.getState().getSkillLevel('smithing');
   if (playerLevel < recipe.levelRequired) return null;
+  // Check ingredients
   for (const ing of recipe.ingredients) {
     if (!bankStore.hasItem(ing.itemId, ing.quantity)) return null;
   }
+  // Consume ingredients
   for (const ing of recipe.ingredients) {
     bankStore.removeItem(ing.itemId, ing.quantity);
   }
@@ -175,7 +164,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
   actionStartTime: 0,
   nextActionTime: 0,
   currentActionInterval: 3000,
-  waitingForRespawn: false,
   gameMode: 'standard',
   totalPlayTime: 0,
   sessionStartTime: Date.now(),
@@ -186,31 +174,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   startSkillAction: (skillId, actionId) => {
     const interval = getActionInterval(skillId, actionId);
+    // Use performance.now() (monotonic) — same clock the tick manager passes to tick().
     const now = performance.now();
-
-    // Проверяем: если нода истощена — сразу в режим ожидания
-    const limits = getNodeLimits(actionId);
-    if (limits?.stockLimit && limits.respawnMs) {
-      const resourceStore = useResourceStore.getState();
-      if (resourceStore.isDepleted(actionId, limits.respawnMs)) {
-        set({
-          activeSkill: skillId,
-          activeActionId: actionId,
-          actionProgress: 0,
-          actionStartTime: 0,
-          nextActionTime: 0,
-          currentActionInterval: interval,
-          waitingForRespawn: true,
-          isRunning: true,
-          isPaused: false,
-        });
-        useNotificationsStore.getState().notifyInfo(
-          `⏳ ${WOODCUTTING_TREES_MAP[actionId]?.name ?? actionId} восстанавливается...`
-        );
-        return true;
-      }
-    }
-
     set({
       activeSkill: skillId,
       activeActionId: actionId,
@@ -218,7 +183,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       actionStartTime: now,
       nextActionTime: now + interval,
       currentActionInterval: interval,
-      waitingForRespawn: false,
       isRunning: true,
       isPaused: false,
     });
@@ -230,7 +194,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       activeSkill: null,
       activeActionId: null,
       actionProgress: 0,
-      waitingForRespawn: false,
       isRunning: false,
     });
   },
@@ -243,84 +206,43 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!state.isRunning || state.isPaused) return;
     if (!state.activeSkill || !state.activeActionId) return;
 
-    const resourceStore = useResourceStore.getState();
-
-    // ── Режим ожидания восстановления ноды ──
-    if (state.waitingForRespawn) {
-      const limits = getNodeLimits(state.activeActionId);
-      if (limits?.stockLimit && limits.respawnMs) {
-        const stillDepleted = resourceStore.isDepleted(state.activeActionId, limits.respawnMs);
-        if (!stillDepleted) {
-          // Нода восстановилась — автоматически возобновляем
-          const interval = state.currentActionInterval;
-          set({
-            waitingForRespawn: false,
-            actionProgress: 0,
-            actionStartTime: now,
-            nextActionTime: now + interval,
-          });
-          useNotificationsStore.getState().notifyInfo(
-            `✨ ${WOODCUTTING_TREES_MAP[state.activeActionId]?.name ?? state.activeActionId} восстановилось!`
-          );
-        }
-      }
-      // В режиме ожидания ничего больше не делаем
-      return;
-    }
-
     // Update progress bar
     const elapsed = now - state.actionStartTime;
     const progress = Math.min(elapsed / state.currentActionInterval, 1);
     set({ actionProgress: progress });
 
+    // Check if action completes
     if (now < state.nextActionTime) return;
 
     // Process action
     const result = processAction(state.activeSkill, state.activeActionId);
 
     if (result === null) {
-      // Action failed — stop
-      set({ isRunning: false, actionProgress: 0, waitingForRespawn: false });
+      // Action failed (insufficient materials, wrong level, etc.) — stop
+      set({ isRunning: false, actionProgress: 0 });
       useNotificationsStore.getState().notifyInfo('Not enough resources or level too low. Action stopped.');
       return;
     }
 
-      // ── Записываем добычу в resourceStore (уменьшаем остаток ноды) ──
-      // +1 ДЕЙСТВИЕ к счётчику ноды (stockLimit считает действия, а не предметы)
-      const limits = getNodeLimits(state.activeActionId);
-      if (limits?.stockLimit) {
-        const ok = resourceStore.recordHarvest(state.activeActionId, 1, limits.stockLimit);
-
-      if (!ok && limits.respawnMs) {
-        // Нода истощилась — переходим в режим ожидания
-        useNotificationsStore.getState().notifyInfo(
-          `⏳ ${WOODCUTTING_TREES_MAP[state.activeActionId]?.name ?? state.activeActionId} истощено. Ожидание восстановления...`
-        );
-        set({
-          waitingForRespawn: true,
-          actionProgress: 0,
-          actionStartTime: 0,
-          nextActionTime: 0,
-        });
-        // При этом результат действия (items/xp) всё равно применяем ниже
-      }
-    }
-
-    // Add items to bank
+    // Add items to bank — проверяем результат addItem и уведомляем о переполнении
     const bankStore = useBankStore.getState();
     const notifs = useNotificationsStore.getState();
     let inventoryFull = false;
-
+    
     for (const { itemId, quantity } of result.items) {
       const added = bankStore.addItem(itemId, quantity);
+      
       if (added && quantity > 0) {
+        // Предмет успешно добавлен — показываем уведомление
         const item = getItem(itemId);
         if (item) notifs.notifyItem(item.name, quantity, item.icon);
       } else if (!added) {
+        // Инвентарь полон — предмет не поместился
         inventoryFull = true;
       }
     }
-
+    
+    // Уведомление о переполнении (один раз за тик, даже если не поместилось несколько предметов)
     if (inventoryFull) {
       notifs.notifyInfo('⚠️ Inventory full! Some items were lost.');
     }
@@ -348,17 +270,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const xpGainedThisSession = { ...state.xpGainedThisSession };
     xpGainedThisSession[state.activeSkill] = (xpGainedThisSession[state.activeSkill] ?? 0) + result.xpGained;
 
-    // Schedule next action (если не ушли в режим ожидания)
-    if (!get().waitingForRespawn) {
-      set({
-        actionProgress: 0,
-        actionStartTime: now,
-        nextActionTime: now + state.currentActionInterval,
-        xpGainedThisSession,
-      });
-    } else {
-      set({ xpGainedThisSession });
-    }
+    // Schedule next action
+    set({
+      actionProgress: 0,
+      actionStartTime: now,
+      nextActionTime: now + state.currentActionInterval,
+      xpGainedThisSession,
+    });
   },
 
   setGameMode: (mode) => set({ gameMode: mode }),
@@ -368,8 +286,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   reset: () => set({
     activeSkill: null, activeActionId: null, actionProgress: 0,
     actionStartTime: 0, nextActionTime: 0, currentActionInterval: 3000,
-    waitingForRespawn: false,
     totalPlayTime: 0, sessionStartTime: Date.now(), lastSaveTime: Date.now(),
     isRunning: false, isPaused: false, xpGainedThisSession: {},
   }),
 }));
+

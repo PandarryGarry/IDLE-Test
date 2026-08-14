@@ -1,15 +1,15 @@
 import type { Item } from './types';
 
 const ITEMS: Record<string, Item> = {
-  // ── Logs (цены снижены: 1/2/3/5/8/12/18/25) ────────────────
-  normal_logs:    { id: 'normal_logs',    name: 'Logs',           category: 'log',   sellValue: 1,    canSell: true,  stackable: true,  icon: '🪵' },
-  oak_logs:       { id: 'oak_logs',       name: 'Oak Logs',       category: 'log',   sellValue: 2,    canSell: true,  stackable: true,  icon: '🪵' },
-  willow_logs:    { id: 'willow_logs',    name: 'Willow Logs',    category: 'log',   sellValue: 3,    canSell: true,  stackable: true,  icon: '🪵' },
-  teak_logs:      { id: 'teak_logs',      name: 'Teak Logs',      category: 'log',   sellValue: 5,    canSell: true,  stackable: true,  icon: '🪵' },
-  maple_logs:     { id: 'maple_logs',     name: 'Maple Logs',     category: 'log',   sellValue: 8,    canSell: true,  stackable: true,  icon: '🪵' },
-  mahogany_logs:  { id: 'mahogany_logs',  name: 'Mahogany Logs',  category: 'log',   sellValue: 12,   canSell: true,  stackable: true,  icon: '🪵' },
-  magic_logs:     { id: 'magic_logs',     name: 'Magic Logs',     category: 'log',   sellValue: 18,   canSell: true,  stackable: true,  icon: '✨' },
-  redwood_logs:   { id: 'redwood_logs',   name: 'Redwood Logs',   category: 'log',   sellValue: 25,   canSell: true,  stackable: true,  icon: '🪵' },
+  // ── Logs ───────────────────────────────────────────────────
+  normal_logs:    { id: 'normal_logs',    name: 'Logs',           category: 'log',   sellValue: 5,    canSell: true,  stackable: true,  icon: '🪵' },
+  oak_logs:       { id: 'oak_logs',       name: 'Oak Logs',       category: 'log',   sellValue: 15,   canSell: true,  stackable: true,  icon: '🪵' },
+  willow_logs:    { id: 'willow_logs',    name: 'Willow Logs',    category: 'log',   sellValue: 25,   canSell: true,  stackable: true,  icon: '🪵' },
+  teak_logs:      { id: 'teak_logs',      name: 'Teak Logs',      category: 'log',   sellValue: 40,   canSell: true,  stackable: true,  icon: '🪵' },
+  maple_logs:     { id: 'maple_logs',     name: 'Maple Logs',     category: 'log',   sellValue: 65,   canSell: true,  stackable: true,  icon: '🪵' },
+  mahogany_logs:  { id: 'mahogany_logs',  name: 'Mahogany Logs',  category: 'log',   sellValue: 90,   canSell: true,  stackable: true,  icon: '🪵' },
+  magic_logs:     { id: 'magic_logs',     name: 'Magic Logs',     category: 'log',   sellValue: 200,  canSell: true,  stackable: true,  icon: '✨' },
+  redwood_logs:   { id: 'redwood_logs',   name: 'Redwood Logs',   category: 'log',   sellValue: 350,  canSell: true,  stackable: true,  icon: '🪵' },
   // ── Ashes ──────────────────────────────────────────────────
   ash:            { id: 'ash',            name: 'Ash',            category: 'ash',   sellValue: 3,    canSell: true,  stackable: true,  icon: '⚪' },
   // ── Ores ───────────────────────────────────────────────────

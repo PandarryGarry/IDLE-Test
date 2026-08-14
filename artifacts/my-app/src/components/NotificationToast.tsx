@@ -13,8 +13,8 @@ export function NotificationToast() {
 
   return (
     <>
-      {/* Desktop: compact top-right stack — под TopBar (h-12 = 48px + отступ) */}
-      <div className="hidden md:flex fixed top-16 right-4 z-50 flex-col items-end gap-1.5 pointer-events-none">
+      {/* Desktop: compact top-right stack */}
+      <div className="hidden md:flex fixed top-4 right-4 z-50 flex-col items-end gap-1.5 pointer-events-none">
         <AnimatePresence initial={false}>
           {visible.map(n => (
             <ToastItem key={n.id} n={n} onDismiss={dismiss} />
@@ -22,8 +22,8 @@ export function NotificationToast() {
         </AnimatePresence>
       </div>
 
-      {/* Mobile: compact top-right stack — под TopBar (h-12 = 48px + отступ) */}
-      <div className="md:hidden fixed top-14 right-3 z-50 flex flex-col items-end gap-1.5 max-w-[calc(100vw-1.5rem)] pointer-events-none">
+      {/* Mobile: compact top-right stack, clear of the bottom navigation */}
+      <div className="md:hidden fixed top-3 right-3 z-50 flex flex-col items-end gap-1.5 max-w-[calc(100vw-1.5rem)] pointer-events-none">
         <AnimatePresence initial={false}>
           {visible.map(n => (
             <ToastItem key={n.id} n={n} onDismiss={dismiss} mobile />

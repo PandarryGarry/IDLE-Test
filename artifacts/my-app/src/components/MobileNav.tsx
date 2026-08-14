@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePlayerStore } from '@/store/playerStore';
 import { useGameStore } from '@/store/gameStore';
-import { useUIStore } from '@/store/uiStore';
 import { SkillId } from '@/data/types';
 import { cn } from '@/lib/utils';
 
@@ -69,7 +68,6 @@ export function MobileNav({ className }: MobileNavProps) {
   const [location] = useLocation();
   const { t } = useTranslation();
   const activeSkill = useGameStore(s => s.activeSkill);
-  const bottomNavVisible = useUIStore(s => s.bottomNavVisible);
   const isSkillRoute = ALL_SKILL_HREFS.includes(location);
   const hasTrainingSkill = activeSkill && !COMBAT_SKILLS_IDS.has(activeSkill);
 
@@ -120,20 +118,12 @@ export function MobileNav({ className }: MobileNavProps) {
         )}
       </AnimatePresence>
 
-      {/* Bottom bar — без Home, только основные разделы */}
-      <motion.nav
-        initial={false}
-        animate={{ 
-          y: bottomNavVisible ? 0 : '100%',
-          opacity: bottomNavVisible ? 1 : 0
-        }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className={cn(
-          'fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-md border-t border-border flex items-stretch',
-          'h-[calc(3.5rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]',
-          className
-        )}
-      >
+      {/* Bottom bar */}
+      <nav className={cn(
+        'fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-md border-t border-border flex items-stretch',
+        'h-[calc(3.5rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]',
+        className
+      )}>
         <NavTab href="/" icon="🏠" label={t('nav.home')} />
         <NavTab href="/combat" icon="⚔️" label={t('nav.combat')} />
 
@@ -153,8 +143,8 @@ export function MobileNav({ className }: MobileNavProps) {
         </button>
 
         <NavTab href="/inventory" icon="🎒" label={t('nav.inventory')} />
-        <NavTab href="/shop" icon="🏪" label="Магазин" />
-      </motion.nav>
+        <NavTab href="/settings"  icon="⚙️" label={t('nav.settings')} />
+      </nav>
     </>
   );
 }
