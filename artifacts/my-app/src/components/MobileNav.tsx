@@ -1,150 +1,170 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { AnimatePresence, motion } from 'framer-motion';
-import { useTranslation } from '@/hooks/useTranslation';
-import { usePlayerStore } from '@/store/playerStore';
 import { useGameStore } from '@/store/gameStore';
-import { SkillId } from '@/data/types';
-import { cn } from '@/lib/utils';
+import { usePlayerStore } from '@/store/playerStore';
+import { useCombatStore } from '@/store/combatStore';
+import { 
+  Home, 
+  Sword, 
+  Backpack, 
+  Coins, 
+  Layers, 
+  X,
+  Trees,
+  Pickaxe,
+  Fish,
+  Flame,
+  ChefHat,
+  Hammer
+} from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface MobileNavProps {
   className?: string;
 }
 
-const GATHERING_SKILLS = [
-  { href: '/woodcutting', icon: '🪓', id: 'woodcutting' as SkillId },
-  { href: '/fishing',     icon: '🎣', id: 'fishing'     as SkillId },
-  { href: '/mining',      icon: '⛏️', id: 'mining'      as SkillId },
-];
-const ARTISAN_SKILLS = [
-  { href: '/firemaking', icon: '🔥', id: 'firemaking' as SkillId },
-  { href: '/cooking',    icon: '🍳', id: 'cooking'    as SkillId },
-  { href: '/smithing',   icon: '🔨', id: 'smithing'   as SkillId },
-];
-const ALL_SKILL_HREFS = [...GATHERING_SKILLS, ...ARTISAN_SKILLS].map(s => s.href);
-const COMBAT_SKILLS_IDS = new Set(['attack','strength','defence','hitpoints','ranged','magic','prayer','slayer']);
-
-function NavTab({ href, icon, label }: { href: string; icon: string; label: string }) {
-  const [location] = useLocation();
-  const isActive = location === href;
-  return (
-    <Link href={href} className="flex-1">
-      <div className={cn(
-        'h-full flex flex-col items-center justify-center gap-0.5 text-[11px] font-bold transition-colors',
-        isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
-      )}>
-        <span className="text-[22px] leading-none">{icon}</span>
-        <span>{label}</span>
-      </div>
-    </Link>
-  );
-}
-
-function SkillChip({ href, icon, id, onNavigate }: { href: string; icon: string; id: SkillId; onNavigate: () => void }) {
-  const [location] = useLocation();
-  const level = usePlayerStore(s => s.skills[id]?.level ?? 1);
-  const activeSkill = useGameStore(s => s.activeSkill);
-  const isActive = location === href;
-  const isTraining = activeSkill === id;
-
-  return (
-    <Link href={href} onClick={onNavigate}>
-      <div className={cn(
-        'relative flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all active:scale-95',
-        isActive ? 'bg-primary/15 border-primary shadow-[0_0_10px_rgba(34,197,94,0.15)]' : 'bg-background/80 border-border'
-      )}>
-        {isTraining && (
-          <div className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_5px_rgba(34,197,94,1)]" />
-        )}
-        <span className="text-2xl leading-none">{icon}</span>
-        <span className={cn('font-mono text-[11px] font-black', isActive ? 'text-primary' : 'text-muted-foreground')}>{level}</span>
-      </div>
-    </Link>
-  );
-}
-
-export function MobileNav({ className }: MobileNavProps) {
-  const [skillsOpen, setSkillsOpen] = useState(false);
+export function MobileNav({ className = '' }: MobileNavProps) {
   const [location] = useLocation();
   const { t } = useTranslation();
-  const activeSkill = useGameStore(s => s.activeSkill);
-  const isSkillRoute = ALL_SKILL_HREFS.includes(location);
-  const hasTrainingSkill = activeSkill && !COMBAT_SKILLS_IDS.has(activeSkill);
+  const [isSkillsMenuOpen, setIsSkillsMenuOpen] = useState(false);
 
-  const closeSkills = () => setSkillsOpen(false);
+  const activeSkill = useGameStore(s => s.activeSkill);
+  const inCombat = useCombatStore(s => s.inCombat);
+  const isTrainingAny = activeSkill !== null || inCombat;
+
+  const skillsList = [
+    { href: '/woodcutting', name: t('skill.woodcutting'), icon: '🪓', id: 'woodcutting', color: 'text-emerald-400' },
+    { href: '/mining',      name: t('skill.mining'),      icon: '⛏️', id: 'mining',      color: 'text-amber-400' },
+    { href: '/fishing',     name: t('skill.fishing'),     icon: '🎣', id: 'fishing',     color: 'text-cyan-400' },
+    { href: '/firemaking',  name: t('skill.firemaking'),  icon: '🔥', id: 'firemaking',  color: 'text-rose-400' },
+    { href: '/cooking',     name: t('skill.cooking'),     icon: '🍳', id: 'cooking',     color: 'text-yellow-400' },
+    { href: '/smithing',    name: t('skill.smithing'),    icon: '🔨', id: 'smithing',    color: 'text-orange-400' },
+  ];
+
+  const isSkillsPage = skillsList.some(s => s.href === location);
 
   return (
     <>
-      {/* Skills panel slide-up */}
-      <AnimatePresence>
-        {skillsOpen && (
-          <>
-            <motion.div
-              key="overlay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
-              onClick={closeSkills}
-            />
-            <motion.div
-              key="panel"
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-              className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] inset-x-0 z-50 bg-card border-t border-border rounded-t-2xl p-4 pb-5 max-h-[75vh] overflow-y-auto overscroll-contain"
-            >
-              {/* Drag handle */}
-              <div className="w-10 h-1 bg-border rounded-full mx-auto mb-5" />
+      {/* Skills Bottom Sheet Modal for Mobile */}
+      {isSkillsMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex flex-col justify-end">
+          <div 
+            className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm animate-in fade-in"
+            onClick={() => setIsSkillsMenuOpen(false)}
+          />
+          <div className="relative bg-slate-900 border-t border-slate-800 rounded-t-3xl p-5 shadow-2xl z-10 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+              <h2 className="font-display font-black text-base text-amber-400 flex items-center gap-2">
+                <Layers className="w-5 h-5" /> {t('nav.skills')}
+              </h2>
+              <button
+                onClick={() => setIsSkillsMenuOpen(false)}
+                className="p-1.5 rounded-full bg-slate-800 text-slate-300 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-              <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground mb-3 px-1">{t('group.gathering')}</p>
-              <div className="grid grid-cols-3 gap-2 mb-5">
-                {GATHERING_SKILLS.map(s => (
-                  <SkillChip key={s.href} {...s} onNavigate={closeSkills} />
-                ))}
-              </div>
+            <div className="grid grid-cols-2 gap-2.5 pb-4">
+              {skillsList.map(skill => (
+                <SkillNavButton 
+                  key={skill.id}
+                  skill={skill}
+                  onClick={() => setIsSkillsMenuOpen(false)}
+                  currentPath={location}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
-              <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground mb-3 px-1">{t('group.artisan')}</p>
-              <div className="grid grid-cols-3 gap-2 mb-5">
-                {ARTISAN_SKILLS.map(s => (
-                  <SkillChip key={s.href} {...s} onNavigate={closeSkills} />
-                ))}
-              </div>
+      {/* Main Bottom Nav Bar */}
+      <nav className={`fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-xl border-t border-slate-800/80 px-2 py-1.5 pb-safe ${className}`}>
+        <div className="flex items-center justify-around max-w-lg mx-auto">
+          
+          {/* Home */}
+          <Link href="/" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] transition-all ${
+            location === '/' ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200'
+          }`}>
+            <Home className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] font-bold">{t('nav.home')}</span>
+          </Link>
 
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+          {/* Combat */}
+          <Link href="/combat" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] relative transition-all ${
+            location === '/combat' ? 'text-red-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+          }`}>
+            {inCombat && (
+              <span className="absolute top-0 right-2 w-2 h-2 rounded-full bg-red-500 animate-ping" />
+            )}
+            <Sword className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] font-bold">{t('nav.combat')}</span>
+          </Link>
 
-      {/* Bottom bar */}
-      <nav className={cn(
-        'fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-md border-t border-border flex items-stretch',
-        'h-[calc(3.5rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)]',
-        className
-      )}>
-        <NavTab href="/" icon="🏠" label={t('nav.home')} />
-        <NavTab href="/combat" icon="⚔️" label={t('nav.combat')} />
+          {/* Skills Drawer Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsSkillsMenuOpen(true)}
+            className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] relative transition-all ${
+              isSkillsPage || isSkillsMenuOpen ? 'text-emerald-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            {activeSkill && (
+              <span className="absolute top-0 right-2 w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
+            )}
+            <Layers className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] font-bold">{t('nav.skills')}</span>
+          </button>
 
-        {/* Skills toggle */}
-        <button
-          onClick={() => setSkillsOpen(v => !v)}
-          className={cn(
-            'relative flex-1 flex flex-col items-center justify-center gap-0.5 text-[11px] font-bold transition-colors',
-            isSkillRoute || skillsOpen ? 'text-primary' : 'text-muted-foreground'
-          )}
-        >
-          {hasTrainingSkill && (
-            <div className="absolute top-2 right-[25%] w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_6px_rgba(34,197,94,1)]" />
-          )}
-          <span className="text-[22px] leading-none">⚡</span>
-          <span>{t('nav.skills')}</span>
-        </button>
+          {/* Inventory */}
+          <Link href="/inventory" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] transition-all ${
+            location === '/inventory' ? 'text-sky-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+          }`}>
+            <Backpack className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] font-bold">{t('nav.inventory')}</span>
+          </Link>
 
-        <NavTab href="/inventory" icon="🎒" label={t('nav.inventory')} />
-        <NavTab href="/settings"  icon="⚙️" label={t('nav.settings')} />
+          {/* Bank */}
+          <Link href="/bank" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] transition-all ${
+            location === '/bank' ? 'text-amber-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+          }`}>
+            <Coins className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] font-bold">{t('nav.bank')}</span>
+          </Link>
+
+        </div>
       </nav>
     </>
+  );
+}
+
+function SkillNavButton({ skill, onClick, currentPath }: { skill: any; onClick: () => void; currentPath: string }) {
+  const level = usePlayerStore(s => s.skills[skill.id as any]?.level ?? 1);
+  const activeSkill = useGameStore(s => s.activeSkill);
+  const isTraining = activeSkill === skill.id;
+  const isCurrent = currentPath === skill.href;
+
+  return (
+    <Link
+      href={skill.href}
+      onClick={onClick}
+      className={`p-3 rounded-2xl border flex items-center justify-between gap-2 transition-all active:scale-95 ${
+        isCurrent
+          ? 'bg-amber-500/15 border-amber-500/50 shadow-md'
+          : 'bg-slate-950/80 border-slate-800 hover:border-slate-700'
+      }`}
+    >
+      <div className="flex items-center gap-2.5">
+        <span className="text-2xl">{skill.icon}</span>
+        <div className="text-left">
+          <div className="text-xs font-bold text-foreground">{skill.name}</div>
+          <div className="text-[10px] text-muted-foreground font-mono">Lvl {level}</div>
+        </div>
+      </div>
+      {isTraining && (
+        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+      )}
+    </Link>
   );
 }

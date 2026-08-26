@@ -10,32 +10,61 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 interface ItemIconProps {
   itemId: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   quantity?: number;
   className?: string;
   showTooltip?: boolean;
 }
 
+export function getItemRarity(itemId: string, sellValue: number = 0, equipSlot?: string): 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic' {
+  if (itemId.includes('dragon') || itemId.includes('diamond') || itemId.includes('onyx') || sellValue >= 5000) {
+    return 'legendary';
+  }
+  if (itemId.includes('runite') || itemId.includes('ruby') || itemId.includes('whale') || sellValue >= 1000) {
+    return 'epic';
+  }
+  if (itemId.includes('adamantite') || itemId.includes('mithril') || itemId.includes('emerald') || itemId.includes('shark') || sellValue >= 200) {
+    return 'rare';
+  }
+  if (itemId.includes('steel') || itemId.includes('iron') || itemId.includes('sapphire') || itemId.includes('lobster') || sellValue >= 40) {
+    return 'uncommon';
+  }
+  return 'common';
+}
+
+const RARITY_STYLES = {
+  common:    'border-slate-700/60 bg-slate-900/80 shadow-inner',
+  uncommon:  'border-emerald-500/50 bg-emerald-950/20 shadow-[0_0_8px_rgba(16,185,129,0.15)]',
+  rare:      'border-blue-500/60 bg-blue-950/20 shadow-[0_0_10px_rgba(59,130,246,0.2)]',
+  epic:      'border-purple-500/60 bg-purple-950/20 shadow-[0_0_12px_rgba(168,85,247,0.25)]',
+  legendary: 'border-amber-500/70 bg-amber-950/25 shadow-[0_0_14px_rgba(245,158,11,0.3)]',
+  mythic:    'border-rose-500/80 bg-rose-950/30 shadow-[0_0_16px_rgba(244,63,94,0.35)] animate-pulse',
+};
+
 export function ItemIcon({ itemId, size = 'md', quantity, className = '', showTooltip = true }: ItemIconProps) {
   const item = getItem(itemId);
+  const { t } = useTranslation();
   
-  if (!item) return <div className={`bg-muted rounded ${className}`} style={{ width: 32, height: 32 }} />;
+  if (!item) return <div className={`bg-slate-900/80 border border-slate-800 rounded-xl ${className}`} style={{ width: 36, height: 36 }} />;
+
+  const rarity = getItemRarity(item.id, item.sellValue, item.equipSlot);
+  const rarityStyle = RARITY_STYLES[rarity];
 
   const sizeClasses = {
-    sm: 'w-8 h-8 text-xl',
-    md: 'w-10 h-10 text-2xl',
-    lg: 'w-14 h-14 text-3xl',
-    xl: 'w-16 h-16 text-4xl',
+    xs: 'w-6 h-6 text-sm rounded-lg',
+    sm: 'w-8 h-8 text-base rounded-xl',
+    md: 'w-11 h-11 text-2xl rounded-xl',
+    lg: 'w-14 h-14 text-3xl rounded-2xl',
+    xl: 'w-16 h-16 text-4xl rounded-2xl',
   };
 
-  const badgeSize = size === 'sm' ? 'text-[9px] px-1' : 'text-xs px-1.5';
-  const { t } = useTranslation();
+  const badgeSize = size === 'xs' || size === 'sm' ? 'text-[9px] px-1 -bottom-1 -right-1' : 'text-[10px] px-1.5 -bottom-1.5 -right-1.5';
 
   const icon = (
-    <div className={`relative flex items-center justify-center bg-accent border border-border rounded shadow-inner ${sizeClasses[size]} ${className}`}>
-      <span>{item.icon || '📦'}</span>
-      {quantity !== undefined && (
-        <span className={`absolute -bottom-2 -right-2 bg-background border border-border text-primary font-mono font-bold rounded-full ${badgeSize}`}>
+    <div className={`relative flex items-center justify-center border transition-all duration-200 select-none ${rarityStyle} ${sizeClasses[size]} ${className}`}>
+      <span className="drop-shadow-sm transition-transform hover:scale-110">{item.icon || '📦'}</span>
+      {quantity !== undefined && quantity > 1 && (
+        <span className={`absolute bg-slate-950/90 border border-amber-500/40 text-amber-300 font-mono font-black rounded-full shadow-md z-10 leading-tight ${badgeSize}`}>
           {formatNumber(quantity)}
         </span>
       )}
@@ -47,18 +76,29 @@ export function ItemIcon({ itemId, size = 'md', quantity, className = '', showTo
   return (
     <Tooltip>
       <TooltipTrigger asChild>{icon}</TooltipTrigger>
-      <TooltipContent className="bg-popover border-border p-3 text-sm shadow-xl">
-        <div className="font-bold text-base mb-1 text-foreground">{item.name}</div>
-        <div className="text-muted-foreground mb-2 max-w-[200px]">
+      <TooltipContent className="bg-slate-950/95 border-amber-500/30 p-3.5 text-xs shadow-2xl backdrop-blur-xl rounded-2xl max-w-xs z-50">
+        <div className="flex items-center justify-between gap-2 mb-1.5">
+          <div className="font-bold text-sm text-slate-100">{item.name}</div>
+          <span className="font-mono text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
+            {rarity}
+          </span>
+        </div>
+        <div className="text-slate-400 mb-2.5 leading-relaxed text-[11px]">
           {item.description ?? t('inventory.noDescription')}
         </div>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-xs">
-          <span className="text-muted-foreground">{t('inventory.sellsFor')}:</span>
-          <span className="text-amber-400 font-mono text-right">{item.sellValue} GP</span>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-2 border-t border-slate-800 font-mono text-[11px]">
+          <span className="text-slate-400">{t('inventory.sellsFor')}:</span>
+          <span className="text-amber-400 font-bold text-right">{item.sellValue} GP</span>
           {item.healAmount !== undefined && (
             <>
-              <span className="text-muted-foreground">{t('inventory.heals')}:</span>
-              <span className="text-green-400 font-mono text-right">{item.healAmount} HP</span>
+              <span className="text-slate-400">{t('inventory.heals')}:</span>
+              <span className="text-emerald-400 font-bold text-right">+{item.healAmount} HP</span>
+            </>
+          )}
+          {item.equipSlot && (
+            <>
+              <span className="text-slate-400">{t('inventory.equipSlot')}:</span>
+              <span className="text-cyan-400 font-bold text-right">{item.equipSlot}</span>
             </>
           )}
         </div>

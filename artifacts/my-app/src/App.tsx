@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -6,7 +6,9 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { tickManager } from '@/gameEngine/tickManager';
 import { initGame } from '@/lib/saveManager';
 import { Sidebar } from '@/components/Sidebar';
+import { TopNavBar } from '@/components/TopNavBar';
 import { MobileNav } from '@/components/MobileNav';
+import { GlobalActiveBar } from '@/components/GlobalActiveBar';
 import { NotificationToast } from '@/components/NotificationToast';
 
 import { DashboardPage } from '@/pages/DashboardPage';
@@ -24,25 +26,52 @@ import { SettingsPage } from '@/pages/SettingsPage';
 function NotFound() {
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
-      <div className="text-center space-y-3">
-        <h1 className="text-5xl font-black text-destructive">404</h1>
-        <p className="text-muted-foreground font-mono text-sm">Area not found</p>
+      <div className="fantasy-card p-8 rounded-3xl text-center space-y-3 max-w-md mx-auto">
+        <div className="text-6xl">🧭</div>
+        <h1 className="text-4xl font-display font-black text-amber-400">404</h1>
+        <p className="text-slate-400 font-mono text-sm">Unknown Realm or Lost Territory</p>
       </div>
     </div>
   );
 }
 
 function Router() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
-    <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/30">
-      {/* Desktop sidebar — hidden on mobile */}
+    <div className="flex min-h-screen bg-background text-foreground selection:bg-amber-500/30">
+      
+      {/* Desktop Sidebar (Permanent) */}
       <div className="hidden md:block">
         <Sidebar />
       </div>
 
-      {/* Main content — 240px offset on desktop, full-width on mobile */}
-      <main className="flex-1 md:ml-60 min-h-screen overflow-x-hidden">
-        <div className="w-full max-w-[1440px] mx-auto px-3 py-4 pb-20 sm:px-4 md:pb-8 md:px-6 lg:px-8">
+      {/* Mobile Drawer Sidebar */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          <div 
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm animate-in fade-in"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className="relative z-10 w-72 max-w-[85vw] h-full shadow-2xl animate-in slide-in-from-left">
+            <Sidebar onCloseMobile={() => setMobileMenuOpen(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Main Content Area */}
+      <div className="flex-1 md:ml-64 min-h-screen flex flex-col overflow-x-hidden">
+        
+        {/* Unified Top Navigation */}
+        <TopNavBar onOpenMobileMenu={() => setMobileMenuOpen(true)} />
+
+        {/* Global Active Progress Floating Widget */}
+        <div className="pt-2">
+          <GlobalActiveBar />
+        </div>
+
+        {/* Page Content View */}
+        <main className="flex-1 w-full max-w-[1440px] mx-auto px-3 py-3 pb-24 sm:px-4 md:pb-10 md:px-6 lg:px-8">
           <Switch>
             <Route path="/" component={DashboardPage} />
             <Route path="/woodcutting" component={WoodcuttingPage} />
@@ -57,10 +86,10 @@ function Router() {
             <Route path="/settings" component={SettingsPage} />
             <Route component={NotFound} />
           </Switch>
-        </div>
-      </main>
+        </main>
+      </div>
 
-      {/* Mobile bottom nav — hidden on desktop */}
+      {/* Mobile Bottom Quick Bar */}
       <MobileNav className="md:hidden" />
 
       <NotificationToast />
@@ -80,7 +109,7 @@ function App() {
   }, []);
 
   return (
-    <TooltipProvider delayDuration={300}>
+    <TooltipProvider delayDuration={200}>
       <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
         <Router />
       </WouterRouter>

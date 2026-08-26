@@ -3,24 +3,36 @@ import { useCombatStore } from '@/store/combatStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useShallow } from 'zustand/react/shallow';
 import { COMBAT_AREAS, MONSTERS_MAP } from '@/data/monsters';
-import { ProgressBar } from '@/components/ProgressBar';
 import { ItemIcon } from '@/components/ItemIcon';
 import { useBankStore } from '@/store/bankStore';
 import { getItem } from '@/data/items';
 import { EquipSlot } from '@/data/types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { 
+  Sword, 
+  Shield, 
+  Heart, 
+  Zap, 
+  Flame, 
+  Skull, 
+  Square, 
+  Check, 
+  Activity, 
+  Utensils, 
+  History,
+  Sparkles,
+  ChevronRight
+} from 'lucide-react';
+import { formatNumber } from '@/lib/utils';
 
 export function CombatPage() {
   const { t } = useTranslation();
 
-  // Селекторы для статических/редко меняющихся данных
-  // useShallow сравнивает по значению и предотвращает лишние ре-рендеры
   const inCombat = useCombatStore(s => s.inCombat);
   const activeAreaId = useCombatStore(s => s.activeAreaId);
   const combatLog = useCombatStore(s => s.combatLog);
   const totalDamageDealt = useCombatStore(s => s.totalDamageDealt);
   const totalDamageTaken = useCombatStore(s => s.totalDamageTaken);
-  const killCount = useCombatStore(s => s.killCount);
   const startCombat = useCombatStore(s => s.startCombat);
   const stopCombat = useCombatStore(s => s.stopCombat);
 
@@ -38,8 +50,6 @@ export function CombatPage() {
     el.scrollTo({ top: el.scrollHeight, behavior });
   }, []);
 
-  // Keep the local log pinned only while the player is already at the bottom.
-  // Scrolling up pauses the pin so the player can inspect older hits and misses.
   useEffect(() => {
     const el = combatLogRef.current;
     if (!el) return;
@@ -68,16 +78,19 @@ export function CombatPage() {
 
   return (
     <div className="space-y-4">
-      {/* Mobile: stacked; Desktop: two columns */}
+      {/* Mobile: Stacked; Desktop: Left Side (Areas + Paperdoll) & Right Side (Battle Arena + Log) */}
       <div className="flex flex-col lg:flex-row gap-4">
 
-        {/* LEFT: Areas + Equipment — не перерисовывается во время боя */}
+        {/* LEFT COLUMN: Areas & Equipment Paperdoll */}
         <div className="w-full lg:w-80 xl:w-96 space-y-4 shrink-0">
 
-          {/* Areas */}
-          <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-            <h2 className="font-black text-sm uppercase tracking-widest text-muted-foreground mb-3">{t('combat.areas')}</h2>
-            <div className="space-y-2">
+          {/* Combat Areas Selection */}
+          <div className="fantasy-card border-red-500/30 p-4 rounded-3xl shadow-lg">
+            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-red-400 mb-3 flex items-center gap-1.5">
+              <Skull className="w-3.5 h-3.5" /> {t('combat.areas')}
+            </h2>
+            
+            <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin">
               {COMBAT_AREAS.map(area => {
                 const isLocked = combatLevel < (area.combatLevelRequired ?? 1);
                 const isActive = activeAreaId === area.id;
@@ -87,26 +100,34 @@ export function CombatPage() {
                     key={area.id}
                     onClick={() => handleAreaClick(area.id, area.combatLevelRequired ?? 1)}
                     disabled={isLocked}
-                    className={`p-3 rounded-xl border transition-all ${
+                    className={`w-full p-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
                       isLocked
-                        ? 'opacity-50 grayscale cursor-not-allowed bg-background border-border/50'
+                        ? 'opacity-40 grayscale cursor-not-allowed bg-slate-950/60 border-slate-800'
                         : isActive
-                          ? 'bg-primary/10 border-primary shadow-[0_0_10px_rgba(34,197,94,0.08)] ring-1 ring-primary/40'
-                          : 'bg-background hover:border-primary/40 cursor-pointer border-border active:scale-[0.98]'
+                          ? 'bg-red-500/15 border-red-500/60 shadow-[0_0_15px_rgba(239,68,68,0.2)] ring-1 ring-red-500/40 cursor-pointer'
+                          : 'bg-slate-950/70 hover:border-red-500/40 cursor-pointer border-slate-800/80 hover:bg-slate-900/60'
                     }`}
                   >
-                    <div className="flex justify-between items-center mb-0.5">
-                      <h3 className="font-bold text-sm">{area.name}</h3>
-                      {isLocked && (
-                        <span className="text-[11px] font-bold text-destructive bg-destructive/10 px-2 py-0.5 rounded-lg">
+                    <div className="flex justify-between items-center mb-1">
+                      <h3 className={`font-bold text-xs sm:text-sm ${isActive ? 'text-red-300' : 'text-slate-100'}`}>
+                        {area.name}
+                      </h3>
+                      {isLocked ? (
+                        <span className="text-[10px] font-mono font-bold text-red-400 bg-red-950/60 border border-red-500/30 px-1.5 py-0.5 rounded-md">
                           Lvl {area.combatLevelRequired}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-mono text-slate-400">
+                          {area.monsterIds.length} monsters
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-muted-foreground">{area.description}</p>
-                    <div className="mt-1.5 flex gap-1.5 overflow-x-auto pb-0.5">
+                    <p className="text-[11px] text-slate-400 leading-tight mb-2">{area.description}</p>
+                    
+                    {/* Monster Rosters */}
+                    <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-none">
                       {area.monsterIds.map(mId => (
-                        <span key={mId} className="shrink-0 bg-accent px-1.5 py-0.5 rounded-lg text-[11px] font-mono border border-border">
+                        <span key={mId} className="shrink-0 bg-slate-900/90 px-1.5 py-0.5 rounded-md text-[10px] font-mono border border-slate-800 text-slate-300">
                           {MONSTERS_MAP[mId]?.name} ({MONSTERS_MAP[mId]?.combatLevel})
                         </span>
                       ))}
@@ -117,80 +138,94 @@ export function CombatPage() {
             </div>
           </div>
 
-          {/* Equipment */}
-          <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-            <h2 className="font-black text-sm uppercase tracking-widest text-muted-foreground mb-3">{t('combat.equipment')}</h2>
-            <div className="grid grid-cols-3 gap-2 justify-items-center">
-              <div className="col-span-3 w-full flex justify-center"><EquipSlotBox slot="helm" /></div>
-              <EquipSlotBox slot="cape" /><EquipSlotBox slot="amulet" /><EquipSlotBox slot="quiver" />
-              <EquipSlotBox slot="weapon" /><EquipSlotBox slot="platebody" /><EquipSlotBox slot="shield" />
-              <div className="col-span-3 w-full flex justify-center"><EquipSlotBox slot="platelegs" /></div>
-              <EquipSlotBox slot="gloves" /><EquipSlotBox slot="boots" /><EquipSlotBox slot="ring" />
+          {/* Equipment Paperdoll (Кукла экипировки) */}
+          <div className="fantasy-card border-slate-800 p-4 rounded-3xl shadow-lg">
+            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-slate-300 mb-3 flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5 text-amber-400" /> {t('combat.equipment')}
+            </h2>
+            
+            <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-3">
+              <div className="grid grid-cols-3 gap-2 justify-items-center">
+                <div className="col-span-3 w-full flex justify-center"><EquipSlotBox slot="helm" label="Helm" /></div>
+                <EquipSlotBox slot="cape" label="Cape" />
+                <EquipSlotBox slot="amulet" label="Neck" />
+                <EquipSlotBox slot="quiver" label="Ammo" />
+                <EquipSlotBox slot="weapon" label="Weapon" />
+                <EquipSlotBox slot="platebody" label="Body" />
+                <EquipSlotBox slot="shield" label="Shield" />
+                <div className="col-span-3 w-full flex justify-center"><EquipSlotBox slot="platelegs" label="Legs" /></div>
+                <EquipSlotBox slot="gloves" label="Hands" />
+                <EquipSlotBox slot="boots" label="Feet" />
+                <EquipSlotBox slot="ring" label="Ring" />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT: Combat + Log + Food — динамическая часть вынесена в CombatScreen */}
+        {/* RIGHT COLUMN: Battle Arena & Combat Log & Food */}
         <div className="flex-1 space-y-4 min-w-0">
 
-          {/* Combat screen — отдельный компонент, перерисовывается только он */}
+          {/* Dynamic Combat Battle Arena */}
           <CombatScreen />
 
-          {/* Combat Log — тоже вынесен, чтобы не зависеть от таймеров */}
-          <div className="bg-card border border-border rounded-2xl p-3 shadow-sm flex flex-col h-56 md:h-64 min-h-0">
+          {/* Combat Log */}
+          <div className="fantasy-card border-slate-800 rounded-3xl p-3 sm:p-4 shadow-lg flex flex-col h-60 md:h-72 min-h-0">
             <div className="flex items-center justify-between gap-2 mb-2 px-1">
-              <h3 className="font-black text-[11px] uppercase tracking-widest text-muted-foreground">{t('combat.log')}</h3>
-              <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground">
-                <span>{t('combat.damage')}: <b className="text-green-400">{totalDamageDealt}</b></span>
-                <span className="hidden sm:inline">{t('combat.taken')}: <b className="text-red-400">{totalDamageTaken}</b></span>
+              <h3 className="font-mono text-xs font-extrabold uppercase tracking-widest text-slate-300 flex items-center gap-1.5">
+                <History className="w-3.5 h-3.5 text-cyan-400" /> {t('combat.log')}
+              </h3>
+              <div className="flex items-center gap-3 text-xs font-mono">
+                <span className="text-slate-400">{t('combat.damage')}: <b className="text-emerald-400 font-bold">{formatNumber(totalDamageDealt)}</b></span>
+                <span className="text-slate-400">{t('combat.taken')}: <b className="text-red-400 font-bold">{formatNumber(totalDamageTaken)}</b></span>
               </div>
             </div>
+
             <div
               ref={combatLogRef}
               onScroll={handleLogScroll}
-              className="relative flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-0.5 font-mono text-[11px] p-2 bg-background rounded-xl border border-border/50 shadow-inner scrollbar-thin"
+              className="relative flex-1 min-h-0 overflow-y-auto space-y-1 font-mono text-xs p-3 bg-slate-950/90 rounded-2xl border border-slate-800/80 shadow-inner scrollbar-thin"
             >
+              {combatLog.length === 0 && (
+                <div className="text-center py-10 text-slate-500 text-xs">
+                  Combat events will appear here during battle...
+                </div>
+              )}
               {combatLog.slice().reverse().map((log) => (
-                <div key={log.id} className={`py-px leading-relaxed ${
-                  log.type === 'player_attack' ? (log.damage && log.damage > 0 ? 'text-green-400' : 'text-slate-500') :
-                  log.type === 'enemy_attack' ? (log.damage && log.damage > 0 ? 'text-red-400' : 'text-slate-500') :
-                  log.type === 'player_death' || log.type === 'enemy_death' ? 'text-amber-400 font-bold' :
-                  log.type === 'eat' ? 'text-blue-400' : 'text-muted-foreground'
+                <div key={log.id} className={`leading-relaxed ${
+                  log.type === 'player_attack' ? (log.damage && log.damage > 0 ? 'text-emerald-400 font-semibold' : 'text-slate-500') :
+                  log.type === 'enemy_attack' ? (log.damage && log.damage > 0 ? 'text-red-400 font-semibold' : 'text-slate-500') :
+                  log.type === 'player_death' || log.type === 'enemy_death' ? 'text-amber-300 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded' :
+                  log.type === 'eat' ? 'text-cyan-400 font-medium' : 'text-slate-400'
                 }`}>
-                  <span className="opacity-40 mr-1.5">[{new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
+                  <span className="opacity-40 mr-2 text-[10px]">[{new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
                   {log.message}
                 </div>
               ))}
             </div>
+
             {showLatest && (
               <button
                 type="button"
                 onClick={() => scrollLogToBottom()}
-                className="self-center -mt-8 mb-2 z-10 rounded-full border border-primary/30 bg-card/90 px-3 py-1 text-[10px] font-bold text-primary shadow-lg backdrop-blur-md transition-colors hover:bg-primary/10"
+                className="self-center -mt-8 mb-2 z-10 rounded-full border border-red-500/40 bg-slate-900/90 px-3 py-1 text-[11px] font-bold text-red-300 shadow-xl backdrop-blur-md transition-all hover:bg-red-500/20 active:scale-95"
               >
                 {t('combat.latest')}
               </button>
             )}
           </div>
 
-          {/* Food — показывается только в бою */}
+          {/* Quick Food Belt */}
           {inCombat && <FoodPanel />}
         </div>
+
       </div>
     </div>
   );
 }
 
-/**
- * CombatScreen — отдельный компонент для боевой сцены.
- * Перерисовывается при каждом тике боя (100мс), но это изолировано
- * от списка зон и экипировки, которые остаются статичными.
- */
 const CombatScreen = memo(function CombatScreen() {
   const { t } = useTranslation();
 
-  // Группируем динамические данные через useShallow —
-  // компонент перерисовывается только когда реально меняются значения
   const {
     inCombat,
     currentMonster,
@@ -225,103 +260,184 @@ const CombatScreen = memo(function CombatScreen() {
 
   const combatLevel = usePlayerStore(s => s.combatLevel);
 
+  const playerHpPct = Math.max(0, Math.min(100, (playerHp / playerMaxHp) * 100));
+  const enemyHpPct = enemyMaxHp > 0 ? Math.max(0, Math.min(100, (enemyHp / enemyMaxHp) * 100)) : 0;
+  
+  const playerAttackProgress = Math.max(0, Math.min(100, (1 - playerAttackTimer / 2400) * 100));
+  const enemyAttackInterval = currentMonster?.attackInterval || 2400;
+  const enemyAttackProgress = Math.max(0, Math.min(100, (1 - enemyAttackTimer / enemyAttackInterval) * 100));
+
   return (
-    <div className="bg-card border border-border rounded-2xl p-4 md:p-5 shadow-sm min-h-[280px] flex flex-col relative overflow-hidden">
+    <div className="fantasy-card border-red-500/30 rounded-3xl p-4 sm:p-6 shadow-2xl min-h-[320px] flex flex-col relative overflow-hidden">
+      
       {!inCombat ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
-          <div className="text-5xl mb-3 opacity-25">⚔️</div>
-          <h2 className="text-xl font-black text-foreground/40">{t('combat.selectArea')}</h2>
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 p-6 text-center">
+          <div className="w-16 h-16 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-center text-4xl mb-3 opacity-60">
+            ⚔️
+          </div>
+          <h2 className="text-lg sm:text-xl font-display font-black text-slate-200">{t('combat.selectArea')}</h2>
+          <p className="text-xs text-slate-400 mt-1 max-w-sm">
+            Choose a combat dungeon or wilderness area from the left to engage in battle.
+          </p>
         </div>
       ) : (
         <div className="h-full flex flex-col z-10">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg md:text-xl font-black tracking-tight flex items-center gap-2">
-              <span className="text-primary">{t('combat.fighting')}</span> {currentMonster?.name}
-            </h2>
+          
+          {/* Arena Header */}
+          <div className="flex justify-between items-center mb-6 pb-3 border-b border-slate-800">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
+              <h2 className="text-base sm:text-lg font-display font-black text-slate-100 flex items-center gap-1.5">
+                <span className="text-red-400">{t('combat.fighting')}</span> {currentMonster?.name}
+              </h2>
+            </div>
+
             <button
               onClick={stopCombat}
-              className="px-3 py-1.5 bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive hover:text-white font-bold rounded-xl text-sm transition-all"
+              className="px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white border border-red-500/40 font-bold rounded-xl text-xs transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
             >
-              {t('combat.stop')}
+              <Square className="w-3.5 h-3.5 fill-current" />
+              <span>{t('combat.stop')}</span>
             </button>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center flex-grow py-2">
-            {/* Player */}
-            <div className="flex-1 w-full text-center space-y-2">
-              <div className="font-bold text-sm text-muted-foreground">{t('combat.you')} (Lvl {combatLevel})</div>
-              <div className="text-4xl md:text-5xl">🧑‍🌾</div>
-              <ProgressBar
-                value={playerHp / playerMaxHp}
-                label={`${playerHp} / ${playerMaxHp}`}
-                colorClass="bg-green-500 shadow-[0_0_12px_rgba(34,197,94,0.4)]"
-                className="h-6 md:h-8 w-full"
-              />
-              <ProgressBar
-                value={1 - (playerAttackTimer / 2400)}
-                colorClass="bg-blue-500"
-                className="h-1.5 opacity-60"
-              />
-            </div>
-
-            <div className="text-3xl font-black text-muted-foreground/50 animate-pulse shrink-0">⚔️</div>
-
-            {/* Enemy */}
-            <div className="flex-1 w-full text-center space-y-2">
-              <div className="font-bold text-sm text-muted-foreground">
-                {currentMonster?.name} (Lvl {currentMonster?.combatLevel})
+          {/* Duel Display (Player vs Monster) */}
+          <div className="flex flex-col md:flex-row gap-6 items-center justify-between flex-grow py-2">
+            
+            {/* Player Side */}
+            <div className="flex-1 w-full text-center space-y-2.5 bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+              <div className="flex items-center justify-between text-xs font-mono text-slate-400">
+                <span className="font-bold text-slate-200">{t('combat.you')}</span>
+                <span className="bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-md font-bold text-amber-300">
+                  Lvl {combatLevel}
+                </span>
               </div>
-              <div className="text-4xl md:text-5xl">{currentMonster?.isBoss ? '🐉' : '👹'}</div>
-              <ProgressBar
-                value={enemyHp / enemyMaxHp}
-                label={`${enemyHp} / ${enemyMaxHp}`}
-                colorClass="bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.4)]"
-                className="h-6 md:h-8 w-full"
-              />
-              <ProgressBar
-                value={1 - (enemyAttackTimer / (currentMonster?.attackInterval || 2400))}
-                colorClass="bg-orange-500"
-                className="h-1.5 opacity-60"
-              />
+
+              <div className="text-5xl py-1 filter drop-shadow-[0_0_12px_rgba(16,185,129,0.3)]">
+                🛡️
+              </div>
+
+              {/* Player HP Bar */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs font-mono">
+                  <span className="text-emerald-400 font-bold flex items-center gap-1">
+                    <Heart className="w-3 h-3 fill-current" /> HP
+                  </span>
+                  <span className="text-slate-200 font-bold">{playerHp} / {playerMaxHp}</span>
+                </div>
+                <div className="h-4 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.5)] transition-all duration-300"
+                    style={{ width: `${playerHpPct}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Attack Timer Bar */}
+              <div className="space-y-0.5">
+                <div className="flex justify-between text-[10px] font-mono text-slate-400">
+                  <span>Attack Speed</span>
+                  <span>{(playerAttackTimer / 1000).toFixed(1)}s</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-100"
+                    style={{ width: `${playerAttackProgress}%` }}
+                  />
+                </div>
+              </div>
             </div>
+
+            {/* Clash Swords Icon in Center */}
+            <div className="flex flex-col items-center justify-center shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-red-500/15 border border-red-500/40 flex items-center justify-center text-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse">
+                ⚔️
+              </div>
+              <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-widest mt-1">VS</span>
+            </div>
+
+            {/* Enemy Side */}
+            <div className="flex-1 w-full text-center space-y-2.5 bg-slate-950/60 p-4 rounded-2xl border border-red-500/30">
+              <div className="flex items-center justify-between text-xs font-mono text-slate-400">
+                <span className="font-bold text-red-300 truncate">{currentMonster?.name}</span>
+                <span className="bg-red-950/60 border border-red-500/30 px-2 py-0.5 rounded-md font-bold text-red-400">
+                  Lvl {currentMonster?.combatLevel}
+                </span>
+              </div>
+
+              <div className="text-5xl py-1 filter drop-shadow-[0_0_12px_rgba(239,68,68,0.3)]">
+                {currentMonster?.isBoss ? '🐉' : '👹'}
+              </div>
+
+              {/* Enemy HP Bar */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs font-mono">
+                  <span className="text-red-400 font-bold flex items-center gap-1">
+                    <Heart className="w-3 h-3 fill-current" /> HP
+                  </span>
+                  <span className="text-slate-200 font-bold">{enemyHp} / {enemyMaxHp}</span>
+                </div>
+                <div className="h-4 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-red-600 to-rose-400 shadow-[0_0_12px_rgba(239,68,68,0.5)] transition-all duration-300"
+                    style={{ width: `${enemyHpPct}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Enemy Attack Timer Bar */}
+              <div className="space-y-0.5">
+                <div className="flex justify-between text-[10px] font-mono text-slate-400">
+                  <span>Attack Speed</span>
+                  <span>{(enemyAttackTimer / 1000).toFixed(1)}s</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                  <div
+                    className="h-full bg-gradient-to-r from-orange-500 to-amber-400 transition-all duration-100"
+                    style={{ width: `${enemyAttackProgress}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
           </div>
 
-          {/* Controls */}
-          <div className="mt-auto pt-3 border-t border-border/50 flex flex-wrap gap-x-5 gap-y-2 justify-between items-center">
+          {/* Combat Toggles & Kill Counter */}
+          <div className="mt-4 pt-3 border-t border-slate-800 flex flex-wrap gap-x-6 gap-y-2 justify-between items-center">
             <div className="flex gap-4">
-              <label className="flex items-center gap-2 text-sm font-bold cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={autoEat}
                   onChange={(e) => setAutoEat(e.target.checked)}
-                  className="rounded bg-input border-border text-primary focus:ring-primary h-4 w-4 accent-primary"
+                  className="rounded-lg bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500 h-4 w-4 accent-amber-500 cursor-pointer"
                 />
                 {t('combat.autoEat')}
               </label>
-              <label className="flex items-center gap-2 text-sm font-bold cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={autoLoot}
                   onChange={(e) => setAutoLoot(e.target.checked)}
-                  className="rounded bg-input border-border text-primary focus:ring-primary h-4 w-4 accent-primary"
+                  className="rounded-lg bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500 h-4 w-4 accent-amber-500 cursor-pointer"
                 />
                 {t('combat.autoLoot')}
               </label>
             </div>
-            <div className="text-sm font-mono text-muted-foreground">
-              {t('combat.killCount')}: <span className="text-amber-400 font-bold">{killCount}</span>
+            
+            <div className="text-xs font-mono text-slate-400 flex items-center gap-1.5">
+              <Skull className="w-3.5 h-3.5 text-red-400" />
+              {t('combat.killCount')}: <span className="text-amber-300 font-bold">{formatNumber(killCount)}</span>
             </div>
           </div>
+
         </div>
       )}
+
     </div>
   );
 });
 
-/**
- * FoodPanel — отдельный компонент для списка еды.
- * Перерисовывается только при изменении items в банке.
- */
 const FoodPanel = memo(function FoodPanel() {
   const { t } = useTranslation();
   const eatFood = useCombatStore(s => s.eatFood);
@@ -332,31 +448,33 @@ const FoodPanel = memo(function FoodPanel() {
     .filter(({ item }) => item && item.healAmount && item.healAmount > 0);
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-3 shadow-sm">
-      <h3 className="font-black text-[11px] uppercase tracking-widest text-muted-foreground mb-2 px-1">{t('combat.food')}</h3>
-      <div className="flex gap-2 overflow-x-auto pb-1">
+    <div className="fantasy-card border-slate-800 rounded-3xl p-3.5 shadow-lg">
+      <h3 className="font-mono text-xs font-extrabold uppercase tracking-widest text-slate-300 mb-2.5 px-1 flex items-center gap-1.5">
+        <Utensils className="w-3.5 h-3.5 text-amber-400" /> {t('combat.food')}
+      </h3>
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {foodItems.map(({ slot, item }) => (
           <button
             key={slot.itemId}
             onClick={() => eatFood(slot.itemId)}
-            className="flex items-center gap-2 shrink-0 bg-background border border-border hover:border-primary p-2 rounded-xl transition-all active:scale-95"
+            className="flex items-center gap-2 shrink-0 bg-slate-950/80 border border-slate-800 hover:border-emerald-500 p-2 rounded-2xl transition-all active:scale-95 shadow-sm"
           >
-            <ItemIcon itemId={slot.itemId} size="sm" quantity={slot.quantity} />
+            <ItemIcon itemId={slot.itemId} size="sm" quantity={slot.quantity} showTooltip={false} />
             <div className="text-left">
-              <div className="text-xs font-bold">{item?.name}</div>
-              <div className="text-[11px] text-green-400 font-mono">+{item?.healAmount} HP</div>
+              <div className="text-xs font-bold text-slate-200 truncate max-w-[100px]">{item?.name}</div>
+              <div className="text-[11px] text-emerald-400 font-mono font-bold">+{item?.healAmount} HP</div>
             </div>
           </button>
         ))}
         {foodItems.length === 0 && (
-          <p className="text-sm text-muted-foreground py-1 px-1">{t('combat.noFood')}</p>
+          <p className="text-xs text-slate-500 py-1 px-1 font-mono">{t('combat.noFood')}</p>
         )}
       </div>
     </div>
   );
 });
 
-function EquipSlotBox({ slot }: { slot: EquipSlot }) {
+function EquipSlotBox({ slot, label }: { slot: EquipSlot; label: string }) {
   const itemId = usePlayerStore(s => s.equipment[slot]);
   const unequip = usePlayerStore(s => s.unequipItem);
   const addItem = useBankStore(s => s.addItem);
@@ -372,17 +490,19 @@ function EquipSlotBox({ slot }: { slot: EquipSlot }) {
     <button
       type="button"
       onClick={handleUnequip}
-      className={`w-12 h-12 rounded-xl border flex items-center justify-center relative transition-all ${
+      className={`w-12 h-12 rounded-2xl border flex items-center justify-center relative transition-all active:scale-95 ${
         itemId
-          ? 'bg-accent border-primary/50 cursor-pointer hover:border-destructive active:scale-95'
-          : 'bg-background border-border/30 opacity-40'
+          ? 'bg-slate-900 border-amber-500/60 shadow-[0_0_10px_rgba(245,158,11,0.2)] hover:border-red-500'
+          : 'bg-slate-950/70 border-slate-800/80 hover:border-slate-700 opacity-60'
       }`}
-      title={slot}
+      title={itemId ? `Click to unequip ${slot}` : slot}
     >
       {itemId ? (
-        <ItemIcon itemId={itemId} size="md" />
+        <ItemIcon itemId={itemId} size="md" showTooltip={true} />
       ) : (
-        <span className="text-[10px] text-muted-foreground font-mono leading-tight text-center">{slot.substring(0, 3)}</span>
+        <span className="text-[10px] text-slate-500 font-mono font-bold uppercase leading-tight text-center">
+          {label.substring(0, 3)}
+        </span>
       )}
     </button>
   );

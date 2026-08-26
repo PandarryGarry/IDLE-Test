@@ -3,11 +3,11 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { exportSaveAsFile, importSave, manualSave } from '@/lib/saveManager';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { useTranslation } from '@/hooks/useTranslation';
+import { Settings, Globe, ShieldAlert, Save, Download, Upload, Trash2, Moon, Sparkles } from 'lucide-react';
 
 export function SettingsPage() {
   const { t } = useTranslation();
   
-  // Точечные селекторы: компонент перерисовывается только при изменении этих значений
   const language = useSettingsStore(s => s.language);
   const autoSaveEnabled = useSettingsStore(s => s.autoSaveEnabled);
   const autoSaveInterval = useSettingsStore(s => s.autoSaveInterval);
@@ -43,45 +43,54 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="space-y-4 max-w-2xl">
-      {/* Page title */}
-      <div className="bg-card border border-border p-4 md:p-5 rounded-2xl shadow-sm">
-        <h1 className="text-2xl font-black tracking-tight flex items-center gap-2">
-          <span className="text-2xl">⚙️</span> {t('settings.title')}
-        </h1>
+    <div className="space-y-4 max-w-3xl">
+      
+      {/* Title */}
+      <div className="fantasy-card border-amber-500/30 p-4 sm:p-5 rounded-3xl shadow-lg flex items-center gap-3">
+        <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-2xl text-amber-400">
+          ⚙️
+        </div>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-display font-black text-slate-100">{t('settings.title')}</h1>
+          <p className="text-xs text-slate-400">Manage realms configuration and character data</p>
+        </div>
       </div>
 
-      {/* Language selector — prominent */}
-      <div className="bg-card border border-border rounded-2xl p-4 md:p-5 shadow-sm space-y-3">
-        <h2 className="font-black text-sm uppercase tracking-widest text-muted-foreground">{t('settings.language')}</h2>
-        <div className="flex gap-2">
+      {/* Language Selector */}
+      <div className="fantasy-card border-slate-800 p-4 sm:p-5 rounded-3xl shadow-lg space-y-3">
+        <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+          <Globe className="w-3.5 h-3.5 text-cyan-400" /> {t('settings.language')}
+        </h2>
+        <div className="grid grid-cols-2 gap-2.5">
           <button
             onClick={() => updateSetting('language', 'en')}
-            className={`flex-1 py-3 rounded-xl font-black text-lg tracking-wide transition-all ${
+            className={`py-3 px-4 rounded-2xl font-black text-sm tracking-wide transition-all active:scale-95 flex items-center justify-center gap-2 ${
               language === 'en'
-                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25'
-                : 'bg-background border border-border text-muted-foreground hover:border-primary/50'
+                ? 'bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                : 'bg-slate-950 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700'
             }`}
           >
-            🇬🇧 EN
+            🇬🇧 English
           </button>
           <button
             onClick={() => updateSetting('language', 'ru')}
-            className={`flex-1 py-3 rounded-xl font-black text-lg tracking-wide transition-all ${
+            className={`py-3 px-4 rounded-2xl font-black text-sm tracking-wide transition-all active:scale-95 flex items-center justify-center gap-2 ${
               language === 'ru'
-                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25'
-                : 'bg-background border border-border text-muted-foreground hover:border-primary/50'
+                ? 'bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                : 'bg-slate-950 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700'
             }`}
           >
-            🇷🇺 RU
+            🇷🇺 Русский
           </button>
         </div>
       </div>
 
+      {/* Gameplay & Display Grid */}
       <div className="grid sm:grid-cols-2 gap-4">
+        
         {/* Gameplay */}
-        <div className="bg-card border border-border rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
-          <h2 className="font-black text-sm uppercase tracking-widest text-muted-foreground">{t('settings.gameplay')}</h2>
+        <div className="fantasy-card border-slate-800 p-4 sm:p-5 rounded-3xl shadow-lg space-y-4">
+          <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-slate-400">{t('settings.gameplay')}</h2>
 
           <ToggleSetting
             label={t('settings.autoSave')}
@@ -91,13 +100,13 @@ export function SettingsPage() {
           />
 
           {autoSaveEnabled && (
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">{t('settings.autoSaveInterval')} (s)</span>
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-xs text-slate-400 font-mono">{t('settings.autoSaveInterval')} (s)</span>
               <input
                 type="number"
                 value={autoSaveInterval}
                 onChange={(e) => updateSetting('autoSaveInterval', Math.max(10, parseInt(e.target.value) || 30))}
-                className="bg-background border border-border rounded-lg px-3 py-1.5 w-20 text-right font-mono text-sm focus:outline-none focus:border-primary"
+                className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 w-20 text-right font-mono text-xs text-amber-300 focus:outline-none focus:border-amber-500"
                 min="10"
               />
             </div>
@@ -112,8 +121,8 @@ export function SettingsPage() {
         </div>
 
         {/* Display */}
-        <div className="bg-card border border-border rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
-          <h2 className="font-black text-sm uppercase tracking-widest text-muted-foreground">{t('settings.display')}</h2>
+        <div className="fantasy-card border-slate-800 p-4 sm:p-5 rounded-3xl shadow-lg space-y-4">
+          <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-slate-400">{t('settings.display')}</h2>
 
           <ToggleSetting
             label={t('settings.darkMode')}
@@ -125,57 +134,64 @@ export function SettingsPage() {
             }}
           />
 
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">{t('settings.numberFormat')}</span>
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-xs text-slate-300 font-medium">{t('settings.numberFormat')}</span>
             <select
               value={numberFormat}
               onChange={(e) => updateSetting('numberFormat', e.target.value as any)}
-              className="bg-background border border-border rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none focus:border-primary"
+              className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs font-mono text-amber-300 focus:outline-none focus:border-amber-500"
             >
               <option value="abbreviated">{t('settings.numberFormat.abbreviated')}</option>
               <option value="full">{t('settings.numberFormat.full')}</option>
             </select>
           </div>
         </div>
+
       </div>
 
       {/* Save Management */}
-      <div className="bg-card border border-border rounded-2xl p-4 md:p-5 shadow-sm space-y-5">
-        <h2 className="font-black text-sm uppercase tracking-widest text-primary">{t('settings.saveManagement')}</h2>
+      <div className="fantasy-card border-amber-500/30 p-4 sm:p-5 rounded-3xl shadow-xl space-y-4">
+        <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
+          <Save className="w-3.5 h-3.5" /> {t('settings.saveManagement')}
+        </h2>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2.5">
           <button
             onClick={handleSave}
-            className="flex-1 sm:flex-none px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-sm hover:bg-primary/90 transition-all text-sm"
+            className="flex-1 sm:flex-none px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-2xl text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.25)]"
           >
+            <Save className="w-3.5 h-3.5" />
             {t('settings.manualSave')}
           </button>
+          
           <button
             onClick={handleExport}
-            className="flex-1 sm:flex-none px-5 py-2.5 bg-accent border border-border text-foreground font-bold rounded-xl hover:bg-accent/80 transition-all text-sm"
+            className="flex-1 sm:flex-none px-5 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-200 font-bold rounded-2xl text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5"
           >
+            <Download className="w-3.5 h-3.5" />
             {t('settings.exportSave')}
           </button>
         </div>
 
-        <div className="space-y-2 pt-3 border-t border-border/50">
-          <h3 className="font-bold text-sm text-muted-foreground">{t('ui.import')} Save (Base64)</h3>
+        <div className="space-y-2 pt-3 border-t border-slate-800">
+          <h3 className="font-mono text-xs text-slate-400">{t('ui.import')} Save (Base64)</h3>
           <textarea
             value={importString}
             onChange={(e) => setImportString(e.target.value)}
-            placeholder="Paste your exported save string here..."
-            className="w-full h-24 bg-background border border-border rounded-xl p-3 font-mono text-xs focus:outline-none focus:border-primary transition-colors resize-none"
+            placeholder="Paste your exported save data string here..."
+            className="w-full h-20 bg-slate-950 border border-slate-800 rounded-2xl p-3 font-mono text-xs text-slate-300 focus:outline-none focus:border-amber-500 transition-colors resize-none placeholder:text-slate-600"
           />
           <button
             onClick={handleImport}
             disabled={!importString}
-            className="w-full sm:w-auto px-5 py-2 bg-amber-600/15 text-amber-500 border border-amber-600/40 hover:bg-amber-600/25 font-bold rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+            className="w-full sm:w-auto px-5 py-2 bg-slate-900 border border-slate-800 hover:border-amber-500/40 text-amber-300 font-bold rounded-xl text-xs transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
           >
+            <Upload className="w-3.5 h-3.5" />
             {t('ui.import')} & Reload
           </button>
         </div>
 
-        <div className="pt-4 border-t border-destructive/20">
+        <div className="pt-3 border-t border-red-500/20">
           <button
             onClick={() => {
               if (window.confirm('Are you sure you want to completely reset your game? This cannot be undone.')) {
@@ -183,12 +199,14 @@ export function SettingsPage() {
                 window.location.reload();
               }
             }}
-            className="w-full sm:w-auto px-5 py-2 bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive hover:text-white font-bold rounded-xl transition-all text-sm"
+            className="w-full sm:w-auto px-4 py-2 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/30 font-bold rounded-xl text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5"
           >
+            <Trash2 className="w-3.5 h-3.5" />
             Hard Reset Game
           </button>
         </div>
       </div>
+
     </div>
   );
 }
@@ -199,17 +217,20 @@ function ToggleSetting({
   label: string; description?: string; checked: boolean; onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="flex items-center justify-between gap-3 cursor-pointer group">
+    <div className="flex items-center justify-between gap-3 cursor-pointer group select-none" onClick={() => onChange(!checked)}>
       <div className="min-w-0">
-        <div className="font-medium text-sm group-hover:text-primary transition-colors">{label}</div>
-        {description && <div className="text-xs text-muted-foreground leading-tight mt-0.5">{description}</div>}
+        <div className="font-semibold text-xs text-slate-200 group-hover:text-amber-300 transition-colors">{label}</div>
+        {description && <div className="text-[11px] text-slate-400 leading-tight mt-0.5">{description}</div>}
       </div>
       <div
-        onClick={() => onChange(!checked)}
-        className={`shrink-0 w-11 h-6 rounded-full transition-colors relative ${checked ? 'bg-primary' : 'bg-muted'}`}
+        className={`shrink-0 w-10 h-5 rounded-full transition-colors relative border ${
+          checked ? 'bg-amber-500 border-amber-400' : 'bg-slate-900 border-slate-700'
+        }`}
       >
-        <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-0.5'}`} />
+        <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full shadow transition-transform ${
+          checked ? 'translate-x-5 bg-slate-950' : 'translate-x-0.5 bg-slate-400'
+        }`} />
       </div>
-    </label>
+    </div>
   );
 }
