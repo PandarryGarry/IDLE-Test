@@ -31,7 +31,7 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
   const cardStyle: React.CSSProperties = isLocked
     ? { background: 'var(--bg-card-dark)', border: '1px solid var(--border-light)', opacity: 0.6, filter: 'grayscale(0.4)', cursor: 'not-allowed', borderRadius: 14 }
     : isActive
-      ? { background: 'var(--accent-emerald-bg)', border: '1px solid var(--accent-emerald)', borderRadius: 14, boxShadow: 'var(--shadow-active)' }
+      ? { background: 'linear-gradient(160deg, #4a2c0a, #2e1a06)', border: '2px solid #c8880a', borderRadius: 14, boxShadow: '0 3px 0 #2a1005, 0 0 16px rgba(200,136,10,0.25)' }
       : { background: 'linear-gradient(180deg, #c89858 0%, #a07840 100%)', border: '2px solid #5a3010', borderRadius: 14, boxShadow: '0 3px 0 #3d1e08, inset 0 1px 0 rgba(220,170,80,0.2)', cursor: 'pointer' };
 
   return (
@@ -41,7 +41,7 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
       onMouseLeave={e => { if (!isLocked && !isActive) { (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-card)'; (e.currentTarget as HTMLDivElement).style.transform = ''; } }}>
 
       {/* Активная полоска */}
-      {isActive && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, var(--accent-emerald), #4caf50)', borderRadius: '14px 14px 0 0' }} />}
+      {isActive && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #c8880a, #f0c030, #ffd700)', borderRadius: '14px 14px 0 0' }} />}
 
       <div style={{ padding: '14px 14px', display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
 
@@ -121,8 +121,8 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
               🔒 Ур. {action.levelRequired}
             </div>
           ) : isActive ? (
-            <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#4ade80', background: 'var(--accent-emerald-bg)', border: '1px solid var(--accent-emerald)', borderRadius: 8, padding: '6px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent-emerald)', boxShadow: '0 0 6px var(--accent-emerald)', display: 'inline-block' }} />
+            <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#4ade80', background: 'rgba(200,136,10,0.15)', border: '1px solid rgba(200,136,10,0.5)', borderRadius: 8, padding: '6px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#f0c030', boxShadow: '0 0 6px rgba(240,192,48,0.7)', display: 'inline-block' }} />
               В процессе…
             </div>
           ) : (
