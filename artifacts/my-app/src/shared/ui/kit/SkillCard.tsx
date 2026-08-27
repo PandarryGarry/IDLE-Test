@@ -156,7 +156,7 @@ export const SkillCard = memo(function SkillCard({ skillId, href, diameter=72 }:
         onClick={() => setPopup(true)}
         style={{
           display:'flex',flexDirection:'column',alignItems:'center',gap:4,
-          padding:'6px 4px 5px',borderRadius:14,
+          padding:'6px 4px 8px',borderRadius:14,
           background:cardBg,border:`2px solid ${cardBorder}`,
           cursor:'pointer',transition:'all 0.14s ease',
           position:'relative',userSelect:'none',
@@ -170,7 +170,7 @@ export const SkillCard = memo(function SkillCard({ skillId, href, diameter=72 }:
         )}
 
         {/* ── Круг: SVG кольцо + иконка + badge внутри ── */}
-        <div style={{ position:'relative',width:D,height:D,flexShrink:0,overflow:'visible' }}>
+        <div style={{ position:'relative',width:D,height:D,flexShrink:0 }}>
 
           {/* SVG кольцо */}
           <svg width={D} height={D} viewBox={`0 0 ${D} ${D}`}
@@ -202,24 +202,24 @@ export const SkillCard = memo(function SkillCard({ skillId, href, diameter=72 }:
             }
           </div>
 
-          {/* Badge уровня — внутри круга, снизу, поверх иконки */}
-          <div style={{
-            position:'absolute',
-            bottom:badgeBottom,
-            left:'50%',transform:'translateX(-50%)',
-            minWidth:Math.round(D*0.38),height:badgeH,
-            borderRadius:9999,zIndex:3,
-            background:'rgba(20,8,0,0.82)',
-            border:`1.5px solid ${isActive?'#f0c030':'#8b5020'}`,
-            boxShadow:isActive?'0 0 8px rgba(240,192,48,0.6)':'0 1px 4px rgba(0,0,0,0.7)',
-            display:'flex',alignItems:'center',justifyContent:'center',
-            fontFamily:'var(--app-font-mono)',
-            fontSize:badgeFS,fontWeight:900,
-            color:isActive?'#f5d060':'#c8a040',
-            lineHeight:1,padding:'0 5px',
-          }}>
-            {st.level}
-          </div>
+
+        </div>
+
+        {/* Badge уровня — поверх нижней части круга */}
+        <div style={{
+          marginTop: -badgeH * 0.5 - 1,
+          minWidth: Math.round(D * 0.38), height: badgeH,
+          borderRadius: 9999, zIndex: 3, position: 'relative',
+          background: 'rgba(15,6,0,0.9)',
+          border: `1.5px solid ${isActive ? '#f0c030' : '#8b5020'}`,
+          boxShadow: isActive ? '0 0 8px rgba(240,192,48,0.6)' : '0 1px 4px rgba(0,0,0,0.7)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: 'var(--app-font-mono)',
+          fontSize: badgeFS, fontWeight: 900,
+          color: isActive ? '#f5d060' : '#c8a040',
+          lineHeight: 1, padding: '0 5px',
+        }}>
+          {st.level}
         </div>
       </div>
 
