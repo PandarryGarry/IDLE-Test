@@ -164,7 +164,7 @@ export function DashboardPage() {
               <div className="text-[9px] font-mono uppercase font-bold tracking-wider mb-0.5" style={{ color: '#ff8060' }}>
                 Боевой Lvl
               </div>
-              <div className="text-xl sm:text-2xl font-mono font-black text-red-400">
+              <div className="text-xl sm:text-2xl font-mono font-black" style={{ color: '#ff6050', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
                 {combatLevel}
               </div>
             </div>
@@ -173,7 +173,7 @@ export function DashboardPage() {
               <div className="text-[9px] font-mono uppercase font-bold tracking-wider mb-0.5" style={{ color: '#4ade80' }}>
                 Total Lvl
               </div>
-              <div className="text-xl sm:text-2xl font-mono font-black text-emerald-400">
+              <div className="text-xl sm:text-2xl font-mono font-black" style={{ color: '#4ade80', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
                 {totalLevel}
               </div>
             </div>
