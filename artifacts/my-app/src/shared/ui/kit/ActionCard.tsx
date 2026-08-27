@@ -32,7 +32,7 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
     ? { background: 'var(--bg-card-dark)', border: '1px solid var(--border-light)', opacity: 0.6, filter: 'grayscale(0.4)', cursor: 'not-allowed', borderRadius: 14 }
     : isActive
       ? { background: 'var(--accent-emerald-bg)', border: '1px solid var(--accent-emerald)', borderRadius: 14, boxShadow: 'var(--shadow-active)' }
-      : { background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: 14, boxShadow: 'var(--shadow-card)', cursor: 'pointer' };
+      : { background: 'linear-gradient(180deg, #c89858 0%, #a07840 100%)', border: '2px solid #5a3010', borderRadius: 14, boxShadow: '0 3px 0 #3d1e08, inset 0 1px 0 rgba(220,170,80,0.2)', cursor: 'pointer' };
 
   return (
     <div onClick={() => !isLocked && onActionClick()}
@@ -78,7 +78,7 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
         {outputItem && visual && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', background: 'var(--bg-card-dark)', border: '1px solid var(--border-light)', borderRadius: 10 }}>
             {/* Ячейка иконки 44×44 */}
-            <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--bg-slot)', border: '1px solid var(--border-slot)', boxShadow: 'var(--shadow-slot)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: '10%' }}>
+            <div style={{ width: 44, height: 44, borderRadius: 10, background: 'linear-gradient(160deg, #3d2010, #2e1608)', border: '2px solid #6b3810', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: '10%' }}>
               {visual.type === 'image' ? (
                 <img src={visual.value} alt={outputItem.name} loading="lazy"
                   style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(45,31,15,0.2))' }} />
@@ -87,8 +87,8 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
               )}
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--app-font-mono)', textTransform: 'uppercase', fontWeight: 700 }}>Добыча</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{outputItem.name}</div>
+              <div style={{ fontSize: 10, color: '#a07838', fontFamily: 'var(--app-font-mono)', textTransform: 'uppercase', fontWeight: 700 }}>Добыча</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#f5d880', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{outputItem.name}</div>
             </div>
           </div>
         )}
@@ -96,28 +96,28 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
         {/* ── Стат-строки ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 11, fontFamily: 'var(--app-font-mono)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}><Zap size={11} color="var(--accent-gold)" /> Опыт</span>
-            <span style={{ fontWeight: 700, color: 'var(--text-gold)' }}>{formatNumber(action.xp)} XP</span>
+            <span style={{ color: '#a07838', display: 'flex', alignItems: 'center', gap: 4 }}><Zap size={11} color="var(--accent-gold)" /> Опыт</span>
+            <span style={{ fontWeight: 700, color: '#f0c030' }}>{formatNumber(action.xp)} XP</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={11} color="var(--text-muted)" /> Время</span>
-            <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{(action.interval / 1000).toFixed(1)} с.</span>
+            <span style={{ color: '#a07838', display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={11} color="var(--text-muted)" /> Время</span>
+            <span style={{ fontWeight: 600, color: '#e0b850' }}>{(action.interval / 1000).toFixed(1)} с.</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Темп</span>
+            <span style={{ color: '#a07838' }}>Темп</span>
             <span style={{ fontWeight: 700, color: 'var(--accent-emerald)' }}>{xpPerHour(action.xp, action.interval)}</span>
           </div>
           {renderExtra && (
-            <div style={{ paddingTop: 6, marginTop: 2, borderTop: '1px solid var(--border-light)', fontFamily: 'var(--app-font-sans)' }}>
+            <div style={{ paddingTop: 6, marginTop: 2, borderTop: '1px solid #6b3810', fontFamily: 'var(--app-font-sans)' }}>
               {renderExtra}
             </div>
           )}
         </div>
 
         {/* ── Кнопка ── */}
-        <div style={{ marginTop: 'auto', paddingTop: 8, borderTop: '1px solid var(--border-light)' }}>
+        <div style={{ marginTop: 'auto', paddingTop: 8, borderTop: '1px solid #6b3810' }}>
           {isLocked ? (
-            <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--bg-card-dark)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '6px 0' }}>
+            <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#a07838', background: 'var(--bg-card-dark)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '6px 0' }}>
               🔒 Ур. {action.levelRequired}
             </div>
           ) : isActive ? (
