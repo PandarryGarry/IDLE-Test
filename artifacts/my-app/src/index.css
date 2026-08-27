@@ -40,29 +40,29 @@
    ═══════════════════════════════════════════════════════════ */
 :root {
   /* Фоны */
-  --bg-page:        #f5ede0;
+  --bg-page:        #e8c98a;
   --bg-sidebar:     #2d1f0f;
-  --bg-card:        #fdf5e8;
-  --bg-card-hover:  #fff8ef;
-  --bg-card-dark:   #e8d5b5;
-  --bg-slot:        #ede0c8;
-  --bg-slot-hover:  #f5e8cc;
-  --bg-header:      #3d2910;
+  --bg-card:        #f2dfa0;
+  --bg-card-hover:  #f7e8b0;
+  --bg-card-dark:   #d4b870;
+  --bg-slot:        #c8a040;
+  --bg-slot-hover:  #d4b055;
+  --bg-header:      #2d1a00;
   --bg-overlay:     rgba(45,31,15,0.75);
 
   /* Бордеры */
-  --border-default: #c8a878;
-  --border-light:   #e0c898;
-  --border-strong:  #8b6030;
-  --border-accent:  #d4860a;
-  --border-sidebar: #4a3018;
-  --border-card:    #d4b880;
-  --border-slot:    #b8966a;
+  --border-default: #a07830;
+  --border-light:   #c09040;
+  --border-strong:  #6b4010;
+  --border-accent:  #c07000;
+  --border-sidebar: #3a2000;
+  --border-card:    #b08838;
+  --border-slot:    #987030;
 
   /* Текст */
-  --text-primary:   #2d1f0f;
-  --text-secondary: #6b4a28;
-  --text-muted:     #9a7450;
+  --text-primary:   #1a0f00;
+  --text-secondary: #4a2c00;
+  --text-muted:     #7a5820;
   --text-light:     #c8a878;
   --text-white:     #fdf5e8;
   --text-gold:      #d4860a;
@@ -84,7 +84,7 @@
   --accent-teal-bg:     #d0f5f0;
 
   /* Полосы прогресса */
-  --bar-track:      #dcc8a0;
+  --bar-track:      #c8a040;
   --bar-xp-from:    #d4860a;
   --bar-xp-to:      #f0b830;
   --bar-hp-from:    #b02020;
