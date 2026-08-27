@@ -30,22 +30,19 @@ export function WoodcuttingPage() {
       <SkillHeader skillId="woodcutting" skillName={t('skill.woodcutting')} skillIcon="🪓" />
 
       {/* Active Action Panel */}
-      <div className={`rounded-3xl p-4 sm:p-5 relative overflow-hidden transition-all border ${
-        isTraining 
-          ? 'bg-gradient-to-b g-card-active' 
-          : 'g-card border-[var(--border-default)]'
-      }`}>
+      <div className='rounded-2xl p-4 sm:p-5 relative overflow-hidden transition-all'
+      style={{ background: isTraining ? 'linear-gradient(160deg, #4a2c0a, #2e1a06)' : 'linear-gradient(160deg, #9a7040, #7a5028)', border: isTraining ? '2px solid #c8880a' : '2px solid #5a3010', boxShadow: isTraining ? '0 3px 0 #2a1005, 0 0 20px rgba(200,136,10,0.2)' : '0 3px 0 #3d1e08' }}>
         {isTraining && activeTree ? (
           <div className="space-y-3.5 relative z-10">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.4)', boxShadow: '0 0 12px rgba(16,185,129,0.2)' }}>
-                  <Trees className="w-6 h-6 text-emerald-400" />
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(200,136,10,0.2)', border: '2px solid rgba(200,136,10,0.5)', boxShadow: '0 0 12px rgba(200,136,10,0.3)' }}>
+                  <Trees className='w-6 h-6' style={{ color: '#f0c030' }} />
                 </div>
                 <div>
                   <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
                     <span>{t('woodcutting.chopping')}</span>
-                    <span className="text-emerald-300 font-extrabold">{activeTree.name}</span>
+                    <span style={{ color: '#f5d060', fontWeight: 800 }} className=''>{activeTree.name}</span>
                   </h3>
                   <p className="text-[var(--text-secondary)] text-xs font-mono mt-0.5 flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-emerald-400" />
