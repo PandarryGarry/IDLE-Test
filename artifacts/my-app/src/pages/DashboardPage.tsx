@@ -58,8 +58,8 @@ function Stat({ label, value }: { label: string; value: React.ReactNode }) {
         whiteSpace:'nowrap',
       }}>{label}</span>
       <div style={{
-        fontFamily:'var(--app-font-mono)', fontSize:18, fontWeight:900,
-        color:'#f5d060', lineHeight:1, minHeight:24,
+        fontFamily:'var(--app-font-mono)', fontSize:16, fontWeight:900,
+        color:'#f5d060', lineHeight:1, minHeight:22,
         textShadow:'0 1px 4px rgba(0,0,0,0.5)',
         display:'flex', alignItems:'center', justifyContent:'center',
       }}>{value}</div>
@@ -92,7 +92,7 @@ function SkillGrid({ ids }: { ids: readonly string[] }) {
   return (
     <div style={{
       display:'grid',
-      gridTemplateColumns:'repeat(auto-fill, minmax(72px,1fr))',
+      gridTemplateColumns:'repeat(auto-fill, minmax(65px,1fr))',
       gap:10,
       justifyItems:'center',
     }}>
