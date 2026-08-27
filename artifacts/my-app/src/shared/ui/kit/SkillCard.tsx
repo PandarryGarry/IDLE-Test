@@ -239,7 +239,7 @@ export const SkillCard = memo(function SkillCard({
           flexDirection: 'column',
           alignItems:    'center',
           gap:           4,
-          padding:       '6px 4px 6px',
+          padding:       '8px 6px 10px',
           borderRadius:  14,
           background:    cardBg,
           border:        `2px solid ${cardBorder}`,
@@ -337,7 +337,7 @@ export const SkillCard = memo(function SkillCard({
           {/* Уровень badge — по центру нижнего края круга */}
           <div style={{
             position:  'absolute',
-            bottom:    -Math.round(badgeD * 0.4),
+            bottom:    -Math.round(badgeD * 0.25),
             left:      '50%',
             transform: 'translateX(-50%)',
             minWidth:  badgeD, height: badgeD,
@@ -361,7 +361,7 @@ export const SkillCard = memo(function SkillCard({
         </div>
 
         {/* Отступ под badge */}
-        <div style={{ height: Math.round(badgeD * 0.45) }} />
+        <div style={{ height: Math.round(badgeD * 0.3) }} />
       </div>
 
       {/* Попап */}
