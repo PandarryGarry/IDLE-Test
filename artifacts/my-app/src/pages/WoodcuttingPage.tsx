@@ -72,13 +72,13 @@ export function WoodcuttingPage() {
             <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'var(--bg-card-dark)', border: '1px solid var(--border-light)' }}>
               <Trees className="w-6 h-6 text-[var(--text-muted)]" />
             </div>
-            <p className="text-xs font-medium text-[var(--text-secondary)]">{t('woodcutting.selectTree')}</p>
+            <p className="text-xs font-medium" style={{ color: '#c8a050' }}>{t('woodcutting.selectTree')}</p>
           </div>
         )}
       </div>
 
       <div className="flex items-center justify-between px-1 pt-1">
-        <h2 className="text-xs font-extrabold uppercase tracking-widest text-emerald-400 font-mono flex items-center gap-1.5">
+        <h2 className="text-xs font-extrabold uppercase tracking-widest font-mono flex items-center gap-1.5" style={{ color: '#4ade80' }}>
           <span>🌲</span> {t('woodcutting.availableTrees')}
         </h2>
       </div>
