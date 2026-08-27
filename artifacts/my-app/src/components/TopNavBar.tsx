@@ -33,10 +33,10 @@ export function TopNavBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void 
   const pillStyle: React.CSSProperties = {
     display: 'flex', alignItems: 'center', gap: 6,
     padding: '4px 10px', borderRadius: 8,
-    background: 'rgba(255,248,238,0.9)',
-    border: '1px solid var(--border-default)',
+    background: 'linear-gradient(180deg, #8b5020, #6b3810)',
+    border: '2px solid #3d1e08',
     fontSize: 12, fontFamily: 'var(--app-font-mono)', fontWeight: 700,
-    color: 'var(--text-secondary)', cursor: 'pointer',
+    color: '#f0d070', cursor: 'pointer',
     transition: 'all 0.15s',
     boxShadow: '0 1px 3px rgba(45,31,15,0.1)',
     textDecoration: 'none',
@@ -45,9 +45,9 @@ export function TopNavBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void 
   return (
     <header style={{
       position: 'sticky', top: 0, zIndex: 30, width: '100%',
-      background: 'rgba(253,245,232,0.97)',
+      background: 'rgba(160,96,40,0.97)',
       borderBottom: '1px solid var(--border-card)',
-      boxShadow: '0 2px 12px rgba(45,31,15,0.1)',
+      boxShadow: '0 3px 0 #3d1e08, 0 4px 12px rgba(10,4,0,0.4)',
       backdropFilter: 'blur(12px)',
     }}>
       <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 16px', height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -62,18 +62,18 @@ export function TopNavBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void 
 
           {/* Лого мобайл */}
           <Link href="/" className="md:hidden" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#c07010,#e09820)', boxShadow: '0 0 10px rgba(212,134,10,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(180deg,#c8880a,#9a6008)', boxShadow: '0 2px 0 #3d2005, 0 0 10px rgba(200,136,10,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Sword size={14} color="#fff8ee" />
             </div>
-            <span style={{ fontFamily: 'var(--app-font-display)', fontWeight: 900, fontSize: 14, color: 'var(--text-primary)' }}>
+            <span style={{ fontFamily: 'var(--app-font-display)', fontWeight: 900, fontSize: 14, color: '#f5d880' }}>
               Aethelia<span style={{ color: '#d4860a', fontFamily: 'var(--app-font-sans)', fontWeight: 800, fontSize: 11 }}>RPG</span>
             </span>
           </Link>
 
           {/* Мир (десктоп) */}
-          <div className="hidden md:flex" style={{ alignItems: 'center', gap: 6, fontSize: 12, fontFamily: 'var(--app-font-mono)', color: 'var(--text-muted)' }}>
+          <div className="hidden md:flex" style={{ alignItems: 'center', gap: 6, fontSize: 12, fontFamily: 'var(--app-font-mono)', color: '#c8a050' }}>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#1a9e5a', boxShadow: '0 0 6px #1a9e5a', display: 'inline-block' }} />
-            <span>Мир: <b style={{ color: 'var(--text-secondary)', fontFamily: 'var(--app-font-sans)' }}>Этелия</b></span>
+            <span>Мир: <b style={{ color: '#f0d070', fontFamily: 'var(--app-font-sans)' }}>Этелия</b></span>
           </div>
         </div>
 
@@ -81,7 +81,7 @@ export function TopNavBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void 
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
 
           {/* Уровень боя */}
-          <Link href="/combat" style={{ ...pillStyle, background: 'rgba(255,232,232,0.9)', borderColor: 'rgba(192,40,30,0.35)', color: '#c0281e' }}>
+          <Link href="/combat" style={{ ...pillStyle, background: 'linear-gradient(180deg, #7a2010, #5a1808)', borderColor: '#3d0e06', color: '#ff8070' }}>
             <Sword size={13} color="#c0281e" />
             <span>{combatLevel}</span>
             <span className="hidden sm:inline" style={{ color: 'rgba(192,40,30,0.5)', fontWeight: 400, fontSize: 10 }}>LVL</span>
@@ -112,7 +112,7 @@ export function TopNavBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void 
           {/* Сохранение */}
           <button type="button" onClick={handleSave} style={{
             ...pillStyle,
-            background: savedRecently ? '#1a9e5a' : pillStyle.background,
+            background: savedRecently ? '#2a7a30' : 'linear-gradient(180deg, #8b5020, #6b3810)',
             borderColor: savedRecently ? '#1a9e5a' : 'var(--border-default)',
             color: savedRecently ? '#fff' : 'var(--text-secondary)',
           }}>
