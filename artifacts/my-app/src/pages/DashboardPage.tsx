@@ -262,7 +262,7 @@ export function DashboardPage() {
       )}
 
       {/* ══ 4. НАВЫКИ ══ */}
-      <div style={{ ...PANEL, paddingBottom: 18 }}>
+      <div style={{ ...PANEL, paddingBottom: 22, overflow: 'visible' }}>
         {/* Табы */}
         <div style={{ display:'flex',gap:6,marginBottom:14 }}>
           <Tab label="⚔ Бой"     active={tab==='combat'}    onClick={() => setTab('combat')} />
