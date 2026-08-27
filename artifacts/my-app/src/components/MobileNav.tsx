@@ -49,14 +49,14 @@ export function MobileNav({ className = '' }: MobileNavProps) {
             onClick={() => setIsSkillsMenuOpen(false)}
           />
           <div className="relative rounded-t-2xl p-5 shadow-2xl z-10 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom"
-            style={{ background: '#1c1409', border: '1px solid #3d2e1e', borderBottom: 'none' }}>
-            <div className="flex items-center justify-between pb-3 mb-3 border-b" style={{ borderColor: '#3d2e1e' }}>
+            style={{ background: 'var(--bg-card)', border: '1px solid #3d2e1e', borderBottom: 'none' }}>
+            <div className="flex items-center justify-between pb-3 mb-3 border-b" style={{ borderColor: 'var(--border-default)' }}>
               <h2 className="font-display font-black text-base text-amber-300 flex items-center gap-2">
                 <Layers className="w-5 h-5 text-amber-400" /> {t('nav.skills')}
               </h2>
               <button
                 onClick={() => setIsSkillsMenuOpen(false)}
-                className="p-1.5 rounded-full bg-[#231810] text-stone-300 hover:text-white"
+                className="p-1.5 rounded-full bg-[#231810] text-stone-300 hover:text-[var(--text-primary)]"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -83,7 +83,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
           
           {/* Home */}
           <Link href="/" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] transition-all ${
-            location === '/' ? 'text-amber-400 font-bold' : 'text-stone-300 hover:text-white'
+            location === '/' ? 'text-amber-400 font-bold' : 'text-stone-300 hover:text-[var(--text-primary)]'
           }`}>
             <Home className="w-5 h-5 mb-0.5" />
             <span className="text-[10px] font-bold">{t('nav.home')}</span>
@@ -91,7 +91,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
 
           {/* Combat */}
           <Link href="/combat" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] relative transition-all ${
-            location === '/combat' ? 'text-red-400 font-bold' : 'text-stone-300 hover:text-white'
+            location === '/combat' ? 'text-red-400 font-bold' : 'text-stone-300 hover:text-[var(--text-primary)]'
           }`}>
             {inCombat && (
               <span className="absolute top-0 right-2 w-2 h-2 rounded-full bg-red-500 animate-ping" />
@@ -105,7 +105,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
             type="button"
             onClick={() => setIsSkillsMenuOpen(true)}
             className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] relative transition-all ${
-              isSkillsPage || isSkillsMenuOpen ? 'text-emerald-400 font-bold' : 'text-stone-300 hover:text-white'
+              isSkillsPage || isSkillsMenuOpen ? 'text-emerald-400 font-bold' : 'text-stone-300 hover:text-[var(--text-primary)]'
             }`}
           >
             {activeSkill && (
@@ -117,7 +117,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
 
           {/* Inventory */}
           <Link href="/inventory" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] transition-all ${
-            location === '/inventory' ? 'text-sky-400 font-bold' : 'text-stone-300 hover:text-white'
+            location === '/inventory' ? 'text-sky-400 font-bold' : 'text-stone-300 hover:text-[var(--text-primary)]'
           }`}>
             <Backpack className="w-5 h-5 mb-0.5" />
             <span className="text-[10px] font-bold">{t('nav.inventory')}</span>
@@ -125,7 +125,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
 
           {/* Settings */}
           <Link href="/settings" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] transition-all ${
-            location === '/settings' ? 'text-amber-400 font-bold' : 'text-stone-300 hover:text-white'
+            location === '/settings' ? 'text-amber-400 font-bold' : 'text-stone-300 hover:text-[var(--text-primary)]'
           }`}>
             <Settings className="w-5 h-5 mb-0.5" />
             <span className="text-[10px] font-bold">{t('nav.settings')}</span>
@@ -157,7 +157,7 @@ function SkillNavButton({ skill, onClick, currentPath }: { skill: any; onClick: 
         <IconFrame icon={getSkillVisual(skill.id)} shape="none" size="sm" />
         <div className="text-left">
           <div className="text-xs font-bold text-stone-100">{skill.name}</div>
-          <div className="text-[10px] text-stone-500 font-mono">Ур. {level}</div>
+          <div className="text-[10px] text-[var(--text-muted)] font-mono">Ур. {level}</div>
         </div>
       </div>
       {isTraining && (
