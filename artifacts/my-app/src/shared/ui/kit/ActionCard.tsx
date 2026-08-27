@@ -57,7 +57,7 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
           </div>
 
           {isLocked ? (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontFamily: 'var(--app-font-mono)', fontWeight: 700, color: '#ff7060', background: 'var(--accent-ruby-bg)', border: '1px solid rgba(192,40,30,0.3)', padding: '2px 6px', borderRadius: 6, flexShrink: 0 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontFamily: 'var(--app-font-mono)', fontWeight: 800, color: '#ff7060', background: 'var(--accent-ruby-bg)', border: '1px solid rgba(192,40,30,0.3)', padding: '2px 6px', borderRadius: 6, flexShrink: 0 }}>
               <Lock size={9} /> {action.levelRequired}
             </span>
           ) : (
