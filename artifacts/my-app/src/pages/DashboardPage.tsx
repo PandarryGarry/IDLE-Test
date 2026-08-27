@@ -59,9 +59,10 @@ function Stat({ label, value }: { label: string; value: React.ReactNode }) {
       }}>{label}</span>
       <div style={{
         fontFamily:'var(--app-font-mono)', fontSize:16, fontWeight:900,
-        color:'#f5d060', lineHeight:1, minHeight:22,
+        color:'#f5d060', lineHeight:1, height:22,
         textShadow:'0 1px 4px rgba(0,0,0,0.5)',
         display:'flex', alignItems:'center', justifyContent:'center',
+        overflow:'hidden',
       }}>{value}</div>
     </div>
   );
@@ -91,10 +92,10 @@ function Tab({ label, active, onClick }: { label:string; active:boolean; onClick
 function SkillGrid({ ids }: { ids: readonly string[] }) {
   return (
     <div style={{
-      display:'grid',
-      gridTemplateColumns:'repeat(4, 1fr)',
+      display:'flex',
+      flexWrap:'wrap',
       gap:8,
-      justifyItems:'center',
+      justifyContent:'flex-start',
     }}>
       {ids.map(id => <SkillCard key={id} skillId={id} diameter={72} />)}
     </div>
