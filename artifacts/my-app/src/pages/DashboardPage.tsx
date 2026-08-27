@@ -22,7 +22,8 @@ const PANEL: React.CSSProperties = {
   border:     '2px solid #5a3010',
   borderRadius: 16,
   boxShadow:  '0 4px 0 #3d1e08, 0 6px 24px rgba(10,4,0,0.35), inset 0 1px 0 rgba(220,170,80,0.08)',
-  padding:    '14px',
+  padding:    '14px 14px 18px',
+  overflow:   'visible',
 };
 
 /* ── Заголовок секции — по центру ── */
@@ -57,9 +58,10 @@ function Stat({ label, value }: { label: string; value: React.ReactNode }) {
         whiteSpace:'nowrap',
       }}>{label}</span>
       <div style={{
-        fontFamily:'var(--app-font-mono)', fontSize:20, fontWeight:900,
-        color:'#f5d060', lineHeight:1,
+        fontFamily:'var(--app-font-mono)', fontSize:18, fontWeight:900,
+        color:'#f5d060', lineHeight:1, minHeight:24,
         textShadow:'0 1px 4px rgba(0,0,0,0.5)',
+        display:'flex', alignItems:'center', justifyContent:'center',
       }}>{value}</div>
     </div>
   );
@@ -90,7 +92,7 @@ function SkillGrid({ ids }: { ids: readonly string[] }) {
   return (
     <div style={{
       display:'grid',
-      gridTemplateColumns:'repeat(auto-fill, minmax(80px,1fr))',
+      gridTemplateColumns:'repeat(auto-fill, minmax(72px,1fr))',
       gap:10,
       justifyItems:'center',
     }}>
@@ -317,6 +319,38 @@ export function DashboardPage() {
               <ActionProgressBar height="h-2" color="amber" />
             </div>
           ) : null}
+        </div>
+      )}
+
+      {/* ══ 3.5 БЕЗ АКТИВНОСТИ — быстрый старт ══ */}
+      {!inCombat && !isRunning && (
+        <div style={PANEL}>
+          <SectionHeader icon="🗺" label="Начать приключение" />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+            {[
+              { href:'/woodcutting', icon:'🪓', label:'Рубить лес' },
+              { href:'/mining',      icon:'⛏️', label:'Добывать руду' },
+              { href:'/fishing',     icon:'🎣', label:'Ловить рыбу' },
+              { href:'/combat',      icon:'⚔️', label:'В бой' },
+            ].map(({ href, icon, label }) => (
+              <Link key={href} href={href} style={{ textDecoration:'none' }}>
+                <div style={{
+                  display:'flex', alignItems:'center', gap:8,
+                  padding:'10px 12px', borderRadius:10, cursor:'pointer',
+                  background:'linear-gradient(160deg,#5a3010,#3a1e08)',
+                  border:'2px solid #4a2808',
+                  boxShadow:'0 3px 0 #2a1005',
+                  transition:'all 0.12s',
+                }}
+                  onMouseEnter={e=>(e.currentTarget as HTMLDivElement).style.borderColor='#c8880a'}
+                  onMouseLeave={e=>(e.currentTarget as HTMLDivElement).style.borderColor='#4a2808'}
+                >
+                  <span style={{ fontSize:18 }}>{icon}</span>
+                  <span style={{ fontSize:12, fontWeight:700, color:'#f0d070', whiteSpace:'nowrap' }}>{label}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 
