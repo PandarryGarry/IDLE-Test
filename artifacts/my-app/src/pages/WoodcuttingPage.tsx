@@ -32,8 +32,8 @@ export function WoodcuttingPage() {
       {/* Active Action Panel */}
       <div className={`rounded-3xl p-4 sm:p-5 relative overflow-hidden transition-all border ${
         isTraining 
-          ? 'bg-gradient-to-b from-emerald-950/40 via-[#1f2b3e] to-[#172232] border-emerald-500/80 shadow-[0_0_24px_rgba(16,185,129,0.3)]' 
-          : 'bg-[#1f2b3e] border-[#344562]'
+          ? 'bg-gradient-to-b from-emerald-950/40 via-[#221810] to-[#1c1108] border-emerald-500/80 shadow-[0_0_24px_rgba(16,185,129,0.3)]' 
+          : 'bg-[#221810] border-[#3d2e1e]'
       }`}>
         {isTraining && activeTree ? (
           <div className="space-y-3.5 relative z-10">
@@ -43,11 +43,11 @@ export function WoodcuttingPage() {
                   🪓
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-slate-100 flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-bold text-stone-100 flex items-center gap-2">
                     <span>{t('woodcutting.chopping')}</span>
                     <span className="text-emerald-300 font-extrabold">{activeTree.name}</span>
                   </h3>
-                  <p className="text-slate-300 text-xs font-mono mt-0.5 flex items-center gap-1.5">
+                  <p className="text-stone-300 text-xs font-mono mt-0.5 flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-emerald-400" />
                     <span>{(activeTree.interval / 1000).toFixed(1)} сек. за действие</span>
                   </p>
@@ -68,11 +68,11 @@ export function WoodcuttingPage() {
             </div>
           </div>
         ) : (
-          <div className="text-center text-slate-300 flex flex-col items-center gap-2 py-6">
-            <div className="w-12 h-12 rounded-2xl bg-[#162030] border border-[#2d3d56] flex items-center justify-center text-2xl">
+          <div className="text-center text-stone-300 flex flex-col items-center gap-2 py-6">
+            <div className="w-12 h-12 rounded-2xl bg-[#1a1108] border border-[#3a2b1a] flex items-center justify-center text-2xl">
               🌲
             </div>
-            <p className="text-xs font-medium text-slate-300">{t('woodcutting.selectTree')}</p>
+            <p className="text-xs font-medium text-stone-300">{t('woodcutting.selectTree')}</p>
           </div>
         )}
       </div>

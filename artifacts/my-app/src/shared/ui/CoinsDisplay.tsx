@@ -72,7 +72,7 @@ export function CoinsDisplay({
 
       {/* 2. Серебряные монеты (Silver) */}
       {(silver > 0 || gold > 0 || showAllDenominations) && (
-        <span className="inline-flex items-center gap-0.5 text-slate-200 font-bold">
+        <span className="inline-flex items-center gap-0.5 text-stone-200 font-bold">
           <span>{silver}</span>
           <span className={`rounded-full bg-gradient-to-br from-slate-100 via-slate-300 to-slate-400 border border-slate-100 shadow-[0_0_6px_rgba(226,232,240,0.5)] flex items-center justify-center font-black text-slate-900 select-none ${style.coin}`}>
             с

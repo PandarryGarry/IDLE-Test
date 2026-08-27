@@ -44,8 +44,8 @@ export function SmithingPage() {
       {/* Active Action Panel */}
       <div className={`rounded-3xl p-4 sm:p-5 relative overflow-hidden transition-all border ${
         isTraining 
-          ? 'bg-gradient-to-b from-orange-950/40 via-[#1f2b3e] to-[#172232] border-orange-500/80 shadow-[0_0_24px_rgba(249,115,22,0.3)]' 
-          : 'bg-[#1f2b3e] border-[#344562]'
+          ? 'bg-gradient-to-b from-orange-950/40 via-[#221810] to-[#1c1108] border-orange-500/80 shadow-[0_0_24px_rgba(249,115,22,0.3)]' 
+          : 'bg-[#221810] border-[#3d2e1e]'
       }`}>
         {isTraining && activeRecipe ? (
           <div className="space-y-3.5 relative z-10">
@@ -55,11 +55,11 @@ export function SmithingPage() {
                   <SkillIcon skillId="smithing" size="md" />
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-slate-100 flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-bold text-stone-100 flex items-center gap-2">
                     <span>{t('smithing.smithing')}</span>
                     <span className="text-orange-300 font-extrabold">{activeRecipe.name}</span>
                   </h3>
-                  <p className="text-slate-300 text-xs font-mono mt-0.5 flex items-center gap-1.5">
+                  <p className="text-stone-300 text-xs font-mono mt-0.5 flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-orange-400" />
                     <span>{(activeRecipe.interval / 1000).toFixed(1)} сек. за действие</span>
                   </p>
@@ -80,11 +80,11 @@ export function SmithingPage() {
             </div>
           </div>
         ) : (
-          <div className="text-center text-slate-300 flex flex-col items-center gap-2 py-6">
-            <div className="w-12 h-12 rounded-2xl bg-[#162030] border border-[#2d3d56] flex items-center justify-center p-2">
+          <div className="text-center text-stone-300 flex flex-col items-center gap-2 py-6">
+            <div className="w-12 h-12 rounded-2xl bg-[#1a1108] border border-[#3a2b1a] flex items-center justify-center p-2">
               <SkillIcon skillId="smithing" size="md" />
             </div>
-            <p className="text-xs font-medium text-slate-300">{t('smithing.selectRecipe')}</p>
+            <p className="text-xs font-medium text-stone-300">{t('smithing.selectRecipe')}</p>
           </div>
         )}
       </div>
@@ -96,7 +96,7 @@ export function SmithingPage() {
           className={`flex-1 sm:flex-none px-5 py-2.5 rounded-2xl font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
             tab === 'smelting' 
               ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black shadow-md' 
-              : 'bg-[#1f2b3e] border border-[#344562] text-slate-300 hover:text-white'
+              : 'bg-[#221810] border border-[#3d2e1e] text-stone-300 hover:text-white'
           }`}
         >
           🔥 {t('smithing.smelting')}
@@ -106,7 +106,7 @@ export function SmithingPage() {
           className={`flex-1 sm:flex-none px-5 py-2.5 rounded-2xl font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
             tab === 'equipment' 
               ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black shadow-md' 
-              : 'bg-[#1f2b3e] border border-[#344562] text-slate-300 hover:text-white'
+              : 'bg-[#221810] border border-[#3d2e1e] text-stone-300 hover:text-white'
           }`}
         >
           🛡️ {t('smithing.equipment')}
@@ -118,16 +118,16 @@ export function SmithingPage() {
         actions={currentList}
         onActionClick={handleActionClick}
         renderExtra={(action) => (
-          <div className="flex flex-col gap-1.5 mt-2 pt-2 border-t border-slate-800">
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">{t('smithing.ingredients')}:</span>
+          <div className="flex flex-col gap-1.5 mt-2 pt-2 border-t border-stone-800">
+            <span className="text-[10px] text-stone-500 font-bold uppercase tracking-wider font-mono">{t('smithing.ingredients')}:</span>
             <div className="flex flex-wrap gap-1.5">
               {action.ingredients.map((ing: any, i: number) => {
                 const qty = getItemQty(ing.itemId);
                 const hasEnough = qty >= ing.quantity;
                 return (
-                  <div key={i} className="flex items-center gap-1 bg-slate-950 px-2 py-1 rounded-lg border border-slate-800">
+                  <div key={i} className="flex items-center gap-1 bg-stone-950 px-2 py-1 rounded-lg border border-stone-800">
                     <ItemIcon itemId={ing.itemId} size="sm" />
-                    <span className={`text-xs font-mono font-bold ${hasEnough ? 'text-slate-200' : 'text-red-400'}`}>
+                    <span className={`text-xs font-mono font-bold ${hasEnough ? 'text-stone-200' : 'text-red-400'}`}>
                       {qty}/{ing.quantity}
                     </span>
                   </div>

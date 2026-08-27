@@ -62,12 +62,12 @@ export const UIIcons = {
   
   // Статус и интерактив
   lock: () => <Lock className="w-3.5 h-3.5 text-amber-400" />,
-  unlock: () => <Unlock className="w-3.5 h-3.5 text-slate-400" />,
+  unlock: () => <Unlock className="w-3.5 h-3.5 text-stone-500" />,
   sparkles: () => <Sparkles className="w-4 h-4 text-amber-400" />,
   trend: () => <TrendingUp className="w-4 h-4 text-emerald-400" />,
   food: () => <Utensils className="w-4 h-4 text-amber-400" />,
   history: () => <History className="w-4 h-4 text-cyan-400" />,
-  search: () => <Search className="w-4 h-4 text-slate-400" />,
+  search: () => <Search className="w-4 h-4 text-stone-500" />,
   check: () => <Check className="w-4 h-4 text-emerald-400" />,
-  globe: () => <Globe className="w-4 h-4 text-slate-400" />,
+  globe: () => <Globe className="w-4 h-4 text-stone-500" />,
 };

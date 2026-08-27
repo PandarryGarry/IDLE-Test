@@ -65,7 +65,7 @@ function ToastItem({
     ? 'bg-red-950/60 border-red-400/25 text-red-100 ring-1 ring-red-400/20 shadow-red-900/40'
     : isItem
     ? 'bg-emerald-950/60 border-emerald-400/25 text-emerald-100 ring-1 ring-emerald-400/20'
-    : 'bg-slate-900/70 border-white/10 text-slate-200';
+    : 'bg-stone-900/70 border-white/10 text-stone-200';
 
   return (
     <motion.div

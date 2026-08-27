@@ -45,7 +45,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
       {isSkillsMenuOpen && (
         <div className="fixed inset-0 z-50 md:hidden flex flex-col justify-end">
           <div 
-            className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm animate-in fade-in"
+            className="absolute inset-0 bg-stone-950/80 backdrop-blur-sm animate-in fade-in"
             onClick={() => setIsSkillsMenuOpen(false)}
           />
           <div className="relative rounded-t-2xl p-5 shadow-2xl z-10 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom"
@@ -56,7 +56,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
               </h2>
               <button
                 onClick={() => setIsSkillsMenuOpen(false)}
-                className="p-1.5 rounded-full bg-[#202c40] text-slate-300 hover:text-white"
+                className="p-1.5 rounded-full bg-[#231810] text-stone-300 hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -83,7 +83,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
           
           {/* Home */}
           <Link href="/" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] transition-all ${
-            location === '/' ? 'text-amber-400 font-bold' : 'text-slate-300 hover:text-white'
+            location === '/' ? 'text-amber-400 font-bold' : 'text-stone-300 hover:text-white'
           }`}>
             <Home className="w-5 h-5 mb-0.5" />
             <span className="text-[10px] font-bold">{t('nav.home')}</span>
@@ -91,7 +91,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
 
           {/* Combat */}
           <Link href="/combat" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] relative transition-all ${
-            location === '/combat' ? 'text-red-400 font-bold' : 'text-slate-300 hover:text-white'
+            location === '/combat' ? 'text-red-400 font-bold' : 'text-stone-300 hover:text-white'
           }`}>
             {inCombat && (
               <span className="absolute top-0 right-2 w-2 h-2 rounded-full bg-red-500 animate-ping" />
@@ -105,7 +105,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
             type="button"
             onClick={() => setIsSkillsMenuOpen(true)}
             className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] relative transition-all ${
-              isSkillsPage || isSkillsMenuOpen ? 'text-emerald-400 font-bold' : 'text-slate-300 hover:text-white'
+              isSkillsPage || isSkillsMenuOpen ? 'text-emerald-400 font-bold' : 'text-stone-300 hover:text-white'
             }`}
           >
             {activeSkill && (
@@ -117,7 +117,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
 
           {/* Inventory */}
           <Link href="/inventory" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] transition-all ${
-            location === '/inventory' ? 'text-sky-400 font-bold' : 'text-slate-300 hover:text-white'
+            location === '/inventory' ? 'text-sky-400 font-bold' : 'text-stone-300 hover:text-white'
           }`}>
             <Backpack className="w-5 h-5 mb-0.5" />
             <span className="text-[10px] font-bold">{t('nav.inventory')}</span>
@@ -125,7 +125,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
 
           {/* Settings */}
           <Link href="/settings" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] transition-all ${
-            location === '/settings' ? 'text-amber-400 font-bold' : 'text-slate-300 hover:text-white'
+            location === '/settings' ? 'text-amber-400 font-bold' : 'text-stone-300 hover:text-white'
           }`}>
             <Settings className="w-5 h-5 mb-0.5" />
             <span className="text-[10px] font-bold">{t('nav.settings')}</span>
@@ -150,14 +150,14 @@ function SkillNavButton({ skill, onClick, currentPath }: { skill: any; onClick: 
       className={`p-3 rounded-2xl border flex items-center justify-between gap-2.5 transition-all active:scale-95 ${
         isCurrent
           ? 'bg-amber-500/20 border-amber-400/60 shadow-md'
-          : 'bg-[#182232] border-[#2e3e56] hover:border-[#3d5070]'
+          : 'bg-[#201508] border-[#3a2b1a] hover:border-[#3d5070]'
       }`}
     >
       <div className="flex items-center gap-2.5">
         <IconFrame icon={getSkillVisual(skill.id)} shape="none" size="sm" />
         <div className="text-left">
-          <div className="text-xs font-bold text-slate-100">{skill.name}</div>
-          <div className="text-[10px] text-slate-400 font-mono">Ур. {level}</div>
+          <div className="text-xs font-bold text-stone-100">{skill.name}</div>
+          <div className="text-[10px] text-stone-500 font-mono">Ур. {level}</div>
         </div>
       </div>
       {isTraining && (

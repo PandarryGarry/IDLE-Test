@@ -45,7 +45,7 @@ export function getItemTier(itemId: string, item?: Item): string {
 }
 
 const RARITY_NAMES: Record<string, { label: string; text: string; bg: string; dot: string; border: string }> = {
-  common:    { label: 'Обычный',     text: 'text-slate-300', bg: 'bg-slate-800/80', dot: 'bg-slate-400', border: 'border-slate-700' },
+  common:    { label: 'Обычный',     text: 'text-stone-300', bg: 'bg-stone-800/80', dot: 'bg-slate-400', border: 'border-stone-700' },
   uncommon:  { label: 'Необычный',   text: 'text-emerald-400', bg: 'bg-emerald-950/40', dot: 'bg-emerald-400', border: 'border-emerald-500/40' },
   rare:      { label: 'Редкий',      text: 'text-blue-400', bg: 'bg-blue-950/40', dot: 'bg-blue-400', border: 'border-blue-500/40' },
   epic:      { label: 'Эпический',   text: 'text-purple-400', bg: 'bg-purple-950/40', dot: 'bg-purple-400', border: 'border-purple-500/40' },
@@ -149,19 +149,19 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 select-none animate-in fade-in duration-200">
       <div 
-        className="fixed inset-0 bg-slate-950/80 backdrop-blur-md"
+        className="fixed inset-0 bg-stone-950/80 backdrop-blur-md"
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-sm sm:max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl z-10 space-y-4 animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-sm sm:max-w-md bg-stone-900 border border-stone-800 rounded-3xl p-5 shadow-2xl z-10 space-y-4 animate-in zoom-in-95 duration-200">
         
         {/* Header Bar */}
-        <div className="flex items-center justify-between pb-2 border-b border-slate-800/80">
+        <div className="flex items-center justify-between pb-2 border-b border-stone-800/80">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-black text-slate-300 uppercase tracking-wider">
+            <span className="text-xs font-mono font-black text-stone-300 uppercase tracking-wider">
               {item.equipSlot ? 'Снаряжение' : 'Предмет'}
             </span>
-            <span className="text-[10px] font-mono font-extrabold bg-slate-800 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded-md">
+            <span className="text-[10px] font-mono font-extrabold bg-stone-800 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded-md">
               {tier}
             </span>
           </div>
@@ -173,7 +173,7 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
               className={`p-2 rounded-xl transition-all active:scale-95 ${
                 isLocked 
                   ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]' 
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent'
+                  : 'text-stone-500 hover:text-stone-200 hover:bg-stone-800 border border-transparent'
               }`}
               title={isLocked ? 'Заперто от продажи' : 'Запереть предмет'}
             >
@@ -183,7 +183,7 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all active:scale-95"
+              className="p-2 rounded-xl text-stone-500 hover:text-white hover:bg-stone-800 transition-all active:scale-95"
             >
               <X className="w-4 h-4" />
             </button>
@@ -199,7 +199,7 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
               <span className="drop-shadow-md">{visual.value}</span>
             )}
             {quantity > 1 && (
-              <span className="absolute -bottom-1 -right-1 bg-[#141b28] border border-amber-400/50 text-amber-300 font-mono text-[10px] font-black px-1.5 py-0.2 rounded-full shadow">
+              <span className="absolute -bottom-1 -right-1 bg-[#160f06] border border-amber-400/50 text-amber-300 font-mono text-[10px] font-black px-1.5 py-0.2 rounded-full shadow">
                 x{formatNumber(quantity)}
               </span>
             )}
@@ -211,10 +211,10 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
                 {rarity.label}
               </span>
             </div>
-            <h2 className="text-base sm:text-lg font-display font-black text-slate-100 truncate">
+            <h2 className="text-base sm:text-lg font-display font-black text-stone-100 truncate">
               {item.name}
             </h2>
-            <p className="text-xs text-slate-400 font-medium">
+            <p className="text-xs text-stone-500 font-medium">
               {categoryLabel}
             </p>
           </div>
@@ -222,18 +222,18 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
 
         {/* Stat Pill Badges */}
         <div className="grid grid-cols-2 gap-2 pt-1">
-          <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-2.5 flex items-center gap-2.5">
+          <div className="bg-stone-950/80 border border-stone-800 rounded-2xl p-2.5 flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
               <Coins className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-[10px] text-slate-400 font-mono uppercase font-bold">Цена за 1 шт.</div>
+              <div className="text-[10px] text-stone-500 font-mono uppercase font-bold">Цена за 1 шт.</div>
               <CoinsDisplay amount={item.sellValue} size="xs" />
             </div>
           </div>
 
           {item.healAmount !== undefined && (
-            <div className="bg-slate-950/80 border border-emerald-500/30 rounded-2xl p-2.5 flex items-center gap-2.5">
+            <div className="bg-stone-950/80 border border-emerald-500/30 rounded-2xl p-2.5 flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
                 <Heart className="w-4 h-4 fill-current" />
               </div>
@@ -245,7 +245,7 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
           )}
 
           {item.combatStats?.attackBonus !== undefined && item.combatStats.attackBonus > 0 && (
-            <div className="bg-slate-950/80 border border-rose-500/30 rounded-2xl p-2.5 flex items-center gap-2.5">
+            <div className="bg-stone-950/80 border border-rose-500/30 rounded-2xl p-2.5 flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-rose-500/15 border border-rose-500/40 flex items-center justify-center text-rose-400 shrink-0">
                 <Sword className="w-4 h-4" />
               </div>
@@ -257,7 +257,7 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
           )}
 
           {item.combatStats?.strengthBonus !== undefined && item.combatStats.strengthBonus > 0 && (
-            <div className="bg-slate-950/80 border border-emerald-500/30 rounded-2xl p-2.5 flex items-center gap-2.5">
+            <div className="bg-stone-950/80 border border-emerald-500/30 rounded-2xl p-2.5 flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
                 <Zap className="w-4 h-4" />
               </div>
@@ -269,7 +269,7 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
           )}
 
           {item.combatStats?.defenceBonus !== undefined && item.combatStats.defenceBonus > 0 && (
-            <div className="bg-slate-950/80 border border-blue-500/30 rounded-2xl p-2.5 flex items-center gap-2.5">
+            <div className="bg-stone-950/80 border border-blue-500/30 rounded-2xl p-2.5 flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/40 flex items-center justify-center text-blue-400 shrink-0">
                 <Shield className="w-4 h-4" />
               </div>
@@ -282,12 +282,12 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
         </div>
 
         {/* Description Text */}
-        <p className="text-xs text-slate-400 italic bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60 leading-relaxed">
+        <p className="text-xs text-stone-500 italic bg-stone-950/40 p-2.5 rounded-xl border border-stone-800/60 leading-relaxed">
           {item.description ?? 'Классический предмет средневекового мира.'}
         </p>
 
         {/* Action Controls Section */}
-        <div className="space-y-2 pt-2 border-t border-slate-800/80">
+        <div className="space-y-2 pt-2 border-t border-stone-800/80">
           
           {item.equipSlot && (
             <button
@@ -295,7 +295,7 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
               onClick={isEquipped ? handleUnequip : handleEquip}
               className={`w-full py-3 rounded-2xl font-extrabold text-xs transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg ${
                 isEquipped
-                  ? 'bg-slate-800 hover:bg-slate-700 text-rose-300 border border-rose-500/40'
+                  ? 'bg-stone-800 hover:bg-slate-700 text-rose-300 border border-rose-500/40'
                   : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-slate-950 shadow-[0_0_20px_rgba(245,158,11,0.25)]'
               }`}
             >
@@ -328,11 +328,11 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
                 <>
                   <div className="flex items-center gap-2">
                     {quantity > 1 && (
-                      <div className="flex items-center bg-slate-950 border border-slate-800 rounded-2xl p-1 shrink-0">
+                      <div className="flex items-center bg-stone-950 border border-stone-800 rounded-2xl p-1 shrink-0">
                         <button
                           type="button"
                           onClick={() => setSellQty(Math.max(1, sellQty - 1))}
-                          className="w-8 h-8 rounded-xl bg-slate-900 hover:bg-slate-800 flex items-center justify-center text-slate-300 active:scale-90"
+                          className="w-8 h-8 rounded-xl bg-stone-900 hover:bg-stone-800 flex items-center justify-center text-stone-300 active:scale-90"
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>
@@ -342,7 +342,7 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
                         <button
                           type="button"
                           onClick={() => setSellQty(Math.min(quantity, sellQty + 1))}
-                          className="w-8 h-8 rounded-xl bg-slate-900 hover:bg-slate-800 flex items-center justify-center text-slate-300 active:scale-90"
+                          className="w-8 h-8 rounded-xl bg-stone-900 hover:bg-stone-800 flex items-center justify-center text-stone-300 active:scale-90"
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </button>
@@ -352,7 +352,7 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
                     <button
                       type="button"
                       onClick={() => handleSell(sellQty)}
-                      className="flex-1 py-3 px-4 rounded-2xl bg-slate-800/90 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-extrabold text-xs transition-all active:scale-95 flex items-center justify-between"
+                      className="flex-1 py-3 px-4 rounded-2xl bg-stone-800/90 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-extrabold text-xs transition-all active:scale-95 flex items-center justify-between"
                     >
                       <span>Продать {quantity > 1 ? `(${sellQty} шт.)` : ''}</span>
                       <CoinsDisplay amount={currentSellPrice} size="xs" />
@@ -363,7 +363,7 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
                     <button
                       type="button"
                       onClick={() => handleSell(quantity)}
-                      className="w-full py-2.5 rounded-2xl bg-slate-950 border border-slate-800 hover:border-amber-500/40 text-slate-300 hover:text-amber-300 font-bold text-xs transition-all active:scale-95 flex items-center justify-between px-4 font-mono"
+                      className="w-full py-2.5 rounded-2xl bg-stone-950 border border-stone-800 hover:border-amber-500/40 text-stone-300 hover:text-amber-300 font-bold text-xs transition-all active:scale-95 flex items-center justify-between px-4 font-mono"
                     >
                       <span>Продать всё (x{formatNumber(quantity)})</span>
                       <CoinsDisplay amount={totalSellPrice} size="xs" />
@@ -377,7 +377,7 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
           <button
             type="button"
             onClick={onClose}
-            className="w-full py-2.5 rounded-2xl bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs font-semibold transition-all active:scale-95"
+            className="w-full py-2.5 rounded-2xl bg-stone-950 hover:bg-stone-800 text-stone-500 hover:text-stone-200 text-xs font-semibold transition-all active:scale-95"
           >
             Закрыть
           </button>

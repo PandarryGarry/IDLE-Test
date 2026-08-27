@@ -85,7 +85,7 @@ export function CombatPage() {
         <div className="w-full lg:w-80 xl:w-96 space-y-4 shrink-0">
 
           {/* Combat Areas Selection */}
-          <div className="bg-[#1f2b3e] border border-[#344562] p-4 rounded-3xl shadow-xl">
+          <div className="bg-[#221810] border border-[#3d2e1e] p-4 rounded-3xl shadow-xl">
             <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-red-400 mb-3 flex items-center gap-1.5">
               <Skull className="w-3.5 h-3.5" /> {t('combat.areas')}
             </h2>
@@ -102,14 +102,14 @@ export function CombatPage() {
                     disabled={isLocked}
                     className={`w-full p-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
                       isLocked
-                        ? 'opacity-40 grayscale cursor-not-allowed bg-[#182130] border-[#2a374c]'
+                        ? 'opacity-40 grayscale cursor-not-allowed bg-[#1e1408] border-[#2e2010]'
                         : isActive
                           ? 'bg-red-500/20 border-red-500/70 shadow-[0_0_18px_rgba(239,68,68,0.25)] ring-1 ring-red-500/40 cursor-pointer'
-                          : 'bg-[#182232] hover:border-red-500/40 cursor-pointer border-[#2e3e56] hover:bg-[#1e2a3c]'
+                          : 'bg-[#201508] hover:border-red-500/40 cursor-pointer border-[#3a2b1a] hover:bg-[#231810]'
                     }`}
                   >
                     <div className="flex justify-between items-center mb-1">
-                      <h3 className={`font-bold text-xs sm:text-sm ${isActive ? 'text-red-300 font-extrabold' : 'text-slate-100'}`}>
+                      <h3 className={`font-bold text-xs sm:text-sm ${isActive ? 'text-red-300 font-extrabold' : 'text-stone-100'}`}>
                         {area.name}
                       </h3>
                       {isLocked ? (
@@ -117,17 +117,17 @@ export function CombatPage() {
                           Ур. {area.combatLevelRequired}
                         </span>
                       ) : (
-                        <span className="text-[10px] font-mono text-slate-400">
+                        <span className="text-[10px] font-mono text-stone-500">
                           {area.monsterIds.length} монстров
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-slate-300 leading-tight mb-2">{area.description}</p>
+                    <p className="text-[11px] text-stone-300 leading-tight mb-2">{area.description}</p>
                     
                     {/* Monster Rosters */}
                     <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-none">
                       {area.monsterIds.map(mId => (
-                        <span key={mId} className="shrink-0 bg-[#141b28] px-1.5 py-0.5 rounded-md text-[10px] font-mono border border-[#2a374c] text-slate-200 font-medium">
+                        <span key={mId} className="shrink-0 bg-[#160f06] px-1.5 py-0.5 rounded-md text-[10px] font-mono border border-[#2e2010] text-stone-200 font-medium">
                           {MONSTERS_MAP[mId]?.name} ({MONSTERS_MAP[mId]?.combatLevel})
                         </span>
                       ))}
@@ -139,12 +139,12 @@ export function CombatPage() {
           </div>
 
           {/* Equipment Paperdoll (Кукла экипировки) */}
-          <div className="bg-[#1f2b3e] border border-[#344562] p-4 rounded-3xl shadow-xl">
-            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-slate-200 mb-3 flex items-center gap-1.5">
+          <div className="bg-[#221810] border border-[#3d2e1e] p-4 rounded-3xl shadow-xl">
+            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-stone-200 mb-3 flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5 text-amber-400" /> {t('combat.equipment')}
             </h2>
             
-            <div className="bg-[#182232] border border-[#2e3e56] rounded-2xl p-3 shadow-inner">
+            <div className="bg-[#201508] border border-[#3a2b1a] rounded-2xl p-3 shadow-inner">
               <div className="grid grid-cols-3 gap-2 justify-items-center">
                 <div className="col-span-3 w-full flex justify-center"><EquipSlotBox slot="helm" label="Шлем" /></div>
                 <EquipSlotBox slot="cape" label="Плащ" />
@@ -169,21 +169,21 @@ export function CombatPage() {
           <CombatScreen />
 
           {/* Combat Log */}
-          <div className="fantasy-card border-slate-800 rounded-3xl p-3 sm:p-4 shadow-lg flex flex-col h-60 md:h-72 min-h-0">
+          <div className="fantasy-card border-stone-800 rounded-3xl p-3 sm:p-4 shadow-lg flex flex-col h-60 md:h-72 min-h-0">
             <div className="flex items-center justify-between gap-2 mb-2 px-1">
-              <h3 className="font-mono text-xs font-extrabold uppercase tracking-widest text-slate-300 flex items-center gap-1.5">
+              <h3 className="font-mono text-xs font-extrabold uppercase tracking-widest text-stone-300 flex items-center gap-1.5">
                 <History className="w-3.5 h-3.5 text-cyan-400" /> {t('combat.log')}
               </h3>
               <div className="flex items-center gap-3 text-xs font-mono">
-                <span className="text-slate-400">{t('combat.damage')}: <b className="text-emerald-400 font-bold">{formatNumber(totalDamageDealt)}</b></span>
-                <span className="text-slate-400">{t('combat.taken')}: <b className="text-red-400 font-bold">{formatNumber(totalDamageTaken)}</b></span>
+                <span className="text-stone-500">{t('combat.damage')}: <b className="text-emerald-400 font-bold">{formatNumber(totalDamageDealt)}</b></span>
+                <span className="text-stone-500">{t('combat.taken')}: <b className="text-red-400 font-bold">{formatNumber(totalDamageTaken)}</b></span>
               </div>
             </div>
 
             <div
               ref={combatLogRef}
               onScroll={handleLogScroll}
-              className="relative flex-1 min-h-0 overflow-y-auto space-y-1 font-mono text-xs p-3 bg-slate-950/90 rounded-2xl border border-slate-800/80 shadow-inner scrollbar-thin"
+              className="relative flex-1 min-h-0 overflow-y-auto space-y-1 font-mono text-xs p-3 bg-stone-950/90 rounded-2xl border border-stone-800/80 shadow-inner scrollbar-thin"
             >
               {combatLog.length === 0 && (
                 <div className="text-center py-10 text-slate-500 text-xs">
@@ -195,7 +195,7 @@ export function CombatPage() {
                   log.type === 'player_attack' ? (log.damage && log.damage > 0 ? 'text-emerald-400 font-semibold' : 'text-slate-500') :
                   log.type === 'enemy_attack' ? (log.damage && log.damage > 0 ? 'text-red-400 font-semibold' : 'text-slate-500') :
                   log.type === 'player_death' || log.type === 'enemy_death' ? 'text-amber-300 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded' :
-                  log.type === 'eat' ? 'text-cyan-400 font-medium' : 'text-slate-400'
+                  log.type === 'eat' ? 'text-cyan-400 font-medium' : 'text-stone-500'
                 }`}>
                   <span className="opacity-40 mr-2 text-[10px]">[{new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
                   {log.message}
@@ -207,7 +207,7 @@ export function CombatPage() {
               <button
                 type="button"
                 onClick={() => scrollLogToBottom()}
-                className="self-center -mt-8 mb-2 z-10 rounded-full border border-red-500/40 bg-slate-900/90 px-3 py-1 text-[11px] font-bold text-red-300 shadow-xl backdrop-blur-md transition-all hover:bg-red-500/20 active:scale-95"
+                className="self-center -mt-8 mb-2 z-10 rounded-full border border-red-500/40 bg-stone-900/90 px-3 py-1 text-[11px] font-bold text-red-300 shadow-xl backdrop-blur-md transition-all hover:bg-red-500/20 active:scale-95"
               >
                 {t('combat.latest')}
               </button>
@@ -268,15 +268,15 @@ const CombatScreen = memo(function CombatScreen() {
   const enemyAttackProgress = Math.max(0, Math.min(100, (1 - enemyAttackTimer / enemyAttackInterval) * 100));
 
   return (
-    <div className="bg-[#1f2b3e] border border-red-500/40 rounded-3xl p-4 sm:p-6 shadow-2xl min-h-[320px] flex flex-col relative overflow-hidden">
+    <div className="bg-[#221810] border border-red-500/40 rounded-3xl p-4 sm:p-6 shadow-2xl min-h-[320px] flex flex-col relative overflow-hidden">
       
       {!inCombat ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 p-6 text-center">
-          <div className="w-16 h-16 rounded-3xl bg-[#182232] border border-[#2e3e56] flex items-center justify-center text-4xl mb-3 opacity-70">
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-stone-300 p-6 text-center">
+          <div className="w-16 h-16 rounded-3xl bg-[#201508] border border-[#3a2b1a] flex items-center justify-center text-4xl mb-3 opacity-70">
             ⚔️
           </div>
-          <h2 className="text-lg sm:text-xl font-display font-black text-slate-100">{t('combat.selectArea')}</h2>
-          <p className="text-xs text-slate-400 mt-1 max-w-sm">
+          <h2 className="text-lg sm:text-xl font-display font-black text-stone-100">{t('combat.selectArea')}</h2>
+          <p className="text-xs text-stone-500 mt-1 max-w-sm">
             Выберите боевую локацию или подземелье слева, чтобы начать сражение.
           </p>
         </div>
@@ -284,10 +284,10 @@ const CombatScreen = memo(function CombatScreen() {
         <div className="h-full flex flex-col z-10">
           
           {/* Arena Header */}
-          <div className="flex justify-between items-center mb-6 pb-3 border-b border-[#2d3d56]">
+          <div className="flex justify-between items-center mb-6 pb-3 border-b border-[#3a2b1a]">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-              <h2 className="text-base sm:text-lg font-display font-black text-slate-100 flex items-center gap-1.5">
+              <h2 className="text-base sm:text-lg font-display font-black text-stone-100 flex items-center gap-1.5">
                 <span className="text-red-400">{t('combat.fighting')}</span> {currentMonster?.name}
               </h2>
             </div>
@@ -305,10 +305,10 @@ const CombatScreen = memo(function CombatScreen() {
           <div className="flex flex-col md:flex-row gap-6 items-center justify-between flex-grow py-2">
             
             {/* Player Side */}
-            <div className="flex-1 w-full text-center space-y-2.5 bg-[#172130] p-4 rounded-2xl border border-[#2d3d56]">
-              <div className="flex items-center justify-between text-xs font-mono text-slate-300">
-                <span className="font-bold text-slate-100">{t('combat.you')}</span>
-                <span className="bg-[#1e2a3c] border border-[#334460] px-2 py-0.5 rounded-md font-bold text-amber-300">
+            <div className="flex-1 w-full text-center space-y-2.5 bg-[#172130] p-4 rounded-2xl border border-[#3a2b1a]">
+              <div className="flex items-center justify-between text-xs font-mono text-stone-300">
+                <span className="font-bold text-stone-100">{t('combat.you')}</span>
+                <span className="bg-[#231810] border border-[#3d2e1e] px-2 py-0.5 rounded-md font-bold text-amber-300">
                   Ур. {combatLevel}
                 </span>
               </div>
@@ -323,9 +323,9 @@ const CombatScreen = memo(function CombatScreen() {
                   <span className="text-emerald-400 font-bold flex items-center gap-1">
                     <Heart className="w-3 h-3 fill-current" /> ОЗ
                   </span>
-                  <span className="text-slate-100 font-bold">{playerHp} / {playerMaxHp}</span>
+                  <span className="text-stone-100 font-bold">{playerHp} / {playerMaxHp}</span>
                 </div>
-                <div className="h-4 w-full bg-[#121924] rounded-full overflow-hidden border border-[#2d3d56] p-0.5 shadow-inner">
+                <div className="h-4 w-full bg-[#121924] rounded-full overflow-hidden border border-[#3a2b1a] p-0.5 shadow-inner">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_12px_rgba(16,185,129,0.6)] transition-all duration-300"
                     style={{ width: `${playerHpPct}%` }}
@@ -335,11 +335,11 @@ const CombatScreen = memo(function CombatScreen() {
 
               {/* Attack Timer Bar */}
               <div className="space-y-0.5">
-                <div className="flex justify-between text-[10px] font-mono text-slate-400">
+                <div className="flex justify-between text-[10px] font-mono text-stone-500">
                   <span>Скорость атаки</span>
                   <span>{(playerAttackTimer / 1000).toFixed(1)} сек.</span>
                 </div>
-                <div className="h-1.5 w-full bg-[#121924] rounded-full overflow-hidden border border-[#2d3d56]">
+                <div className="h-1.5 w-full bg-[#121924] rounded-full overflow-hidden border border-[#3a2b1a]">
                   <div
                     className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-100"
                     style={{ width: `${playerAttackProgress}%` }}
@@ -358,7 +358,7 @@ const CombatScreen = memo(function CombatScreen() {
 
             {/* Enemy Side */}
             <div className="flex-1 w-full text-center space-y-2.5 bg-[#172130] p-4 rounded-2xl border border-red-500/40">
-              <div className="flex items-center justify-between text-xs font-mono text-slate-300">
+              <div className="flex items-center justify-between text-xs font-mono text-stone-300">
                 <span className="font-bold text-red-300 truncate">{currentMonster?.name}</span>
                 <span className="bg-red-950/80 border border-red-500/50 px-2 py-0.5 rounded-md font-bold text-red-400">
                   Ур. {currentMonster?.combatLevel}
@@ -375,9 +375,9 @@ const CombatScreen = memo(function CombatScreen() {
                   <span className="text-red-400 font-bold flex items-center gap-1">
                     <Heart className="w-3 h-3 fill-current" /> ОЗ
                   </span>
-                  <span className="text-slate-100 font-bold">{enemyHp} / {enemyMaxHp}</span>
+                  <span className="text-stone-100 font-bold">{enemyHp} / {enemyMaxHp}</span>
                 </div>
-                <div className="h-4 w-full bg-[#121924] rounded-full overflow-hidden border border-[#2d3d56] p-0.5 shadow-inner">
+                <div className="h-4 w-full bg-[#121924] rounded-full overflow-hidden border border-[#3a2b1a] p-0.5 shadow-inner">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-red-600 to-rose-400 shadow-[0_0_12px_rgba(239,68,68,0.6)] transition-all duration-300"
                     style={{ width: `${enemyHpPct}%` }}
@@ -387,11 +387,11 @@ const CombatScreen = memo(function CombatScreen() {
 
               {/* Enemy Attack Timer Bar */}
               <div className="space-y-0.5">
-                <div className="flex justify-between text-[10px] font-mono text-slate-400">
+                <div className="flex justify-between text-[10px] font-mono text-stone-500">
                   <span>Скорость атаки</span>
                   <span>{(enemyAttackTimer / 1000).toFixed(1)} сек.</span>
                 </div>
-                <div className="h-1.5 w-full bg-[#121924] rounded-full overflow-hidden border border-[#2d3d56]">
+                <div className="h-1.5 w-full bg-[#121924] rounded-full overflow-hidden border border-[#3a2b1a]">
                   <div
                     className="h-full bg-gradient-to-r from-orange-500 to-amber-400 transition-all duration-100"
                     style={{ width: `${enemyAttackProgress}%` }}
@@ -403,29 +403,29 @@ const CombatScreen = memo(function CombatScreen() {
           </div>
 
           {/* Combat Toggles & Kill Counter */}
-          <div className="mt-4 pt-3 border-t border-[#2d3d56] flex flex-wrap gap-x-6 gap-y-2 justify-between items-center">
+          <div className="mt-4 pt-3 border-t border-[#3a2b1a] flex flex-wrap gap-x-6 gap-y-2 justify-between items-center">
             <div className="flex gap-4">
-              <label className="flex items-center gap-2 text-xs font-bold text-slate-200 cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-xs font-bold text-stone-200 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={autoEat}
                   onChange={(e) => setAutoEat(e.target.checked)}
-                  className="rounded-lg bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500 h-4 w-4 accent-amber-500 cursor-pointer"
+                  className="rounded-lg bg-stone-900 border-stone-700 text-amber-500 focus:ring-amber-500 h-4 w-4 accent-amber-500 cursor-pointer"
                 />
                 {t('combat.autoEat')}
               </label>
-              <label className="flex items-center gap-2 text-xs font-bold text-slate-200 cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-xs font-bold text-stone-200 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={autoLoot}
                   onChange={(e) => setAutoLoot(e.target.checked)}
-                  className="rounded-lg bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500 h-4 w-4 accent-amber-500 cursor-pointer"
+                  className="rounded-lg bg-stone-900 border-stone-700 text-amber-500 focus:ring-amber-500 h-4 w-4 accent-amber-500 cursor-pointer"
                 />
                 {t('combat.autoLoot')}
               </label>
             </div>
             
-            <div className="text-xs font-mono text-slate-300 flex items-center gap-1.5">
+            <div className="text-xs font-mono text-stone-300 flex items-center gap-1.5">
               <Skull className="w-3.5 h-3.5 text-red-400" />
               {t('combat.killCount')}: <span className="text-amber-300 font-bold">{formatNumber(killCount)}</span>
             </div>
@@ -448,8 +448,8 @@ const FoodPanel = memo(function FoodPanel() {
     .filter(({ item }) => item && item.healAmount && item.healAmount > 0);
 
   return (
-    <div className="fantasy-card border-slate-800 rounded-3xl p-3.5 shadow-lg">
-      <h3 className="font-mono text-xs font-extrabold uppercase tracking-widest text-slate-300 mb-2.5 px-1 flex items-center gap-1.5">
+    <div className="fantasy-card border-stone-800 rounded-3xl p-3.5 shadow-lg">
+      <h3 className="font-mono text-xs font-extrabold uppercase tracking-widest text-stone-300 mb-2.5 px-1 flex items-center gap-1.5">
         <Utensils className="w-3.5 h-3.5 text-amber-400" /> {t('combat.food')}
       </h3>
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -457,11 +457,11 @@ const FoodPanel = memo(function FoodPanel() {
           <button
             key={slot.itemId}
             onClick={() => eatFood(slot.itemId)}
-            className="flex items-center gap-2 shrink-0 bg-slate-950/80 border border-slate-800 hover:border-emerald-500 p-2 rounded-2xl transition-all active:scale-95 shadow-sm"
+            className="flex items-center gap-2 shrink-0 bg-stone-950/80 border border-stone-800 hover:border-emerald-500 p-2 rounded-2xl transition-all active:scale-95 shadow-sm"
           >
             <ItemIcon itemId={slot.itemId} size="sm" quantity={slot.quantity} showTooltip={false} />
             <div className="text-left">
-              <div className="text-xs font-bold text-slate-200 truncate max-w-[100px]">{item?.name}</div>
+              <div className="text-xs font-bold text-stone-200 truncate max-w-[100px]">{item?.name}</div>
               <div className="text-[11px] text-emerald-400 font-mono font-bold">+{item?.healAmount} HP</div>
             </div>
           </button>
@@ -490,20 +490,30 @@ function EquipSlotBox({ slot, label }: { slot: EquipSlot; label: string }) {
     <button
       type="button"
       onClick={handleUnequip}
-      className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border flex items-center justify-center relative transition-all active:scale-95 shadow-md ${
-        itemId
-          ? 'bg-[#202c40] border-amber-400/60 shadow-[0_0_12px_rgba(245,158,11,0.25)] hover:border-red-500'
-          : 'bg-[#141b28] border-[#2a374c] hover:border-[#3a4d6b]'
-      }`}
-      title={itemId ? `Кликните, чтобы снять ${label}` : label}
+      title={itemId ? `Снять: ${label}` : label}
+      className="relative flex flex-col items-center gap-0.5 group"
     >
-      {itemId ? (
-        <ItemIcon itemId={itemId} size="md" showTooltip={true} />
-      ) : (
-        <span className="text-[10px] text-slate-400 font-mono font-bold uppercase leading-tight text-center">
-          {label.substring(0, 4)}
-        </span>
-      )}
+      {/* Ячейка — единый стиль с инвентарём */}
+      <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl border flex items-center justify-center transition-all active:scale-95 ${
+        itemId
+          ? 'border-amber-500/55 bg-amber-950/15 shadow-[0_0_10px_rgba(245,158,11,0.18)]'
+          : 'border-dashed border-stone-700/60 bg-stone-950/40'
+      }`}
+        style={{ boxShadow: itemId ? undefined : 'inset 0 2px 4px rgba(0,0,0,0.35)' }}
+      >
+        {itemId ? (
+          <ItemIcon itemId={itemId} size="md" showTooltip={true} />
+        ) : (
+          /* Иконка слота — маленький символ */
+          <span className="text-stone-700 text-[10px] font-mono font-bold uppercase leading-tight">
+            {label.substring(0, 3)}
+          </span>
+        )}
+      </div>
+      {/* Подпись под ячейкой */}
+      <span className="text-[9px] text-stone-600 font-mono uppercase tracking-wide leading-none">
+        {label}
+      </span>
     </button>
   );
 }

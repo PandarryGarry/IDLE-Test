@@ -30,7 +30,7 @@ function NotFound() {
       <div className="fantasy-card p-8 rounded-3xl text-center space-y-3 max-w-md mx-auto">
         <div className="text-6xl">🧭</div>
         <h1 className="text-4xl font-display font-black text-amber-400">404</h1>
-        <p className="text-slate-400 font-mono text-sm">Локация не найдена</p>
+        <p className="text-stone-500 font-mono text-sm">Локация не найдена</p>
       </div>
     </div>
   );
@@ -51,7 +51,7 @@ function Router() {
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 md:hidden flex">
           <div 
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm animate-in fade-in"
+            className="fixed inset-0 bg-stone-950/80 backdrop-blur-sm animate-in fade-in"
             onClick={() => setMobileMenuOpen(false)}
           />
           <div className="relative z-10 w-72 max-w-[85vw] h-full shadow-2xl animate-in slide-in-from-left">

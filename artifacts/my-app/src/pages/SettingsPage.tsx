@@ -47,18 +47,18 @@ export function SettingsPage() {
       
       {/* Title */}
       <div className="fantasy-card border-amber-500/30 p-4 sm:p-5 rounded-3xl shadow-lg flex items-center gap-3">
-        <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-2xl text-amber-400">
+        <div className="w-12 h-12 rounded-2xl bg-stone-900 border border-stone-800 flex items-center justify-center text-2xl text-amber-400">
           ⚙️
         </div>
         <div>
-          <h1 className="text-xl sm:text-2xl font-display font-black text-slate-100">{t('settings.title')}</h1>
-          <p className="text-xs text-slate-400">Manage realms configuration and character data</p>
+          <h1 className="text-xl sm:text-2xl font-display font-black text-stone-100">{t('settings.title')}</h1>
+          <p className="text-xs text-stone-500">Manage realms configuration and character data</p>
         </div>
       </div>
 
       {/* Language Selector */}
-      <div className="fantasy-card border-slate-800 p-4 sm:p-5 rounded-3xl shadow-lg space-y-3">
-        <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+      <div className="fantasy-card border-stone-800 p-4 sm:p-5 rounded-3xl shadow-lg space-y-3">
+        <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-stone-500 flex items-center gap-1.5">
           <Globe className="w-3.5 h-3.5 text-cyan-400" /> {t('settings.language')}
         </h2>
         <div className="grid grid-cols-2 gap-2.5">
@@ -67,7 +67,7 @@ export function SettingsPage() {
             className={`py-3 px-4 rounded-2xl font-black text-sm tracking-wide transition-all active:scale-95 flex items-center justify-center gap-2 ${
               language === 'en'
                 ? 'bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-                : 'bg-slate-950 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700'
+                : 'bg-stone-950 border border-stone-800 text-stone-300 hover:text-white hover:border-stone-700'
             }`}
           >
             🇬🇧 English
@@ -77,7 +77,7 @@ export function SettingsPage() {
             className={`py-3 px-4 rounded-2xl font-black text-sm tracking-wide transition-all active:scale-95 flex items-center justify-center gap-2 ${
               language === 'ru'
                 ? 'bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-                : 'bg-slate-950 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700'
+                : 'bg-stone-950 border border-stone-800 text-stone-300 hover:text-white hover:border-stone-700'
             }`}
           >
             🇷🇺 Русский
@@ -89,8 +89,8 @@ export function SettingsPage() {
       <div className="grid sm:grid-cols-2 gap-4">
         
         {/* Gameplay */}
-        <div className="fantasy-card border-slate-800 p-4 sm:p-5 rounded-3xl shadow-lg space-y-4">
-          <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-slate-400">{t('settings.gameplay')}</h2>
+        <div className="fantasy-card border-stone-800 p-4 sm:p-5 rounded-3xl shadow-lg space-y-4">
+          <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-stone-500">{t('settings.gameplay')}</h2>
 
           <ToggleSetting
             label={t('settings.autoSave')}
@@ -101,12 +101,12 @@ export function SettingsPage() {
 
           {autoSaveEnabled && (
             <div className="flex items-center justify-between pt-1">
-              <span className="text-xs text-slate-400 font-mono">{t('settings.autoSaveInterval')} (s)</span>
+              <span className="text-xs text-stone-500 font-mono">{t('settings.autoSaveInterval')} (s)</span>
               <input
                 type="number"
                 value={autoSaveInterval}
                 onChange={(e) => updateSetting('autoSaveInterval', Math.max(10, parseInt(e.target.value) || 30))}
-                className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 w-20 text-right font-mono text-xs text-amber-300 focus:outline-none focus:border-amber-500"
+                className="bg-stone-950 border border-stone-800 rounded-xl px-3 py-1.5 w-20 text-right font-mono text-xs text-amber-300 focus:outline-none focus:border-amber-500"
                 min="10"
               />
             </div>
@@ -121,8 +121,8 @@ export function SettingsPage() {
         </div>
 
         {/* Display */}
-        <div className="fantasy-card border-slate-800 p-4 sm:p-5 rounded-3xl shadow-lg space-y-4">
-          <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-slate-400">{t('settings.display')}</h2>
+        <div className="fantasy-card border-stone-800 p-4 sm:p-5 rounded-3xl shadow-lg space-y-4">
+          <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-stone-500">{t('settings.display')}</h2>
 
           <ToggleSetting
             label={t('settings.darkMode')}
@@ -135,11 +135,11 @@ export function SettingsPage() {
           />
 
           <div className="flex items-center justify-between pt-1">
-            <span className="text-xs text-slate-300 font-medium">{t('settings.numberFormat')}</span>
+            <span className="text-xs text-stone-300 font-medium">{t('settings.numberFormat')}</span>
             <select
               value={numberFormat}
               onChange={(e) => updateSetting('numberFormat', e.target.value as any)}
-              className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs font-mono text-amber-300 focus:outline-none focus:border-amber-500"
+              className="bg-stone-950 border border-stone-800 rounded-xl px-3 py-1.5 text-xs font-mono text-amber-300 focus:outline-none focus:border-amber-500"
             >
               <option value="abbreviated">{t('settings.numberFormat.abbreviated')}</option>
               <option value="full">{t('settings.numberFormat.full')}</option>
@@ -166,25 +166,25 @@ export function SettingsPage() {
           
           <button
             onClick={handleExport}
-            className="flex-1 sm:flex-none px-5 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-200 font-bold rounded-2xl text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5"
+            className="flex-1 sm:flex-none px-5 py-2.5 bg-stone-900 border border-stone-800 hover:border-stone-700 text-stone-200 font-bold rounded-2xl text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5"
           >
             <Download className="w-3.5 h-3.5" />
             {t('settings.exportSave')}
           </button>
         </div>
 
-        <div className="space-y-2 pt-3 border-t border-slate-800">
-          <h3 className="font-mono text-xs text-slate-400">{t('ui.import')} Save (Base64)</h3>
+        <div className="space-y-2 pt-3 border-t border-stone-800">
+          <h3 className="font-mono text-xs text-stone-500">{t('ui.import')} Save (Base64)</h3>
           <textarea
             value={importString}
             onChange={(e) => setImportString(e.target.value)}
             placeholder="Paste your exported save data string here..."
-            className="w-full h-20 bg-slate-950 border border-slate-800 rounded-2xl p-3 font-mono text-xs text-slate-300 focus:outline-none focus:border-amber-500 transition-colors resize-none placeholder:text-slate-600"
+            className="w-full h-20 bg-stone-950 border border-stone-800 rounded-2xl p-3 font-mono text-xs text-stone-300 focus:outline-none focus:border-amber-500 transition-colors resize-none placeholder:text-slate-600"
           />
           <button
             onClick={handleImport}
             disabled={!importString}
-            className="w-full sm:w-auto px-5 py-2 bg-slate-900 border border-slate-800 hover:border-amber-500/40 text-amber-300 font-bold rounded-xl text-xs transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+            className="w-full sm:w-auto px-5 py-2 bg-stone-900 border border-stone-800 hover:border-amber-500/40 text-amber-300 font-bold rounded-xl text-xs transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
           >
             <Upload className="w-3.5 h-3.5" />
             {t('ui.import')} & Reload
@@ -219,16 +219,16 @@ function ToggleSetting({
   return (
     <div className="flex items-center justify-between gap-3 cursor-pointer group select-none" onClick={() => onChange(!checked)}>
       <div className="min-w-0">
-        <div className="font-semibold text-xs text-slate-200 group-hover:text-amber-300 transition-colors">{label}</div>
-        {description && <div className="text-[11px] text-slate-400 leading-tight mt-0.5">{description}</div>}
+        <div className="font-semibold text-xs text-stone-200 group-hover:text-amber-300 transition-colors">{label}</div>
+        {description && <div className="text-[11px] text-stone-500 leading-tight mt-0.5">{description}</div>}
       </div>
       <div
         className={`shrink-0 w-10 h-5 rounded-full transition-colors relative border ${
-          checked ? 'bg-amber-500 border-amber-400' : 'bg-slate-900 border-slate-700'
+          checked ? 'bg-amber-500 border-amber-400' : 'bg-stone-900 border-stone-700'
         }`}
       >
         <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full shadow transition-transform ${
-          checked ? 'translate-x-5 bg-slate-950' : 'translate-x-0.5 bg-slate-400'
+          checked ? 'translate-x-5 bg-stone-950' : 'translate-x-0.5 bg-slate-400'
         }`} />
       </div>
     </div>

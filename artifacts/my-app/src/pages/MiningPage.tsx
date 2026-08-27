@@ -33,8 +33,8 @@ export function MiningPage() {
       {/* Active Action Panel */}
       <div className={`rounded-3xl p-4 sm:p-5 relative overflow-hidden transition-all border ${
         isTraining 
-          ? 'bg-gradient-to-b from-amber-950/40 via-[#1f2b3e] to-[#172232] border-amber-500/80 shadow-[0_0_24px_rgba(245,158,11,0.3)]' 
-          : 'bg-[#1f2b3e] border-[#344562]'
+          ? 'bg-gradient-to-b from-amber-950/40 via-[#221810] to-[#1c1108] border-amber-500/80 shadow-[0_0_24px_rgba(245,158,11,0.3)]' 
+          : 'bg-[#221810] border-[#3d2e1e]'
       }`}>
         {isTraining && activeRock ? (
           <div className="space-y-3.5 relative z-10">
@@ -44,11 +44,11 @@ export function MiningPage() {
                   <SkillIcon skillId="mining" size="md" />
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-slate-100 flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-bold text-stone-100 flex items-center gap-2">
                     <span>{t('mining.mining')}</span>
                     <span className="text-amber-300 font-extrabold">{activeRock.name}</span>
                   </h3>
-                  <p className="text-slate-300 text-xs font-mono mt-0.5 flex items-center gap-1.5">
+                  <p className="text-stone-300 text-xs font-mono mt-0.5 flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-amber-400" />
                     <span>{(activeRock.interval / 1000).toFixed(1)} сек. за действие</span>
                   </p>
@@ -69,11 +69,11 @@ export function MiningPage() {
             </div>
           </div>
         ) : (
-          <div className="text-center text-slate-300 flex flex-col items-center gap-2 py-6">
-            <div className="w-12 h-12 rounded-2xl bg-[#162030] border border-[#2d3d56] flex items-center justify-center p-2">
+          <div className="text-center text-stone-300 flex flex-col items-center gap-2 py-6">
+            <div className="w-12 h-12 rounded-2xl bg-[#1a1108] border border-[#3a2b1a] flex items-center justify-center p-2">
               <SkillIcon skillId="mining" size="md" />
             </div>
-            <p className="text-xs font-medium text-slate-300">{t('mining.selectRock')}</p>
+            <p className="text-xs font-medium text-stone-300">{t('mining.selectRock')}</p>
           </div>
         )}
       </div>

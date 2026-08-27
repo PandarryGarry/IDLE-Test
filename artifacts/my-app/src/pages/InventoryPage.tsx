@@ -56,7 +56,7 @@ export function InventoryPage() {
     <div className="space-y-4 max-w-4xl mx-auto">
       
       {/* 1. Header Banner */}
-      <div className="bg-slate-900/90 border border-slate-800/90 rounded-3xl p-4 sm:p-5 flex items-center justify-between gap-3 shadow-xl backdrop-blur-md">
+      <div className="bg-stone-900/90 border border-stone-800/90 rounded-3xl p-4 sm:p-5 flex items-center justify-between gap-3 shadow-xl backdrop-blur-md">
         
         {/* Title & Slot counter */}
         <div className="flex items-center gap-3">
@@ -64,13 +64,13 @@ export function InventoryPage() {
             🎒
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-display font-black text-slate-100 flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-display font-black text-stone-100 flex items-center gap-2">
               <span>Инвентарь</span>
-              <span className="font-mono text-xs sm:text-sm font-bold text-slate-400 font-sans">
+              <span className="font-mono text-xs sm:text-sm font-bold text-stone-500 font-sans">
                 <span className="text-amber-400 font-mono font-black">{totalItems}</span> / {maxSlots}
               </span>
             </h1>
-            <div className="text-xs font-mono text-slate-400 mt-1 flex items-center gap-1.5">
+            <div className="text-xs font-mono text-stone-500 mt-1 flex items-center gap-1.5">
               <span>Кошелек:</span>
               <CoinsDisplay amount={gp} size="sm" />
             </div>
@@ -91,7 +91,7 @@ export function InventoryPage() {
       </div>
 
       {/* 2. Category Filter & Search Bar */}
-      <div className="flex items-center justify-between gap-2 bg-slate-900/70 border border-slate-800/80 p-1.5 rounded-2xl">
+      <div className="flex items-center justify-between gap-2 bg-stone-900/70 border border-stone-800/80 p-1.5 rounded-2xl">
         
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1">
           {CATEGORIES.map(({ key, label, icon }) => (
@@ -100,8 +100,8 @@ export function InventoryPage() {
               onClick={() => setCategory(key as any)}
               className={`px-3 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 active:scale-95 ${
                 activeCategory === key
-                  ? 'bg-slate-800 text-amber-300 border border-amber-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                  ? 'bg-stone-800 text-amber-300 border border-amber-500/40 shadow-sm'
+                  : 'text-stone-500 hover:text-stone-200 hover:bg-stone-900'
               }`}
             >
               <span className="text-base">{icon}</span>
@@ -110,7 +110,7 @@ export function InventoryPage() {
           ))}
         </div>
 
-        <div className="flex items-center pl-1 border-l border-slate-800 shrink-0">
+        <div className="flex items-center pl-1 border-l border-stone-800 shrink-0">
           {isSearchOpen ? (
             <div className="relative flex items-center">
               <input
@@ -119,12 +119,12 @@ export function InventoryPage() {
                 placeholder="Поиск..."
                 value={searchQuery}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-32 sm:w-48 pl-2.5 pr-7 py-1.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-amber-500"
+                className="w-32 sm:w-48 pl-2.5 pr-7 py-1.5 bg-stone-900 border border-stone-700 rounded-xl text-xs text-stone-200 focus:outline-none focus:border-amber-500"
               />
               <button
                 type="button"
                 onClick={() => { setSearch(''); setIsSearchOpen(false); }}
-                className="absolute right-2 text-slate-400 hover:text-white"
+                className="absolute right-2 text-stone-500 hover:text-white"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -133,7 +133,7 @@ export function InventoryPage() {
             <button
               type="button"
               onClick={() => setIsSearchOpen(true)}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900 transition-all active:scale-95"
+              className="p-2 rounded-xl text-stone-500 hover:text-white hover:bg-stone-900 transition-all active:scale-95"
               title="Поиск предмета"
             >
               <Search className="w-4 h-4" />
@@ -144,7 +144,7 @@ export function InventoryPage() {
       </div>
 
       {/* 3. Squircle Inventory Slots Grid */}
-      <div className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-3 sm:p-5 shadow-2xl min-h-[380px]">
+      <div className="bg-stone-900/60 border border-stone-800/80 rounded-3xl p-3 sm:p-5 shadow-2xl min-h-[380px]">
         
         {filteredItems.length === 0 && !emptySlotsCount ? (
           <div className="text-center py-20 text-slate-500 flex flex-col items-center gap-2">

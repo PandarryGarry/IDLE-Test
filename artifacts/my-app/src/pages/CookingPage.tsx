@@ -45,8 +45,8 @@ export function CookingPage() {
       {/* Active Action Panel */}
       <div className={`rounded-3xl p-4 sm:p-5 relative overflow-hidden transition-all border ${
         isTraining 
-          ? 'bg-gradient-to-b from-yellow-950/40 via-[#1f2b3e] to-[#172232] border-yellow-500/80 shadow-[0_0_24px_rgba(234,179,8,0.3)]' 
-          : 'bg-[#1f2b3e] border-[#344562]'
+          ? 'bg-gradient-to-b from-yellow-950/40 via-[#221810] to-[#1c1108] border-yellow-500/80 shadow-[0_0_24px_rgba(234,179,8,0.3)]' 
+          : 'bg-[#221810] border-[#3d2e1e]'
       }`}>
         {isTraining && activeRecipe ? (
           <div className="space-y-3.5 relative z-10">
@@ -56,11 +56,11 @@ export function CookingPage() {
                   <SkillIcon skillId="cooking" size="md" />
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-slate-100 flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-bold text-stone-100 flex items-center gap-2">
                     <span>{t('cooking.cooking')}</span>
                     <span className="text-yellow-300 font-extrabold">{activeRecipe.name}</span>
                   </h3>
-                  <div className="text-slate-300 text-xs font-mono flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
+                  <div className="text-stone-300 text-xs font-mono flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 text-yellow-400" />
                       {(activeRecipe.interval / 1000).toFixed(1)} сек. за действие
@@ -87,11 +87,11 @@ export function CookingPage() {
             </div>
           </div>
         ) : (
-          <div className="text-center text-slate-300 flex flex-col items-center gap-2 py-6">
-            <div className="w-12 h-12 rounded-2xl bg-[#162030] border border-[#2d3d56] flex items-center justify-center p-2">
+          <div className="text-center text-stone-300 flex flex-col items-center gap-2 py-6">
+            <div className="w-12 h-12 rounded-2xl bg-[#1a1108] border border-[#3a2b1a] flex items-center justify-center p-2">
               <SkillIcon skillId="cooking" size="md" />
             </div>
-            <p className="text-xs font-medium text-slate-300">{t('cooking.selectRecipe')}</p>
+            <p className="text-xs font-medium text-stone-300">{t('cooking.selectRecipe')}</p>
           </div>
         )}
       </div>
@@ -111,10 +111,10 @@ export function CookingPage() {
           const hasEnough = qty >= 1;
           const burnChance = calcBurnChance(playerLevel, action.levelRequired, action.burnChanceBase ?? 0.3);
           return (
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800">
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-stone-800">
               <div className="flex items-center gap-1.5">
                 <ItemIcon itemId={action.rawItemId} size="sm" />
-                <span className={`text-xs font-mono font-bold ${hasEnough ? 'text-slate-200' : 'text-red-400'}`}>
+                <span className={`text-xs font-mono font-bold ${hasEnough ? 'text-stone-200' : 'text-red-400'}`}>
                   {qty} / 1 in bank
                 </span>
               </div>
