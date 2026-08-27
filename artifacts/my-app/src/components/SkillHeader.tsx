@@ -97,7 +97,7 @@ export function SkillHeader({ skillId, skillName, skillIcon }: SkillHeaderProps)
             )}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 6 }}>
-              <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 12, color: '#d4a840' }}>
+              <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 12, color: '#e0c060', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                 XP: <b style={{ color: '#f5d060' }}>{formatNumber(Math.floor(xp))}</b>
               </span>
               {xpPerHour > 0 && (
