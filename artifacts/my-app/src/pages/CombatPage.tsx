@@ -146,7 +146,7 @@ export function CombatPage() {
             </h2>
             
             {/* Кукла экипировки — 3 колонки, фиксированные ячейки */}
-            <div className="rounded-xl p-3" style={{ background: '#160f06', border: '1px solid #2e2010' }}>
+            <div className="rounded-xl p-3" style={{ background: 'var(--bg-slot)', border: '1px solid var(--border-slot)' }}>
               <div className="grid grid-cols-3 gap-y-3 gap-x-2 justify-items-center">
                 {/* Ряд 1: пусто / Шлем / пусто */}
                 <div />
@@ -523,7 +523,7 @@ function EquipSlotBox({ slot, label }: { slot: EquipSlot; label: string }) {
           : 'border-stone-700/35'
       }`}
         style={{
-          background: itemId ? 'rgba(120,60,10,0.15)' : 'rgba(20,12,4,0.75)',
+          background: itemId ? 'var(--accent-gold-bg)' : 'var(--bg-slot)',
           boxShadow: itemId
             ? '0 0 10px rgba(245,158,11,0.12), inset 0 1px 0 rgba(255,200,80,0.06)'
             : 'inset 0 2px 5px rgba(0,0,0,0.5)',
