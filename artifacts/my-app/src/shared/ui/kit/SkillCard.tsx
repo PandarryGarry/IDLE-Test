@@ -1,13 +1,15 @@
 /**
- * SkillCard — круглая карточка навыка с круговым XP-баром.
- * Стиль: Melvor Idle / Wooden Tavern.
+ * SkillCard — круглая карточка навыка.
+ * Иконка 90-95%, SVG кольцо XP вокруг, уровень снизу.
+ * По клику — попап с деталями и кнопкой "Прокачать".
  */
-import React, { memo } from 'react';
+import React, { memo, useState, useCallback } from 'react';
 import { Link } from 'wouter';
 import { usePlayerStore } from '@/store/playerStore';
 import { useGameStore } from '@/store/gameStore';
-import { getLevelProgress } from '@/gameEngine/xpTable';
+import { getLevelProgress, getXpForLevel } from '@/gameEngine/xpTable';
 import { getSkillShortName, getSkillVisual } from '@/shared/icons/skillIcons';
+import { formatNumber } from '@/lib/utils';
 import type { SkillId } from '@/data/types';
 
 export const SKILL_LINKS: Record<string, string> = {
@@ -20,221 +22,356 @@ export const SKILL_LINKS: Record<string, string> = {
   thieving: '/combat', summoning: '/combat', astrology: '/combat',
 };
 
+const SKILL_DESC: Record<string, string> = {
+  woodcutting: 'Рубка деревьев и заготовка брёвен для ремёсел и костров.',
+  mining:      'Добыча руды и самоцветов в глубинах гор.',
+  fishing:     'Ловля рыбы в реках, озёрах и морях.',
+  cooking:     'Приготовление еды для восполнения здоровья.',
+  smithing:    'Плавка металлов и ковка оружия и брони.',
+  firemaking:  'Разжигание костров и управление огнём.',
+  attack:      'Мастерство ближнего боя и точность ударов.',
+  strength:    'Физическая сила и мощь атак.',
+  defence:     'Защита от вражеских атак и урона.',
+  hitpoints:   'Запас здоровья и живучесть в бою.',
+  ranged:      'Стрельба из луков и дальнобойного оружия.',
+  magic:       'Владение заклинаниями и магическими силами.',
+  prayer:      'Молитвы и благословения богов.',
+  slayer:      'Охота на особых монстров за наградой.',
+};
+
 const COMBAT_SKILLS = new Set([
-  'attack', 'strength', 'defence', 'hitpoints',
-  'ranged', 'magic', 'prayer', 'slayer',
+  'attack','strength','defence','hitpoints','ranged','magic','prayer','slayer',
 ]);
 
 interface SkillCardProps {
   skillId: string;
   href?: string;
-  /** sm = 80px, md = 96px, lg = 112px — диаметр круга */
-  size?: 'sm' | 'md' | 'lg';
+  /** Диаметр круга в px */
+  diameter?: number;
 }
 
+/* ── Попап с деталями навыка ────────────────────────────────── */
+function SkillPopup({
+  skillId, onClose, linkPath,
+}: { skillId: string; onClose: () => void; linkPath: string }) {
+  const state    = usePlayerStore(s => s.skills[skillId as SkillId]) || { level: 1, xp: 0 };
+  const visual   = getSkillVisual(skillId);
+  const name     = getSkillShortName(skillId);
+  const desc     = SKILL_DESC[skillId] || 'Навык персонажа.';
+  const progress = getLevelProgress(state.xp);
+  const curXp    = getXpForLevel(state.level);
+  const nextXp   = getXpForLevel(state.level + 1);
+  const xpLeft   = Math.max(0, nextXp - state.xp);
+  const isMax    = state.level >= 99;
+
+  return (
+    <>
+      {/* Оверлей */}
+      <div
+        onClick={onClose}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 100,
+          background: 'rgba(20,10,0,0.72)',
+          backdropFilter: 'blur(3px)',
+        }}
+      />
+
+      {/* Попап */}
+      <div style={{
+        position:  'fixed', zIndex: 101,
+        left: '50%', top: '50%',
+        transform: 'translate(-50%,-50%)',
+        width: 'min(320px, 90vw)',
+        background: 'linear-gradient(160deg,#7a5028,#4a2c10)',
+        border:     '2px solid #c8880a',
+        borderRadius: 20,
+        boxShadow: '0 8px 0 #2a1005, 0 12px 40px rgba(10,4,0,0.7)',
+        padding: '20px 18px 18px',
+        display: 'flex', flexDirection: 'column', gap: 14,
+      }}>
+        {/* Закрыть */}
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute', top: 10, right: 12,
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: '#c8a050', fontSize: 18, lineHeight: 1, padding: 4,
+          }}
+        >✕</button>
+
+        {/* Иконка + название */}
+        <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+          <div style={{
+            width: 60, height: 60, borderRadius: '50%', flexShrink: 0,
+            background: 'linear-gradient(160deg,#2e1608,#1e0e04)',
+            border: '2px solid #c8880a',
+            boxShadow: '0 0 16px rgba(200,136,10,0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+          }}>
+            {visual.type === 'image'
+              ? <img src={visual.value} alt={name} style={{ width:'85%', height:'85%', objectFit:'contain' }} />
+              : <span style={{ fontSize: 30 }}>{visual.value}</span>
+            }
+          </div>
+          <div>
+            <div style={{
+              fontFamily: 'var(--app-font-display)', fontSize: 18, fontWeight: 900,
+              color: '#fff8d0', textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+            }}>{name}</div>
+            <div style={{
+              fontSize: 11, color: '#d4a840', fontFamily: 'var(--app-font-mono)', fontWeight: 700,
+            }}>Уровень {state.level}{isMax ? ' (макс.)' : ''}</div>
+          </div>
+        </div>
+
+        {/* Описание */}
+        <p style={{
+          fontSize: 12, color: '#c8a050', lineHeight: 1.5,
+          margin: 0, padding: '8px 10px',
+          background: 'rgba(20,10,0,0.35)', borderRadius: 10,
+          border: '1px solid rgba(200,136,10,0.2)',
+        }}>{desc}</p>
+
+        {/* XP Прогресс */}
+        {!isMax && (
+          <div>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+              <span style={{ fontSize:11, color:'#a07838', fontFamily:'var(--app-font-mono)' }}>
+                → Уровень {state.level + 1}
+              </span>
+              <span style={{ fontSize:11, color:'#d4a840', fontFamily:'var(--app-font-mono)', fontWeight:700 }}>
+                {formatNumber(Math.floor(state.xp - curXp))} / {formatNumber(nextXp - curXp)} XP
+              </span>
+            </div>
+            {/* Трек */}
+            <div style={{
+              height: 10, background: '#1a0a04', border: '2px solid #5a3010',
+              borderRadius: 9999, overflow: 'hidden',
+            }}>
+              <div style={{
+                height: '100%',
+                width: `${Math.min(100, progress * 100)}%`,
+                background: 'linear-gradient(90deg,#c8880a,#f0c030)',
+                borderRadius: 9999,
+                boxShadow: '0 0 8px rgba(240,192,48,0.5)',
+                transition: 'width 0.4s ease',
+              }} />
+            </div>
+            <div style={{ fontSize:10, color:'#8b6030', fontFamily:'var(--app-font-mono)', marginTop:4, textAlign:'right' }}>
+              Осталось: {formatNumber(xpLeft)} XP
+            </div>
+          </div>
+        )}
+
+        {/* Кнопка */}
+        <Link
+          href={linkPath}
+          onClick={onClose}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            padding: '11px 0', borderRadius: 12, textDecoration: 'none',
+            background: 'linear-gradient(180deg,#c8880a,#9a6008)',
+            border: '2px solid #6b4008',
+            boxShadow: '0 3px 0 #3d2005, 0 0 16px rgba(200,136,10,0.35)',
+            color: '#fff8d0', fontSize: 13, fontWeight: 800,
+            fontFamily: 'var(--app-font-sans)',
+            letterSpacing: '0.04em',
+          }}
+        >
+          ⚡ Прокачать навык
+        </Link>
+      </div>
+    </>
+  );
+}
+
+/* ── Основная карточка ─────────────────────────────────────── */
 export const SkillCard = memo(function SkillCard({
-  skillId, href, size = 'sm',
+  skillId, href, diameter = 80,
 }: SkillCardProps) {
   const state       = usePlayerStore(s => s.skills[skillId as SkillId]) || { level: 1, xp: 0 };
   const activeSkill = useGameStore(s => s.activeSkill);
+  const [popup, setPopup] = useState(false);
 
   const isActive = activeSkill === skillId;
-  const isCombat = COMBAT_SKILLS.has(skillId);
-  const progress = getLevelProgress(state.xp);           // 0..1
-  const name     = getSkillShortName(skillId);
+  const progress = getLevelProgress(state.xp);
   const visual   = getSkillVisual(skillId);
-  const link     = href ?? SKILL_LINKS[skillId] ?? '/';
+  const linkPath = href ?? SKILL_LINKS[skillId] ?? '/';
 
-  // ── Размеры ────────────────────────────────────────────────
-  const D   = size === 'sm' ? 80  : size === 'lg' ? 112 : 96;   // диаметр SVG
-  const SW  = size === 'sm' ? 5   : size === 'lg' ? 7   : 6;    // stroke-width
-  const R   = (D - SW) / 2;                                       // радиус
-  const C   = D / 2;                                              // центр
+  // SVG параметры
+  const D    = diameter;
+  const SW   = Math.max(4, Math.round(D * 0.065)); // толщина кольца ~6.5% от D
+  const R    = (D - SW) / 2;
+  const C    = D / 2;
   const circ = 2 * Math.PI * R;
-  const progressVis = progress < 0.02 ? 0 : progress;  // скрываем при 0
-  const offset = circ * (1 - Math.min(1, progressVis));
+  const offset = circ * (1 - Math.min(1, progress));
 
-  // Диаметр внутреннего круга иконки (≈73% от D)
-  const iconD    = Math.round(D * 0.80);
-  const iconFontSize = Math.round(iconD * 0.55);
-  const nameFS   = size === 'sm' ? 10 : size === 'lg' ? 13 : 11;
-  const badgeD   = size === 'sm' ? 22 : size === 'lg' ? 28 : 24;
-  const badgeFS  = size === 'sm' ? 10 : size === 'lg' ? 13 : 11;
+  // Иконка — 88% от D
+  const iconD = Math.round(D * 0.88);
 
-  // ── Цвета ──────────────────────────────────────────────────
-  // Активный — золото; боевой неактивный — тёмно-красный акцент; остальные — нейтральный
-  const ringColor   = isActive ? '#f0c030' : isCombat ? '#c84030' : '#8b5020';
-  const ringGlow    = isActive ? 'rgba(240,192,48,0.6)' : isCombat ? 'rgba(200,64,48,0.4)' : 'none';
-  const badgeBg     = isActive ? '#f0c030' : '#2e1608';
-  const badgeColor  = isActive ? '#1a0800' : '#d4a840';
-  const nameColor   = isActive ? '#fff8d0' : '#e0c070';
-  const outerBorder = isActive ? '#c8880a' : '#5a3010';
-  const outerBg     = isActive
-    ? 'linear-gradient(160deg,#4a2c0a,#2e1a06)'
-    : 'linear-gradient(160deg,#7a5028,#5a3818)';
-  const outerShadow = isActive
-    ? `0 3px 0 #2a1005,0 0 16px ${ringGlow}`
-    : '0 3px 0 #3d1e08';
+  // Уровень badge
+  const badgeD  = Math.max(20, Math.round(D * 0.30));
+  const badgeFS = Math.max(9,  Math.round(D * 0.135));
 
-  // ── Контейнер карточки ────────────────────────────────────
-  const cardStyle: React.CSSProperties = {
-    display:        'flex',
-    flexDirection:  'column',
-    alignItems:     'center',
-    gap:            5,
-    padding:        '10px 8px 8px',
-    borderRadius:   16,
-    background:     outerBg,
-    border:         `2px solid ${outerBorder}`,
-    boxShadow:      outerShadow,
-    cursor:         'pointer',
-    transition:     'all 0.15s ease',
-    position:       'relative',
-    userSelect:     'none',
-    minWidth:       D + 8,
-  };
+  // Цвета
+  const ringFill  = isActive ? '#f0c030' : '#c8880a';
+  const ringTrack = '#5a3010';
+  const ringGlow  = isActive ? 'rgba(240,192,48,0.6)' : 'none';
+  const badgeBg   = isActive ? '#f0c030' : '#1e0c04';
+  const badgeFg   = isActive ? '#1a0800' : '#d4a840';
+  const cardBg    = isActive
+    ? 'radial-gradient(circle at 50% 40%,rgba(200,136,10,0.18),transparent 70%)'
+    : 'none';
+  const cardBorder = isActive ? '#c8880a' : 'transparent';
+
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setPopup(true);
+  }, []);
 
   return (
-    <Link href={link} style={{ display: 'block', textDecoration: 'none' }}>
+    <>
+      {/* Карточка */}
       <div
-        style={cardStyle}
+        onClick={handleClick}
+        style={{
+          display:       'flex',
+          flexDirection: 'column',
+          alignItems:    'center',
+          gap:           4,
+          padding:       '6px 4px 6px',
+          borderRadius:  14,
+          background:    cardBg,
+          border:        `2px solid ${cardBorder}`,
+          cursor:        'pointer',
+          transition:    'all 0.14s ease',
+          position:      'relative',
+          userSelect:    'none',
+        }}
         onMouseEnter={e => {
-          if (!isActive) {
-            const el = e.currentTarget as HTMLDivElement;
-            el.style.borderColor = '#c8880a';
-            el.style.transform   = 'translateY(-3px)';
-            el.style.boxShadow   = '0 5px 0 #3d1e08, 0 0 12px rgba(200,136,10,0.25)';
-          }
+          const el = e.currentTarget as HTMLDivElement;
+          el.style.transform = 'translateY(-3px) scale(1.04)';
+          el.style.borderColor = '#c8880a';
         }}
         onMouseLeave={e => {
-          if (!isActive) {
-            const el = e.currentTarget as HTMLDivElement;
-            el.style.borderColor = outerBorder;
-            el.style.transform   = '';
-            el.style.boxShadow   = outerShadow;
-          }
+          const el = e.currentTarget as HTMLDivElement;
+          el.style.transform = '';
+          el.style.borderColor = cardBorder;
         }}
       >
-        {/* ── Активный dot (правый верхний угол) ── */}
+        {/* Активный dot */}
         {isActive && (
           <div style={{
-            position: 'absolute', top: 6, right: 6,
+            position: 'absolute', top: 4, right: 4,
             width: 8, height: 8, borderRadius: '50%',
             background: '#f0c030',
-            boxShadow: '0 0 8px rgba(240,192,48,0.8)',
+            boxShadow: '0 0 8px rgba(240,192,48,0.9)',
+            zIndex: 2,
           }} />
         )}
 
-        {/* ── Круг с прогресс-баром (SVG) ── */}
-        <div style={{ position: 'relative', width: D, height: D, flexShrink: 0 }}>
+        {/* SVG кольцо + иконка */}
+        <div style={{ position: 'relative', width: D, height: D }}>
 
-          {/* SVG круговой прогресс */}
+          {/* SVG кольцо */}
           <svg
             width={D} height={D}
-            style={{ position: 'absolute', inset: 0, transform: 'rotate(-90deg)' }}
             viewBox={`0 0 ${D} ${D}`}
+            style={{ position:'absolute', inset:0, transform:'rotate(-90deg)' }}
           >
-            {/* Трек (фон) */}
-            <circle
-              cx={C} cy={C} r={R}
-              fill="none"
-              stroke="#7a4828"
-              strokeWidth={SW + 1}
-            />
-            {/* Заполнение */}
-            <circle
-              cx={C} cy={C} r={R}
-              fill="none"
-              stroke={ringColor}
-              strokeWidth={SW}
-              strokeDasharray={circ}
-              strokeDashoffset={offset}
-              strokeLinecap="round"
-              style={{
-                transition: 'stroke-dashoffset 0.4s ease',
-                filter: isActive ? `drop-shadow(0 0 4px ${ringColor})` : 'none',
-              }}
-            />
+            {/* Трек */}
+            <circle cx={C} cy={C} r={R} fill="none" stroke={ringTrack} strokeWidth={SW} />
+            {/* Прогресс */}
+            {progress > 0 && (
+              <circle
+                cx={C} cy={C} r={R}
+                fill="none"
+                stroke={ringFill}
+                strokeWidth={SW}
+                strokeDasharray={circ}
+                strokeDashoffset={offset}
+                strokeLinecap="round"
+                style={{
+                  transition: 'stroke-dashoffset 0.5s ease',
+                  filter: isActive ? `drop-shadow(0 0 4px ${ringFill})` : 'none',
+                }}
+              />
+            )}
           </svg>
 
-          {/* Иконка — внутренний круг */}
+          {/* Иконка — 88% от D, по центру */}
           <div style={{
-            position:   'absolute',
-            top:        '50%', left: '50%',
-            transform:  'translate(-50%,-50%)',
-            width:      iconD, height: iconD,
+            position:  'absolute',
+            top:       '50%', left: '50%',
+            transform: 'translate(-50%,-50%)',
+            width:     iconD, height: iconD,
             borderRadius: '50%',
             background: 'linear-gradient(160deg,#2e1608,#1e0e04)',
-            border:     `2px solid ${isActive ? ringColor + 'cc' : '#6b3818'}`,
-            boxShadow:  'inset 0 2px 8px rgba(0,0,0,0.6)',
-            display:    'flex', alignItems: 'center', justifyContent: 'center',
-            overflow:   'hidden',
+            border:    `1.5px solid ${isActive ? '#c8880a88' : '#5a3010'}`,
+            boxShadow: isActive
+              ? `inset 0 2px 6px rgba(0,0,0,0.55), 0 0 12px ${ringGlow}`
+              : 'inset 0 2px 6px rgba(0,0,0,0.55)',
+            display:   'flex', alignItems:'center', justifyContent:'center',
+            overflow:  'hidden',
           }}>
             {visual.type === 'image' ? (
               <img
                 src={visual.value}
-                alt={name}
+                alt=""
                 style={{
-                  width: '80%', height: '80%',
-                  objectFit: 'contain',
-                  filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))',
+                  width:'88%', height:'88%', objectFit:'contain',
+                  filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.6))',
                 }}
               />
             ) : (
               <span style={{
-                fontSize:   iconFontSize,
+                fontSize:   Math.round(iconD * 0.56),
                 lineHeight: 1,
-                filter:     'drop-shadow(0 1px 3px rgba(0,0,0,0.5))',
+                filter:     'drop-shadow(0 1px 4px rgba(0,0,0,0.5))',
               }}>
                 {visual.value}
               </span>
             )}
           </div>
 
-          {/* Бейдж уровня — нижний центр круга */}
+          {/* Уровень badge — по центру нижнего края круга */}
           <div style={{
-            position:   'absolute',
-            bottom:     -badgeD * 0.28,
-            left:       '50%',
-            transform:  'translateX(-50%)',
-            minWidth:   badgeD, height: badgeD,
+            position:  'absolute',
+            bottom:    -Math.round(badgeD * 0.4),
+            left:      '50%',
+            transform: 'translateX(-50%)',
+            minWidth:  badgeD, height: badgeD,
             borderRadius: 9999,
             background: badgeBg,
-            border:     `2px solid ${isActive ? '#f0c030' : '#6b3810'}`,
-            boxShadow:  isActive ? '0 0 10px rgba(240,192,48,0.5)' : '0 2px 4px rgba(0,0,0,0.5)',
-            display:    'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: 'var(--app-font-mono)',
-            fontSize:   badgeFS,
-            fontWeight: 900,
-            color:      badgeColor,
-            lineHeight: 1,
-            padding:    '0 5px',
-            zIndex:     2,
+            border:    `2px solid ${isActive ? '#f0c030' : '#6b3818'}`,
+            boxShadow: isActive
+              ? '0 0 10px rgba(240,192,48,0.55), 0 2px 4px rgba(0,0,0,0.5)'
+              : '0 2px 4px rgba(0,0,0,0.55)',
+            display:   'flex', alignItems:'center', justifyContent:'center',
+            fontFamily:'var(--app-font-mono)',
+            fontSize:  badgeFS,
+            fontWeight:900,
+            color:     badgeFg,
+            lineHeight:1,
+            padding:   '0 5px',
+            zIndex:    3,
           }}>
             {state.level}
           </div>
         </div>
 
-        {/* Отступ под бейдж */}
-        <div style={{ height: badgeD * 0.32 }} />
-
-        {/* Название */}
-        <span style={{
-          fontSize:      nameFS,
-          fontWeight:    700,
-          color:         nameColor,
-          textAlign:     'center',
-          lineHeight:    1.2,
-          width:         '100%',
-          overflow:      'hidden',
-          textOverflow:  'ellipsis',
-          whiteSpace:    'nowrap',
-          textShadow:    '0 1px 2px rgba(0,0,0,0.6)',
-          padding:       '0 2px',
-        }}>
-          {name}
-        </span>
+        {/* Отступ под badge */}
+        <div style={{ height: Math.round(badgeD * 0.45) }} />
       </div>
-    </Link>
+
+      {/* Попап */}
+      {popup && (
+        <SkillPopup
+          skillId={skillId}
+          linkPath={linkPath}
+          onClose={() => setPopup(false)}
+        />
+      )}
+    </>
   );
 });
