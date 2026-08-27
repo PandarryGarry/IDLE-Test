@@ -230,6 +230,37 @@ export function DashboardPage() {
         </div>
       )}
 
+      {/* ══ 3.5 БЫСТРЫЙ СТАРТ (когда нет активности) ══ */}
+      {!inCombat && !isRunning && !offline && (
+        <div style={PANEL}>
+          <SectionHeader icon="🗺" label="Выбери занятие" />
+          <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:6 }}>
+            {[
+              { href:'/woodcutting',icon:'🪓',label:'Рубить лес' },
+              { href:'/mining',icon:'⛏️',label:'Добывать руду' },
+              { href:'/fishing',icon:'🎣',label:'Ловить рыбу' },
+              { href:'/combat',icon:'⚔️',label:'В бой' },
+            ].map(({ href,icon,label }) => (
+              <Link key={href} href={href} style={{ textDecoration:'none' }}>
+                <div style={{
+                  display:'flex',alignItems:'center',gap:8,
+                  padding:'10px 12px',borderRadius:10,cursor:'pointer',
+                  background:'linear-gradient(160deg,#5a3010,#3a1e08)',
+                  border:'2px solid #4a2808',
+                  boxShadow:'0 3px 0 #2a1005',transition:'all 0.12s',
+                }}
+                  onMouseEnter={e=>(e.currentTarget as HTMLDivElement).style.borderColor='#c8880a'}
+                  onMouseLeave={e=>(e.currentTarget as HTMLDivElement).style.borderColor='#4a2808'}
+                >
+                  <span style={{ fontSize:18 }}>{icon}</span>
+                  <span style={{ fontSize:12,fontWeight:700,color:'#f0d070',whiteSpace:'nowrap' }}>{label}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ══ 4. НАВЫКИ ══ */}
       <div style={PANEL}>
         {/* Табы */}
