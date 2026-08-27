@@ -74,13 +74,13 @@ export function FishingPage() {
             <div className="w-12 h-12 rounded-2xl bg-[var(--bg-page)] border border-[var(--border-light)] flex items-center justify-center p-2">
               <SkillIcon skillId="fishing" size="md" />
             </div>
-            <p className="text-xs font-medium" style={{ color: '#c8a050' }}>{t('fishing.selectSpot')}</p>
+            <p className="text-xs font-medium" style={{ color: '#e0c070', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{t('fishing.selectSpot')}</p>
           </div>
         )}
       </div>
 
       <div className="flex items-center justify-between px-1 pt-1">
-        <h2 className="text-xs font-extrabold uppercase tracking-widest font-mono flex items-center gap-1.5" style={{ color: '#67e8f9' }}>
+        <h2 className="text-xs font-extrabold uppercase tracking-widest font-mono flex items-center gap-1.5" style={{ color: '#80f0ff', textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
           <span>🎣</span> {t('fishing.availableSpots')}
         </h2>
       </div>
