@@ -5,6 +5,34 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Tailwind v4 — регистрируем токены как утилиты */
+@theme inline {
+  --color-border:          var(--border-default);
+  --color-background:      var(--bg-page);
+  --color-foreground:      var(--text-primary);
+  --color-muted:           var(--bg-card-dark);
+  --color-muted-foreground: var(--text-muted);
+  --color-primary:         var(--accent-gold);
+  --color-primary-foreground: #fff8ee;
+  --color-card:            var(--bg-card);
+  --color-card-foreground: var(--text-primary);
+  --color-popover:         var(--bg-card);
+  --color-popover-foreground: var(--text-primary);
+  --color-accent:          var(--bg-card-dark);
+  --color-accent-foreground: var(--text-secondary);
+  --color-destructive:     var(--accent-ruby);
+  --color-destructive-foreground: #fff;
+  --color-ring:            var(--accent-gold);
+  --color-input:           var(--bg-slot);
+  --font-sans:             var(--app-font-sans);
+  --font-mono:             var(--app-font-mono);
+  --font-display:          var(--app-font-display);
+  --radius-sm:             6px;
+  --radius-md:             10px;
+  --radius-lg:             14px;
+  --radius-xl:             18px;
+}
+
 /* ═══════════════════════════════════════════════════════════
    AETHELIA RPG — CSS CUSTOM PROPERTIES
    Все значения берутся из src/styles/tokens.ts
@@ -100,7 +128,7 @@
    БАЗОВЫЕ СТИЛИ
    ═══════════════════════════════════════════════════════════ */
 @layer base {
-  * { @apply border-border; box-sizing: border-box; }
+  * { box-sizing: border-box; border-color: var(--border-default); }
 
   body {
     font-family: var(--app-font-sans);

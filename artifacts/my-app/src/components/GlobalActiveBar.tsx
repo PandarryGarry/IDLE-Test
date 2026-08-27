@@ -63,13 +63,13 @@ export function GlobalActiveBar() {
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-red-400 font-mono">
                   {t('group.combat')}
                 </span>
-                <span className="text-muted-foreground text-xs">•</span>
-                <span className="text-xs font-bold text-foreground truncate">
+                <span className="text-[var(--text-muted)] text-xs">•</span>
+                <span className="text-xs font-bold text-[var(--text-primary)] truncate">
                   vs {currentMonster.name} (Lvl {currentMonster.combatLevel})
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs font-mono mt-0.5">
-                <span className="text-muted-foreground text-[11px]">HP:</span>
+                <span className="text-[var(--text-muted)] text-[11px]">HP:</span>
                 <div className="w-24 sm:w-32 h-2 bg-stone-800 rounded-full overflow-hidden border border-stone-700">
                   <div 
                     className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-300"

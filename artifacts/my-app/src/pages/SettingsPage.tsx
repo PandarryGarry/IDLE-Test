@@ -51,7 +51,7 @@ export function SettingsPage() {
           ⚙️
         </div>
         <div>
-          <h1 className="text-xl sm:text-2xl font-display font-black text-stone-100">{t('settings.title')}</h1>
+          <h1 className="text-xl sm:text-2xl font-display font-black text-[var(--text-primary)]">{t('settings.title')}</h1>
           <p className="text-xs text-stone-500">Manage realms configuration and character data</p>
         </div>
       </div>
@@ -67,7 +67,7 @@ export function SettingsPage() {
             className={`py-3 px-4 rounded-2xl font-black text-sm tracking-wide transition-all active:scale-95 flex items-center justify-center gap-2 ${
               language === 'en'
                 ? 'bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-                : 'bg-stone-950 border border-stone-800 text-stone-300 hover:text-white hover:border-stone-700'
+                : 'bg-stone-950 border border-stone-800 text-[var(--text-secondary)] hover:text-white hover:border-stone-700'
             }`}
           >
             🇬🇧 English
@@ -77,7 +77,7 @@ export function SettingsPage() {
             className={`py-3 px-4 rounded-2xl font-black text-sm tracking-wide transition-all active:scale-95 flex items-center justify-center gap-2 ${
               language === 'ru'
                 ? 'bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-                : 'bg-stone-950 border border-stone-800 text-stone-300 hover:text-white hover:border-stone-700'
+                : 'bg-stone-950 border border-stone-800 text-[var(--text-secondary)] hover:text-white hover:border-stone-700'
             }`}
           >
             🇷🇺 Русский
@@ -135,7 +135,7 @@ export function SettingsPage() {
           />
 
           <div className="flex items-center justify-between pt-1">
-            <span className="text-xs text-stone-300 font-medium">{t('settings.numberFormat')}</span>
+            <span className="text-xs text-[var(--text-secondary)] font-medium">{t('settings.numberFormat')}</span>
             <select
               value={numberFormat}
               onChange={(e) => updateSetting('numberFormat', e.target.value as any)}
@@ -166,7 +166,7 @@ export function SettingsPage() {
           
           <button
             onClick={handleExport}
-            className="flex-1 sm:flex-none px-5 py-2.5 bg-stone-900 border border-stone-800 hover:border-stone-700 text-stone-200 font-bold rounded-2xl text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5"
+            className="flex-1 sm:flex-none px-5 py-2.5 bg-stone-900 border border-stone-800 hover:border-stone-700 text-[var(--text-primary)] font-bold rounded-2xl text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5"
           >
             <Download className="w-3.5 h-3.5" />
             {t('settings.exportSave')}
@@ -179,7 +179,7 @@ export function SettingsPage() {
             value={importString}
             onChange={(e) => setImportString(e.target.value)}
             placeholder="Paste your exported save data string here..."
-            className="w-full h-20 bg-stone-950 border border-stone-800 rounded-2xl p-3 font-mono text-xs text-stone-300 focus:outline-none focus:border-amber-500 transition-colors resize-none placeholder:text-slate-600"
+            className="w-full h-20 bg-stone-950 border border-stone-800 rounded-2xl p-3 font-mono text-xs text-[var(--text-secondary)] focus:outline-none focus:border-amber-500 transition-colors resize-none placeholder:text-slate-600"
           />
           <button
             onClick={handleImport}
@@ -219,7 +219,7 @@ function ToggleSetting({
   return (
     <div className="flex items-center justify-between gap-3 cursor-pointer group select-none" onClick={() => onChange(!checked)}>
       <div className="min-w-0">
-        <div className="font-semibold text-xs text-stone-200 group-hover:text-amber-300 transition-colors">{label}</div>
+        <div className="font-semibold text-xs text-[var(--text-primary)] group-hover:text-amber-300 transition-colors">{label}</div>
         {description && <div className="text-[11px] text-stone-500 leading-tight mt-0.5">{description}</div>}
       </div>
       <div

@@ -40,7 +40,7 @@ function Router() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground selection:bg-amber-500/30">
+    <div className="flex min-h-screen bg-[var(--bg-page)] text-[var(--text-primary)] selection:bg-amber-500/30">
       
       {/* Desktop Sidebar (Permanent) */}
       <div className="hidden md:block">

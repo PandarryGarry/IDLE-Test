@@ -32,7 +32,7 @@ export function WoodcuttingPage() {
       {/* Active Action Panel */}
       <div className={`rounded-3xl p-4 sm:p-5 relative overflow-hidden transition-all border ${
         isTraining 
-          ? 'bg-gradient-to-b from-emerald-950/40 via-[#221810] to-[#1c1108] border-emerald-500/80 shadow-[0_0_24px_rgba(16,185,129,0.3)]' 
+          ? 'bg-gradient-to-b g-card-active' 
           : 'g-card border-[var(--border-default)]'
       }`}>
         {isTraining && activeTree ? (
@@ -43,11 +43,11 @@ export function WoodcuttingPage() {
                   <Trees className="w-6 h-6 text-emerald-400" />
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-stone-100 flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
                     <span>{t('woodcutting.chopping')}</span>
                     <span className="text-emerald-300 font-extrabold">{activeTree.name}</span>
                   </h3>
-                  <p className="text-stone-300 text-xs font-mono mt-0.5 flex items-center gap-1.5">
+                  <p className="text-[var(--text-secondary)] text-xs font-mono mt-0.5 flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-emerald-400" />
                     <span>{(activeTree.interval / 1000).toFixed(1)} сек. за действие</span>
                   </p>
@@ -68,11 +68,11 @@ export function WoodcuttingPage() {
             </div>
           </div>
         ) : (
-          <div className="text-center text-stone-300 flex flex-col items-center gap-2 py-6">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: '#1a1108', border: '1px solid #3a2b1a' }}>
+          <div className="text-center text-[var(--text-secondary)] flex flex-col items-center gap-2 py-6">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'var(--bg-card-dark)', border: '1px solid var(--border-light)' }}>
               <Trees className="w-6 h-6 text-[var(--text-muted)]" />
             </div>
-            <p className="text-xs font-medium text-stone-300">{t('woodcutting.selectTree')}</p>
+            <p className="text-xs font-medium text-[var(--text-secondary)]">{t('woodcutting.selectTree')}</p>
           </div>
         )}
       </div>

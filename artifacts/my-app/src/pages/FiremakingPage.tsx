@@ -53,11 +53,11 @@ export function FiremakingPage() {
                   <SkillIcon skillId="firemaking" size="md" />
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-stone-100 flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
                     <span>{t('firemaking.burning')}</span>
                     <span className="text-rose-300 font-extrabold">{activeLog.name}</span>
                   </h3>
-                  <p className="text-stone-300 text-xs font-mono mt-0.5 flex items-center gap-1.5">
+                  <p className="text-[var(--text-secondary)] text-xs font-mono mt-0.5 flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-rose-400" />
                     <span>{(activeLog.interval / 1000).toFixed(1)} сек. за действие</span>
                   </p>
@@ -78,11 +78,11 @@ export function FiremakingPage() {
             </div>
           </div>
         ) : (
-          <div className="text-center text-stone-300 flex flex-col items-center gap-2 py-6">
+          <div className="text-center text-[var(--text-secondary)] flex flex-col items-center gap-2 py-6">
             <div className="w-12 h-12 rounded-2xl bg-[var(--bg-page)] border border-[var(--border-light)] flex items-center justify-center p-2">
               <SkillIcon skillId="firemaking" size="md" />
             </div>
-            <p className="text-xs font-medium text-stone-300">{t('firemaking.selectLog')}</p>
+            <p className="text-xs font-medium text-[var(--text-secondary)]">{t('firemaking.selectLog')}</p>
           </div>
         )}
       </div>
@@ -104,7 +104,7 @@ export function FiremakingPage() {
             <div className="flex items-center justify-between mt-2 pt-2 border-t border-stone-800">
               <div className="flex items-center gap-1.5">
                 <ItemIcon itemId={action.logId} size="sm" />
-                <span className={`text-xs font-mono font-bold ${hasEnough ? 'text-stone-200' : 'text-red-400'}`}>
+                <span className={`text-xs font-mono font-bold ${hasEnough ? 'text-[var(--text-primary)]' : 'text-red-400'}`}>
                   {qty} / 1 in bank
                 </span>
               </div>

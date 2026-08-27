@@ -76,8 +76,8 @@ export function ItemInfoPopover({
         <div className="flex items-start gap-2.5">
           <ItemIcon itemId={itemId} size="md" showTooltip={false} />
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-sm font-black text-foreground">{item.name}</h3>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <h3 className="truncate text-sm font-black text-[var(--text-primary)]">{item.name}</h3>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
               {t('inventory.type')}: {item.category.replace('_', ' ')}
             </p>
           </div>
@@ -87,18 +87,18 @@ export function ItemInfoPopover({
           )}
         </div>
 
-        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+        <p className="mt-2 text-xs leading-relaxed text-[var(--text-muted)]">
           {item.description ?? t('inventory.noDescription')}
         </p>
 
-        <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-border/60 pt-2 text-xs">
-          <dt className="text-muted-foreground">{t('inventory.sellsFor')}</dt>
+        <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-[var(--border-default)]/60 pt-2 text-xs">
+          <dt className="text-[var(--text-muted)]">{t('inventory.sellsFor')}</dt>
           <dd className="text-right font-mono font-bold text-amber-400">
             {formatNumber(item.sellValue)} GP
           </dd>
           {item.healAmount !== undefined && (
             <>
-              <dt className="text-muted-foreground">{t('inventory.heals')}</dt>
+              <dt className="text-[var(--text-muted)]">{t('inventory.heals')}</dt>
               <dd className="text-right font-mono font-bold text-emerald-400">
                 +{item.healAmount} HP
               </dd>
@@ -106,21 +106,21 @@ export function ItemInfoPopover({
           )}
           {item.equipSlot && (
             <>
-              <dt className="text-muted-foreground">{t('inventory.equipSlot')}</dt>
+              <dt className="text-[var(--text-muted)]">{t('inventory.equipSlot')}</dt>
               <dd className="text-right font-mono text-sky-400">{item.equipSlot}</dd>
             </>
           )}
         </dl>
 
         {combatStats.length > 0 && (
-          <div className="mt-3 border-t border-border/60 pt-2">
-            <div className="mb-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+          <div className="mt-3 border-t border-[var(--border-default)]/60 pt-2">
+            <div className="mb-1 text-[10px] font-black uppercase tracking-wider text-[var(--text-muted)]">
               {t('inventory.stats')}
             </div>
             <div className="space-y-1 text-xs">
               {combatStats.map(([stat, value]) => (
                 <div key={stat} className="flex justify-between gap-3">
-                  <span className="text-muted-foreground">{STAT_LABELS[stat] ?? stat}</span>
+                  <span className="text-[var(--text-muted)]">{STAT_LABELS[stat] ?? stat}</span>
                   <span className={Number(value) > 0 ? 'font-mono text-primary' : 'font-mono text-destructive'}>
                     {Number(value) > 0 ? '+' : ''}{value}
                   </span>
@@ -132,15 +132,15 @@ export function ItemInfoPopover({
 
         {/* Сравнение с текущей экипировкой */}
         {comparison && (
-          <div className="mt-3 border-t border-border/60 pt-2">
-            <div className="mb-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+          <div className="mt-3 border-t border-[var(--border-default)]/60 pt-2">
+            <div className="mb-1 text-[10px] font-black uppercase tracking-wider text-[var(--text-muted)]">
               {t('inventory.vsCurrent') ?? 'vs Current'}
             </div>
             <div className="space-y-1 text-xs">
               {comparison.map(([stat, diff]) => (
                 <div key={stat} className="flex justify-between gap-3">
-                  <span className="text-muted-foreground">{STAT_LABELS[stat] ?? stat}</span>
-                  <span className={diff > 0 ? 'font-mono text-emerald-400' : diff < 0 ? 'font-mono text-destructive' : 'font-mono text-muted-foreground'}>
+                  <span className="text-[var(--text-muted)]">{STAT_LABELS[stat] ?? stat}</span>
+                  <span className={diff > 0 ? 'font-mono text-emerald-400' : diff < 0 ? 'font-mono text-destructive' : 'font-mono text-[var(--text-muted)]'}>
                     {diff > 0 ? '+' : ''}{diff}
                   </span>
                 </div>
@@ -156,14 +156,14 @@ export function ItemInfoPopover({
           className={`mt-3 w-full flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-lg text-xs font-bold transition-colors active:scale-95 ${
             isLocked
               ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/25'
-              : 'bg-background border border-border text-muted-foreground hover:text-foreground hover:border-primary/50'
+              : 'bg-[var(--bg-page)] border border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-primary/50'
           }`}
         >
           {isLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
           {isLocked ? t('inventory.unlock') ?? 'Unlock' : t('inventory.lock') ?? 'Lock'}
         </button>
 
-        {actions && <div className="mt-2 border-t border-border/60 pt-2">{actions}</div>}
+        {actions && <div className="mt-2 border-t border-[var(--border-default)]/60 pt-2">{actions}</div>}
       </PopoverContent>
     </Popover>
   );

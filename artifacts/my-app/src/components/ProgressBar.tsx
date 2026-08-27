@@ -13,7 +13,7 @@ export function ProgressBar({ value, className, showText, label, colorClass = "b
   const percent = Math.min(Math.max(value * 100, 0), 100);
   
   return (
-    <div className={cn("relative h-6 w-full overflow-hidden rounded-md bg-muted border border-border", className)}>
+    <div className={cn("relative h-6 w-full overflow-hidden rounded-md bg-[var(--bg-card-dark)] border border-[var(--border-default)]", className)}>
       <div 
         className={cn(
           "h-full transition-all duration-100 ease-linear", 

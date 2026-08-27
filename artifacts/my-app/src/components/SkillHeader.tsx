@@ -56,7 +56,7 @@ export function SkillHeader({ skillId, skillName, skillIcon }: SkillHeaderProps)
 
   return (
     <div className="rounded-2xl overflow-hidden"
-      style={{ background: 'linear-gradient(160deg,#2a1f12,#1a1108)', border: '1px solid #3d2e1e', boxShadow: '0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,220,130,0.05)' }}>
+      style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', boxShadow: 'var(--shadow-card)' }}>
 
       <div className="p-4 sm:p-5">
         {/* ── Верхняя строка: иконка + инфо + уровень ── */}
@@ -74,14 +74,14 @@ export function SkillHeader({ skillId, skillName, skillIcon }: SkillHeaderProps)
 
           {/* Название + XP */}
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-display font-black tracking-wide text-stone-100 truncate">
+            <h1 className="text-xl font-display font-black tracking-wide text-[var(--text-primary)] truncate">
               {skillName}
             </h1>
             {descriptionKey && (
-              <p className="text-xs text-stone-500 line-clamp-1 mt-0.5">{t(descriptionKey)}</p>
+              <p className="text-xs text-[var(--text-muted)] line-clamp-1 mt-0.5">{t(descriptionKey)}</p>
             )}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1.5 text-xs font-mono">
-              <span className="text-stone-500">
+              <span className="text-[var(--text-muted)]">
                 XP: <b className="text-amber-400 font-bold">{formatNumber(Math.floor(xp))}</b>
               </span>
               {xpPerHour > 0 && (
@@ -95,15 +95,15 @@ export function SkillHeader({ skillId, skillName, skillIcon }: SkillHeaderProps)
 
           {/* Большой уровень */}
           <div className="shrink-0 text-center px-3.5 py-2 rounded-xl"
-            style={{ background: '#1a1108', border: '1px solid #3d2e1e', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.4)' }}>
+            style={{ background: 'var(--bg-card-dark)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-slot)' }}>
             <div className={`text-3xl font-mono font-black leading-none ${theme.accent}`}>{level}</div>
-            <div className="text-[9px] text-stone-600 uppercase tracking-widest font-mono mt-0.5">Уровень</div>
+            <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest font-mono mt-0.5">Уровень</div>
           </div>
         </div>
 
         {/* ── Полоса прогресса XP ── */}
         <div className="space-y-1">
-          <div className="flex justify-between text-[10px] font-mono text-stone-500">
+          <div className="flex justify-between text-[10px] font-mono text-[var(--text-muted)]">
             <span>{level >= 99 ? 'Максимальный уровень' : `→ Ур. ${level + 1}`}</span>
             <span className="text-stone-400 font-bold">
               {level >= 99 ? '100%' : `${formatNumber(Math.floor(xpIntoLevel))} / ${formatNumber(Math.floor(xpRequiredForLevel))} XP`}

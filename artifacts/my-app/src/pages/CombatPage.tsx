@@ -103,14 +103,14 @@ export function CombatPage() {
                     disabled={isLocked}
                     className={`w-full p-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
                       isLocked
-                        ? 'opacity-40 grayscale cursor-not-allowed bg-[#1e1408] border-[var(--border-card)]'
+                        ? 'opacity-40 grayscale cursor-not-allowed bg-[var(--bg-card-dark)] border-[var(--border-card)]'
                         : isActive
                           ? 'bg-red-500/20 border-red-500/70 shadow-[0_0_18px_rgba(239,68,68,0.25)] ring-1 ring-red-500/40 cursor-pointer'
-                          : 'bg-[var(--bg-card-dark)] hover:border-red-500/40 cursor-pointer border-[var(--border-light)] hover:bg-[#231810]'
+                          : 'bg-[var(--bg-card-dark)] hover:border-red-500/40 cursor-pointer border-[var(--border-light)] hover:bg-[var(--bg-card-dark)]'
                     }`}
                   >
                     <div className="flex justify-between items-center mb-1">
-                      <h3 className={`font-bold text-xs sm:text-sm ${isActive ? 'text-red-300 font-extrabold' : 'text-stone-100'}`}>
+                      <h3 className={`font-bold text-xs sm:text-sm ${isActive ? 'text-red-300 font-extrabold' : 'text-[var(--text-primary)]'}`}>
                         {area.name}
                       </h3>
                       {isLocked ? (
@@ -123,12 +123,12 @@ export function CombatPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-stone-300 leading-tight mb-2">{area.description}</p>
+                    <p className="text-[11px] text-[var(--text-secondary)] leading-tight mb-2">{area.description}</p>
                     
                     {/* Monster Rosters */}
                     <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-none">
                       {area.monsterIds.map(mId => (
-                        <span key={mId} className="shrink-0 bg-[var(--bg-slot)] px-1.5 py-0.5 rounded-md text-[10px] font-mono border border-[var(--border-card)] text-stone-200 font-medium">
+                        <span key={mId} className="shrink-0 bg-[var(--bg-slot)] px-1.5 py-0.5 rounded-md text-[10px] font-mono border border-[var(--border-card)] text-[var(--text-primary)] font-medium">
                           {MONSTERS_MAP[mId]?.name} ({MONSTERS_MAP[mId]?.combatLevel})
                         </span>
                       ))}
@@ -141,7 +141,7 @@ export function CombatPage() {
 
           {/* Equipment Paperdoll (Кукла экипировки) */}
           <div className="g-card border border-[var(--border-default)] p-4 rounded-3xl shadow-xl">
-            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-stone-200 mb-3 flex items-center gap-1.5">
+            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-[var(--text-primary)] mb-3 flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5 text-amber-400" /> {t('combat.equipment')}
             </h2>
             
@@ -182,7 +182,7 @@ export function CombatPage() {
           {/* Combat Log */}
           <div className="fantasy-card border-stone-800 rounded-3xl p-3 sm:p-4 shadow-lg flex flex-col h-60 md:h-72 min-h-0">
             <div className="flex items-center justify-between gap-2 mb-2 px-1">
-              <h3 className="font-mono text-xs font-extrabold uppercase tracking-widest text-stone-300 flex items-center gap-1.5">
+              <h3 className="font-mono text-xs font-extrabold uppercase tracking-widest text-[var(--text-secondary)] flex items-center gap-1.5">
                 <History className="w-3.5 h-3.5 text-cyan-400" /> {t('combat.log')}
               </h3>
               <div className="flex items-center gap-3 text-xs font-mono">
@@ -282,11 +282,11 @@ const CombatScreen = memo(function CombatScreen() {
     <div className="g-card border border-red-500/40 rounded-3xl p-4 sm:p-6 shadow-2xl min-h-[320px] flex flex-col relative overflow-hidden">
       
       {!inCombat ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-stone-300 p-6 text-center">
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-[var(--text-secondary)] p-6 text-center">
           <div className="w-16 h-16 rounded-3xl bg-[var(--bg-card-dark)] border border-[var(--border-light)] flex items-center justify-center text-4xl mb-3 opacity-70">
             ⚔️
           </div>
-          <h2 className="text-lg sm:text-xl font-display font-black text-stone-100">{t('combat.selectArea')}</h2>
+          <h2 className="text-lg sm:text-xl font-display font-black text-[var(--text-primary)]">{t('combat.selectArea')}</h2>
           <p className="text-xs text-stone-500 mt-1 max-w-sm">
             Выберите боевую локацию или подземелье слева, чтобы начать сражение.
           </p>
@@ -298,7 +298,7 @@ const CombatScreen = memo(function CombatScreen() {
           <div className="flex justify-between items-center mb-6 pb-3 border-b border-[var(--border-light)]">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-              <h2 className="text-base sm:text-lg font-display font-black text-stone-100 flex items-center gap-1.5">
+              <h2 className="text-base sm:text-lg font-display font-black text-[var(--text-primary)] flex items-center gap-1.5">
                 <span className="text-red-400">{t('combat.fighting')}</span> {currentMonster?.name}
               </h2>
             </div>
@@ -316,10 +316,10 @@ const CombatScreen = memo(function CombatScreen() {
           <div className="flex flex-col md:flex-row gap-6 items-center justify-between flex-grow py-2">
             
             {/* Player Side */}
-            <div className="flex-1 w-full text-center space-y-2.5 bg-[#172130] p-4 rounded-2xl border border-[var(--border-light)]">
-              <div className="flex items-center justify-between text-xs font-mono text-stone-300">
-                <span className="font-bold text-stone-100">{t('combat.you')}</span>
-                <span className="bg-[#231810] border border-[var(--border-default)] px-2 py-0.5 rounded-md font-bold text-amber-300">
+            <div className="flex-1 w-full text-center space-y-2.5 bg-[var(--bg-card-dark)] p-4 rounded-2xl border border-[var(--border-light)]">
+              <div className="flex items-center justify-between text-xs font-mono text-[var(--text-secondary)]">
+                <span className="font-bold text-[var(--text-primary)]">{t('combat.you')}</span>
+                <span className="bg-[var(--bg-card-dark)] border border-[var(--border-default)] px-2 py-0.5 rounded-md font-bold text-amber-300">
                   Ур. {combatLevel}
                 </span>
               </div>
@@ -334,9 +334,9 @@ const CombatScreen = memo(function CombatScreen() {
                   <span className="text-emerald-400 font-bold flex items-center gap-1">
                     <Heart className="w-3 h-3 fill-current" /> ОЗ
                   </span>
-                  <span className="text-stone-100 font-bold">{playerHp} / {playerMaxHp}</span>
+                  <span className="text-[var(--text-primary)] font-bold">{playerHp} / {playerMaxHp}</span>
                 </div>
-                <div className="h-4 w-full bg-[#121924] rounded-full overflow-hidden border border-[var(--border-light)] p-0.5 shadow-inner">
+                <div className="h-4 w-full bg-[var(--bar-track)] rounded-full overflow-hidden border border-[var(--border-light)] p-0.5 shadow-inner">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_12px_rgba(16,185,129,0.6)] transition-all duration-300"
                     style={{ width: `${playerHpPct}%` }}
@@ -350,7 +350,7 @@ const CombatScreen = memo(function CombatScreen() {
                   <span>Скорость атаки</span>
                   <span>{(playerAttackTimer / 1000).toFixed(1)} сек.</span>
                 </div>
-                <div className="h-1.5 w-full bg-[#121924] rounded-full overflow-hidden border border-[var(--border-light)]">
+                <div className="h-1.5 w-full bg-[var(--bar-track)] rounded-full overflow-hidden border border-[var(--border-light)]">
                   <div
                     className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-100"
                     style={{ width: `${playerAttackProgress}%` }}
@@ -368,8 +368,8 @@ const CombatScreen = memo(function CombatScreen() {
             </div>
 
             {/* Enemy Side */}
-            <div className="flex-1 w-full text-center space-y-2.5 bg-[#172130] p-4 rounded-2xl border border-red-500/40">
-              <div className="flex items-center justify-between text-xs font-mono text-stone-300">
+            <div className="flex-1 w-full text-center space-y-2.5 bg-[var(--bg-card-dark)] p-4 rounded-2xl border border-red-500/40">
+              <div className="flex items-center justify-between text-xs font-mono text-[var(--text-secondary)]">
                 <span className="font-bold text-red-300 truncate">{currentMonster?.name}</span>
                 <span className="bg-red-950/80 border border-red-500/50 px-2 py-0.5 rounded-md font-bold text-red-400">
                   Ур. {currentMonster?.combatLevel}
@@ -386,9 +386,9 @@ const CombatScreen = memo(function CombatScreen() {
                   <span className="text-red-400 font-bold flex items-center gap-1">
                     <Heart className="w-3 h-3 fill-current" /> ОЗ
                   </span>
-                  <span className="text-stone-100 font-bold">{enemyHp} / {enemyMaxHp}</span>
+                  <span className="text-[var(--text-primary)] font-bold">{enemyHp} / {enemyMaxHp}</span>
                 </div>
-                <div className="h-4 w-full bg-[#121924] rounded-full overflow-hidden border border-[var(--border-light)] p-0.5 shadow-inner">
+                <div className="h-4 w-full bg-[var(--bar-track)] rounded-full overflow-hidden border border-[var(--border-light)] p-0.5 shadow-inner">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-red-600 to-rose-400 shadow-[0_0_12px_rgba(239,68,68,0.6)] transition-all duration-300"
                     style={{ width: `${enemyHpPct}%` }}
@@ -402,7 +402,7 @@ const CombatScreen = memo(function CombatScreen() {
                   <span>Скорость атаки</span>
                   <span>{(enemyAttackTimer / 1000).toFixed(1)} сек.</span>
                 </div>
-                <div className="h-1.5 w-full bg-[#121924] rounded-full overflow-hidden border border-[var(--border-light)]">
+                <div className="h-1.5 w-full bg-[var(--bar-track)] rounded-full overflow-hidden border border-[var(--border-light)]">
                   <div
                     className="h-full bg-gradient-to-r from-orange-500 to-amber-400 transition-all duration-100"
                     style={{ width: `${enemyAttackProgress}%` }}
@@ -416,7 +416,7 @@ const CombatScreen = memo(function CombatScreen() {
           {/* Combat Toggles & Kill Counter */}
           <div className="mt-4 pt-3 border-t border-[var(--border-light)] flex flex-wrap gap-x-6 gap-y-2 justify-between items-center">
             <div className="flex gap-4">
-              <label className="flex items-center gap-2 text-xs font-bold text-stone-200 cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-xs font-bold text-[var(--text-primary)] cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={autoEat}
@@ -425,7 +425,7 @@ const CombatScreen = memo(function CombatScreen() {
                 />
                 {t('combat.autoEat')}
               </label>
-              <label className="flex items-center gap-2 text-xs font-bold text-stone-200 cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-xs font-bold text-[var(--text-primary)] cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={autoLoot}
@@ -436,7 +436,7 @@ const CombatScreen = memo(function CombatScreen() {
               </label>
             </div>
             
-            <div className="text-xs font-mono text-stone-300 flex items-center gap-1.5">
+            <div className="text-xs font-mono text-[var(--text-secondary)] flex items-center gap-1.5">
               <Skull className="w-3.5 h-3.5 text-red-400" />
               {t('combat.killCount')}: <span className="text-amber-300 font-bold">{formatNumber(killCount)}</span>
             </div>
@@ -460,7 +460,7 @@ const FoodPanel = memo(function FoodPanel() {
 
   return (
     <div className="fantasy-card border-stone-800 rounded-3xl p-3.5 shadow-lg">
-      <h3 className="font-mono text-xs font-extrabold uppercase tracking-widest text-stone-300 mb-2.5 px-1 flex items-center gap-1.5">
+      <h3 className="font-mono text-xs font-extrabold uppercase tracking-widest text-[var(--text-secondary)] mb-2.5 px-1 flex items-center gap-1.5">
         <Utensils className="w-3.5 h-3.5 text-amber-400" /> {t('combat.food')}
       </h3>
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -472,7 +472,7 @@ const FoodPanel = memo(function FoodPanel() {
           >
             <ItemIcon itemId={slot.itemId} size="sm" quantity={slot.quantity} showTooltip={false} />
             <div className="text-left">
-              <div className="text-xs font-bold text-stone-200 truncate max-w-[100px]">{item?.name}</div>
+              <div className="text-xs font-bold text-[var(--text-primary)] truncate max-w-[100px]">{item?.name}</div>
               <div className="text-[11px] text-emerald-400 font-mono font-bold">+{item?.healAmount} HP</div>
             </div>
           </button>

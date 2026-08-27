@@ -28,7 +28,7 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn(
-        'bg-background group/calendar p-3 [--cell-size:2rem] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent',
+        'bg-[var(--bg-page)] group/calendar p-3 [--cell-size:2rem] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent',
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className,
@@ -80,13 +80,13 @@ function Calendar({
           'select-none font-medium',
           captionLayout === 'label'
             ? 'text-sm'
-            : '[&>svg]:text-muted-foreground flex h-8 items-center gap-1 rounded-md pl-2 pr-1 text-sm [&>svg]:size-3.5',
+            : '[&>svg]:text-[var(--text-muted)] flex h-8 items-center gap-1 rounded-md pl-2 pr-1 text-sm [&>svg]:size-3.5',
           defaultClassNames.caption_label,
         ),
         table: 'w-full border-collapse',
         weekdays: cn('flex', defaultClassNames.weekdays),
         weekday: cn(
-          'text-muted-foreground flex-1 select-none rounded-md text-[0.8rem] font-normal',
+          'text-[var(--text-muted)] flex-1 select-none rounded-md text-[0.8rem] font-normal',
           defaultClassNames.weekday,
         ),
         week: cn('mt-2 flex w-full', defaultClassNames.week),
@@ -95,7 +95,7 @@ function Calendar({
           defaultClassNames.week_number_header,
         ),
         week_number: cn(
-          'text-muted-foreground select-none text-[0.8rem]',
+          'text-[var(--text-muted)] select-none text-[0.8rem]',
           defaultClassNames.week_number,
         ),
         day: cn(
@@ -113,11 +113,11 @@ function Calendar({
           defaultClassNames.today,
         ),
         outside: cn(
-          'text-muted-foreground aria-selected:text-muted-foreground',
+          'text-[var(--text-muted)] aria-selected:text-[var(--text-muted)]',
           defaultClassNames.outside,
         ),
         disabled: cn(
-          'text-muted-foreground opacity-50',
+          'text-[var(--text-muted)] opacity-50',
           defaultClassNames.disabled,
         ),
         hidden: cn('invisible', defaultClassNames.hidden),

@@ -64,7 +64,7 @@ export function InventoryPage() {
             🎒
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-display font-black text-stone-100 flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-display font-black text-[var(--text-primary)] flex items-center gap-2">
               <span>Инвентарь</span>
               <span className="font-mono text-xs sm:text-sm font-bold text-stone-500 font-sans">
                 <span className="text-amber-400 font-mono font-black">{totalItems}</span> / {maxSlots}
@@ -102,7 +102,7 @@ export function InventoryPage() {
               className={`px-3 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 active:scale-95 ${
                 activeCategory === key
                   ? 'bg-stone-800 text-amber-300 border border-amber-500/40 shadow-sm'
-                  : 'text-stone-500 hover:text-stone-200 hover:bg-stone-900'
+                  : 'text-stone-500 hover:text-[var(--text-primary)] hover:bg-stone-900'
               }`}
             >
               <span className="text-base">{icon}</span>
@@ -120,7 +120,7 @@ export function InventoryPage() {
                 placeholder="Поиск..."
                 value={searchQuery}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-32 sm:w-48 pl-2.5 pr-7 py-1.5 bg-stone-900 border border-stone-700 rounded-xl text-xs text-stone-200 focus:outline-none focus:border-amber-500"
+                className="w-32 sm:w-48 pl-2.5 pr-7 py-1.5 bg-stone-900 border border-stone-700 rounded-xl text-xs text-[var(--text-primary)] focus:outline-none focus:border-amber-500"
               />
               <button
                 type="button"
@@ -145,7 +145,7 @@ export function InventoryPage() {
       </div>
 
       {/* 3. Squircle Inventory Slots Grid */}
-      <div className="rounded-2xl p-3 sm:p-4 min-h-[380px]" style={{ background: 'rgba(30,18,8,0.85)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.35)' }}>
+      <div className="rounded-2xl p-3 sm:p-4 min-h-[380px]" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.35)' }}>
         
         {filteredItems.length === 0 && !emptySlotsCount ? (
           <div className="text-center py-20 text-slate-500 flex flex-col items-center gap-2">

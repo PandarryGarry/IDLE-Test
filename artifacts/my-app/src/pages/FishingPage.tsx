@@ -45,11 +45,11 @@ export function FishingPage() {
                   <SkillIcon skillId="fishing" size="md" />
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-stone-100 flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
                     <span>{t('fishing.fishing')}</span>
                     <span className="text-cyan-300 font-extrabold">{activeSpot.name}</span>
                   </h3>
-                  <p className="text-stone-300 text-xs font-mono mt-0.5 flex items-center gap-1.5">
+                  <p className="text-[var(--text-secondary)] text-xs font-mono mt-0.5 flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-cyan-400" />
                     <span>{(activeSpot.interval / 1000).toFixed(1)} сек. за действие</span>
                   </p>
@@ -70,11 +70,11 @@ export function FishingPage() {
             </div>
           </div>
         ) : (
-          <div className="text-center text-stone-300 flex flex-col items-center gap-2 py-6">
+          <div className="text-center text-[var(--text-secondary)] flex flex-col items-center gap-2 py-6">
             <div className="w-12 h-12 rounded-2xl bg-[var(--bg-page)] border border-[var(--border-light)] flex items-center justify-center p-2">
               <SkillIcon skillId="fishing" size="md" />
             </div>
-            <p className="text-xs font-medium text-stone-300">{t('fishing.selectSpot')}</p>
+            <p className="text-xs font-medium text-[var(--text-secondary)]">{t('fishing.selectSpot')}</p>
           </div>
         )}
       </div>

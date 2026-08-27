@@ -55,11 +55,11 @@ export function SmithingPage() {
                   <SkillIcon skillId="smithing" size="md" />
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-stone-100 flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
                     <span>{t('smithing.smithing')}</span>
                     <span className="text-orange-300 font-extrabold">{activeRecipe.name}</span>
                   </h3>
-                  <p className="text-stone-300 text-xs font-mono mt-0.5 flex items-center gap-1.5">
+                  <p className="text-[var(--text-secondary)] text-xs font-mono mt-0.5 flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-orange-400" />
                     <span>{(activeRecipe.interval / 1000).toFixed(1)} сек. за действие</span>
                   </p>
@@ -80,11 +80,11 @@ export function SmithingPage() {
             </div>
           </div>
         ) : (
-          <div className="text-center text-stone-300 flex flex-col items-center gap-2 py-6">
+          <div className="text-center text-[var(--text-secondary)] flex flex-col items-center gap-2 py-6">
             <div className="w-12 h-12 rounded-2xl bg-[var(--bg-page)] border border-[var(--border-light)] flex items-center justify-center p-2">
               <SkillIcon skillId="smithing" size="md" />
             </div>
-            <p className="text-xs font-medium text-stone-300">{t('smithing.selectRecipe')}</p>
+            <p className="text-xs font-medium text-[var(--text-secondary)]">{t('smithing.selectRecipe')}</p>
           </div>
         )}
       </div>
@@ -96,7 +96,7 @@ export function SmithingPage() {
           className={`flex-1 sm:flex-none px-5 py-2.5 rounded-2xl font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
             tab === 'smelting' 
               ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black shadow-md' 
-              : 'g-card border border-[var(--border-default)] text-stone-300 hover:text-white'
+              : 'g-card border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-white'
           }`}
         >
           🔥 {t('smithing.smelting')}
@@ -106,7 +106,7 @@ export function SmithingPage() {
           className={`flex-1 sm:flex-none px-5 py-2.5 rounded-2xl font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
             tab === 'equipment' 
               ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black shadow-md' 
-              : 'g-card border border-[var(--border-default)] text-stone-300 hover:text-white'
+              : 'g-card border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-white'
           }`}
         >
           🛡️ {t('smithing.equipment')}
@@ -127,7 +127,7 @@ export function SmithingPage() {
                 return (
                   <div key={i} className="flex items-center gap-1 bg-stone-950 px-2 py-1 rounded-lg border border-stone-800">
                     <ItemIcon itemId={ing.itemId} size="sm" />
-                    <span className={`text-xs font-mono font-bold ${hasEnough ? 'text-stone-200' : 'text-red-400'}`}>
+                    <span className={`text-xs font-mono font-bold ${hasEnough ? 'text-[var(--text-primary)]' : 'text-red-400'}`}>
                       {qty}/{ing.quantity}
                     </span>
                   </div>

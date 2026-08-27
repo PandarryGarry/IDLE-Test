@@ -46,10 +46,10 @@ export function getItemTier(itemId: string, item?: Item): string {
 
 const RARITY_NAMES: Record<string, { label: string; text: string; bg: string; dot: string; border: string }> = {
   common:    { label: 'Обычный',     text: 'text-stone-300', bg: 'bg-stone-800/80', dot: 'bg-slate-400', border: 'border-stone-700' },
-  uncommon:  { label: 'Необычный',   text: 'text-emerald-400', bg: 'bg-emerald-950/40', dot: 'bg-emerald-400', border: 'border-emerald-500/40' },
-  rare:      { label: 'Редкий',      text: 'text-blue-400', bg: 'bg-blue-950/40', dot: 'bg-blue-400', border: 'border-blue-500/40' },
-  epic:      { label: 'Эпический',   text: 'text-purple-400', bg: 'bg-purple-950/40', dot: 'bg-purple-400', border: 'border-purple-500/40' },
-  legendary: { label: 'Легендарный', text: 'text-amber-400', bg: 'bg-amber-950/40', dot: 'bg-amber-400', border: 'border-amber-500/40' },
+  uncommon:  { label: 'Необычный',   text: 'text-emerald-400', bg: 'bg-emerald-100/80', dot: 'bg-emerald-400', border: 'border-emerald-500/40' },
+  rare:      { label: 'Редкий',      text: 'text-blue-400', bg: 'bg-blue-50', dot: 'bg-blue-400', border: 'border-blue-500/40' },
+  epic:      { label: 'Эпический',   text: 'text-purple-400', bg: 'bg-purple-50', dot: 'bg-purple-400', border: 'border-purple-500/40' },
+  legendary: { label: 'Легендарный', text: 'text-amber-400', bg: 'bg-amber-50', dot: 'bg-amber-400', border: 'border-amber-500/40' },
   mythic:    { label: 'Мифический',  text: 'text-rose-400', bg: 'bg-rose-950/40', dot: 'bg-rose-400', border: 'border-rose-500/40' },
 };
 

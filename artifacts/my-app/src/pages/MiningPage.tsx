@@ -44,11 +44,11 @@ export function MiningPage() {
                   <SkillIcon skillId="mining" size="md" />
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-stone-100 flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
                     <span>{t('mining.mining')}</span>
                     <span className="text-amber-300 font-extrabold">{activeRock.name}</span>
                   </h3>
-                  <p className="text-stone-300 text-xs font-mono mt-0.5 flex items-center gap-1.5">
+                  <p className="text-[var(--text-secondary)] text-xs font-mono mt-0.5 flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-amber-400" />
                     <span>{(activeRock.interval / 1000).toFixed(1)} сек. за действие</span>
                   </p>
@@ -69,11 +69,11 @@ export function MiningPage() {
             </div>
           </div>
         ) : (
-          <div className="text-center text-stone-300 flex flex-col items-center gap-2 py-6">
+          <div className="text-center text-[var(--text-secondary)] flex flex-col items-center gap-2 py-6">
             <div className="w-12 h-12 rounded-2xl bg-[var(--bg-page)] border border-[var(--border-light)] flex items-center justify-center p-2">
               <SkillIcon skillId="mining" size="md" />
             </div>
-            <p className="text-xs font-medium text-stone-300">{t('mining.selectRock')}</p>
+            <p className="text-xs font-medium text-[var(--text-secondary)]">{t('mining.selectRock')}</p>
           </div>
         )}
       </div>
@@ -89,7 +89,7 @@ export function MiningPage() {
         actions={ROCKS}
         onActionClick={handleActionClick}
         renderExtra={(action) => action.gemChance ? (
-          <div className="flex items-center justify-between text-xs text-amber-300 font-mono bg-amber-950/40 px-2 py-1 rounded-lg border border-amber-500/20">
+          <div className="flex items-center justify-between text-xs text-amber-300 font-mono bg-amber-50 px-2 py-1 rounded-lg border border-amber-500/20">
             <span className="flex items-center gap-1 text-[11px] text-amber-400">
               <Gem className="w-3 h-3 text-cyan-400" /> Gem Drop:
             </span>

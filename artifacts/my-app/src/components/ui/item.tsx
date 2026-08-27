@@ -35,8 +35,8 @@ const itemVariants = cva(
     variants: {
       variant: {
         default: 'bg-transparent',
-        outline: 'border-border',
-        muted: 'bg-muted/50',
+        outline: 'border-[var(--border-default)]',
+        muted: 'bg-[var(--bg-card-dark)]/50',
       },
       size: {
         default: 'gap-4 p-4 ',
@@ -76,7 +76,7 @@ const itemMediaVariants = cva(
     variants: {
       variant: {
         default: 'bg-transparent',
-        icon: "bg-muted size-8 rounded-sm border [&_svg:not([class*='size-'])]:size-4",
+        icon: "bg-[var(--bg-card-dark)] size-8 rounded-sm border [&_svg:not([class*='size-'])]:size-4",
         image:
           'size-10 overflow-hidden rounded-sm [&_img]:size-full [&_img]:object-cover',
       },
@@ -133,7 +133,7 @@ function ItemDescription({ className, ...props }: React.ComponentProps<'p'>) {
     <p
       data-slot="item-description"
       className={cn(
-        'text-muted-foreground line-clamp-2 text-balance text-sm font-normal leading-normal',
+        'text-[var(--text-muted)] line-clamp-2 text-balance text-sm font-normal leading-normal',
         '[&>a:hover]:text-primary [&>a]:underline [&>a]:underline-offset-4',
         className,
       )}
