@@ -175,21 +175,9 @@ export function ActionCard({
               В процессе…
             </div>
           ) : (
-            <div className="w-full py-1.5 text-center text-[11px] font-bold text-stone-300 group-hover:text-stone-950 rounded-xl transition-all"
-              style={{ background: '#231a10', border: '1px solid #3d2e1e' }}
-              onMouseEnter={e => {
-                const el = e.currentTarget;
-                el.style.background = 'linear-gradient(135deg,#d97706,#f59e0b)';
-                el.style.border     = '1px solid #f59e0b';
-                el.style.boxShadow  = '0 2px 12px rgba(245,158,11,0.3)';
-              }}
-              onMouseLeave={e => {
-                const el = e.currentTarget;
-                el.style.background = '#231a10';
-                el.style.border     = '1px solid #3d2e1e';
-                el.style.boxShadow  = '';
-              }}>
-              Начать
+            <div className="w-full py-2 text-center text-[11px] font-bold rounded-xl transition-all cursor-pointer"
+              style={{ background: 'linear-gradient(135deg,#92400e,#b45309)', border: '1px solid #c2690a', color: '#fef3c7', boxShadow: '0 2px 8px rgba(180,83,9,0.3)' }}>
+              Начать →
             </div>
           )}
         </div>

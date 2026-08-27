@@ -6,6 +6,7 @@ import { COMBAT_AREAS, MONSTERS_MAP } from '@/data/monsters';
 import { ItemIcon } from '@/components/ItemIcon';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { getItem } from '@/data/items';
+import { getItemVisual } from '@/shared/icons/itemIcons';
 import { EquipSlot } from '@/data/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { 
@@ -484,6 +485,18 @@ const FoodPanel = memo(function FoodPanel() {
   );
 });
 
+/* Показывает картинку/эмодзи предмета внутри ячейки без лишних рамок */
+function EquipItemVisual({ itemId, label }: { itemId: string; label: string }) {
+  const item = getItem(itemId);
+  const visual = getItemVisual(itemId);
+  return visual?.type === 'image' ? (
+    <img src={visual.value} alt={item?.name ?? label}
+      className="w-[78%] h-[78%] object-contain drop-shadow-md" />
+  ) : (
+    <span className="text-2xl leading-none drop-shadow-sm">{visual?.value ?? '?'}</span>
+  );
+}
+
 function EquipSlotBox({ slot, label }: { slot: EquipSlot; label: string }) {
   const itemId = usePlayerStore(s => s.equipment[slot]);
   const unequip = usePlayerStore(s => s.unequipItem);
@@ -503,27 +516,31 @@ function EquipSlotBox({ slot, label }: { slot: EquipSlot; label: string }) {
       title={itemId ? `Снять: ${label}` : label}
       className="relative flex flex-col items-center gap-0.5 group"
     >
-      {/* Ячейка — единый стиль с инвентарём */}
-      <div className={`w-14 h-14 rounded-xl border flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${
+      {/* Ячейка */}
+      <div className={`w-14 h-14 rounded-xl border flex items-center justify-center transition-all hover:scale-105 active:scale-95 relative overflow-hidden ${
         itemId
-          ? 'border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.15)]'
-          : 'border-dashed border-stone-700/50'
+          ? 'border-amber-500/50'
+          : 'border-stone-700/40'
       }`}
         style={{
-          background: itemId ? 'rgba(120,60,10,0.12)' : 'rgba(20,13,5,0.7)',
-          boxShadow: itemId ? undefined : 'inset 0 2px 4px rgba(0,0,0,0.4)',
+          background: itemId ? 'rgba(120,60,10,0.15)' : 'rgba(22,13,5,0.8)',
+          boxShadow: itemId
+            ? '0 0 10px rgba(245,158,11,0.12), inset 0 1px 0 rgba(255,200,80,0.06)'
+            : 'inset 0 2px 5px rgba(0,0,0,0.45)',
+          borderStyle: itemId ? 'solid' : 'dashed',
         }}
       >
         {itemId ? (
-          <ItemIcon itemId={itemId} size="md" showTooltip={true} />
+          /* Рисуем картинку напрямую — без рамки ItemIcon */
+          <EquipItemVisual itemId={itemId} label={label} />
         ) : (
-          <span className="text-stone-700/60 text-[10px] font-mono font-bold uppercase">
+          <span className="text-[11px] font-mono font-bold uppercase" style={{ color: 'rgba(120,80,40,0.5)' }}>
             {label.substring(0, 3)}
           </span>
         )}
       </div>
       {/* Подпись */}
-      <span className="text-[9px] text-stone-600/80 font-mono tracking-wide leading-none">
+      <span className="text-[9px] font-mono tracking-wide leading-none" style={{ color: 'rgba(120,80,40,0.6)' }}>
         {label}
       </span>
     </button>
