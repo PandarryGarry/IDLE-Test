@@ -239,7 +239,7 @@ export const SkillCard = memo(function SkillCard({
           flexDirection: 'column',
           alignItems:    'center',
           gap:           4,
-          padding:       '8px 6px 10px',
+          padding:       '8px 6px 6px',
           borderRadius:  14,
           background:    cardBg,
           border:        `2px solid ${cardBorder}`,
@@ -272,16 +272,13 @@ export const SkillCard = memo(function SkillCard({
 
         {/* SVG кольцо + иконка */}
         <div style={{ position: 'relative', width: D, height: D }}>
-
           {/* SVG кольцо */}
           <svg
             width={D} height={D}
             viewBox={`0 0 ${D} ${D}`}
             style={{ position:'absolute', inset:0, transform:'rotate(-90deg)' }}
           >
-            {/* Трек */}
             <circle cx={C} cy={C} r={R} fill="none" stroke={ringTrack} strokeWidth={SW} />
-            {/* Прогресс */}
             {progress > 0 && (
               <circle
                 cx={C} cy={C} r={R}
@@ -299,69 +296,51 @@ export const SkillCard = memo(function SkillCard({
             )}
           </svg>
 
-          {/* Иконка — 88% от D, по центру */}
+          {/* Иконка */}
           <div style={{
-            position:  'absolute',
-            top:       '50%', left: '50%',
-            transform: 'translate(-50%,-50%)',
-            width:     iconD, height: iconD,
-            borderRadius: '50%',
-            background: 'linear-gradient(160deg,#2e1608,#1e0e04)',
-            border:    `1.5px solid ${isActive ? '#c8880a88' : '#5a3010'}`,
+            position:'absolute', top:'50%', left:'50%',
+            transform:'translate(-50%,-50%)',
+            width:iconD, height:iconD,
+            borderRadius:'50%',
+            background:'linear-gradient(160deg,#2e1608,#1e0e04)',
+            border:`1.5px solid ${isActive?'#c8880a88':'#5a3010'}`,
             boxShadow: isActive
-              ? `inset 0 2px 6px rgba(0,0,0,0.55), 0 0 12px ${ringGlow}`
+              ? `inset 0 2px 6px rgba(0,0,0,0.55),0 0 12px ${ringGlow}`
               : 'inset 0 2px 6px rgba(0,0,0,0.55)',
-            display:   'flex', alignItems:'center', justifyContent:'center',
-            overflow:  'hidden',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            overflow:'hidden',
           }}>
-            {visual.type === 'image' ? (
-              <img
-                src={visual.value}
-                alt=""
-                style={{
-                  width:'88%', height:'88%', objectFit:'contain',
-                  filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.6))',
-                }}
-              />
+            {visual.type==='image' ? (
+              <img src={visual.value} alt=""
+                style={{ width:'88%',height:'88%',objectFit:'contain',
+                  filter:'drop-shadow(0 1px 4px rgba(0,0,0,0.6))' }} />
             ) : (
-              <span style={{
-                fontSize:   Math.round(iconD * 0.56),
-                lineHeight: 1,
-                filter:     'drop-shadow(0 1px 4px rgba(0,0,0,0.5))',
-              }}>
+              <span style={{ fontSize:Math.round(iconD*0.56),lineHeight:1,
+                filter:'drop-shadow(0 1px 4px rgba(0,0,0,0.5))' }}>
                 {visual.value}
               </span>
             )}
           </div>
-
-          {/* Уровень badge — по центру нижнего края круга */}
-          <div style={{
-            position:  'absolute',
-            bottom:    -Math.round(badgeD * 0.25),
-            left:      '50%',
-            transform: 'translateX(-50%)',
-            minWidth:  badgeD, height: badgeD,
-            borderRadius: 9999,
-            background: badgeBg,
-            border:    `2px solid ${isActive ? '#f0c030' : '#6b3818'}`,
-            boxShadow: isActive
-              ? '0 0 10px rgba(240,192,48,0.55), 0 2px 4px rgba(0,0,0,0.5)'
-              : '0 2px 4px rgba(0,0,0,0.55)',
-            display:   'flex', alignItems:'center', justifyContent:'center',
-            fontFamily:'var(--app-font-mono)',
-            fontSize:  badgeFS,
-            fontWeight:900,
-            color:     badgeFg,
-            lineHeight:1,
-            padding:   '0 5px',
-            zIndex:    3,
-          }}>
-            {state.level}
-          </div>
         </div>
 
-        {/* Отступ под badge */}
-        <div style={{ height: Math.round(badgeD * 0.3) }} />
+        {/* Badge уровня — ВНЕ SVG-контейнера, в нормальном потоке */}
+        <div style={{
+          marginTop: -Math.round(badgeD * 0.5),
+          minWidth:badgeD, height:badgeD,
+          borderRadius:9999,
+          background:badgeBg,
+          border:`2px solid ${isActive?'#f0c030':'#6b3818'}`,
+          boxShadow: isActive
+            ? '0 0 10px rgba(240,192,48,0.55),0 2px 4px rgba(0,0,0,0.5)'
+            : '0 2px 4px rgba(0,0,0,0.55)',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          fontFamily:'var(--app-font-mono)',
+          fontSize:badgeFS, fontWeight:900, color:badgeFg,
+          lineHeight:1, padding:'0 5px',
+          zIndex:3, position:'relative',
+        }}>
+          {state.level}
+        </div>
       </div>
 
       {/* Попап */}
