@@ -82,7 +82,7 @@ export function FiremakingPage() {
             <div className="w-12 h-12 rounded-2xl bg-[var(--bg-page)] border border-[var(--border-light)] flex items-center justify-center p-2">
               <SkillIcon skillId="firemaking" size="md" />
             </div>
-            <p className="text-xs font-medium text-[var(--text-secondary)]">{t('firemaking.selectLog')}</p>
+            <p className="text-xs font-medium" style={{ color: '#c8a050' }}>{t('firemaking.selectLog')}</p>
           </div>
         )}
       </div>
