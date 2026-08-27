@@ -87,8 +87,8 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
               )}
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 10, color: '#d4a848', fontFamily: 'var(--app-font-mono)', textTransform: 'uppercase', fontWeight: 700 }}>Добыча</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#f5d880', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{outputItem.name}</div>
+              <div style={{ fontSize: 10, color: '#f0c840', fontFamily: 'var(--app-font-mono)', textTransform: 'uppercase', fontWeight: 700 }}>Добыча</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#fff8d0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{outputItem.name}</div>
             </div>
           </div>
         )}
@@ -96,15 +96,15 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
         {/* ── Стат-строки ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 11, fontFamily: 'var(--app-font-mono)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#d4a848', display: 'flex', alignItems: 'center', gap: 4 }}><Zap size={11} color="var(--accent-gold)" /> Опыт</span>
+            <span style={{ color: '#f0c840', display: 'flex', alignItems: 'center', gap: 4 }}><Zap size={11} color="var(--accent-gold)" /> Опыт</span>
             <span style={{ fontWeight: 700, color: '#f0c030' }}>{formatNumber(action.xp)} XP</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#d4a848', display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={11} color="var(--text-muted)" /> Время</span>
+            <span style={{ color: '#f0c840', display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={11} color="var(--text-muted)" /> Время</span>
             <span style={{ fontWeight: 600, color: '#e0b850' }}>{(action.interval / 1000).toFixed(1)} с.</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#d4a848' }}>Темп</span>
+            <span style={{ color: '#f0c840' }}>Темп</span>
             <span style={{ fontWeight: 700, color: 'var(--accent-emerald)' }}>{xpPerHour(action.xp, action.interval)}</span>
           </div>
           {renderExtra && (
@@ -117,7 +117,7 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
         {/* ── Кнопка ── */}
         <div style={{ marginTop: 'auto', paddingTop: 8, borderTop: '1px solid rgba(200,150,50,0.25)' }}>
           {isLocked ? (
-            <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#d4a848', background: 'var(--bg-card-dark)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '6px 0' }}>
+            <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#f0c840', background: 'var(--bg-card-dark)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '6px 0' }}>
               🔒 Ур. {action.levelRequired}
             </div>
           ) : isActive ? (
