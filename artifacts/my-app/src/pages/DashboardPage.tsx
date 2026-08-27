@@ -34,14 +34,12 @@ function StatCell({ label, value }: { label: string; value: React.ReactNode }) {
         whiteSpace: 'nowrap',
       }}>{label}</span>
       <div style={{
-        height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        <span style={{
-          fontFamily: 'var(--app-font-mono)', fontSize: 18, fontWeight: 900,
-          color: '#f5d060', lineHeight: 1,
-          textShadow: '0 1px 4px rgba(0,0,0,0.5)',
-        }}>{value}</span>
-      </div>
+        height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        overflow: 'hidden',
+        fontFamily: 'var(--app-font-mono)', fontSize: 18, fontWeight: 900,
+        color: '#f5d060', lineHeight: 1,
+        textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+      }}>{value}</div>
     </div>
   );
 }
@@ -170,7 +168,7 @@ export function DashboardPage() {
         {/* 3 метрики */}
         <div style={{ display: 'flex', gap: 6 }}>
           <StatCell label="⚔ Боевой Lvl" value={combatLevel} />
-          <StatCell label="💰 Кошелёк"   value={<CoinsDisplay amount={gp} size="xs" />} />
+          <StatCell label="💰 Кошелёк"   value={<span style={{display:"flex",alignItems:"center",height:"100%"}}><CoinsDisplay amount={gp} size="xs" /></span>} />
           <StatCell label="🎒 Сумка"     value={`${usedSlots}/${maxSlots}`} />
         </div>
       </div>
