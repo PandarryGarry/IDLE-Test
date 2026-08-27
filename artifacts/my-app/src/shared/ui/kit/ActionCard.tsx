@@ -51,13 +51,13 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
             <TierBadge tier={tier} size="sm" />
             <h3 style={{
               fontWeight: 700, fontSize: 14, lineHeight: 1.2,
-              color: isActive ? 'var(--accent-emerald)' : 'var(--text-primary)',
+              color: isActive ? '#4ade80' : '#fff8d0',
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>{action.name}</h3>
           </div>
 
           {isLocked ? (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontFamily: 'var(--app-font-mono)', fontWeight: 700, color: 'var(--accent-ruby)', background: 'var(--accent-ruby-bg)', border: '1px solid rgba(192,40,30,0.3)', padding: '2px 6px', borderRadius: 6, flexShrink: 0 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontFamily: 'var(--app-font-mono)', fontWeight: 700, color: '#ff7060', background: 'var(--accent-ruby-bg)', border: '1px solid rgba(192,40,30,0.3)', padding: '2px 6px', borderRadius: 6, flexShrink: 0 }}>
               <Lock size={9} /> {action.levelRequired}
             </span>
           ) : (
@@ -76,7 +76,7 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
 
         {/* ── Иконка добычи ── */}
         {outputItem && visual && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', background: 'var(--bg-card-dark)', border: '1px solid var(--border-light)', borderRadius: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', background: 'rgba(30,14,4,0.5)', border: '1px solid #6b3810', borderRadius: 10 }}>
             {/* Ячейка иконки 44×44 */}
             <div style={{ width: 44, height: 44, borderRadius: 10, background: 'linear-gradient(160deg, #3d2010, #2e1608)', border: '2px solid #6b3810', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: '10%' }}>
               {visual.type === 'image' ? (
@@ -87,7 +87,7 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
               )}
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 10, color: '#a07838', fontFamily: 'var(--app-font-mono)', textTransform: 'uppercase', fontWeight: 700 }}>Добыча</div>
+              <div style={{ fontSize: 10, color: '#d4a848', fontFamily: 'var(--app-font-mono)', textTransform: 'uppercase', fontWeight: 700 }}>Добыча</div>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#f5d880', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{outputItem.name}</div>
             </div>
           </div>
@@ -96,28 +96,28 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
         {/* ── Стат-строки ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 11, fontFamily: 'var(--app-font-mono)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#a07838', display: 'flex', alignItems: 'center', gap: 4 }}><Zap size={11} color="var(--accent-gold)" /> Опыт</span>
+            <span style={{ color: '#d4a848', display: 'flex', alignItems: 'center', gap: 4 }}><Zap size={11} color="var(--accent-gold)" /> Опыт</span>
             <span style={{ fontWeight: 700, color: '#f0c030' }}>{formatNumber(action.xp)} XP</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#a07838', display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={11} color="var(--text-muted)" /> Время</span>
+            <span style={{ color: '#d4a848', display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={11} color="var(--text-muted)" /> Время</span>
             <span style={{ fontWeight: 600, color: '#e0b850' }}>{(action.interval / 1000).toFixed(1)} с.</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#a07838' }}>Темп</span>
+            <span style={{ color: '#d4a848' }}>Темп</span>
             <span style={{ fontWeight: 700, color: 'var(--accent-emerald)' }}>{xpPerHour(action.xp, action.interval)}</span>
           </div>
           {renderExtra && (
-            <div style={{ paddingTop: 6, marginTop: 2, borderTop: '1px solid #6b3810', fontFamily: 'var(--app-font-sans)' }}>
+            <div style={{ paddingTop: 6, marginTop: 2, borderTop: '1px solid rgba(200,150,50,0.25)', fontFamily: 'var(--app-font-sans)' }}>
               {renderExtra}
             </div>
           )}
         </div>
 
         {/* ── Кнопка ── */}
-        <div style={{ marginTop: 'auto', paddingTop: 8, borderTop: '1px solid #6b3810' }}>
+        <div style={{ marginTop: 'auto', paddingTop: 8, borderTop: '1px solid rgba(200,150,50,0.25)' }}>
           {isLocked ? (
-            <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#a07838', background: 'var(--bg-card-dark)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '6px 0' }}>
+            <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#d4a848', background: 'var(--bg-card-dark)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '6px 0' }}>
               🔒 Ур. {action.levelRequired}
             </div>
           ) : isActive ? (
