@@ -41,7 +41,7 @@ const PANEL: React.CSSProperties = {
 /* ── Быстрое действие ── */
 function QuickBtn({ href, icon, label }: { href:string; icon:string; label:string }) {
   return (
-    <Link href={href} style={{ flex:'1 1 calc(50% - 4px)', minWidth:0, textDecoration:'none' }}>
+    <Link href={href} style={{ flex:'1 1 calc(50% - 3px)', minWidth:0, maxWidth:'calc(50% - 3px)', textDecoration:'none' }}>
       <div style={{
         display:'flex', alignItems:'center', justifyContent:'center', gap:8,
         padding:'10px 6px', borderRadius:10,
@@ -60,10 +60,10 @@ function QuickBtn({ href, icon, label }: { href:string; icon:string; label:strin
   );
 }
 
-/* ── Грид навыков — адаптивный ── */
+/* ── Грид навыков — auto-fit ── */
 function SkillGrid({ ids }: { ids: readonly string[] }) {
   return (
-    <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(72px, 1fr))', gap:6 }}>
       {ids.map(id => <SkillCard key={id} skillId={id} size="sm" />)}
     </div>
   );
