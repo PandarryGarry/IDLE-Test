@@ -66,11 +66,11 @@ export function InventoryPage() {
           <div>
             <h1 className="text-xl sm:text-2xl font-display font-black text-[var(--text-primary)] flex items-center gap-2">
               <span>Инвентарь</span>
-              <span className="font-mono text-xs sm:text-sm font-bold text-stone-500 font-sans">
+              <span className="font-mono text-xs sm:text-sm font-bold text-[var(--text-muted)] font-sans">
                 <span className="text-amber-400 font-mono font-black">{totalItems}</span> / {maxSlots}
               </span>
             </h1>
-            <div className="text-xs font-mono text-stone-500 mt-1 flex items-center gap-1.5">
+            <div className="text-xs font-mono text-[var(--text-muted)] mt-1 flex items-center gap-1.5">
               <span>Кошелек:</span>
               <CoinsDisplay amount={gp} size="sm" />
             </div>
@@ -81,7 +81,7 @@ export function InventoryPage() {
         <button
           type="button"
           onClick={handleUpgradeSlots}
-          className="px-4 py-2.5 rounded-xl font-extrabold text-xs transition-all active:scale-95 flex items-center gap-1.5 shrink-0 text-stone-950"
+          className="px-4 py-2.5 rounded-xl font-extrabold text-xs transition-all active:scale-95 flex items-center gap-1.5 shrink-0 text-[var(--text-primary)]"
           style={{ background: 'linear-gradient(135deg,#d97706,#f59e0b)', border: '1px solid #f59e0b', boxShadow: '0 2px 10px rgba(245,158,11,0.3)' }}
           title={`Купить +10 ячеек`}
         >
@@ -102,7 +102,7 @@ export function InventoryPage() {
               className={`px-3 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 active:scale-95 ${
                 activeCategory === key
                   ? 'bg-stone-800 text-amber-300 border border-amber-500/40 shadow-sm'
-                  : 'text-stone-500 hover:text-[var(--text-primary)] hover:bg-stone-900'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-dark)]'
               }`}
             >
               <span className="text-base">{icon}</span>
@@ -120,12 +120,12 @@ export function InventoryPage() {
                 placeholder="Поиск..."
                 value={searchQuery}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-32 sm:w-48 pl-2.5 pr-7 py-1.5 bg-stone-900 border border-stone-700 rounded-xl text-xs text-[var(--text-primary)] focus:outline-none focus:border-amber-500"
+                className="w-32 sm:w-48 pl-2.5 pr-7 py-1.5 bg-[var(--bg-slot)] border border-[var(--border-default)] rounded-xl text-xs text-[var(--text-primary)] focus:outline-none focus:border-amber-500"
               />
               <button
                 type="button"
                 onClick={() => { setSearch(''); setIsSearchOpen(false); }}
-                className="absolute right-2 text-stone-500 hover:text-white"
+                className="absolute right-2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -134,7 +134,7 @@ export function InventoryPage() {
             <button
               type="button"
               onClick={() => setIsSearchOpen(true)}
-              className="p-2 rounded-xl text-stone-500 hover:text-white hover:bg-stone-900 transition-all active:scale-95"
+              className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-dark)] transition-all active:scale-95"
               title="Поиск предмета"
             >
               <Search className="w-4 h-4" />
