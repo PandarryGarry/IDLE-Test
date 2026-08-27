@@ -17,12 +17,12 @@ interface SquircleSlotProps {
 }
 
 const RARITY_STYLES: Record<string, { border: string; bg: string; glow: string }> = {
-  common:    { border: '#b8a080', bg: '#f5eedd', glow: 'none' },
-  uncommon:  { border: '#3a9e50', bg: '#e0f5e8', glow: '0 0 8px rgba(58,158,80,0.3)' },
-  rare:      { border: '#2060c0', bg: '#e0eeff', glow: '0 0 10px rgba(32,96,192,0.3)' },
-  epic:      { border: '#8040c0', bg: '#f0e0ff', glow: '0 0 12px rgba(128,64,192,0.35)' },
-  legendary: { border: '#c07010', bg: '#fff0c0', glow: '0 0 14px rgba(192,112,16,0.45)' },
-  mythic:    { border: '#c02840', bg: '#ffe0e8', glow: '0 0 16px rgba(192,40,64,0.5)' },
+  common:    { border: '#6b3810', bg: 'linear-gradient(160deg, #3d2010, #2e1608)', glow: 'none' },
+  uncommon:  { border: '#2a6e30', bg: 'linear-gradient(160deg, #1e3818, #152810)', glow: '0 0 8px rgba(42,110,48,0.5)' },
+  rare:      { border: '#1848a0', bg: 'linear-gradient(160deg, #10203a, #0a1828)', glow: '0 0 10px rgba(24,72,160,0.5)' },
+  epic:      { border: '#6020a0', bg: 'linear-gradient(160deg, #28103a, #1a0828)', glow: '0 0 12px rgba(96,32,160,0.5)' },
+  legendary: { border: '#c07010', bg: 'linear-gradient(160deg, #3a2408, #281804)', glow: '0 0 14px rgba(192,112,16,0.6)' },
+  mythic:    { border: '#c02840', bg: 'linear-gradient(160deg, #3a1018, #280a10)', glow: '0 0 16px rgba(192,40,64,0.6)' },
 };
 
 export function SquircleSlot({ itemId, quantity, locked = false, isEmptyPlaceholder = false, size = 'md', onClick, className = '' }: SquircleSlotProps) {
@@ -87,9 +87,9 @@ export function SquircleSlot({ itemId, quantity, locked = false, isEmptyPlacehol
         <span style={{
           position: 'absolute', bottom: 3, right: 4, zIndex: 10,
           fontSize: 10, fontFamily: 'var(--app-font-mono)', fontWeight: 900,
-          color: 'var(--text-primary)', lineHeight: 1,
-          background: 'rgba(253,245,232,0.9)', padding: '1px 4px', borderRadius: 4,
-          border: '1px solid var(--border-light)',
+          color: '#f5d880', lineHeight: 1,
+          background: 'rgba(20,10,0,0.85)', padding: '1px 4px', borderRadius: 4,
+          border: '1px solid #6b3810',
         }}>{formatNumber(quantity)}</span>
       )}
     </button>
