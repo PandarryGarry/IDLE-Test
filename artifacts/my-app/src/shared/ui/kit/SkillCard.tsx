@@ -54,8 +54,8 @@ export const SkillCard = memo(function SkillCard({
   const offset = circ * (1 - Math.min(1, progress));
 
   // Диаметр внутреннего круга иконки (≈73% от D)
-  const iconD    = Math.round(D * 0.73);
-  const iconFontSize = Math.round(iconD * 0.48);
+  const iconD    = Math.round(D * 0.80);
+  const iconFontSize = Math.round(iconD * 0.55);
   const nameFS   = size === 'sm' ? 10 : size === 'lg' ? 13 : 11;
   const badgeD   = size === 'sm' ? 22 : size === 'lg' ? 28 : 24;
   const badgeFS  = size === 'sm' ? 10 : size === 'lg' ? 13 : 11;
@@ -81,7 +81,7 @@ export const SkillCard = memo(function SkillCard({
     flexDirection:  'column',
     alignItems:     'center',
     gap:            5,
-    padding:        '10px 8px 8px',
+    padding:        '8px 6px 7px',
     borderRadius:   16,
     background:     outerBg,
     border:         `2px solid ${outerBorder}`,
@@ -137,7 +137,7 @@ export const SkillCard = memo(function SkillCard({
             <circle
               cx={C} cy={C} r={R}
               fill="none"
-              stroke="#1e0c04"
+              stroke="#3d1e08"
               strokeWidth={SW}
             />
             {/* Заполнение */}
@@ -174,7 +174,7 @@ export const SkillCard = memo(function SkillCard({
                 src={visual.value}
                 alt={name}
                 style={{
-                  width: '72%', height: '72%',
+                  width: '80%', height: '80%',
                   objectFit: 'contain',
                   filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))',
                 }}
@@ -193,7 +193,7 @@ export const SkillCard = memo(function SkillCard({
           {/* Бейдж уровня — нижний центр круга */}
           <div style={{
             position:   'absolute',
-            bottom:     -badgeD * 0.35,
+            bottom:     -badgeD * 0.28,
             left:       '50%',
             transform:  'translateX(-50%)',
             minWidth:   badgeD, height: badgeD,
@@ -215,7 +215,7 @@ export const SkillCard = memo(function SkillCard({
         </div>
 
         {/* Отступ под бейдж */}
-        <div style={{ height: badgeD * 0.4 }} />
+        <div style={{ height: badgeD * 0.32 }} />
 
         {/* Название */}
         <span style={{
