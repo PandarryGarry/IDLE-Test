@@ -60,9 +60,9 @@
   --border-slot:    #8b4e20;
 
   /* Текст */
-  --text-primary:   #f5d880;
-  --text-secondary: #e0b850;
-  --text-muted:     #a07838;
+  --text-primary:   #fff8d0;
+  --text-secondary: #f5d060;
+  --text-muted:     #c8a050;
   --text-light:     #f5d880;
   --text-white:     #fff8e0;
   --text-gold:      #f0c030;
@@ -132,7 +132,7 @@
 
   body {
     font-family: var(--app-font-sans);
-    background-color: #b08048;
+    background-color: #a07038;
     color: var(--text-primary);
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
@@ -288,7 +288,7 @@
 
 /* Полосы прогресса */
 .g-bar-track {
-  background: #1e0e04;
+  background: #3d1e08;
   border: 2px solid #5a3010;
   border-radius: var(--radius-sm);
   overflow: hidden;
