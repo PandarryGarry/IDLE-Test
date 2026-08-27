@@ -73,13 +73,13 @@ export function MiningPage() {
             <div className="w-12 h-12 rounded-2xl bg-[var(--bg-page)] border border-[var(--border-light)] flex items-center justify-center p-2">
               <SkillIcon skillId="mining" size="md" />
             </div>
-            <p className="text-xs font-medium text-[var(--text-secondary)]">{t('mining.selectRock')}</p>
+            <p className="text-xs font-medium" style={{ color: '#c8a050' }}>{t('mining.selectRock')}</p>
           </div>
         )}
       </div>
 
       <div className="flex items-center justify-between px-1 pt-1">
-        <h2 className="text-xs font-extrabold uppercase tracking-widest text-amber-400 font-mono flex items-center gap-1.5">
+        <h2 className="text-xs font-extrabold uppercase tracking-widest font-mono flex items-center gap-1.5" style={{ color: '#fbbf24' }}>
           <span>⛏️</span> {t('mining.availableRocks')}
         </h2>
       </div>
