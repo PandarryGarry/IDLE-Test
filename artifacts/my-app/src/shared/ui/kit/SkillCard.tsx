@@ -107,10 +107,8 @@ export const SkillCard = memo(function SkillCard({ skillId, href, size = 'md' }:
         <span style={{
           fontSize:FS, fontWeight:700, color: isActive ? '#fff8d0' : '#e0c070',
           textAlign:'center', lineHeight:1.2, width:'100%',
-          display:'-webkit-box', WebkitLineClamp:2,
-          WebkitBoxOrient:'vertical', overflow:'hidden',
+          overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
           textShadow:'0 1px 2px rgba(0,0,0,0.6)',
-          wordBreak:'break-word',
         }}>{name}</span>
       </div>
     </Link>
