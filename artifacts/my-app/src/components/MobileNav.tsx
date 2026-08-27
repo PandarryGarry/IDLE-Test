@@ -48,8 +48,9 @@ export function MobileNav({ className = '' }: MobileNavProps) {
             className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm animate-in fade-in"
             onClick={() => setIsSkillsMenuOpen(false)}
           />
-          <div className="relative bg-[#1a2436] border-t border-[#31415c] rounded-t-3xl p-5 shadow-2xl z-10 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom">
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#2e3e56]">
+          <div className="relative rounded-t-2xl p-5 shadow-2xl z-10 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom"
+            style={{ background: '#1c1409', border: '1px solid #3d2e1e', borderBottom: 'none' }}>
+            <div className="flex items-center justify-between pb-3 mb-3 border-b" style={{ borderColor: '#3d2e1e' }}>
               <h2 className="font-display font-black text-base text-amber-300 flex items-center gap-2">
                 <Layers className="w-5 h-5 text-amber-400" /> {t('nav.skills')}
               </h2>
@@ -76,7 +77,8 @@ export function MobileNav({ className = '' }: MobileNavProps) {
       )}
 
       {/* Main Bottom Nav Bar */}
-      <nav className={`fixed bottom-0 left-0 right-0 z-40 bg-[#172030]/95 backdrop-blur-xl border-t border-[#2d3d56] px-2 py-1.5 pb-safe ${className}`}>
+      <nav className={`fixed bottom-0 left-0 right-0 z-40 backdrop-blur-xl border-t px-2 py-1.5 pb-safe ${className}`}
+        style={{ background: 'rgba(22,14,6,0.97)', borderColor: '#2e2010', boxShadow: '0 -2px 12px rgba(0,0,0,0.5)' }}>
         <div className="flex items-center justify-around max-w-lg mx-auto">
           
           {/* Home */}

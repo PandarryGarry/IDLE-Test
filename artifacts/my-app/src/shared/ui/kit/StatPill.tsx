@@ -10,32 +10,26 @@ interface StatPillProps {
   className?: string;
 }
 
-const COLOR_MAP: Record<StatColor, { bg: string; border: string; text: string; iconBg: string }> = {
-  amber:   { bg: 'bg-slate-950/80', border: 'border-slate-800',       text: 'text-amber-300',   iconBg: 'bg-amber-500/15 border-amber-500/30 text-amber-400' },
-  emerald: { bg: 'bg-slate-950/80', border: 'border-emerald-500/30', text: 'text-emerald-300', iconBg: 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400' },
-  rose:    { bg: 'bg-slate-950/80', border: 'border-rose-500/30',    text: 'text-rose-300',    iconBg: 'bg-rose-500/15 border-rose-500/40 text-rose-400' },
-  blue:    { bg: 'bg-slate-950/80', border: 'border-blue-500/30',    text: 'text-blue-300',    iconBg: 'bg-blue-500/15 border-blue-500/40 text-blue-400' },
-  purple:  { bg: 'bg-slate-950/80', border: 'border-purple-500/30',  text: 'text-purple-300',  iconBg: 'bg-purple-500/15 border-purple-500/40 text-purple-400' },
-  slate:   { bg: 'bg-slate-950/80', border: 'border-slate-800',       text: 'text-slate-200',   iconBg: 'bg-slate-800 border-slate-700 text-slate-300' },
+const COLOR_MAP: Record<StatColor, { border: string; iconBg: string; text: string }> = {
+  amber:   { border: 'border-amber-800/50',  iconBg: 'bg-amber-900/40 text-amber-400',   text: 'text-amber-300' },
+  emerald: { border: 'border-emerald-800/50',iconBg: 'bg-emerald-900/40 text-emerald-400',text: 'text-emerald-300' },
+  rose:    { border: 'border-rose-800/50',   iconBg: 'bg-rose-900/40 text-rose-400',     text: 'text-rose-300' },
+  blue:    { border: 'border-blue-800/50',   iconBg: 'bg-blue-900/40 text-blue-400',     text: 'text-blue-300' },
+  purple:  { border: 'border-purple-800/50', iconBg: 'bg-purple-900/40 text-purple-400', text: 'text-purple-300' },
+  slate:   { border: 'border-stone-700/50',  iconBg: 'bg-stone-800/60 text-stone-400',   text: 'text-stone-300' },
 };
 
-export function StatPill({
-  icon,
-  label,
-  value,
-  color = 'amber',
-  className = '',
-}: StatPillProps) {
-  const scheme = COLOR_MAP[color] || COLOR_MAP.slate;
-
+export function StatPill({ icon, label, value, color = 'amber', className = '' }: StatPillProps) {
+  const s = COLOR_MAP[color] ?? COLOR_MAP.slate;
   return (
-    <div className={`border rounded-2xl p-2.5 flex items-center gap-2.5 shadow-sm ${scheme.bg} ${scheme.border} ${className}`}>
-      <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${scheme.iconBg}`}>
+    <div className={`flex items-center gap-2.5 rounded-xl border p-2.5 ${s.border} ${className}`}
+      style={{ background: 'linear-gradient(160deg,#231a10,#1a1108)', boxShadow: 'inset 0 1px 0 rgba(255,220,130,0.04)' }}>
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${s.iconBg}`}>
         {icon}
       </div>
       <div className="min-w-0">
-        <div className="text-[10px] text-slate-400 font-mono uppercase font-bold truncate">{label}</div>
-        <div className={`text-xs font-mono font-black ${scheme.text}`}>{value}</div>
+        <div className="text-[10px] text-stone-500 font-mono uppercase font-bold tracking-wide truncate">{label}</div>
+        <div className={`text-xs font-mono font-black ${s.text}`}>{value}</div>
       </div>
     </div>
   );

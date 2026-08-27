@@ -4,95 +4,51 @@ import { useGameStore } from '@/store/gameStore';
 import { useCombatStore } from '@/store/combatStore';
 import { SkillId } from '@/data/types';
 import { Link, useLocation } from 'wouter';
-import { 
-  Settings, 
-  Sword, 
-  Backpack, 
-  Shield, 
-  Sparkles, 
-  Home
-} from 'lucide-react';
+import { Settings, Backpack, Home, Sword, Flame, Fish, Pickaxe, Trees, ChefHat, Hammer } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { getSkillVisual } from '@/shared/icons/skillIcons';
-import { IconFrame } from '@/shared/ui/kit/IconFrame';
 
-interface SidebarItemProps {
+interface NavItemProps {
   href: string;
   icon: React.ReactNode;
   label: string;
   skillId?: SkillId;
-  colorScheme?: 'green' | 'amber' | 'blue' | 'red' | 'purple' | 'default';
+  accentColor?: string;
 }
 
-function SidebarItem({ href, icon, label, skillId, colorScheme = 'default' }: SidebarItemProps) {
+function NavItem({ href, icon, label, skillId, accentColor = 'text-amber-400' }: NavItemProps) {
   const [location] = useLocation();
-  const isActiveRoute = location === href;
-  
+  const isActive = location === href;
   const level = usePlayerStore(s => skillId ? s.skills[skillId]?.level : undefined);
   const activeSkill = useGameStore(s => s.activeSkill);
   const isTraining = skillId && activeSkill === skillId;
 
-  const colorStyles = {
-    green: {
-      activeBg: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/50 shadow-md',
-      dot: 'bg-emerald-400 shadow-[0_0_8px_#34d399]',
-      badge: 'border-emerald-500/40 text-emerald-300 bg-emerald-950/50',
-    },
-    amber: {
-      activeBg: 'bg-amber-500/20 text-amber-200 border-amber-400/50 shadow-md',
-      dot: 'bg-amber-400 shadow-[0_0_8px_#fbbf24]',
-      badge: 'border-amber-500/40 text-amber-300 bg-amber-950/50',
-    },
-    blue: {
-      activeBg: 'bg-cyan-500/20 text-cyan-200 border-cyan-400/50 shadow-md',
-      dot: 'bg-cyan-400 shadow-[0_0_8px_#22d3ee]',
-      badge: 'border-cyan-500/40 text-cyan-300 bg-cyan-950/50',
-    },
-    red: {
-      activeBg: 'bg-rose-500/20 text-rose-200 border-rose-400/50 shadow-md',
-      dot: 'bg-rose-400 shadow-[0_0_8px_#fb7185]',
-      badge: 'border-rose-500/40 text-rose-300 bg-rose-950/50',
-    },
-    purple: {
-      activeBg: 'bg-purple-500/20 text-purple-200 border-purple-400/50 shadow-md',
-      dot: 'bg-purple-400 shadow-[0_0_8px_#c084fc]',
-      badge: 'border-purple-500/40 text-purple-300 bg-purple-950/50',
-    },
-    default: {
-      activeBg: 'bg-amber-500/20 text-amber-200 border-amber-400/50 shadow-md',
-      dot: 'bg-amber-400 shadow-[0_0_8px_#fbbf24]',
-      badge: 'border-[#334460] text-slate-200 bg-[#172030]',
-    },
-  };
-
-  const scheme = colorStyles[colorScheme];
-
   return (
     <Link href={href} className="block group">
-      <div className={`flex items-center justify-between px-3 py-2 rounded-xl mb-1 transition-all duration-150 border ${
-        isActiveRoute 
-          ? scheme.activeBg
-          : 'text-slate-300 hover:text-white hover:bg-[#222f44] border-transparent hover:border-[#334460]'
+      <div className={`flex items-center justify-between px-3 py-2 rounded-xl mb-0.5 border transition-all duration-150 ${
+        isActive
+          ? 'bg-amber-500/10 border-amber-500/30 text-amber-100'
+          : 'border-transparent text-stone-400 hover:text-stone-100 hover:bg-stone-800/60 hover:border-stone-700/50'
       }`}>
         <div className="flex items-center gap-2.5 min-w-0">
-          <span className="w-6 flex justify-center shrink-0 transition-transform group-hover:scale-110">
+          <span className={`w-5 flex justify-center shrink-0 ${isActive ? accentColor : 'text-stone-500 group-hover:' + accentColor}`}>
             {icon}
           </span>
           <span className="font-semibold text-xs tracking-wide truncate">{label}</span>
         </div>
-        
         <div className="flex items-center gap-1.5 shrink-0">
           {level !== undefined && (
-            <span className={`font-mono text-[11px] font-extrabold px-1.5 py-0.5 rounded-md border ${
-              isTraining 
-                ? 'bg-emerald-500 text-slate-950 font-black shadow-[0_0_8px_rgba(16,185,129,0.5)]' 
-                : scheme.badge
+            <span className={`font-mono text-[11px] font-bold px-1.5 py-0.5 rounded-md border ${
+              isTraining
+                ? 'bg-emerald-500 text-stone-950 border-emerald-400 shadow-sm'
+                : isActive
+                  ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                  : 'bg-stone-800 text-stone-400 border-stone-700'
             }`}>
               {level}
             </span>
           )}
           {isTraining && (
-            <div className={`w-2 h-2 rounded-full animate-ping ${scheme.dot}`} />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
           )}
         </div>
       </div>
@@ -100,92 +56,92 @@ function SidebarItem({ href, icon, label, skillId, colorScheme = 'default' }: Si
   );
 }
 
-interface SidebarProps {
-  onCloseMobile?: () => void;
+function SectionLabel({ children, color = 'text-stone-500' }: { children: React.ReactNode; color?: string }) {
+  return (
+    <div className={`text-[10px] font-mono font-bold uppercase tracking-widest px-3 mb-1.5 ${color}`}>
+      {children}
+    </div>
+  );
 }
 
-export function Sidebar({ onCloseMobile }: SidebarProps) {
+export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
   const { t } = useTranslation();
   const combatLevel = usePlayerStore(s => s.combatLevel);
   const inCombat = useCombatStore(s => s.inCombat);
 
   return (
-    <aside className="w-64 bg-[#1b2537] border-r border-[#2d3d56] h-screen flex flex-col fixed left-0 top-0 overflow-hidden z-50 shadow-2xl">
-      
-      {/* Brand Header */}
-      <div className="p-4 border-b border-[#2d3d56] bg-[#222e44] flex items-center justify-between">
-        <Link href="/" onClick={onCloseMobile} className="flex items-center gap-2.5 cursor-pointer group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500/30 to-amber-600/20 flex items-center justify-center border border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.3)] group-hover:scale-105 transition-all text-amber-300">
-            <Sword className="w-5 h-5" />
+    <aside className="w-60 h-screen flex flex-col fixed left-0 top-0 z-50 overflow-hidden"
+      style={{ background: 'linear-gradient(180deg, #1a1108 0%, #170f07 100%)', borderRight: '1px solid #2e2010' }}>
+
+      {/* ── Логотип ── */}
+      <Link href="/" onClick={onCloseMobile}
+        className="flex items-center gap-3 px-4 py-4 border-b border-stone-800/60 group hover:bg-stone-800/20 transition-colors">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+          style={{ background: 'linear-gradient(135deg, #92400e, #b45309)', boxShadow: '0 0 12px rgba(180,83,9,0.4)' }}>
+          <Sword className="w-4 h-4 text-amber-200" />
+        </div>
+        <div>
+          <div className="font-display font-black text-sm tracking-wider text-stone-100 leading-tight">
+            Aethelia<span className="text-amber-400 font-sans font-extrabold text-xs ml-0.5">RPG</span>
           </div>
-          <div>
-            <div className="font-display font-black text-base tracking-wider text-slate-100 flex items-center gap-1">
-              Aethelia<span className="text-amber-400 font-sans font-extrabold text-sm">RPG</span>
+          <div className="text-[10px] text-stone-500 font-mono">Idle Fantasy</div>
+        </div>
+      </Link>
+
+      {/* ── Навигация ── */}
+      <div className="flex-1 overflow-y-auto px-2 py-3 space-y-4 scrollbar-thin">
+
+        {/* Главная */}
+        <div>
+          <NavItem href="/" icon={<Home className="w-4 h-4" />} label={t('nav.home')} accentColor="text-amber-400" />
+        </div>
+
+        {/* Бой */}
+        <div>
+          <SectionLabel color="text-red-400/80">⚔ {t('group.combat')}</SectionLabel>
+          <NavItem
+            href="/combat"
+            icon={<Sword className="w-4 h-4" />}
+            label={t('nav.combat')}
+            accentColor="text-red-400"
+          />
+          {inCombat && (
+            <div className="mx-3 mt-1 text-[10px] font-mono font-bold text-red-300 bg-red-500/10 border border-red-500/25 px-2 py-1 rounded-lg">
+              ● В бою
             </div>
-            <div className="text-[10px] font-mono text-slate-300 -mt-0.5 flex items-center gap-1">
-              <Sparkles className="w-2.5 h-2.5 text-amber-400" /> Живой мир IDLE
-            </div>
-          </div>
-        </Link>
+          )}
+        </div>
+
+        {/* Добыча */}
+        <div>
+          <SectionLabel color="text-emerald-400/80">◈ {t('group.gathering')}</SectionLabel>
+          <NavItem href="/woodcutting" icon={<Trees className="w-4 h-4" />}    label={t('skill.woodcutting')} skillId="woodcutting" accentColor="text-emerald-400" />
+          <NavItem href="/mining"      icon={<Pickaxe className="w-4 h-4" />}  label={t('skill.mining')}      skillId="mining"      accentColor="text-amber-400" />
+          <NavItem href="/fishing"     icon={<Fish className="w-4 h-4" />}     label={t('skill.fishing')}     skillId="fishing"     accentColor="text-cyan-400" />
+        </div>
+
+        {/* Ремесло */}
+        <div>
+          <SectionLabel color="text-amber-400/80">⚒ {t('group.artisan')}</SectionLabel>
+          <NavItem href="/firemaking" icon={<Flame className="w-4 h-4" />}    label={t('skill.firemaking')} skillId="firemaking" accentColor="text-orange-400" />
+          <NavItem href="/cooking"    icon={<ChefHat className="w-4 h-4" />}  label={t('skill.cooking')}    skillId="cooking"    accentColor="text-amber-400" />
+          <NavItem href="/smithing"   icon={<Hammer className="w-4 h-4" />}   label={t('skill.smithing')}   skillId="smithing"   accentColor="text-stone-400" />
+        </div>
       </div>
 
-      {/* Nav List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-        
-        {/* MAIN / HOME */}
-        <div>
-          <SidebarItem href="/" icon={<Home className="w-4 h-4 text-amber-400" />} label={t('nav.home')} colorScheme="amber" />
-        </div>
+      {/* ── Футер ── */}
+      <div className="px-2 py-2 border-t border-stone-800/60 space-y-0.5">
+        <NavItem href="/inventory" icon={<Backpack className="w-4 h-4" />}  label={t('nav.inventory')} accentColor="text-sky-400" />
+        <NavItem href="/settings"  icon={<Settings className="w-4 h-4" />} label={t('nav.settings')}  accentColor="text-stone-400" />
 
-        {/* COMBAT */}
-        <div>
-          <div className="flex items-center justify-between mb-1.5 px-2">
-            <h3 className="text-[10px] font-extrabold text-red-300 uppercase tracking-widest font-mono flex items-center gap-1.5">
-              <IconFrame icon={getSkillVisual('combat')} shape="none" size="xs" /> {t('group.combat')}
-            </h3>
-            {inCombat && (
-              <span className="text-[9px] font-mono font-bold bg-red-500/25 text-red-300 border border-red-500/40 px-1 rounded animate-pulse">
-                В БОЮ
-              </span>
-            )}
-          </div>
-          <SidebarItem href="/combat" icon={<IconFrame icon={getSkillVisual('combat')} shape="none" size="xs" />} label={t('nav.combat')} colorScheme="red" />
-        </div>
-
-        {/* GATHERING */}
-        <div>
-          <h3 className="text-[10px] font-extrabold text-emerald-300 uppercase tracking-widest mb-1.5 px-2 font-mono flex items-center gap-1.5">
-            <IconFrame icon={getSkillVisual('woodcutting')} shape="none" size="xs" /> {t('group.gathering')}
-          </h3>
-          <SidebarItem href="/woodcutting" icon={<IconFrame icon={getSkillVisual('woodcutting')} shape="none" size="xs" />} label={t('skill.woodcutting')} skillId="woodcutting" colorScheme="green" />
-          <SidebarItem href="/mining"      icon={<IconFrame icon={getSkillVisual('mining')}      shape="none" size="xs" />} label={t('skill.mining')}      skillId="mining"      colorScheme="amber" />
-          <SidebarItem href="/fishing"     icon={<IconFrame icon={getSkillVisual('fishing')}     shape="none" size="xs" />} label={t('skill.fishing')}     skillId="fishing"     colorScheme="blue" />
-        </div>
-
-        {/* ARTISAN */}
-        <div>
-          <h3 className="text-[10px] font-extrabold text-amber-300 uppercase tracking-widest mb-1.5 px-2 font-mono flex items-center gap-1.5">
-            <IconFrame icon={getSkillVisual('smithing')} shape="none" size="xs" /> {t('group.artisan')}
-          </h3>
-          <SidebarItem href="/firemaking" icon={<IconFrame icon={getSkillVisual('firemaking')} shape="none" size="xs" />} label={t('skill.firemaking')} skillId="firemaking" colorScheme="red" />
-          <SidebarItem href="/cooking"    icon={<IconFrame icon={getSkillVisual('cooking')}    shape="none" size="xs" />} label={t('skill.cooking')}    skillId="cooking"    colorScheme="amber" />
-          <SidebarItem href="/smithing"   icon={<IconFrame icon={getSkillVisual('smithing')}   shape="none" size="xs" />} label={t('skill.smithing')}   skillId="smithing"   colorScheme="amber" />
-        </div>
-
-      </div>
-
-      {/* Footer Utilities */}
-      <div className="p-3 border-t border-[#2d3d56] bg-[#1e2a3e] space-y-1">
-        <SidebarItem href="/inventory" icon={<Backpack className="w-4 h-4 text-sky-400" />} label={t('nav.inventory')} />
-        <SidebarItem href="/settings"  icon={<Settings className="w-4 h-4 text-slate-300" />} label={t('nav.settings')} />
-
-        {/* Player Combat Level Widget */}
-        <div className="mt-2 pt-2.5 border-t border-[#2d3d56] flex items-center justify-between px-2 bg-[#172030] p-2 rounded-xl border border-[#2d3d56]">
-          <div className="flex items-center gap-2 text-xs text-slate-200">
-            <Shield className="w-4 h-4 text-red-400" />
+        {/* Уровень боя */}
+        <div className="flex items-center justify-between px-3 py-2 mt-1 rounded-xl"
+          style={{ background: 'rgba(30,18,8,0.8)', border: '1px solid #2e2010' }}>
+          <div className="flex items-center gap-2 text-xs text-stone-400">
+            <Sword className="w-3.5 h-3.5 text-red-400" />
             <span className="font-semibold">{t('combat.combatLevel')}</span>
           </div>
-          <span className="font-mono text-xs font-black text-amber-300 bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/40">
+          <span className="font-mono text-xs font-black text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/25">
             {combatLevel}
           </span>
         </div>

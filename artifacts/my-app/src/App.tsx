@@ -61,8 +61,8 @@ function Router() {
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 md:ml-64 min-h-screen flex flex-col overflow-x-hidden">
-        
+      <div className="flex-1 md:ml-60 min-h-screen flex flex-col overflow-x-hidden">
+
         {/* Unified Top Navigation */}
         <TopNavBar onOpenMobileMenu={() => setMobileMenuOpen(true)} />
 
@@ -72,7 +72,7 @@ function Router() {
         </div>
 
         {/* Page Content View */}
-        <main className="flex-1 w-full max-w-[1440px] mx-auto px-3 py-3 pb-24 sm:px-4 md:pb-10 md:px-6 lg:px-8">
+        <main className="flex-1 w-full max-w-[1400px] mx-auto px-3 py-4 pb-24 sm:px-4 md:pb-10 md:px-6 lg:px-8">
           <Switch>
             <Route path="/" component={DashboardPage} />
             <Route path="/woodcutting" component={WoodcuttingPage} />
