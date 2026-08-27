@@ -69,9 +69,9 @@ export function SquircleSlot({
       <div
         className={`aspect-square rounded-xl flex items-center justify-center ${className}`}
         style={{
-          background: 'rgba(40,25,10,0.65)',
-          border: '1px solid rgba(90,58,25,0.5)',
-          boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.5)',
+          background: 'rgba(50,32,12,0.6)',
+          border: '1px solid rgba(110,72,28,0.45)',
+          boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.45)',
         }}
       >
         <div style={{ width: 8, height: 8, borderRadius: '50%', border: '1px solid rgba(120,78,30,0.35)' }} />

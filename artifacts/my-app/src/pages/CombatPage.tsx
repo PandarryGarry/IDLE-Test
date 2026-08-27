@@ -517,30 +517,28 @@ function EquipSlotBox({ slot, label }: { slot: EquipSlot; label: string }) {
       className="relative flex flex-col items-center gap-0.5 group"
     >
       {/* Ячейка */}
-      <div className={`w-14 h-14 rounded-xl border flex items-center justify-center transition-all hover:scale-105 active:scale-95 relative overflow-hidden ${
+      <div className={`w-16 h-16 rounded-xl border flex items-center justify-center transition-all hover:scale-105 active:scale-95 relative overflow-hidden ${
         itemId
           ? 'border-amber-500/50'
-          : 'border-stone-700/40'
+          : 'border-stone-700/35'
       }`}
         style={{
-          background: itemId ? 'rgba(120,60,10,0.15)' : 'rgba(22,13,5,0.8)',
+          background: itemId ? 'rgba(120,60,10,0.15)' : 'rgba(20,12,4,0.75)',
           boxShadow: itemId
             ? '0 0 10px rgba(245,158,11,0.12), inset 0 1px 0 rgba(255,200,80,0.06)'
-            : 'inset 0 2px 5px rgba(0,0,0,0.45)',
+            : 'inset 0 2px 5px rgba(0,0,0,0.5)',
           borderStyle: itemId ? 'solid' : 'dashed',
         }}
       >
         {itemId ? (
-          /* Рисуем картинку напрямую — без рамки ItemIcon */
           <EquipItemVisual itemId={itemId} label={label} />
         ) : (
-          <span className="text-[11px] font-mono font-bold uppercase" style={{ color: 'rgba(120,80,40,0.5)' }}>
-            {label.substring(0, 3)}
-          </span>
+          /* Пустая ячейка — только маленький индикатор, без текста */
+          <div style={{ width: 10, height: 10, borderRadius: '50%', border: '1px solid rgba(120,78,30,0.3)' }} />
         )}
       </div>
-      {/* Подпись */}
-      <span className="text-[9px] font-mono tracking-wide leading-none" style={{ color: 'rgba(120,80,40,0.6)' }}>
+      {/* Подпись под ячейкой */}
+      <span className="text-[9px] font-mono tracking-wide leading-none mt-0.5 truncate max-w-[64px] text-center" style={{ color: itemId ? 'rgba(200,150,80,0.8)' : 'rgba(100,65,25,0.55)' }}>
         {label}
       </span>
     </button>

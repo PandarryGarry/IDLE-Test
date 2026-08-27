@@ -145,7 +145,7 @@ export function InventoryPage() {
       </div>
 
       {/* 3. Squircle Inventory Slots Grid */}
-      <div className="rounded-2xl p-3 sm:p-4 min-h-[380px]" style={{ background: '#180f07', border: '1px solid #2e2010', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.4)' }}>
+      <div className="rounded-2xl p-3 sm:p-4 min-h-[380px]" style={{ background: 'rgba(30,18,8,0.85)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.35)' }}>
         
         {filteredItems.length === 0 && !emptySlotsCount ? (
           <div className="text-center py-20 text-slate-500 flex flex-col items-center gap-2">
