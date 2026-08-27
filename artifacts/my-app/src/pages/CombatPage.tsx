@@ -103,14 +103,14 @@ export function CombatPage() {
                     disabled={isLocked}
                     className={`w-full p-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
                       isLocked
-                        ? 'cursor-not-allowed border-[var(--border-default)]' style={{ background: 'rgba(50,25,8,0.7)', opacity: 0.75 }}
+                        ? 'cursor-not-allowed border-[var(--border-default)] opacity-75'
                         : isActive
                           ? 'bg-red-500/20 border-red-500/70 shadow-[0_0_18px_rgba(239,68,68,0.25)] ring-1 ring-red-500/40 cursor-pointer'
                           : 'bg-[var(--bg-card-dark)] hover:border-red-500/40 cursor-pointer border-[var(--border-light)] hover:bg-[var(--bg-card-dark)]'
                     }`}
                   >
                     <div className="flex justify-between items-center mb-1">
-                      <h3 className={`font-bold text-xs sm:text-sm ${isActive ? 'text-red-300 font-extrabold' : 'text-[var(--text-primary)]'}`}>
+                      <h3 className="font-bold text-xs sm:text-sm" style={{ color: isActive ? '#ff8060' : '#fff8d0', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                         {area.name}
                       </h3>
                       {isLocked ? (
