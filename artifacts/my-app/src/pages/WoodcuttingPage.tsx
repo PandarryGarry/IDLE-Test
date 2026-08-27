@@ -39,8 +39,8 @@ export function WoodcuttingPage() {
           <div className="space-y-3.5 relative z-10">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-2xl shadow-inner shrink-0 animate-pulse">
-                  🪓
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.4)', boxShadow: '0 0 12px rgba(16,185,129,0.2)' }}>
+                  <Trees className="w-6 h-6 text-emerald-400" />
                 </div>
                 <div>
                   <h3 className="text-base sm:text-lg font-bold text-stone-100 flex items-center gap-2">
@@ -69,8 +69,8 @@ export function WoodcuttingPage() {
           </div>
         ) : (
           <div className="text-center text-stone-300 flex flex-col items-center gap-2 py-6">
-            <div className="w-12 h-12 rounded-2xl bg-[#1a1108] border border-[#3a2b1a] flex items-center justify-center text-2xl">
-              🌲
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: '#1a1108', border: '1px solid #3a2b1a' }}>
+              <Trees className="w-6 h-6 text-stone-600" />
             </div>
             <p className="text-xs font-medium text-stone-300">{t('woodcutting.selectTree')}</p>
           </div>

@@ -144,19 +144,29 @@ export function CombatPage() {
               <Shield className="w-3.5 h-3.5 text-amber-400" /> {t('combat.equipment')}
             </h2>
             
-            <div className="bg-[#201508] border border-[#3a2b1a] rounded-2xl p-3 shadow-inner">
-              <div className="grid grid-cols-3 gap-2 justify-items-center">
-                <div className="col-span-3 w-full flex justify-center"><EquipSlotBox slot="helm" label="Шлем" /></div>
-                <EquipSlotBox slot="cape" label="Плащ" />
-                <EquipSlotBox slot="amulet" label="Шея" />
-                <EquipSlotBox slot="quiver" label="Колчан" />
-                <EquipSlotBox slot="weapon" label="Оружие" />
+            {/* Кукла экипировки — 3 колонки, фиксированные ячейки */}
+            <div className="rounded-xl p-3" style={{ background: '#160f06', border: '1px solid #2e2010' }}>
+              <div className="grid grid-cols-3 gap-y-3 gap-x-2 justify-items-center">
+                {/* Ряд 1: пусто / Шлем / пусто */}
+                <div />
+                <EquipSlotBox slot="helm"      label="Шлем" />
+                <div />
+                {/* Ряд 2: Плащ / Шея / Колчан */}
+                <EquipSlotBox slot="cape"      label="Плащ" />
+                <EquipSlotBox slot="amulet"    label="Шея" />
+                <EquipSlotBox slot="quiver"    label="Колчан" />
+                {/* Ряд 3: Оружие / Доспех / Щит */}
+                <EquipSlotBox slot="weapon"    label="Оружие" />
                 <EquipSlotBox slot="platebody" label="Доспех" />
-                <EquipSlotBox slot="shield" label="Щит" />
-                <div className="col-span-3 w-full flex justify-center"><EquipSlotBox slot="platelegs" label="Поножи" /></div>
-                <EquipSlotBox slot="gloves" label="Перчатки" />
-                <EquipSlotBox slot="boots" label="Сапоги" />
-                <EquipSlotBox slot="ring" label="Кольцо" />
+                <EquipSlotBox slot="shield"    label="Щит" />
+                {/* Ряд 4: пусто / Поножи / пусто */}
+                <div />
+                <EquipSlotBox slot="platelegs" label="Поножи" />
+                <div />
+                {/* Ряд 5: Перчатки / Сапоги / Кольцо */}
+                <EquipSlotBox slot="gloves"    label="Перчатки" />
+                <EquipSlotBox slot="boots"     label="Сапоги" />
+                <EquipSlotBox slot="ring"      label="Кольцо" />
               </div>
             </div>
           </div>
@@ -494,24 +504,26 @@ function EquipSlotBox({ slot, label }: { slot: EquipSlot; label: string }) {
       className="relative flex flex-col items-center gap-0.5 group"
     >
       {/* Ячейка — единый стиль с инвентарём */}
-      <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl border flex items-center justify-center transition-all active:scale-95 ${
+      <div className={`w-14 h-14 rounded-xl border flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${
         itemId
-          ? 'border-amber-500/55 bg-amber-950/15 shadow-[0_0_10px_rgba(245,158,11,0.18)]'
-          : 'border-dashed border-stone-700/60 bg-stone-950/40'
+          ? 'border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.15)]'
+          : 'border-dashed border-stone-700/50'
       }`}
-        style={{ boxShadow: itemId ? undefined : 'inset 0 2px 4px rgba(0,0,0,0.35)' }}
+        style={{
+          background: itemId ? 'rgba(120,60,10,0.12)' : 'rgba(20,13,5,0.7)',
+          boxShadow: itemId ? undefined : 'inset 0 2px 4px rgba(0,0,0,0.4)',
+        }}
       >
         {itemId ? (
           <ItemIcon itemId={itemId} size="md" showTooltip={true} />
         ) : (
-          /* Иконка слота — маленький символ */
-          <span className="text-stone-700 text-[10px] font-mono font-bold uppercase leading-tight">
+          <span className="text-stone-700/60 text-[10px] font-mono font-bold uppercase">
             {label.substring(0, 3)}
           </span>
         )}
       </div>
-      {/* Подпись под ячейкой */}
-      <span className="text-[9px] text-stone-600 font-mono uppercase tracking-wide leading-none">
+      {/* Подпись */}
+      <span className="text-[9px] text-stone-600/80 font-mono tracking-wide leading-none">
         {label}
       </span>
     </button>

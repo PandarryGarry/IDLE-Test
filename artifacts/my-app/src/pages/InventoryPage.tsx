@@ -56,7 +56,7 @@ export function InventoryPage() {
     <div className="space-y-4 max-w-4xl mx-auto">
       
       {/* 1. Header Banner */}
-      <div className="bg-stone-900/90 border border-stone-800/90 rounded-3xl p-4 sm:p-5 flex items-center justify-between gap-3 shadow-xl backdrop-blur-md">
+      <div className="rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3 shadow-xl" style={{ background: 'linear-gradient(160deg,#2a1e0e,#1a1108)', border: '1px solid #3d2e1e' }}>
         
         {/* Title & Slot counter */}
         <div className="flex items-center gap-3">
@@ -81,7 +81,8 @@ export function InventoryPage() {
         <button
           type="button"
           onClick={handleUpgradeSlots}
-          className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:brightness-110 text-white font-extrabold text-xs transition-all active:scale-95 flex items-center gap-1.5 shadow-[0_0_20px_rgba(99,102,241,0.3)] shrink-0"
+          className="px-4 py-2.5 rounded-xl font-extrabold text-xs transition-all active:scale-95 flex items-center gap-1.5 shrink-0 text-stone-950"
+          style={{ background: 'linear-gradient(135deg,#d97706,#f59e0b)', border: '1px solid #f59e0b', boxShadow: '0 2px 10px rgba(245,158,11,0.3)' }}
           title={`Купить +10 ячеек`}
         >
           <Plus className="w-4 h-4 stroke-[3]" />
@@ -91,7 +92,7 @@ export function InventoryPage() {
       </div>
 
       {/* 2. Category Filter & Search Bar */}
-      <div className="flex items-center justify-between gap-2 bg-stone-900/70 border border-stone-800/80 p-1.5 rounded-2xl">
+      <div className="flex items-center justify-between gap-2 p-1.5 rounded-xl" style={{ background: '#1c1108', border: '1px solid #3a2b1a' }}>
         
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1">
           {CATEGORIES.map(({ key, label, icon }) => (
@@ -144,7 +145,7 @@ export function InventoryPage() {
       </div>
 
       {/* 3. Squircle Inventory Slots Grid */}
-      <div className="bg-stone-900/60 border border-stone-800/80 rounded-3xl p-3 sm:p-5 shadow-2xl min-h-[380px]">
+      <div className="rounded-2xl p-3 sm:p-4 min-h-[380px]" style={{ background: '#180f07', border: '1px solid #2e2010', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.4)' }}>
         
         {filteredItems.length === 0 && !emptySlotsCount ? (
           <div className="text-center py-20 text-slate-500 flex flex-col items-center gap-2">

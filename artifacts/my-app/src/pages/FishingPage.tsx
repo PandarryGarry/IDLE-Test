@@ -41,7 +41,7 @@ export function FishingPage() {
           <div className="space-y-3.5 relative z-10">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center text-2xl shadow-inner shrink-0 p-1.5 animate-pulse">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(6,182,212,0.12)', border: '1px solid rgba(6,182,212,0.35)', boxShadow: '0 0 12px rgba(6,182,212,0.15)' }}>
                   <SkillIcon skillId="fishing" size="md" />
                 </div>
                 <div>

@@ -66,8 +66,15 @@ export function SquircleSlot({
   /* Пустая ячейка */
   if (isEmptyPlaceholder || !itemId) {
     return (
-      <div className={`aspect-square rounded-xl border border-dashed border-stone-800/60 bg-stone-950/40 flex items-center justify-center ${className}`}>
-        <div className="w-1.5 h-1.5 rounded-full bg-stone-700/50" />
+      <div
+        className={`aspect-square rounded-xl flex items-center justify-center ${className}`}
+        style={{
+          background: 'rgba(22,14,6,0.7)',
+          border: '1px solid #2e2010',
+          boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.45)',
+        }}
+      >
+        <div className="w-3 h-3 rounded-full opacity-20" style={{ border: '1px solid #5a3c1e' }} />
       </div>
     );
   }
