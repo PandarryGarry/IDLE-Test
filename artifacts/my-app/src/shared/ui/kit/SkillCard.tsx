@@ -139,7 +139,8 @@ export const SkillCard = memo(function SkillCard({ skillId, href, diameter=72 }:
   const badgeFS = Math.round(D * 0.14);
   // Позиция badge: снизу иконки, но внутри SVG-круга
   // bottomInset = SW + небольшой отступ от края кольца
-  const badgeBottom = SW + Math.round(D * 0.04);
+  // Badge — внутри круга у нижнего края, но не касается кольца
+  const badgeBottom = SW + Math.round(D * 0.07);
 
   // Цвета
   const ring   = isActive ? '#f0c030' : '#c8880a';
@@ -169,7 +170,7 @@ export const SkillCard = memo(function SkillCard({ skillId, href, diameter=72 }:
         )}
 
         {/* ── Круг: SVG кольцо + иконка + badge внутри ── */}
-        <div style={{ position:'relative',width:D,height:D,flexShrink:0 }}>
+        <div style={{ position:'relative',width:D,height:D,flexShrink:0,overflow:'visible' }}>
 
           {/* SVG кольцо */}
           <svg width={D} height={D} viewBox={`0 0 ${D} ${D}`}
