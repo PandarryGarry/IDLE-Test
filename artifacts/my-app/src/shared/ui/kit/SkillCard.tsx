@@ -203,23 +203,24 @@ export const SkillCard = memo(function SkillCard({ skillId, href, diameter=72 }:
           </div>
 
 
-        </div>
-
-        {/* Badge уровня — поверх нижней части круга */}
-        <div style={{
-          /* убрано */
-          minWidth: Math.round(D * 0.38), height: badgeH,
-          borderRadius: 9999, zIndex: 3, position: 'relative',
-          background: 'rgba(15,6,0,0.9)',
-          border: `1.5px solid ${isActive ? '#f0c030' : '#8b5020'}`,
-          boxShadow: isActive ? '0 0 8px rgba(240,192,48,0.6)' : '0 1px 4px rgba(0,0,0,0.7)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: 'var(--app-font-mono)',
-          fontSize: badgeFS, fontWeight: 900,
-          color: isActive ? '#f5d060' : '#c8a040',
-          lineHeight: 1, padding: '0 5px',
-        }}>
-          {st.level}
+          {/* Badge уровня — строго внутри круга, по центру снизу */}
+          <div style={{
+            position:'absolute',
+            bottom: SW + 1,
+            left:'50%', transform:'translateX(-50%)',
+            minWidth: Math.round(D*0.36), height: badgeH,
+            borderRadius:9999, zIndex:4,
+            background:'rgba(12,5,0,0.9)',
+            border:`1.5px solid ${isActive?'#f0c030':'#7a4818'}`,
+            boxShadow: isActive?'0 0 8px rgba(240,192,48,0.6)':'0 1px 3px rgba(0,0,0,0.8)',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            fontFamily:'var(--app-font-mono)',
+            fontSize:badgeFS, fontWeight:900,
+            color:isActive?'#f5d060':'#c8a040',
+            lineHeight:1, padding:'0 5px',
+          }}>
+            {st.level}
+          </div>
         </div>
       </div>
 
