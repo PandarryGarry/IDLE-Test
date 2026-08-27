@@ -33,10 +33,10 @@ export function TopNavBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void 
   const pillStyle: React.CSSProperties = {
     display: 'flex', alignItems: 'center', gap: 6,
     padding: '4px 10px', borderRadius: 8,
-    background: 'linear-gradient(180deg, #8b5020, #6b3810)',
+    background: 'linear-gradient(180deg, #a06028, #7a4518)',
     border: '2px solid #3d1e08',
     fontSize: 12, fontFamily: 'var(--app-font-mono)', fontWeight: 700,
-    color: '#f0d070', cursor: 'pointer',
+    color: '#fff8d0', cursor: 'pointer',
     transition: 'all 0.15s',
     boxShadow: '0 1px 3px rgba(45,31,15,0.1)',
     textDecoration: 'none',
@@ -71,9 +71,9 @@ export function TopNavBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void 
           </Link>
 
           {/* Мир (десктоп) */}
-          <div className="hidden md:flex" style={{ alignItems: 'center', gap: 6, fontSize: 12, fontFamily: 'var(--app-font-mono)', color: '#c8a050' }}>
+          <div className="hidden md:flex" style={{ alignItems: 'center', gap: 6, fontSize: 12, fontFamily: 'var(--app-font-mono)', color: '#f0d070' }}>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#1a9e5a', boxShadow: '0 0 6px #1a9e5a', display: 'inline-block' }} />
-            <span>Мир: <b style={{ color: '#f0d070', fontFamily: 'var(--app-font-sans)' }}>Этелия</b></span>
+            <span>Мир: <b style={{ color: '#fff8d0', fontFamily: 'var(--app-font-sans)' }}>Этелия</b></span>
           </div>
         </div>
 
