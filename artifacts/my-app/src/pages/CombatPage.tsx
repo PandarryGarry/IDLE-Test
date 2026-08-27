@@ -87,7 +87,7 @@ export function CombatPage() {
 
           {/* Combat Areas Selection */}
           <div className="g-card border border-[var(--border-default)] p-4 rounded-3xl shadow-xl">
-            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest mb-3 flex items-center gap-1.5" style={{ color: '#ff7060' }}>
+            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest mb-3 flex items-center gap-1.5" style={{ color: '#ff9070', textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>
               <Skull className="w-3.5 h-3.5" /> {t('combat.areas')}
             </h2>
             
@@ -103,7 +103,7 @@ export function CombatPage() {
                     disabled={isLocked}
                     className={`w-full p-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
                       isLocked
-                        ? 'opacity-40 grayscale cursor-not-allowed bg-[var(--bg-card-dark)] border-[var(--border-card)]'
+                        ? 'cursor-not-allowed border-[var(--border-default)]' style={{ background: 'rgba(50,25,8,0.7)', opacity: 0.75 }}
                         : isActive
                           ? 'bg-red-500/20 border-red-500/70 shadow-[0_0_18px_rgba(239,68,68,0.25)] ring-1 ring-red-500/40 cursor-pointer'
                           : 'bg-[var(--bg-card-dark)] hover:border-red-500/40 cursor-pointer border-[var(--border-light)] hover:bg-[var(--bg-card-dark)]'
@@ -114,7 +114,7 @@ export function CombatPage() {
                         {area.name}
                       </h3>
                       {isLocked ? (
-                        <span className="text-[10px] font-mono font-bold text-red-300 bg-red-950/80 border border-red-500/40 px-1.5 py-0.5 rounded-md">
+                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md" style={{ color: '#ff9070', background: 'rgba(120,30,15,0.6)', border: '1px solid rgba(255,120,80,0.4)' }}>
                           Ур. {area.combatLevelRequired}
                         </span>
                       ) : (
@@ -194,7 +194,7 @@ export function CombatPage() {
             <div
               ref={combatLogRef}
               onScroll={handleLogScroll}
-              className="relative flex-1 min-h-0 overflow-y-auto space-y-1 font-mono text-xs p-3 rounded-xl scrollbar-thin" style={{ background: 'rgba(40,20,8,0.6)', border: '2px solid #6b3810', boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.4)' }}
+              className="relative flex-1 min-h-0 overflow-y-auto space-y-1 font-mono text-xs p-3 rounded-xl scrollbar-thin" style={{ background: 'rgba(60,30,10,0.7)', border: '2px solid #8b5020', boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.4)' }}
             >
               {combatLog.length === 0 && (
                 <div className="text-center py-10 text-slate-500 text-xs">
