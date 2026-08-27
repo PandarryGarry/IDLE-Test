@@ -9,7 +9,7 @@ import { usePlayerStore } from '@/store/playerStore';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { TREES } from '@/data/woodcutting';
 import { ROCKS } from '@/data/mining';
-import { FISH_SPOTS } from '@/data/fishing';
+import { FISHING_SPOTS } from '@/data/fishing';
 
 export interface OfflineItem {
   id: string;
@@ -109,7 +109,7 @@ export function calculateOfflineProgress(lastSaveTime: number): OfflineResult | 
   }
 
   if (activeSkill === 'fishing') {
-    const spot = FISH_SPOTS?.find((s: any) => s.id === activeActionId);
+    const spot = FISHING_SPOTS?.find((s: any) => s.id === activeActionId);
     if (spot) {
       const actions = Math.floor(effectiveMs / spot.interval);
       const xpGained = actions * spot.xp;
