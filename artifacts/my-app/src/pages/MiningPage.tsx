@@ -34,7 +34,7 @@ export function MiningPage() {
       <div className={`rounded-3xl p-4 sm:p-5 relative overflow-hidden transition-all border ${
         isTraining 
           ? 'bg-gradient-to-b from-amber-950/40 via-[#221810] to-[#1c1108] border-amber-500/80 shadow-[0_0_24px_rgba(245,158,11,0.3)]' 
-          : 'bg-[#221810] border-[#3d2e1e]'
+          : 'g-card border-[var(--border-default)]'
       }`}>
         {isTraining && activeRock ? (
           <div className="space-y-3.5 relative z-10">
@@ -70,7 +70,7 @@ export function MiningPage() {
           </div>
         ) : (
           <div className="text-center text-stone-300 flex flex-col items-center gap-2 py-6">
-            <div className="w-12 h-12 rounded-2xl bg-[#1a1108] border border-[#3a2b1a] flex items-center justify-center p-2">
+            <div className="w-12 h-12 rounded-2xl bg-[var(--bg-page)] border border-[var(--border-light)] flex items-center justify-center p-2">
               <SkillIcon skillId="mining" size="md" />
             </div>
             <p className="text-xs font-medium text-stone-300">{t('mining.selectRock')}</p>

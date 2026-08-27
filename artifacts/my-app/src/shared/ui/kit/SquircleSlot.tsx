@@ -3,7 +3,6 @@ import { getItem } from '@/data/items';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { getItemTier } from '@/components/modals/UniversalInfoModal';
 import { getItemRarity } from '@/components/ItemIcon';
-import { Lock } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 import { TierBadge } from './TierBadge';
 
@@ -17,121 +16,81 @@ interface SquircleSlotProps {
   className?: string;
 }
 
-/* Рамки редкости — тёплая палитра */
-const RARITY_BORDER: Record<string, string> = {
-  common:    'border-stone-700/60',
-  uncommon:  'border-emerald-500/50',
-  rare:      'border-blue-500/55',
-  epic:      'border-purple-500/55',
-  legendary: 'border-amber-500/65',
-  mythic:    'border-rose-500/70',
+const RARITY_STYLES: Record<string, { border: string; bg: string; glow: string }> = {
+  common:    { border: '#b8a080', bg: '#f5eedd', glow: 'none' },
+  uncommon:  { border: '#3a9e50', bg: '#e0f5e8', glow: '0 0 8px rgba(58,158,80,0.3)' },
+  rare:      { border: '#2060c0', bg: '#e0eeff', glow: '0 0 10px rgba(32,96,192,0.3)' },
+  epic:      { border: '#8040c0', bg: '#f0e0ff', glow: '0 0 12px rgba(128,64,192,0.35)' },
+  legendary: { border: '#c07010', bg: '#fff0c0', glow: '0 0 14px rgba(192,112,16,0.45)' },
+  mythic:    { border: '#c02840', bg: '#ffe0e8', glow: '0 0 16px rgba(192,40,64,0.5)' },
 };
 
-const RARITY_BG: Record<string, string> = {
-  common:    'bg-stone-950/70',
-  uncommon:  'bg-emerald-950/20',
-  rare:      'bg-blue-950/20',
-  epic:      'bg-purple-950/20',
-  legendary: 'bg-amber-950/20',
-  mythic:    'bg-rose-950/20',
-};
+export function SquircleSlot({ itemId, quantity, locked = false, isEmptyPlaceholder = false, size = 'md', onClick, className = '' }: SquircleSlotProps) {
 
-const RARITY_GLOW: Record<string, string> = {
-  common:    '',
-  uncommon:  'shadow-[0_0_10px_rgba(16,185,129,0.15)]',
-  rare:      'shadow-[0_0_12px_rgba(59,130,246,0.18)]',
-  epic:      'shadow-[0_0_14px_rgba(168,85,247,0.20)]',
-  legendary: 'shadow-[0_0_16px_rgba(245,158,11,0.25)]',
-  mythic:    'shadow-[0_0_18px_rgba(244,63,94,0.28)]',
-};
-
-const RARITY_DOT: Record<string, string> = {
-  common:    'hidden',
-  uncommon:  'bg-emerald-400',
-  rare:      'bg-blue-400',
-  epic:      'bg-purple-400',
-  legendary: 'bg-amber-400',
-  mythic:    'bg-rose-400 animate-pulse',
-};
-
-export function SquircleSlot({
-  itemId,
-  quantity,
-  locked = false,
-  isEmptyPlaceholder = false,
-  size = 'md',
-  onClick,
-  className = '',
-}: SquircleSlotProps) {
   /* Пустая ячейка */
   if (isEmptyPlaceholder || !itemId) {
     return (
-      <div
-        className={`aspect-square rounded-xl flex items-center justify-center ${className}`}
-        style={{
-          background: 'rgba(50,32,12,0.6)',
-          border: '1px solid rgba(110,72,28,0.45)',
-          boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.45)',
-        }}
-      >
-        <div style={{ width: 8, height: 8, borderRadius: '50%', border: '1px solid rgba(120,78,30,0.35)' }} />
+      <div className={`g-slot-empty ${className}`}
+        style={{ borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 10, height: 10, borderRadius: '50%', border: '1.5px solid var(--border-slot)', opacity: 0.5 }} />
       </div>
     );
   }
 
-  const item    = getItem(itemId);
-  const tier    = item ? getItemTier(itemId, item) : 'T1';
-  const rarity  = item ? getItemRarity(itemId, item.sellValue, item.equipSlot) : 'common';
-  const visual  = getItemVisual(itemId);
-
-  const borderCls = RARITY_BORDER[rarity] ?? RARITY_BORDER.common;
-  const bgCls     = RARITY_BG[rarity]     ?? RARITY_BG.common;
-  const glowCls   = RARITY_GLOW[rarity]   ?? '';
-  const dotCls    = RARITY_DOT[rarity]    ?? 'hidden';
+  const item   = getItem(itemId);
+  const tier   = item ? getItemTier(itemId, item) : 'T1';
+  const rarity = item ? getItemRarity(itemId, item.sellValue, item.equipSlot) : 'common';
+  const visual = getItemVisual(itemId);
+  const rs     = RARITY_STYLES[rarity] ?? RARITY_STYLES.common;
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`group relative aspect-square rounded-xl border transition-all duration-150 active:scale-95 cursor-pointer select-none overflow-hidden
-        ${bgCls} ${borderCls} ${glowCls}
-        hover:brightness-110 hover:scale-[1.03]
-        ${className}`}
-      style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.35)' }}
-    >
-      {/* Tier badge — верхний левый */}
-      <span className="absolute top-1 left-1 z-10">
+    <button type="button" onClick={onClick} className={`g-slot ${className}`}
+      style={{
+        background: rs.bg,
+        border: `1px solid ${rs.border}`,
+        borderRadius: 10,
+        boxShadow: rs.glow !== 'none' ? `var(--shadow-slot), ${rs.glow}` : 'var(--shadow-slot)',
+        cursor: 'pointer',
+        position: 'relative',
+        transition: 'all 0.15s ease',
+      }}>
+
+      {/* Tier badge */}
+      <span style={{ position: 'absolute', top: 3, left: 4, zIndex: 10 }}>
         <TierBadge tier={tier} size="sm" />
       </span>
 
-      {/* Rarity dot / Lock — верхний правый */}
-      <div className="absolute top-1 right-1 z-10">
-        {locked
-          ? <Lock className="w-3 h-3 text-amber-400" />
-          : <span className={`block w-1.5 h-1.5 rounded-full ${dotCls}`} />}
-      </div>
+      {/* Rarity dot */}
+      {rarity !== 'common' && (
+        <span style={{
+          position: 'absolute', top: 4, right: 4, zIndex: 10,
+          width: 6, height: 6, borderRadius: '50%',
+          background: rs.border,
+          boxShadow: rs.glow !== 'none' ? rs.glow : 'none',
+        }} />
+      )}
 
-      {/* Картинка — по центру, 78% ячейки */}
-      <div className="absolute inset-0 flex items-center justify-center p-[12%]">
+      {/* Картинка — 78% ячейки, строго по центру */}
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '14%' }}>
         {visual.type === 'image' ? (
-          <img
-            src={visual.value}
-            alt={item?.name ?? ''}
-            className="w-full h-full object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)] select-none"
-            loading="lazy"
-          />
+          <img src={visual.value} alt={item?.name ?? ''} loading="lazy"
+            style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(45,31,15,0.25))' }} />
         ) : (
-          <span className="text-2xl sm:text-3xl leading-none drop-shadow-md select-none">
+          <span style={{ fontSize: '1.75rem', lineHeight: 1, filter: 'drop-shadow(0 1px 3px rgba(45,31,15,0.2))' }}>
             {visual.value}
           </span>
         )}
       </div>
 
-      {/* Количество — нижний правый */}
+      {/* Количество */}
       {quantity !== undefined && quantity > 1 && (
-        <span className="absolute bottom-1 right-1 text-[10px] font-mono font-black text-stone-100 group-hover:text-amber-300 leading-tight bg-stone-950/85 px-1 rounded border border-stone-800">
-          {formatNumber(quantity)}
-        </span>
+        <span style={{
+          position: 'absolute', bottom: 3, right: 4, zIndex: 10,
+          fontSize: 10, fontFamily: 'var(--app-font-mono)', fontWeight: 900,
+          color: 'var(--text-primary)', lineHeight: 1,
+          background: 'rgba(253,245,232,0.9)', padding: '1px 4px', borderRadius: 4,
+          border: '1px solid var(--border-light)',
+        }}>{formatNumber(quantity)}</span>
       )}
     </button>
   );

@@ -45,7 +45,7 @@ export function SmithingPage() {
       <div className={`rounded-3xl p-4 sm:p-5 relative overflow-hidden transition-all border ${
         isTraining 
           ? 'bg-gradient-to-b from-orange-950/40 via-[#221810] to-[#1c1108] border-orange-500/80 shadow-[0_0_24px_rgba(249,115,22,0.3)]' 
-          : 'bg-[#221810] border-[#3d2e1e]'
+          : 'g-card border-[var(--border-default)]'
       }`}>
         {isTraining && activeRecipe ? (
           <div className="space-y-3.5 relative z-10">
@@ -81,7 +81,7 @@ export function SmithingPage() {
           </div>
         ) : (
           <div className="text-center text-stone-300 flex flex-col items-center gap-2 py-6">
-            <div className="w-12 h-12 rounded-2xl bg-[#1a1108] border border-[#3a2b1a] flex items-center justify-center p-2">
+            <div className="w-12 h-12 rounded-2xl bg-[var(--bg-page)] border border-[var(--border-light)] flex items-center justify-center p-2">
               <SkillIcon skillId="smithing" size="md" />
             </div>
             <p className="text-xs font-medium text-stone-300">{t('smithing.selectRecipe')}</p>
@@ -96,7 +96,7 @@ export function SmithingPage() {
           className={`flex-1 sm:flex-none px-5 py-2.5 rounded-2xl font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
             tab === 'smelting' 
               ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black shadow-md' 
-              : 'bg-[#221810] border border-[#3d2e1e] text-stone-300 hover:text-white'
+              : 'g-card border border-[var(--border-default)] text-stone-300 hover:text-white'
           }`}
         >
           🔥 {t('smithing.smelting')}
@@ -106,7 +106,7 @@ export function SmithingPage() {
           className={`flex-1 sm:flex-none px-5 py-2.5 rounded-2xl font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
             tab === 'equipment' 
               ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black shadow-md' 
-              : 'bg-[#221810] border border-[#3d2e1e] text-stone-300 hover:text-white'
+              : 'g-card border border-[var(--border-default)] text-stone-300 hover:text-white'
           }`}
         >
           🛡️ {t('smithing.equipment')}

@@ -37,11 +37,11 @@ const SHAPE_CONFIG: Record<IconShape, string> = {
 };
 
 const VARIANT_CONFIG: Record<FrameVariant, string> = {
-  default:     'bg-[#201508] border border-[#3a2b1a] shadow-md',
+  default:     'bg-[var(--bg-card-dark)] border border-[var(--border-light)] shadow-md',
   active:      'bg-emerald-950/40 border border-emerald-500/80 shadow-[0_0_20px_rgba(16,185,129,0.35)] ring-1 ring-emerald-400/50',
   gold:        'bg-amber-950/40 border border-amber-400/70 shadow-[0_0_20px_rgba(245,158,11,0.35)] ring-1 ring-amber-400/40',
   combat:      'bg-red-950/40 border border-red-500/70 shadow-[0_0_20px_rgba(239,68,68,0.35)] ring-1 ring-red-400/40',
-  slot:        'bg-[#1a2538] border border-[#3a2b1a] hover:border-amber-400/60 shadow-inner',
+  slot:        'bg-[#1a2538] border border-[var(--border-light)] hover:border-amber-400/60 shadow-inner',
   transparent: 'bg-transparent border-transparent shadow-none',
 };
 

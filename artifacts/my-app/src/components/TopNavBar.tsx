@@ -9,17 +9,15 @@ import { Link } from 'wouter';
 import { CoinsDisplay } from '@/shared/ui/CoinsDisplay';
 import { Sword, Backpack, Save, Check, Globe, Menu } from 'lucide-react';
 
-interface TopNavBarProps { onOpenMobileMenu?: () => void }
-
-export function TopNavBar({ onOpenMobileMenu }: TopNavBarProps) {
-  const { t } = useTranslation();
-  const combatLevel  = usePlayerStore(s => s.combatLevel);
-  const gp           = useInventoryStore(s => s.gp);
-  const items        = useInventoryStore(s => s.items);
-  const maxSlots     = useInventoryStore(s => s.maxSlots);
-  const language     = useSettingsStore(s => s.language);
+export function TopNavBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) {
+  const { t }         = useTranslation();
+  const combatLevel   = usePlayerStore(s => s.combatLevel);
+  const gp            = useInventoryStore(s => s.gp);
+  const items         = useInventoryStore(s => s.items);
+  const maxSlots      = useInventoryStore(s => s.maxSlots);
+  const language      = useSettingsStore(s => s.language);
   const updateSetting = useSettingsStore(s => s.updateSetting);
-  const notifyInfo   = useNotificationsStore(s => s.notifyInfo);
+  const notifyInfo    = useNotificationsStore(s => s.notifyInfo);
   const [savedRecently, setSavedRecently] = useState(false);
 
   const usedSlots = items.filter(i => i.quantity > 0).length;
@@ -32,82 +30,95 @@ export function TopNavBar({ onOpenMobileMenu }: TopNavBarProps) {
     setTimeout(() => setSavedRecently(false), 2000);
   };
 
-  /* Цвет рамки/текста для пилюль */
-  const pill = "flex items-center gap-1.5 px-2.5 py-1 rounded-lg border transition-all text-xs font-mono font-bold";
-  const pillBase = "bg-stone-900/80 border-stone-700/60 text-stone-300 hover:border-amber-500/40 hover:text-amber-200 active:scale-95";
+  const pillStyle: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: 6,
+    padding: '4px 10px', borderRadius: 8,
+    background: 'rgba(255,248,238,0.9)',
+    border: '1px solid var(--border-default)',
+    fontSize: 12, fontFamily: 'var(--app-font-mono)', fontWeight: 700,
+    color: 'var(--text-secondary)', cursor: 'pointer',
+    transition: 'all 0.15s',
+    boxShadow: '0 1px 3px rgba(45,31,15,0.1)',
+    textDecoration: 'none',
+  };
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b"
-      style={{ background: 'rgba(22,14,6,0.97)', borderColor: '#2e2010', backdropFilter: 'blur(12px)', boxShadow: '0 2px 12px rgba(0,0,0,0.4)' }}>
-      <div className="w-full max-w-[1440px] mx-auto px-3 sm:px-4 md:px-6 h-13 flex items-center justify-between gap-2">
+    <header style={{
+      position: 'sticky', top: 0, zIndex: 30, width: '100%',
+      background: 'rgba(253,245,232,0.97)',
+      borderBottom: '1px solid var(--border-card)',
+      boxShadow: '0 2px 12px rgba(45,31,15,0.1)',
+      backdropFilter: 'blur(12px)',
+    }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 16px', height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
 
         {/* ── Левая часть ── */}
-        <div className="flex items-center gap-2.5">
-          {/* Кнопка мобильного меню */}
-          <button type="button" onClick={onOpenMobileMenu}
-            className="md:hidden p-2 rounded-lg border border-stone-700/60 bg-stone-900/70 text-stone-300 hover:text-stone-100 hover:border-amber-500/40 active:scale-95 transition-all"
-            aria-label="Открыть меню">
-            <Menu className="w-4 h-4" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Мобильное меню */}
+          <button type="button" onClick={onOpenMobileMenu} className="md:hidden"
+            style={{ ...pillStyle, padding: '6px 8px' }}>
+            <Menu size={16} />
           </button>
 
-          {/* Лого (мобайл) */}
-          <Link href="/" className="flex items-center gap-2 md:hidden group">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg,#92400e,#b45309)', boxShadow: '0 0 10px rgba(180,83,9,0.35)' }}>
-              <Sword className="w-3.5 h-3.5 text-amber-200" />
+          {/* Лого мобайл */}
+          <Link href="/" className="md:hidden" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#c07010,#e09820)', boxShadow: '0 0 10px rgba(212,134,10,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Sword size={14} color="#fff8ee" />
             </div>
-            <span className="font-display font-black text-sm text-stone-100">
-              Aethelia<span className="text-amber-400 font-sans text-xs font-extrabold">RPG</span>
+            <span style={{ fontFamily: 'var(--app-font-display)', fontWeight: 900, fontSize: 14, color: 'var(--text-primary)' }}>
+              Aethelia<span style={{ color: '#d4860a', fontFamily: 'var(--app-font-sans)', fontWeight: 800, fontSize: 11 }}>RPG</span>
             </span>
           </Link>
 
           {/* Мир (десктоп) */}
-          <div className="hidden md:flex items-center gap-1.5 text-xs font-mono text-stone-500">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
-            <span>Мир: <b className="text-stone-300 font-sans font-semibold">Этелия</b></span>
+          <div className="hidden md:flex" style={{ alignItems: 'center', gap: 6, fontSize: 12, fontFamily: 'var(--app-font-mono)', color: 'var(--text-muted)' }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#1a9e5a', boxShadow: '0 0 6px #1a9e5a', display: 'inline-block' }} />
+            <span>Мир: <b style={{ color: 'var(--text-secondary)', fontFamily: 'var(--app-font-sans)' }}>Этелия</b></span>
           </div>
         </div>
 
         {/* ── Правая часть — статы ── */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
 
           {/* Уровень боя */}
-          <Link href="/combat" className={`${pill} border-red-800/50 bg-red-950/30 text-red-300 hover:bg-red-900/30 hover:border-red-500/50 active:scale-95`}>
-            <Sword className="w-3.5 h-3.5 text-red-400 shrink-0" />
+          <Link href="/combat" style={{ ...pillStyle, background: 'rgba(255,232,232,0.9)', borderColor: 'rgba(192,40,30,0.35)', color: '#c0281e' }}>
+            <Sword size={13} color="#c0281e" />
             <span>{combatLevel}</span>
-            <span className="hidden sm:inline text-red-400/60 font-normal text-[10px]">LVL</span>
+            <span className="hidden sm:inline" style={{ color: 'rgba(192,40,30,0.5)', fontWeight: 400, fontSize: 10 }}>LVL</span>
           </Link>
 
           {/* Монеты */}
-          <Link href="/inventory" className={`${pill} ${pillBase}`}>
+          <Link href="/inventory" style={pillStyle}>
             <CoinsDisplay amount={gp} size="xs" />
           </Link>
 
-          {/* Слоты инвентаря */}
-          <Link href="/inventory" className={`hidden xs:flex ${pill} ${
-            isFull ? 'border-red-500/50 bg-red-950/30 text-red-300' : pillBase
-          } active:scale-95`}>
-            <Backpack className={`w-3.5 h-3.5 shrink-0 ${isFull ? 'text-red-400' : 'text-sky-400'}`} />
+          {/* Слоты */}
+          <Link href="/inventory" className="hidden xs:flex" style={{
+            ...pillStyle,
+            background: isFull ? 'rgba(255,232,232,0.9)' : pillStyle.background,
+            borderColor: isFull ? 'rgba(192,40,30,0.4)' : 'var(--border-default)',
+            color: isFull ? '#c0281e' : 'var(--text-secondary)',
+          }}>
+            <Backpack size={13} color={isFull ? '#c0281e' : 'var(--accent-sapphire)'} />
             <span>{usedSlots}/{maxSlots}</span>
           </Link>
 
           {/* Язык */}
-          <button type="button" onClick={() => updateSetting('language', language === 'ru' ? 'en' : 'ru')}
-            className={`${pill} ${pillBase}`} title="Язык">
-            <Globe className="w-3.5 h-3.5 text-stone-500" />
-            <span className="hidden sm:inline uppercase text-[11px]">{language}</span>
+          <button type="button" onClick={() => updateSetting('language', language === 'ru' ? 'en' : 'ru')} style={pillStyle}>
+            <Globe size={13} color="var(--text-muted)" />
+            <span className="hidden sm:inline" style={{ textTransform: 'uppercase', fontSize: 11 }}>{language}</span>
           </button>
 
           {/* Сохранение */}
-          <button type="button" onClick={handleSave}
-            className={`${pill} active:scale-95 ${
-              savedRecently
-                ? 'bg-emerald-500 border-emerald-400 text-stone-950 font-black'
-                : 'bg-stone-900/80 border-stone-700/60 text-stone-300 hover:border-amber-500/40 hover:text-amber-200'
-            }`}>
+          <button type="button" onClick={handleSave} style={{
+            ...pillStyle,
+            background: savedRecently ? '#1a9e5a' : pillStyle.background,
+            borderColor: savedRecently ? '#1a9e5a' : 'var(--border-default)',
+            color: savedRecently ? '#fff' : 'var(--text-secondary)',
+          }}>
             {savedRecently
-              ? <><Check className="w-3.5 h-3.5 stroke-[3]" /><span className="hidden sm:inline">Сохранено</span></>
-              : <><Save className="w-3.5 h-3.5 text-amber-400" /><span className="hidden sm:inline">{t('ui.save')}</span></>}
+              ? <><Check size={13} strokeWidth={3} /><span className="hidden sm:inline">Сохранено!</span></>
+              : <><Save size={13} color="#d4860a" /><span className="hidden sm:inline">{t('ui.save')}</span></>}
           </button>
         </div>
       </div>

@@ -33,7 +33,7 @@ export function WoodcuttingPage() {
       <div className={`rounded-3xl p-4 sm:p-5 relative overflow-hidden transition-all border ${
         isTraining 
           ? 'bg-gradient-to-b from-emerald-950/40 via-[#221810] to-[#1c1108] border-emerald-500/80 shadow-[0_0_24px_rgba(16,185,129,0.3)]' 
-          : 'bg-[#221810] border-[#3d2e1e]'
+          : 'g-card border-[var(--border-default)]'
       }`}>
         {isTraining && activeTree ? (
           <div className="space-y-3.5 relative z-10">
@@ -70,7 +70,7 @@ export function WoodcuttingPage() {
         ) : (
           <div className="text-center text-stone-300 flex flex-col items-center gap-2 py-6">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: '#1a1108', border: '1px solid #3a2b1a' }}>
-              <Trees className="w-6 h-6 text-stone-600" />
+              <Trees className="w-6 h-6 text-[var(--text-muted)]" />
             </div>
             <p className="text-xs font-medium text-stone-300">{t('woodcutting.selectTree')}</p>
           </div>

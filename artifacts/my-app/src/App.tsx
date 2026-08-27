@@ -61,7 +61,7 @@ function Router() {
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 md:ml-60 min-h-screen flex flex-col overflow-x-hidden">
+      <div className="flex-1 md:ml-[240px] min-h-screen flex flex-col overflow-x-hidden" style={{ background: 'var(--bg-page)' }}>
 
         {/* Unified Top Navigation */}
         <TopNavBar onOpenMobileMenu={() => setMobileMenuOpen(true)} />

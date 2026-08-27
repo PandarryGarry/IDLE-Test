@@ -46,7 +46,7 @@ function CircularProgress({ progress, level, isActive, skillId }: {
   const radius = 25;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - progress * circumference;
-  const theme = SKILL_THEME_COLORS[skillId] || { stroke: 'stroke-amber-400', glow: 'rgba(245,158,11,0.4)', text: 'text-amber-300', bg: 'bg-[#201508]' };
+  const theme = SKILL_THEME_COLORS[skillId] || { stroke: 'stroke-amber-400', glow: 'rgba(245,158,11,0.4)', text: 'text-amber-300', bg: 'bg-[var(--bg-card-dark)]' };
 
   return (
     <div className="relative w-15 h-15 sm:w-16 sm:h-16 flex items-center justify-center group">
@@ -67,13 +67,13 @@ function CircularProgress({ progress, level, isActive, skillId }: {
       <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 overflow-hidden ${
         isActive 
           ? `${theme.bg} shadow-[0_0_15px_rgba(245,158,11,0.4)] scale-105` 
-          : 'bg-[#201508] group-hover:scale-105'
+          : 'bg-[var(--bg-card-dark)] group-hover:scale-105'
       }`}>
         <SkillIcon skillId={skillId} size="md" />
       </div>
 
-      <div className={`absolute -bottom-1 bg-[#160f06] border px-2 py-0 rounded-full text-[9px] sm:text-[10px] font-mono font-black z-20 leading-tight shadow-md ${
-        isActive ? 'border-amber-400 text-amber-300' : 'border-[#3a2b1a] text-stone-200'
+      <div className={`absolute -bottom-1 bg-[var(--bg-slot)] border px-2 py-0 rounded-full text-[9px] sm:text-[10px] font-mono font-black z-20 leading-tight shadow-md ${
+        isActive ? 'border-amber-400 text-amber-300' : 'border-[var(--border-light)] text-stone-200'
       }`}>
         {level}
       </div>
@@ -95,7 +95,7 @@ const SkillCard = memo(function SkillCard({ skillId }: { skillId: string }) {
       <div className={`relative p-2.5 sm:p-3 rounded-2xl border transition-all duration-150 active:scale-95 flex flex-col items-center gap-1.5 ${
         isActive
           ? 'bg-gradient-to-b from-emerald-950/50 via-[#221810] to-[#182334] border-emerald-500/80 shadow-[0_0_20px_rgba(16,185,129,0.3)]'
-          : 'bg-gradient-to-b from-[#2a1e0e] to-[#201508] border-[#3a2b1a] hover:border-amber-400/60 hover:-translate-y-0.5 hover:shadow-lg'
+          : 'bg-gradient-to-b from-[#2a1e0e] to-[#201508] border-[var(--border-light)] hover:border-amber-400/60 hover:-translate-y-0.5 hover:shadow-lg'
       }`}>
         {isActive && (
           <div className="absolute top-1.5 right-1.5 flex items-center">
@@ -134,13 +134,13 @@ export function DashboardPage() {
     <div className="space-y-4 sm:space-y-5">
       
       {/* 1. Hero Overview Header */}
-      <div className="bg-gradient-to-b from-[#2a1e0e] to-[#1e1408] border border-[#3d2e1e] rounded-3xl p-4 sm:p-6 relative overflow-hidden shadow-2xl">
+      <div className="bg-gradient-to-b from-[#2a1e0e] to-[#1e1408] border border-[var(--border-default)] rounded-3xl p-4 sm:p-6 relative overflow-hidden shadow-2xl">
         <div className="absolute -top-24 -right-24 w-72 h-72 bg-amber-500/8 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           
           <div className="flex items-center gap-3.5">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#1a1108] border-2 border-amber-400/50 flex items-center justify-center text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)] shrink-0">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[var(--bg-page)] border-2 border-amber-400/50 flex items-center justify-center text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)] shrink-0">
               <Shield className="w-7 h-7 sm:w-8 sm:h-8" />
             </div>
             <div>
@@ -160,7 +160,7 @@ export function DashboardPage() {
 
           {/* Quick Metrics Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full lg:w-auto">
-            <div className="bg-[#201508] border border-red-500/40 rounded-2xl p-2.5 text-center shadow-md">
+            <div className="bg-[var(--bg-card-dark)] border border-red-500/40 rounded-2xl p-2.5 text-center shadow-md">
               <div className="text-[9px] text-red-300 font-mono uppercase font-bold tracking-wider mb-0.5">
                 Боевой Lvl
               </div>
@@ -169,7 +169,7 @@ export function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-[#201508] border border-emerald-500/40 rounded-2xl p-2.5 text-center shadow-md">
+            <div className="bg-[var(--bg-card-dark)] border border-emerald-500/40 rounded-2xl p-2.5 text-center shadow-md">
               <div className="text-[9px] text-emerald-300 font-mono uppercase font-bold tracking-wider mb-0.5">
                 Total Lvl
               </div>
@@ -178,7 +178,7 @@ export function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-[#201508] border border-amber-400/40 rounded-2xl p-2.5 text-center shadow-md">
+            <div className="bg-[var(--bg-card-dark)] border border-amber-400/40 rounded-2xl p-2.5 text-center shadow-md">
               <div className="text-[9px] text-amber-300 font-mono uppercase font-bold tracking-wider mb-0.5">
                 Кошелек
               </div>
@@ -187,7 +187,7 @@ export function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-[#201508] border border-sky-400/40 rounded-2xl p-2.5 text-center shadow-md">
+            <div className="bg-[var(--bg-card-dark)] border border-sky-400/40 rounded-2xl p-2.5 text-center shadow-md">
               <div className="text-[9px] text-sky-300 font-mono uppercase font-bold tracking-wider mb-0.5">
                 Сумка
               </div>
@@ -201,7 +201,7 @@ export function DashboardPage() {
       </div>
 
       {/* 2. Activity Hub (Текущая деятельность персонажа) */}
-      <div className="bg-[#221810] border border-[#3d2e1e] p-4 sm:p-5 rounded-3xl shadow-xl">
+      <div className="g-card border border-[var(--border-default)] p-4 sm:p-5 rounded-3xl shadow-xl">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xs font-extrabold uppercase tracking-widest text-stone-200 font-mono flex items-center gap-1.5">
             <Activity className="w-3.5 h-3.5 text-amber-400" /> Текущая активность
@@ -250,7 +250,7 @@ export function DashboardPage() {
               <div className="flex items-center gap-2">
                 <Link
                   href={`/${activeSkill}`}
-                  className="px-3.5 py-2 bg-[#201508] border border-[#3a2b1a] hover:border-emerald-400 text-stone-100 text-xs font-bold rounded-2xl flex items-center gap-1"
+                  className="px-3.5 py-2 bg-[var(--bg-card-dark)] border border-[var(--border-light)] hover:border-emerald-400 text-stone-100 text-xs font-bold rounded-2xl flex items-center gap-1"
                 >
                   Перейти <ArrowUpRight className="w-3.5 h-3.5" />
                 </Link>
@@ -268,19 +268,19 @@ export function DashboardPage() {
           <div className="py-4 text-center text-stone-300 flex flex-col items-center gap-2.5">
             <p className="text-xs text-stone-300 font-medium">{t('dashboard.noActive')}</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full pt-1">
-              <Link href="/woodcutting" className="p-3 rounded-2xl bg-[#231810] border border-[#3a2b1a] hover:border-emerald-400 text-xs text-stone-200 font-bold flex items-center justify-center gap-2.5 active:scale-95 transition-all shadow-md">
+              <Link href="/woodcutting" className="p-3 rounded-2xl bg-[#231810] border border-[var(--border-light)] hover:border-emerald-400 text-xs text-stone-200 font-bold flex items-center justify-center gap-2.5 active:scale-95 transition-all shadow-md">
                 <SkillIcon skillId="woodcutting" size="sm" /> 
                 <span>Рубить лес</span>
               </Link>
-              <Link href="/mining" className="p-3 rounded-2xl bg-[#231810] border border-[#3a2b1a] hover:border-amber-400 text-xs text-stone-200 font-bold flex items-center justify-center gap-2.5 active:scale-95 transition-all shadow-md">
+              <Link href="/mining" className="p-3 rounded-2xl bg-[#231810] border border-[var(--border-light)] hover:border-amber-400 text-xs text-stone-200 font-bold flex items-center justify-center gap-2.5 active:scale-95 transition-all shadow-md">
                 <SkillIcon skillId="mining" size="sm" /> 
                 <span>Добывать руду</span>
               </Link>
-              <Link href="/fishing" className="p-3 rounded-2xl bg-[#231810] border border-[#3a2b1a] hover:border-cyan-400 text-xs text-stone-200 font-bold flex items-center justify-center gap-2.5 active:scale-95 transition-all shadow-md">
+              <Link href="/fishing" className="p-3 rounded-2xl bg-[#231810] border border-[var(--border-light)] hover:border-cyan-400 text-xs text-stone-200 font-bold flex items-center justify-center gap-2.5 active:scale-95 transition-all shadow-md">
                 <SkillIcon skillId="fishing" size="sm" /> 
                 <span>Ловить рыбу</span>
               </Link>
-              <Link href="/combat" className="p-3 rounded-2xl bg-[#231810] border border-[#3a2b1a] hover:border-red-400 text-xs text-stone-200 font-bold flex items-center justify-center gap-2.5 active:scale-95 transition-all shadow-md">
+              <Link href="/combat" className="p-3 rounded-2xl bg-[#231810] border border-[var(--border-light)] hover:border-red-400 text-xs text-stone-200 font-bold flex items-center justify-center gap-2.5 active:scale-95 transition-all shadow-md">
                 <SkillIcon skillId="combat" size="sm" /> 
                 <span>В бой</span>
               </Link>
@@ -296,7 +296,7 @@ export function DashboardPage() {
           className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 active:scale-95 ${
             activeTab === 'all'
               ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-              : 'bg-[#231810] border border-[#3a2b1a] text-stone-300 hover:text-white'
+              : 'bg-[#231810] border border-[var(--border-light)] text-stone-300 hover:text-white'
           }`}
         >
           ✨ Все профессии
@@ -306,7 +306,7 @@ export function DashboardPage() {
           className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 active:scale-95 flex items-center gap-1.5 ${
             activeTab === 'combat'
               ? 'bg-red-500 text-white font-black shadow-[0_0_15px_rgba(239,68,68,0.3)]'
-              : 'bg-[#231810] border border-[#3a2b1a] text-stone-300 hover:text-white'
+              : 'bg-[#231810] border border-[var(--border-light)] text-stone-300 hover:text-white'
           }`}
         >
           ⚔️ Бой
@@ -316,7 +316,7 @@ export function DashboardPage() {
           className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 active:scale-95 flex items-center gap-1.5 ${
             activeTab === 'gathering'
               ? 'bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(16,185,129,0.3)]'
-              : 'bg-[#231810] border border-[#3a2b1a] text-stone-300 hover:text-white'
+              : 'bg-[#231810] border border-[var(--border-light)] text-stone-300 hover:text-white'
           }`}
         >
           🌲 Добыча
@@ -326,7 +326,7 @@ export function DashboardPage() {
           className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 active:scale-95 flex items-center gap-1.5 ${
             activeTab === 'artisan'
               ? 'bg-amber-600 text-white font-black shadow-[0_0_15px_rgba(217,119,6,0.3)]'
-              : 'bg-[#231810] border border-[#3a2b1a] text-stone-300 hover:text-white'
+              : 'bg-[#231810] border border-[var(--border-light)] text-stone-300 hover:text-white'
           }`}
         >
           ⚒️ Ремесло

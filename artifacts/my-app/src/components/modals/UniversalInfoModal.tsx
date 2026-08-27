@@ -199,7 +199,7 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
               <span className="drop-shadow-md">{visual.value}</span>
             )}
             {quantity > 1 && (
-              <span className="absolute -bottom-1 -right-1 bg-[#160f06] border border-amber-400/50 text-amber-300 font-mono text-[10px] font-black px-1.5 py-0.2 rounded-full shadow">
+              <span className="absolute -bottom-1 -right-1 bg-[var(--bg-slot)] border border-amber-400/50 text-amber-300 font-mono text-[10px] font-black px-1.5 py-0.2 rounded-full shadow">
                 x{formatNumber(quantity)}
               </span>
             )}

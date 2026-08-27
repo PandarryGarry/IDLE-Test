@@ -150,7 +150,7 @@ function SkillNavButton({ skill, onClick, currentPath }: { skill: any; onClick: 
       className={`p-3 rounded-2xl border flex items-center justify-between gap-2.5 transition-all active:scale-95 ${
         isCurrent
           ? 'bg-amber-500/20 border-amber-400/60 shadow-md'
-          : 'bg-[#201508] border-[#3a2b1a] hover:border-[#3d5070]'
+          : 'bg-[var(--bg-card-dark)] border-[var(--border-light)] hover:border-[#3d5070]'
       }`}
     >
       <div className="flex items-center gap-2.5">

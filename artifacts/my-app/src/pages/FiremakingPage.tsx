@@ -43,7 +43,7 @@ export function FiremakingPage() {
       <div className={`rounded-3xl p-4 sm:p-5 relative overflow-hidden transition-all border ${
         isTraining 
           ? 'bg-gradient-to-b from-rose-950/40 via-[#221810] to-[#1c1108] border-rose-500/80 shadow-[0_0_24px_rgba(244,63,94,0.3)]' 
-          : 'bg-[#221810] border-[#3d2e1e]'
+          : 'g-card border-[var(--border-default)]'
       }`}>
         {isTraining && activeLog ? (
           <div className="space-y-3.5 relative z-10">
@@ -79,7 +79,7 @@ export function FiremakingPage() {
           </div>
         ) : (
           <div className="text-center text-stone-300 flex flex-col items-center gap-2 py-6">
-            <div className="w-12 h-12 rounded-2xl bg-[#1a1108] border border-[#3a2b1a] flex items-center justify-center p-2">
+            <div className="w-12 h-12 rounded-2xl bg-[var(--bg-page)] border border-[var(--border-light)] flex items-center justify-center p-2">
               <SkillIcon skillId="firemaking" size="md" />
             </div>
             <p className="text-xs font-medium text-stone-300">{t('firemaking.selectLog')}</p>

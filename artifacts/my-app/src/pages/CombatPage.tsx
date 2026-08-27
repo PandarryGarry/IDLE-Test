@@ -86,7 +86,7 @@ export function CombatPage() {
         <div className="w-full lg:w-80 xl:w-96 space-y-4 shrink-0">
 
           {/* Combat Areas Selection */}
-          <div className="bg-[#221810] border border-[#3d2e1e] p-4 rounded-3xl shadow-xl">
+          <div className="g-card border border-[var(--border-default)] p-4 rounded-3xl shadow-xl">
             <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-red-400 mb-3 flex items-center gap-1.5">
               <Skull className="w-3.5 h-3.5" /> {t('combat.areas')}
             </h2>
@@ -103,10 +103,10 @@ export function CombatPage() {
                     disabled={isLocked}
                     className={`w-full p-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
                       isLocked
-                        ? 'opacity-40 grayscale cursor-not-allowed bg-[#1e1408] border-[#2e2010]'
+                        ? 'opacity-40 grayscale cursor-not-allowed bg-[#1e1408] border-[var(--border-card)]'
                         : isActive
                           ? 'bg-red-500/20 border-red-500/70 shadow-[0_0_18px_rgba(239,68,68,0.25)] ring-1 ring-red-500/40 cursor-pointer'
-                          : 'bg-[#201508] hover:border-red-500/40 cursor-pointer border-[#3a2b1a] hover:bg-[#231810]'
+                          : 'bg-[var(--bg-card-dark)] hover:border-red-500/40 cursor-pointer border-[var(--border-light)] hover:bg-[#231810]'
                     }`}
                   >
                     <div className="flex justify-between items-center mb-1">
@@ -128,7 +128,7 @@ export function CombatPage() {
                     {/* Monster Rosters */}
                     <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-none">
                       {area.monsterIds.map(mId => (
-                        <span key={mId} className="shrink-0 bg-[#160f06] px-1.5 py-0.5 rounded-md text-[10px] font-mono border border-[#2e2010] text-stone-200 font-medium">
+                        <span key={mId} className="shrink-0 bg-[var(--bg-slot)] px-1.5 py-0.5 rounded-md text-[10px] font-mono border border-[var(--border-card)] text-stone-200 font-medium">
                           {MONSTERS_MAP[mId]?.name} ({MONSTERS_MAP[mId]?.combatLevel})
                         </span>
                       ))}
@@ -140,7 +140,7 @@ export function CombatPage() {
           </div>
 
           {/* Equipment Paperdoll (Кукла экипировки) */}
-          <div className="bg-[#221810] border border-[#3d2e1e] p-4 rounded-3xl shadow-xl">
+          <div className="g-card border border-[var(--border-default)] p-4 rounded-3xl shadow-xl">
             <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-stone-200 mb-3 flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5 text-amber-400" /> {t('combat.equipment')}
             </h2>
@@ -279,11 +279,11 @@ const CombatScreen = memo(function CombatScreen() {
   const enemyAttackProgress = Math.max(0, Math.min(100, (1 - enemyAttackTimer / enemyAttackInterval) * 100));
 
   return (
-    <div className="bg-[#221810] border border-red-500/40 rounded-3xl p-4 sm:p-6 shadow-2xl min-h-[320px] flex flex-col relative overflow-hidden">
+    <div className="g-card border border-red-500/40 rounded-3xl p-4 sm:p-6 shadow-2xl min-h-[320px] flex flex-col relative overflow-hidden">
       
       {!inCombat ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-stone-300 p-6 text-center">
-          <div className="w-16 h-16 rounded-3xl bg-[#201508] border border-[#3a2b1a] flex items-center justify-center text-4xl mb-3 opacity-70">
+          <div className="w-16 h-16 rounded-3xl bg-[var(--bg-card-dark)] border border-[var(--border-light)] flex items-center justify-center text-4xl mb-3 opacity-70">
             ⚔️
           </div>
           <h2 className="text-lg sm:text-xl font-display font-black text-stone-100">{t('combat.selectArea')}</h2>
@@ -295,7 +295,7 @@ const CombatScreen = memo(function CombatScreen() {
         <div className="h-full flex flex-col z-10">
           
           {/* Arena Header */}
-          <div className="flex justify-between items-center mb-6 pb-3 border-b border-[#3a2b1a]">
+          <div className="flex justify-between items-center mb-6 pb-3 border-b border-[var(--border-light)]">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
               <h2 className="text-base sm:text-lg font-display font-black text-stone-100 flex items-center gap-1.5">
@@ -316,10 +316,10 @@ const CombatScreen = memo(function CombatScreen() {
           <div className="flex flex-col md:flex-row gap-6 items-center justify-between flex-grow py-2">
             
             {/* Player Side */}
-            <div className="flex-1 w-full text-center space-y-2.5 bg-[#172130] p-4 rounded-2xl border border-[#3a2b1a]">
+            <div className="flex-1 w-full text-center space-y-2.5 bg-[#172130] p-4 rounded-2xl border border-[var(--border-light)]">
               <div className="flex items-center justify-between text-xs font-mono text-stone-300">
                 <span className="font-bold text-stone-100">{t('combat.you')}</span>
-                <span className="bg-[#231810] border border-[#3d2e1e] px-2 py-0.5 rounded-md font-bold text-amber-300">
+                <span className="bg-[#231810] border border-[var(--border-default)] px-2 py-0.5 rounded-md font-bold text-amber-300">
                   Ур. {combatLevel}
                 </span>
               </div>
@@ -336,7 +336,7 @@ const CombatScreen = memo(function CombatScreen() {
                   </span>
                   <span className="text-stone-100 font-bold">{playerHp} / {playerMaxHp}</span>
                 </div>
-                <div className="h-4 w-full bg-[#121924] rounded-full overflow-hidden border border-[#3a2b1a] p-0.5 shadow-inner">
+                <div className="h-4 w-full bg-[#121924] rounded-full overflow-hidden border border-[var(--border-light)] p-0.5 shadow-inner">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_12px_rgba(16,185,129,0.6)] transition-all duration-300"
                     style={{ width: `${playerHpPct}%` }}
@@ -350,7 +350,7 @@ const CombatScreen = memo(function CombatScreen() {
                   <span>Скорость атаки</span>
                   <span>{(playerAttackTimer / 1000).toFixed(1)} сек.</span>
                 </div>
-                <div className="h-1.5 w-full bg-[#121924] rounded-full overflow-hidden border border-[#3a2b1a]">
+                <div className="h-1.5 w-full bg-[#121924] rounded-full overflow-hidden border border-[var(--border-light)]">
                   <div
                     className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-100"
                     style={{ width: `${playerAttackProgress}%` }}
@@ -388,7 +388,7 @@ const CombatScreen = memo(function CombatScreen() {
                   </span>
                   <span className="text-stone-100 font-bold">{enemyHp} / {enemyMaxHp}</span>
                 </div>
-                <div className="h-4 w-full bg-[#121924] rounded-full overflow-hidden border border-[#3a2b1a] p-0.5 shadow-inner">
+                <div className="h-4 w-full bg-[#121924] rounded-full overflow-hidden border border-[var(--border-light)] p-0.5 shadow-inner">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-red-600 to-rose-400 shadow-[0_0_12px_rgba(239,68,68,0.6)] transition-all duration-300"
                     style={{ width: `${enemyHpPct}%` }}
@@ -402,7 +402,7 @@ const CombatScreen = memo(function CombatScreen() {
                   <span>Скорость атаки</span>
                   <span>{(enemyAttackTimer / 1000).toFixed(1)} сек.</span>
                 </div>
-                <div className="h-1.5 w-full bg-[#121924] rounded-full overflow-hidden border border-[#3a2b1a]">
+                <div className="h-1.5 w-full bg-[#121924] rounded-full overflow-hidden border border-[var(--border-light)]">
                   <div
                     className="h-full bg-gradient-to-r from-orange-500 to-amber-400 transition-all duration-100"
                     style={{ width: `${enemyAttackProgress}%` }}
@@ -414,7 +414,7 @@ const CombatScreen = memo(function CombatScreen() {
           </div>
 
           {/* Combat Toggles & Kill Counter */}
-          <div className="mt-4 pt-3 border-t border-[#3a2b1a] flex flex-wrap gap-x-6 gap-y-2 justify-between items-center">
+          <div className="mt-4 pt-3 border-t border-[var(--border-light)] flex flex-wrap gap-x-6 gap-y-2 justify-between items-center">
             <div className="flex gap-4">
               <label className="flex items-center gap-2 text-xs font-bold text-stone-200 cursor-pointer select-none">
                 <input

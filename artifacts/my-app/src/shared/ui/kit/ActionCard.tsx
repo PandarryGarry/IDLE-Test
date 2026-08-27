@@ -2,7 +2,6 @@ import React from 'react';
 import { getItem } from '@/data/items';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { getItemTier } from '@/components/modals/UniversalInfoModal';
-import { getItemRarity } from '@/components/ItemIcon';
 import { formatNumber, xpPerHour } from '@/lib/utils';
 import { getLevelForXp, getLevelProgress } from '@/gameEngine/xpTable';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -19,81 +18,50 @@ interface ActionCardProps {
   renderExtra?: React.ReactNode;
 }
 
-export function ActionCard({
-  action,
-  isLocked,
-  isActive,
-  masteryXp = 0,
-  outputItemId,
-  onActionClick,
-  renderExtra,
-}: ActionCardProps) {
+export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputItemId, onActionClick, renderExtra }: ActionCardProps) {
   const { t } = useTranslation();
-
   const masteryLevel    = getLevelForXp(masteryXp);
   const masteryProgress = getLevelProgress(masteryXp);
 
-  const resolvedItemId = outputItemId
-    || action.logId || action.oreId || action.fishId
-    || action.cookedItemId || action.outputItemId;
-
+  const resolvedItemId = outputItemId || action.logId || action.oreId || action.fishId || action.cookedItemId || action.outputItemId;
   const outputItem = resolvedItemId ? getItem(resolvedItemId) : undefined;
   const visual     = resolvedItemId ? getItemVisual(resolvedItemId) : null;
   const tier       = resolvedItemId && outputItem ? getItemTier(resolvedItemId, outputItem) : 'T1';
-  const rarity     = outputItem ? getItemRarity(resolvedItemId!, outputItem.sellValue, outputItem.equipSlot) : 'common';
 
-  /* Цвет рамки карточки */
-  const cardClass = isLocked
-    ? 'opacity-50 grayscale cursor-not-allowed'
+  const cardStyle: React.CSSProperties = isLocked
+    ? { background: 'var(--bg-card-dark)', border: '1px solid var(--border-light)', opacity: 0.6, filter: 'grayscale(0.4)', cursor: 'not-allowed', borderRadius: 14 }
     : isActive
-      ? 'border-emerald-500/60 cursor-pointer'
-      : 'border-stone-700/50 hover:border-amber-500/40 cursor-pointer hover:-translate-y-0.5';
-
-  const cardBg = isLocked
-    ? 'bg-stone-950/60'
-    : isActive
-      ? ''  // inline style ниже
-      : '';
+      ? { background: 'var(--accent-emerald-bg)', border: '1px solid var(--accent-emerald)', borderRadius: 14, boxShadow: 'var(--shadow-active)' }
+      : { background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: 14, boxShadow: 'var(--shadow-card)', cursor: 'pointer' };
 
   return (
-    <div
-      onClick={() => !isLocked && onActionClick()}
-      className={`group relative flex flex-col rounded-2xl border transition-all duration-200 overflow-hidden select-none active:scale-[0.98] ${cardClass} ${cardBg}`}
-      style={isActive
-        ? { background: 'linear-gradient(160deg, rgba(16,185,129,0.12) 0%, #1a1108 100%)', border: '1px solid rgba(16,185,129,0.55)', boxShadow: '0 0 20px rgba(16,185,129,0.14), inset 0 1px 0 rgba(16,185,129,0.12)' }
-        : isLocked
-          ? {}
-          : { background: 'linear-gradient(160deg, #251b10 0%, #1a1108 100%)', border: '1px solid #3d2e1e', boxShadow: '0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,220,130,0.04)' }
-      }
-    >
-      {/* Активная полоска сверху */}
-      {isActive && (
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-400" />
-      )}
+    <div onClick={() => !isLocked && onActionClick()}
+      style={{ ...cardStyle, position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden', transition: 'all 0.2s ease', userSelect: 'none' }}
+      onMouseEnter={e => { if (!isLocked && !isActive) { (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-hover)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; } }}
+      onMouseLeave={e => { if (!isLocked && !isActive) { (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-card)'; (e.currentTarget as HTMLDivElement).style.transform = ''; } }}>
 
-      <div className="p-3.5 flex flex-col flex-1 gap-2.5">
+      {/* Активная полоска */}
+      {isActive && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, var(--accent-emerald), #4caf50)', borderRadius: '14px 14px 0 0' }} />}
 
-        {/* ── Шапка: тир + название + мастерство ── */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-1.5 min-w-0">
+      <div style={{ padding: '14px 14px', display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
+
+        {/* ── Шапка ── */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
             <TierBadge tier={tier} size="sm" />
-            <h3 className={`font-bold text-sm leading-snug truncate ${
-              isActive ? 'text-emerald-200' : 'text-stone-100 group-hover:text-amber-200'
-            }`}>
-              {action.name}
-            </h3>
+            <h3 style={{
+              fontWeight: 700, fontSize: 14, lineHeight: 1.2,
+              color: isActive ? 'var(--accent-emerald)' : 'var(--text-primary)',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>{action.name}</h3>
           </div>
 
           {isLocked ? (
-            <span className="shrink-0 flex items-center gap-1 text-stone-400 text-[10px] font-mono font-bold bg-stone-900/80 border border-stone-700 px-1.5 py-0.5 rounded-lg">
-              <Lock className="w-2.5 h-2.5" /> {action.levelRequired}
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontFamily: 'var(--app-font-mono)', fontWeight: 700, color: 'var(--accent-ruby)', background: 'var(--accent-ruby-bg)', border: '1px solid rgba(192,40,30,0.3)', padding: '2px 6px', borderRadius: 6, flexShrink: 0 }}>
+              <Lock size={9} /> {action.levelRequired}
             </span>
           ) : (
-            <span className={`shrink-0 text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-lg border ${
-              isActive
-                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
-                : 'bg-stone-900/80 text-amber-400 border-stone-700'
-            }`} title={`Мастерство: Ур. ${masteryLevel}`}>
+            <span style={{ fontSize: 11, fontFamily: 'var(--app-font-mono)', fontWeight: 800, padding: '2px 6px', borderRadius: 6, border: `1px solid ${isActive ? 'var(--accent-emerald)' : 'var(--border-default)'}`, color: isActive ? 'var(--accent-emerald)' : 'var(--text-gold)', background: isActive ? 'var(--accent-emerald-bg)' : 'var(--bg-card-dark)', flexShrink: 0 }}>
               M{masteryLevel}
             </span>
           )}
@@ -101,82 +69,64 @@ export function ActionCard({
 
         {/* ── Полоса мастерства ── */}
         {!isLocked && (
-          <div className="w-full">
-            <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: 'rgba(26,18,9,0.9)', border: '1px solid #2e2010' }}>
-              <div
-                className="h-full transition-all duration-300"
-                style={{
-                  width: `${Math.min(100, masteryProgress * 100)}%`,
-                  background: 'linear-gradient(90deg, #d97706, #f59e0b)',
-                  boxShadow: '0 0 6px rgba(245,158,11,0.4)',
-                }}
-              />
-            </div>
+          <div className="g-bar-track" style={{ height: 5 }}>
+            <div className="g-bar-mastery" style={{ height: '100%', width: `${Math.min(100, masteryProgress * 100)}%`, borderRadius: 9999, transition: 'width 0.3s' }} />
           </div>
         )}
 
         {/* ── Иконка добычи ── */}
         {outputItem && visual && (
-          <div className="flex items-center gap-2.5 p-2 rounded-xl" style={{ background: 'rgba(26,18,9,0.7)', border: '1px solid #2e2010' }}>
-            {/* Ячейка иконки — 44×44 px, чёткий центр */}
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 p-1.5"
-              style={{ background: '#1a1108', border: '1px solid #3d2e1e', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', background: 'var(--bg-card-dark)', border: '1px solid var(--border-light)', borderRadius: 10 }}>
+            {/* Ячейка иконки 44×44 */}
+            <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--bg-slot)', border: '1px solid var(--border-slot)', boxShadow: 'var(--shadow-slot)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: '10%' }}>
               {visual.type === 'image' ? (
-                <img src={visual.value} alt={outputItem.name}
-                  className="w-full h-full object-contain drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
-                  loading="lazy" />
+                <img src={visual.value} alt={outputItem.name} loading="lazy"
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(45,31,15,0.2))' }} />
               ) : (
-                <span className="text-2xl leading-none">{visual.value}</span>
+                <span style={{ fontSize: '1.5rem', lineHeight: 1 }}>{visual.value}</span>
               )}
             </div>
-            <div className="min-w-0">
-              <div className="text-[10px] text-stone-500 font-mono uppercase font-bold">Добыча</div>
-              <div className="text-xs font-bold text-stone-100 truncate">{outputItem.name}</div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--app-font-mono)', textTransform: 'uppercase', fontWeight: 700 }}>Добыча</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{outputItem.name}</div>
             </div>
           </div>
         )}
 
         {/* ── Стат-строки ── */}
-        <div className="space-y-1 text-[11px] font-mono">
-          <div className="flex justify-between items-center">
-            <span className="text-stone-500 flex items-center gap-1">
-              <Zap className="w-3 h-3 text-amber-500" /> Опыт
-            </span>
-            <span className="text-amber-400 font-bold">{formatNumber(action.xp)} XP</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 11, fontFamily: 'var(--app-font-mono)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}><Zap size={11} color="var(--accent-gold)" /> Опыт</span>
+            <span style={{ fontWeight: 700, color: 'var(--text-gold)' }}>{formatNumber(action.xp)} XP</span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-stone-500 flex items-center gap-1">
-              <Clock className="w-3 h-3 text-stone-500" /> Время
-            </span>
-            <span className="text-stone-300 font-semibold">{(action.interval / 1000).toFixed(1)} с.</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={11} color="var(--text-muted)" /> Время</span>
+            <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{(action.interval / 1000).toFixed(1)} с.</span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-stone-500">Темп</span>
-            <span className="text-emerald-400 font-bold">{xpPerHour(action.xp, action.interval)}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: 'var(--text-muted)' }}>Темп</span>
+            <span style={{ fontWeight: 700, color: 'var(--accent-emerald)' }}>{xpPerHour(action.xp, action.interval)}</span>
           </div>
           {renderExtra && (
-            <div className="pt-1.5 mt-1 border-t font-sans" style={{ borderColor: '#2e2010' }}>
+            <div style={{ paddingTop: 6, marginTop: 2, borderTop: '1px solid var(--border-light)', fontFamily: 'var(--app-font-sans)' }}>
               {renderExtra}
             </div>
           )}
         </div>
 
-        {/* ── Кнопка действия ── */}
-        <div className="mt-auto pt-2 border-t" style={{ borderColor: '#2e2010' }}>
+        {/* ── Кнопка ── */}
+        <div style={{ marginTop: 'auto', paddingTop: 8, borderTop: '1px solid var(--border-light)' }}>
           {isLocked ? (
-            <div className="w-full py-1.5 text-center text-[11px] font-bold text-stone-600 rounded-xl"
-              style={{ background: 'rgba(26,18,9,0.6)', border: '1px solid #2e2010' }}>
+            <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--bg-card-dark)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '6px 0' }}>
               🔒 Ур. {action.levelRequired}
             </div>
           ) : isActive ? (
-            <div className="w-full py-1.5 text-center text-[11px] font-bold text-emerald-200 rounded-xl flex items-center justify-center gap-1.5"
-              style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.4)' }}>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
+            <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: 'var(--accent-emerald)', background: 'var(--accent-emerald-bg)', border: '1px solid var(--accent-emerald)', borderRadius: 8, padding: '6px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent-emerald)', boxShadow: '0 0 6px var(--accent-emerald)', display: 'inline-block' }} />
               В процессе…
             </div>
           ) : (
-            <div className="w-full py-2 text-center text-[11px] font-bold rounded-xl transition-all cursor-pointer"
-              style={{ background: 'linear-gradient(135deg,#92400e,#b45309)', border: '1px solid #c2690a', color: '#fef3c7', boxShadow: '0 2px 8px rgba(180,83,9,0.3)' }}>
+            <div className="g-btn-primary" style={{ textAlign: 'center', fontSize: 11, padding: '7px 0', borderRadius: 8 }}>
               Начать →
             </div>
           )}
