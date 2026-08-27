@@ -187,7 +187,7 @@ function SkillPopup({
 
 /* ── Основная карточка ─────────────────────────────────────── */
 export const SkillCard = memo(function SkillCard({
-  skillId, href, diameter = 80,
+  skillId, href, diameter = 72,
 }: SkillCardProps) {
   const state       = usePlayerStore(s => s.skills[skillId as SkillId]) || { level: 1, xp: 0 };
   const activeSkill = useGameStore(s => s.activeSkill);
