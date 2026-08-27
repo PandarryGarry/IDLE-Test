@@ -144,7 +144,7 @@ export const SkillCard = memo(function SkillCard({ skillId, href, diameter=72 }:
 
   // Цвета
   const ring   = isActive ? '#f0c030' : '#c8880a';
-  const track  = '#5a3010';
+  const track  = '#8b5828';
   const cardBg = isActive
     ? 'radial-gradient(circle at 50% 40%,rgba(200,136,10,0.2),transparent 72%)'
     : 'none';
@@ -220,7 +220,7 @@ export const SkillCard = memo(function SkillCard({ skillId, href, diameter=72 }:
           {/* Badge уровня — в разрыве кольца снизу */}
           <div style={{
             position:'absolute',
-            bottom: -Math.round(badgeH * 0.35),
+            bottom: -Math.round(badgeH * 0.28),
             left:'50%', transform:'translateX(-50%)',
             minWidth: Math.round(D*0.42), height: badgeH,
             borderRadius:9999, zIndex:4,
