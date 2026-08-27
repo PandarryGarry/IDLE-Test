@@ -194,7 +194,7 @@ export function CombatPage() {
             <div
               ref={combatLogRef}
               onScroll={handleLogScroll}
-              className="relative flex-1 min-h-0 overflow-y-auto space-y-1 font-mono text-xs p-3 bg-stone-950/90 rounded-2xl border border-stone-800/80 shadow-inner scrollbar-thin"
+              className="relative flex-1 min-h-0 overflow-y-auto space-y-1 font-mono text-xs p-3 bg-[var(--bg-card-dark)] rounded-xl border border-[var(--border-light)] shadow-inner scrollbar-thin"
             >
               {combatLog.length === 0 && (
                 <div className="text-center py-10 text-slate-500 text-xs">
@@ -218,7 +218,7 @@ export function CombatPage() {
               <button
                 type="button"
                 onClick={() => scrollLogToBottom()}
-                className="self-center -mt-8 mb-2 z-10 rounded-full border border-red-500/40 bg-stone-900/90 px-3 py-1 text-[11px] font-bold text-red-300 shadow-xl backdrop-blur-md transition-all hover:bg-red-500/20 active:scale-95"
+                className="self-center -mt-8 mb-2 z-10 rounded-full border border-red-500/40 bg-[var(--bg-card)] px-3 py-1 text-[11px] font-bold text-red-300 shadow-xl backdrop-blur-md transition-all hover:bg-red-500/20 active:scale-95"
               >
                 {t('combat.latest')}
               </button>
@@ -421,7 +421,7 @@ const CombatScreen = memo(function CombatScreen() {
                   type="checkbox"
                   checked={autoEat}
                   onChange={(e) => setAutoEat(e.target.checked)}
-                  className="rounded-lg bg-stone-900 border-stone-700 text-amber-500 focus:ring-amber-500 h-4 w-4 accent-amber-500 cursor-pointer"
+                  className="rounded-lg bg-[var(--bg-slot)] border-[var(--border-default)] text-amber-500 focus:ring-amber-500 h-4 w-4 accent-amber-500 cursor-pointer"
                 />
                 {t('combat.autoEat')}
               </label>
@@ -430,7 +430,7 @@ const CombatScreen = memo(function CombatScreen() {
                   type="checkbox"
                   checked={autoLoot}
                   onChange={(e) => setAutoLoot(e.target.checked)}
-                  className="rounded-lg bg-stone-900 border-stone-700 text-amber-500 focus:ring-amber-500 h-4 w-4 accent-amber-500 cursor-pointer"
+                  className="rounded-lg bg-[var(--bg-slot)] border-[var(--border-default)] text-amber-500 focus:ring-amber-500 h-4 w-4 accent-amber-500 cursor-pointer"
                 />
                 {t('combat.autoLoot')}
               </label>
@@ -468,7 +468,7 @@ const FoodPanel = memo(function FoodPanel() {
           <button
             key={slot.itemId}
             onClick={() => eatFood(slot.itemId)}
-            className="flex items-center gap-2 shrink-0 bg-stone-950/80 border border-stone-800 hover:border-emerald-500 p-2 rounded-2xl transition-all active:scale-95 shadow-sm"
+            className="flex items-center gap-2 shrink-0 bg-[var(--bg-card-dark)] border border-[var(--border-default)] hover:border-emerald-500 p-2 rounded-2xl transition-all active:scale-95 shadow-sm"
           >
             <ItemIcon itemId={slot.itemId} size="sm" quantity={slot.quantity} showTooltip={false} />
             <div className="text-left">
