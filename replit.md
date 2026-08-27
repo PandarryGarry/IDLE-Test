@@ -34,7 +34,10 @@ _Describe the high-level user-facing capabilities of this app once they exist._
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- **Git Workflow**: NEVER use `git push --force`. Always maintain clean linear fast-forward commit history on `main` so the user can update in Replit by simply clicking the "Pull" button in the Git UI without opening the shell.
+- **Language**: Russian is the primary default language across all interfaces, descriptions, and notifications.
+- **Theme & Style**: Modern Melvor-style living fantasy UI (Slate Navy `#172030` / `#1b2434`), tactile squircle slots, 3-tier WoW currency system (Gold, Silver, Copper), Game UI Kit modular components.
+- **No Bank**: Bank entity is eliminated, inventory is the single unified bag with wallet and slot expansion.
 
 ## Gotchas
 
