@@ -58,12 +58,16 @@ function Stat({ label, value }: { label: string; value: React.ReactNode }) {
         whiteSpace:'nowrap',
       }}>{label}</span>
       <div style={{
-        fontFamily:'var(--app-font-mono)', fontSize:16, fontWeight:900,
-        color:'#f5d060', lineHeight:1, height:22,
-        textShadow:'0 1px 4px rgba(0,0,0,0.5)',
-        display:'flex', alignItems:'center', justifyContent:'center',
+        height:24, display:'flex', alignItems:'center', justifyContent:'center',
         overflow:'hidden',
-      }}>{value}</div>
+      }}>
+        <span style={{
+          fontFamily:'var(--app-font-mono)', fontSize:16, fontWeight:900,
+          color:'#f5d060', lineHeight:1,
+          textShadow:'0 1px 4px rgba(0,0,0,0.5)',
+          display:'flex', alignItems:'center',
+        }}>{value}</span>
+      </div>
     </div>
   );
 }
@@ -95,7 +99,7 @@ function SkillGrid({ ids }: { ids: readonly string[] }) {
       display:'flex',
       flexWrap:'wrap',
       gap:8,
-      justifyContent:'flex-start',
+      justifyContent:'center',
     }}>
       {ids.map(id => <SkillCard key={id} skillId={id} diameter={72} />)}
     </div>
@@ -240,7 +244,7 @@ export function DashboardPage() {
         {/* 3 метрики — одинаковый размер */}
         <div style={{ display:'flex', gap:6 }}>
           <Stat label="Боевой Lvl"  value={combatLevel} />
-          <Stat label="Кошелёк"     value={<span style={{ fontSize:14, fontWeight:900, color:"#f5d060" }}><CoinsDisplay amount={gp} size="xs" /></span>} />
+          <Stat label="Кошелёк"     value={<CoinsDisplay amount={gp} size="xs" />} />
           <Stat label="Сумка"       value={`${usedSlots}/${maxSlots}`} />
         </div>
       </div>
