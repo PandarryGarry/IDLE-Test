@@ -45,7 +45,7 @@ export function WoodcuttingPage() {
                     <span style={{ color: '#f5d060', fontWeight: 800 }} className=''>{activeTree.name}</span>
                   </h3>
                   <p className="text-[var(--text-secondary)] text-xs font-mono mt-0.5 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                    <Clock className="w-3.5 h-3.5 text-amber-400" />
                     <span>{(activeTree.interval / 1000).toFixed(1)} сек. за действие</span>
                   </p>
                 </div>
