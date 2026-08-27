@@ -53,7 +53,7 @@ function Tab({ label,active,onClick }: { label:string;active:boolean;onClick:()=
 
 function SkillGrid({ ids }: { ids:readonly string[] }) {
   return (
-    <div style={{ display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center' }}>
+    <div style={{ display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',paddingBottom:14 }}>
       {ids.map(id => <SkillCard key={id} skillId={id} diameter={72} />)}
     </div>
   );
@@ -262,7 +262,7 @@ export function DashboardPage() {
       )}
 
       {/* ══ 4. НАВЫКИ ══ */}
-      <div style={{ ...PANEL, paddingBottom: 22, overflow: 'visible' }}>
+      <div style={{ ...PANEL, paddingBottom: 6 }}>
         {/* Табы */}
         <div style={{ display:'flex',gap:6,marginBottom:14 }}>
           <Tab label="⚔ Бой"     active={tab==='combat'}    onClick={() => setTab('combat')} />
