@@ -74,30 +74,30 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
       left: 0,
       top: 0,
       zIndex: 50,
-      background: 'linear-gradient(180deg, #3d2910 0%, #2d1f0f 100%)',
-      borderRight: '1px solid var(--border-sidebar)',
-      boxShadow: '3px 0 16px rgba(45,31,15,0.35)',
+      background: 'linear-gradient(180deg, #2a1508 0%, #1e0e04 100%)',
+      borderRight: '2px solid #5a3010',
+      boxShadow: '4px 0 20px rgba(10,4,0,0.6)',
       overflow: 'hidden',
     }}>
 
       {/* ── Логотип ── */}
       <Link href="/" onClick={onCloseMobile}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 16px', borderBottom: '1px solid var(--border-sidebar)', cursor: 'pointer', transition: 'background 0.15s' }}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 16px', borderBottom: '2px solid #5a3010', cursor: 'pointer', transition: 'background 0.15s' }}
           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,134,10,0.08)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
           <div style={{
             width: 36, height: 36, borderRadius: 10,
-            background: 'linear-gradient(135deg, #c07010, #e09820)',
-            boxShadow: '0 0 14px rgba(212,134,10,0.5)',
+            background: 'linear-gradient(180deg, #c8880a, #9a6008)',
+            boxShadow: '0 2px 0 #3d2005, 0 0 12px rgba(200,136,10,0.4)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             <Sword size={18} color="#fff8ee" />
           </div>
           <div>
-            <div style={{ fontFamily: 'var(--app-font-display)', fontWeight: 900, fontSize: 15, color: '#fef3d0', letterSpacing: '0.08em' }}>
+            <div style={{ fontFamily: 'var(--app-font-display)', fontWeight: 900, fontSize: 15, color: '#f5d880', letterSpacing: '0.08em' }}>
               Aethelia<span style={{ color: '#f0a820', fontFamily: 'var(--app-font-sans)', fontWeight: 800, fontSize: 12, marginLeft: 2 }}>RPG</span>
             </div>
-            <div style={{ fontSize: 10, color: 'var(--text-sidebarMuted, #9a7850)', fontFamily: 'var(--app-font-mono)' }}>Idle Fantasy</div>
+            <div style={{ fontSize: 10, color: '#a07838', fontFamily: 'var(--app-font-mono)' }}>Idle Fantasy</div>
           </div>
         </div>
       </Link>
@@ -143,7 +143,7 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '8px 12px', marginTop: 4, borderRadius: 10,
-          background: 'rgba(192,40,30,0.1)', border: '1px solid rgba(192,40,30,0.25)',
+          background: 'rgba(100,20,10,0.4)', border: '1px solid rgba(192,40,30,0.4)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-sidebar)' }}>
             <Sword size={14} color="#e04040" />
