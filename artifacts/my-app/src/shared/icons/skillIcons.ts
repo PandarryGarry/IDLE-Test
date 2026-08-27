@@ -44,7 +44,7 @@ export const SKILL_SHORT_NAMES: Record<string, string> = {
   ranged: 'Стрельба',
   magic: 'Магия',
   prayer: 'Молитва',
-  slayer: 'Истребление',
+  slayer: 'Слэйер',
   woodcutting: 'Лесоруб',
   mining: 'Горное дело',
   fishing: 'Рыбалка',
