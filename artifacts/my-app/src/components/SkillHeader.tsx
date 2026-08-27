@@ -24,22 +24,21 @@ const SKILL_DESCRIPTION_KEYS: Partial<Record<SkillId, TranslationKey>> = {
   smithing:    'skill.smithingDesc',
 };
 
-/* Тепло-тёмные акценты под каждый навык */
-const SKILL_THEME: Record<string, { accent: string; iconBg: string; barGrad: string }> = {
-  woodcutting: { accent: 'text-emerald-400', iconBg: 'rgba(16,185,129,0.15)',  barGrad: 'from-emerald-600 via-emerald-400 to-teal-300' },
-  mining:      { accent: 'text-amber-400',   iconBg: 'rgba(245,158,11,0.15)',  barGrad: 'from-amber-600 via-amber-400 to-yellow-300' },
-  fishing:     { accent: 'text-cyan-400',    iconBg: 'rgba(6,182,212,0.15)',   barGrad: 'from-cyan-600 via-cyan-400 to-sky-300' },
-  firemaking:  { accent: 'text-orange-400',  iconBg: 'rgba(249,115,22,0.15)', barGrad: 'from-orange-600 via-orange-400 to-amber-300' },
-  cooking:     { accent: 'text-yellow-400',  iconBg: 'rgba(234,179,8,0.15)',  barGrad: 'from-yellow-600 via-yellow-400 to-amber-200' },
-  smithing:    { accent: 'text-stone-300',   iconBg: 'rgba(120,113,108,0.2)', barGrad: 'from-stone-500 via-stone-300 to-stone-200' },
+const SKILL_THEME: Record<string, { barFrom: string; barTo: string; accent: string }> = {
+  woodcutting: { barFrom: '#2e7d32', barTo: '#4caf50', accent: '#4ade80' },
+  mining:      { barFrom: '#b45309', barTo: '#f59e0b', accent: '#fbbf24' },
+  fishing:     { barFrom: '#0e7490', barTo: '#22d3ee', accent: '#67e8f9' },
+  firemaking:  { barFrom: '#c2410c', barTo: '#f97316', accent: '#fb923c' },
+  cooking:     { barFrom: '#a16207', barTo: '#eab308', accent: '#fde047' },
+  smithing:    { barFrom: '#475569', barTo: '#94a3b8', accent: '#cbd5e1' },
 };
 
 export function SkillHeader({ skillId, skillName, skillIcon }: SkillHeaderProps) {
   const { t } = useTranslation();
-  const xp                = usePlayerStore(s => s.skills[skillId]?.xp ?? 0);
-  const level             = usePlayerStore(s => s.skills[skillId]?.level ?? 1);
-  const xpGainedSession   = useGameStore(s => s.xpGainedThisSession[skillId] ?? 0);
-  const sessionStartTime  = useGameStore(s => s.sessionStartTime);
+  const xp               = usePlayerStore(s => s.skills[skillId]?.xp ?? 0);
+  const level            = usePlayerStore(s => s.skills[skillId]?.level ?? 1);
+  const xpGainedSession  = useGameStore(s => s.xpGainedThisSession[skillId] ?? 0);
+  const sessionStartTime = useGameStore(s => s.sessionStartTime);
 
   const currentLevelXp     = getXpForLevel(level);
   const nextLevelXp        = getXpForLevel(level + 1);
@@ -55,38 +54,55 @@ export function SkillHeader({ skillId, skillName, skillIcon }: SkillHeaderProps)
   const skillVisual = getSkillVisual(skillId);
 
   return (
-    <div className="rounded-2xl overflow-hidden"
-      style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', boxShadow: 'var(--shadow-card)' }}>
+    <div style={{
+      background: 'linear-gradient(160deg, #7a5028 0%, #5a3818 100%)',
+      border: '2px solid #3d1e08',
+      borderRadius: 14,
+      boxShadow: '0 4px 0 #2a1005, 0 6px 20px rgba(10,4,0,0.5), inset 0 1px 0 rgba(220,170,80,0.2)',
+      overflow: 'hidden',
+    }}>
+      <div style={{ padding: '16px 20px' }}>
 
-      <div className="p-4 sm:p-5">
-        {/* ── Верхняя строка: иконка + инфо + уровень ── */}
-        <div className="flex items-center gap-3.5 mb-4">
+        {/* ── Верхняя строка ── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
 
           {/* Иконка навыка */}
-          <div className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
-            style={{ background: theme.iconBg, border: '1px solid rgba(255,220,130,0.12)', boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.4)' }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: 12, flexShrink: 0,
+            background: 'linear-gradient(160deg, #4a2810, #2e1608)',
+            border: '2px solid #8b5020',
+            boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.5), 0 2px 0 #1a0804',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+          }}>
             {skillVisual.type === 'image' ? (
-              <img src={skillVisual.value} alt={skillName} className="w-full h-full object-contain p-1.5" />
+              <img src={skillVisual.value} alt={skillName}
+                style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
             ) : (
-              <span className="text-3xl">{skillVisual.value}</span>
+              <span style={{ fontSize: 28 }}>{skillVisual.value}</span>
             )}
           </div>
 
-          {/* Название + XP */}
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-display font-black tracking-wide text-[var(--text-primary)] truncate">
-              {skillName}
-            </h1>
+          {/* Название + описание + XP */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 style={{
+              fontFamily: 'var(--app-font-display)', fontWeight: 900, fontSize: 22,
+              color: '#fff8d0', textShadow: '0 2px 4px rgba(0,0,0,0.6)',
+              letterSpacing: '0.04em', lineHeight: 1.1,
+            }}>{skillName}</h1>
+
             {descriptionKey && (
-              <p className="text-xs line-clamp-1 mt-0.5" style={{ color: "#d4a840", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>{t(descriptionKey)}</p>
+              <p style={{ fontSize: 12, color: '#c8a050', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {t(descriptionKey)}
+              </p>
             )}
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1.5 text-xs font-mono">
-              <span className="text-[var(--text-muted)]">
-                XP: <b className="text-amber-400 font-bold">{formatNumber(Math.floor(xp))}</b>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 6 }}>
+              <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 12, color: '#d4a840' }}>
+                XP: <b style={{ color: '#f5d060' }}>{formatNumber(Math.floor(xp))}</b>
               </span>
               {xpPerHour > 0 && (
-                <span className={`flex items-center gap-1 font-bold ${theme.accent}`}>
-                  <TrendingUp className="w-3 h-3" />
+                <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 12, color: theme.accent, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <TrendingUp size={12} />
                   +{formatNumber(Math.floor(xpPerHour))}/ч
                 </span>
               )}
@@ -94,32 +110,49 @@ export function SkillHeader({ skillId, skillName, skillIcon }: SkillHeaderProps)
           </div>
 
           {/* Большой уровень */}
-          <div className="shrink-0 text-center px-3.5 py-2 rounded-xl"
-            style={{ background: 'var(--bg-card-dark)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-slot)' }}>
-            <div className={`text-3xl font-mono font-black leading-none ${theme.accent}`}>{level}</div>
-            <div className="text-[9px] uppercase tracking-widest font-mono mt-0.5" style={{ color: "#a07030" }}>Уровень</div>
+          <div style={{
+            flexShrink: 0, textAlign: 'center', padding: '8px 16px',
+            background: 'linear-gradient(180deg, #4a2810, #2e1608)',
+            border: '2px solid #8b5020',
+            borderRadius: 12,
+            boxShadow: '0 3px 0 #1a0804, inset 0 1px 0 rgba(220,170,80,0.15)',
+          }}>
+            <div style={{ fontFamily: 'var(--app-font-mono)', fontSize: 36, fontWeight: 900, color: '#f5d060', lineHeight: 1, textShadow: '0 2px 4px rgba(0,0,0,0.6)' }}>
+              {level}
+            </div>
+            <div style={{ fontSize: 9, color: '#a07030', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--app-font-mono)', marginTop: 2 }}>
+              Уровень
+            </div>
           </div>
         </div>
 
-        {/* ── Полоса прогресса XP ── */}
-        <div className="space-y-1">
-          <div className="flex justify-between text-[10px] font-mono" style={{ color: "#c8a040" }}>
-            <span>{level >= 99 ? 'Максимальный уровень' : `→ Ур. ${level + 1}`}</span>
-            <span style={{ color: "#d4a840", fontWeight: 700 }}>
+        {/* ── XP Прогресс-бар ── */}
+        <div style={{ marginTop: 4 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+            <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 10, color: '#c8a050' }}>
+              {level >= 99 ? 'Максимальный уровень' : `→ Ур. ${level + 1}`}
+            </span>
+            <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 10, color: '#d4a840', fontWeight: 700 }}>
               {level >= 99 ? '100%' : `${formatNumber(Math.floor(xpIntoLevel))} / ${formatNumber(Math.floor(xpRequiredForLevel))} XP`}
             </span>
           </div>
-          <div className="h-2.5 w-full rounded-full overflow-hidden"
-            style={{ background: '#1a0a04', border: '2px solid #5a3010', borderRadius: 9999, overflow: 'hidden', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6)' }}>
-            <div
-              className={`h-full rounded-full bg-gradient-to-r ${theme.barGrad} transition-all duration-300`}
-              style={{
-                width: `${Math.min(100, Math.max(0, progress * 100))}%`,
-                boxShadow: '0 0 8px rgba(245,158,11,0.35)',
-              }}
-            />
+          {/* Трек */}
+          <div style={{
+            height: 12, background: '#1a0a04', border: '2px solid #5a3010',
+            borderRadius: 9999, overflow: 'hidden',
+            boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.7)',
+          }}>
+            <div style={{
+              height: '100%',
+              width: `${Math.min(100, Math.max(0, progress * 100))}%`,
+              background: `linear-gradient(90deg, ${theme.barFrom}, ${theme.barTo})`,
+              borderRadius: 9999,
+              boxShadow: `0 0 8px ${theme.barTo}80`,
+              transition: 'width 0.3s ease',
+            }} />
           </div>
         </div>
+
       </div>
     </div>
   );
