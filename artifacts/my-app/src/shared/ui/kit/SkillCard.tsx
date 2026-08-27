@@ -138,8 +138,8 @@ export const SkillCard = memo(function SkillCard({
             <circle
               cx={C} cy={C} r={R}
               fill="none"
-              stroke="#5a3018"
-              strokeWidth={SW}
+              stroke="#7a4828"
+              strokeWidth={SW + 1}
             />
             {/* Заполнение */}
             <circle
