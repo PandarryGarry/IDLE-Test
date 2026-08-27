@@ -47,10 +47,10 @@ export function FishingPage() {
                 <div>
                   <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
                     <span>{t('fishing.fishing')}</span>
-                    <span className="text-cyan-300 font-extrabold">{activeSpot.name}</span>
+                    <span className="text-amber-300 font-extrabold">{activeSpot.name}</span>
                   </h3>
                   <p className="text-[var(--text-secondary)] text-xs font-mono mt-0.5 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 style={{ color: "#f0c030" }} className="" />
+                    <Clock className="w-3.5 h-3.5" style={{ color: "#f0c030" }} />
                     <span>{(activeSpot.interval / 1000).toFixed(1)} сек. за действие</span>
                   </p>
                 </div>
