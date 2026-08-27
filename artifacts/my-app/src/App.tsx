@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Route, Switch, Router as WouterRouter } from 'wouter';
+import { Route, Switch, Router as WouterRouter, Redirect } from 'wouter';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { ErrorBoundary } from '@/components/error-boundary';
 
 import { tickManager } from '@/gameEngine/tickManager';
 import { initGame } from '@/lib/saveManager';
@@ -10,6 +11,7 @@ import { TopNavBar } from '@/components/TopNavBar';
 import { MobileNav } from '@/components/MobileNav';
 import { GlobalActiveBar } from '@/components/GlobalActiveBar';
 import { NotificationToast } from '@/components/NotificationToast';
+import { SplashScreen } from '@/components/SplashScreen';
 
 import { DashboardPage } from '@/pages/DashboardPage';
 import { WoodcuttingPage } from '@/pages/WoodcuttingPage';
@@ -20,7 +22,6 @@ import { SmithingPage } from '@/pages/SmithingPage';
 import { FiremakingPage } from '@/pages/FiremakingPage';
 import { CombatPage } from '@/pages/CombatPage';
 import { InventoryPage } from '@/pages/InventoryPage';
-import { BankPage } from '@/pages/BankPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 
 function NotFound() {
@@ -29,7 +30,7 @@ function NotFound() {
       <div className="fantasy-card p-8 rounded-3xl text-center space-y-3 max-w-md mx-auto">
         <div className="text-6xl">🧭</div>
         <h1 className="text-4xl font-display font-black text-amber-400">404</h1>
-        <p className="text-slate-400 font-mono text-sm">Unknown Realm or Lost Territory</p>
+        <p className="text-slate-400 font-mono text-sm">Локация не найдена</p>
       </div>
     </div>
   );
@@ -82,7 +83,9 @@ function Router() {
             <Route path="/firemaking" component={FiremakingPage} />
             <Route path="/combat" component={CombatPage} />
             <Route path="/inventory" component={InventoryPage} />
-            <Route path="/bank" component={BankPage} />
+            <Route path="/bank">
+              <Redirect to="/inventory" />
+            </Route>
             <Route path="/settings" component={SettingsPage} />
             <Route component={NotFound} />
           </Switch>
@@ -99,21 +102,40 @@ function Router() {
 }
 
 function App() {
+  const [isReady, setIsReady] = useState(false);
+
   useEffect(() => {
-    initGame();
-    tickManager.start();
-    document.documentElement.classList.add('dark');
+    try {
+      initGame();
+      tickManager.start();
+      document.documentElement.classList.add('dark');
+    } catch (e) {
+      console.error('Failed to init game:', e);
+    }
     return () => {
-      tickManager.stop();
+      try {
+        tickManager.stop();
+      } catch (e) {
+        // ignore
+      }
     };
   }, []);
 
+  const basePath = import.meta.env.BASE_URL?.replace(/\/$/, '') || undefined;
+
   return (
-    <TooltipProvider delayDuration={200}>
-      <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-        <Router />
-      </WouterRouter>
-    </TooltipProvider>
+    <ErrorBoundary>
+      <TooltipProvider delayDuration={200}>
+        <SplashScreen onLoaded={() => setIsReady(true)} minDisplayTimeMs={500} />
+        {basePath ? (
+          <WouterRouter base={basePath}>
+            <Router />
+          </WouterRouter>
+        ) : (
+          <Router />
+        )}
+      </TooltipProvider>
+    </ErrorBoundary>
   );
 }
 

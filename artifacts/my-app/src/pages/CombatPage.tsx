@@ -4,7 +4,7 @@ import { usePlayerStore } from '@/store/playerStore';
 import { useShallow } from 'zustand/react/shallow';
 import { COMBAT_AREAS, MONSTERS_MAP } from '@/data/monsters';
 import { ItemIcon } from '@/components/ItemIcon';
-import { useBankStore } from '@/store/bankStore';
+import { useInventoryStore } from '@/store/inventoryStore';
 import { getItem } from '@/data/items';
 import { EquipSlot } from '@/data/types';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -85,12 +85,12 @@ export function CombatPage() {
         <div className="w-full lg:w-80 xl:w-96 space-y-4 shrink-0">
 
           {/* Combat Areas Selection */}
-          <div className="fantasy-card border-red-500/30 p-4 rounded-3xl shadow-lg">
+          <div className="bg-[#1f2b3e] border border-[#344562] p-4 rounded-3xl shadow-xl">
             <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-red-400 mb-3 flex items-center gap-1.5">
               <Skull className="w-3.5 h-3.5" /> {t('combat.areas')}
             </h2>
             
-            <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin">
+            <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-700">
               {COMBAT_AREAS.map(area => {
                 const isLocked = combatLevel < (area.combatLevelRequired ?? 1);
                 const isActive = activeAreaId === area.id;
@@ -102,32 +102,32 @@ export function CombatPage() {
                     disabled={isLocked}
                     className={`w-full p-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
                       isLocked
-                        ? 'opacity-40 grayscale cursor-not-allowed bg-slate-950/60 border-slate-800'
+                        ? 'opacity-40 grayscale cursor-not-allowed bg-[#182130] border-[#2a374c]'
                         : isActive
-                          ? 'bg-red-500/15 border-red-500/60 shadow-[0_0_15px_rgba(239,68,68,0.2)] ring-1 ring-red-500/40 cursor-pointer'
-                          : 'bg-slate-950/70 hover:border-red-500/40 cursor-pointer border-slate-800/80 hover:bg-slate-900/60'
+                          ? 'bg-red-500/20 border-red-500/70 shadow-[0_0_18px_rgba(239,68,68,0.25)] ring-1 ring-red-500/40 cursor-pointer'
+                          : 'bg-[#182232] hover:border-red-500/40 cursor-pointer border-[#2e3e56] hover:bg-[#1e2a3c]'
                     }`}
                   >
                     <div className="flex justify-between items-center mb-1">
-                      <h3 className={`font-bold text-xs sm:text-sm ${isActive ? 'text-red-300' : 'text-slate-100'}`}>
+                      <h3 className={`font-bold text-xs sm:text-sm ${isActive ? 'text-red-300 font-extrabold' : 'text-slate-100'}`}>
                         {area.name}
                       </h3>
                       {isLocked ? (
-                        <span className="text-[10px] font-mono font-bold text-red-400 bg-red-950/60 border border-red-500/30 px-1.5 py-0.5 rounded-md">
-                          Lvl {area.combatLevelRequired}
+                        <span className="text-[10px] font-mono font-bold text-red-300 bg-red-950/80 border border-red-500/40 px-1.5 py-0.5 rounded-md">
+                          Ур. {area.combatLevelRequired}
                         </span>
                       ) : (
                         <span className="text-[10px] font-mono text-slate-400">
-                          {area.monsterIds.length} monsters
+                          {area.monsterIds.length} монстров
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-slate-400 leading-tight mb-2">{area.description}</p>
+                    <p className="text-[11px] text-slate-300 leading-tight mb-2">{area.description}</p>
                     
                     {/* Monster Rosters */}
                     <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-none">
                       {area.monsterIds.map(mId => (
-                        <span key={mId} className="shrink-0 bg-slate-900/90 px-1.5 py-0.5 rounded-md text-[10px] font-mono border border-slate-800 text-slate-300">
+                        <span key={mId} className="shrink-0 bg-[#141b28] px-1.5 py-0.5 rounded-md text-[10px] font-mono border border-[#2a374c] text-slate-200 font-medium">
                           {MONSTERS_MAP[mId]?.name} ({MONSTERS_MAP[mId]?.combatLevel})
                         </span>
                       ))}
@@ -139,24 +139,24 @@ export function CombatPage() {
           </div>
 
           {/* Equipment Paperdoll (Кукла экипировки) */}
-          <div className="fantasy-card border-slate-800 p-4 rounded-3xl shadow-lg">
-            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-slate-300 mb-3 flex items-center gap-1.5">
+          <div className="bg-[#1f2b3e] border border-[#344562] p-4 rounded-3xl shadow-xl">
+            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-slate-200 mb-3 flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5 text-amber-400" /> {t('combat.equipment')}
             </h2>
             
-            <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-3">
+            <div className="bg-[#182232] border border-[#2e3e56] rounded-2xl p-3 shadow-inner">
               <div className="grid grid-cols-3 gap-2 justify-items-center">
-                <div className="col-span-3 w-full flex justify-center"><EquipSlotBox slot="helm" label="Helm" /></div>
-                <EquipSlotBox slot="cape" label="Cape" />
-                <EquipSlotBox slot="amulet" label="Neck" />
-                <EquipSlotBox slot="quiver" label="Ammo" />
-                <EquipSlotBox slot="weapon" label="Weapon" />
-                <EquipSlotBox slot="platebody" label="Body" />
-                <EquipSlotBox slot="shield" label="Shield" />
-                <div className="col-span-3 w-full flex justify-center"><EquipSlotBox slot="platelegs" label="Legs" /></div>
-                <EquipSlotBox slot="gloves" label="Hands" />
-                <EquipSlotBox slot="boots" label="Feet" />
-                <EquipSlotBox slot="ring" label="Ring" />
+                <div className="col-span-3 w-full flex justify-center"><EquipSlotBox slot="helm" label="Шлем" /></div>
+                <EquipSlotBox slot="cape" label="Плащ" />
+                <EquipSlotBox slot="amulet" label="Шея" />
+                <EquipSlotBox slot="quiver" label="Колчан" />
+                <EquipSlotBox slot="weapon" label="Оружие" />
+                <EquipSlotBox slot="platebody" label="Доспех" />
+                <EquipSlotBox slot="shield" label="Щит" />
+                <div className="col-span-3 w-full flex justify-center"><EquipSlotBox slot="platelegs" label="Поножи" /></div>
+                <EquipSlotBox slot="gloves" label="Перчатки" />
+                <EquipSlotBox slot="boots" label="Сапоги" />
+                <EquipSlotBox slot="ring" label="Кольцо" />
               </div>
             </div>
           </div>
@@ -268,23 +268,23 @@ const CombatScreen = memo(function CombatScreen() {
   const enemyAttackProgress = Math.max(0, Math.min(100, (1 - enemyAttackTimer / enemyAttackInterval) * 100));
 
   return (
-    <div className="fantasy-card border-red-500/30 rounded-3xl p-4 sm:p-6 shadow-2xl min-h-[320px] flex flex-col relative overflow-hidden">
+    <div className="bg-[#1f2b3e] border border-red-500/40 rounded-3xl p-4 sm:p-6 shadow-2xl min-h-[320px] flex flex-col relative overflow-hidden">
       
       {!inCombat ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 p-6 text-center">
-          <div className="w-16 h-16 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-center text-4xl mb-3 opacity-60">
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 p-6 text-center">
+          <div className="w-16 h-16 rounded-3xl bg-[#182232] border border-[#2e3e56] flex items-center justify-center text-4xl mb-3 opacity-70">
             ⚔️
           </div>
-          <h2 className="text-lg sm:text-xl font-display font-black text-slate-200">{t('combat.selectArea')}</h2>
+          <h2 className="text-lg sm:text-xl font-display font-black text-slate-100">{t('combat.selectArea')}</h2>
           <p className="text-xs text-slate-400 mt-1 max-w-sm">
-            Choose a combat dungeon or wilderness area from the left to engage in battle.
+            Выберите боевую локацию или подземелье слева, чтобы начать сражение.
           </p>
         </div>
       ) : (
         <div className="h-full flex flex-col z-10">
           
           {/* Arena Header */}
-          <div className="flex justify-between items-center mb-6 pb-3 border-b border-slate-800">
+          <div className="flex justify-between items-center mb-6 pb-3 border-b border-[#2d3d56]">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
               <h2 className="text-base sm:text-lg font-display font-black text-slate-100 flex items-center gap-1.5">
@@ -294,7 +294,7 @@ const CombatScreen = memo(function CombatScreen() {
 
             <button
               onClick={stopCombat}
-              className="px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white border border-red-500/40 font-bold rounded-xl text-xs transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
+              className="px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-200 hover:text-white border border-red-500/50 font-bold rounded-2xl text-xs transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
             >
               <Square className="w-3.5 h-3.5 fill-current" />
               <span>{t('combat.stop')}</span>
@@ -305,15 +305,15 @@ const CombatScreen = memo(function CombatScreen() {
           <div className="flex flex-col md:flex-row gap-6 items-center justify-between flex-grow py-2">
             
             {/* Player Side */}
-            <div className="flex-1 w-full text-center space-y-2.5 bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
-              <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-                <span className="font-bold text-slate-200">{t('combat.you')}</span>
-                <span className="bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-md font-bold text-amber-300">
-                  Lvl {combatLevel}
+            <div className="flex-1 w-full text-center space-y-2.5 bg-[#172130] p-4 rounded-2xl border border-[#2d3d56]">
+              <div className="flex items-center justify-between text-xs font-mono text-slate-300">
+                <span className="font-bold text-slate-100">{t('combat.you')}</span>
+                <span className="bg-[#1e2a3c] border border-[#334460] px-2 py-0.5 rounded-md font-bold text-amber-300">
+                  Ур. {combatLevel}
                 </span>
               </div>
 
-              <div className="text-5xl py-1 filter drop-shadow-[0_0_12px_rgba(16,185,129,0.3)]">
+              <div className="text-5xl py-1 filter drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]">
                 🛡️
               </div>
 
@@ -321,13 +321,13 @@ const CombatScreen = memo(function CombatScreen() {
               <div className="space-y-1">
                 <div className="flex justify-between text-xs font-mono">
                   <span className="text-emerald-400 font-bold flex items-center gap-1">
-                    <Heart className="w-3 h-3 fill-current" /> HP
+                    <Heart className="w-3 h-3 fill-current" /> ОЗ
                   </span>
-                  <span className="text-slate-200 font-bold">{playerHp} / {playerMaxHp}</span>
+                  <span className="text-slate-100 font-bold">{playerHp} / {playerMaxHp}</span>
                 </div>
-                <div className="h-4 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                <div className="h-4 w-full bg-[#121924] rounded-full overflow-hidden border border-[#2d3d56] p-0.5 shadow-inner">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.5)] transition-all duration-300"
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_12px_rgba(16,185,129,0.6)] transition-all duration-300"
                     style={{ width: `${playerHpPct}%` }}
                   />
                 </div>
@@ -336,10 +336,10 @@ const CombatScreen = memo(function CombatScreen() {
               {/* Attack Timer Bar */}
               <div className="space-y-0.5">
                 <div className="flex justify-between text-[10px] font-mono text-slate-400">
-                  <span>Attack Speed</span>
-                  <span>{(playerAttackTimer / 1000).toFixed(1)}s</span>
+                  <span>Скорость атаки</span>
+                  <span>{(playerAttackTimer / 1000).toFixed(1)} сек.</span>
                 </div>
-                <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                <div className="h-1.5 w-full bg-[#121924] rounded-full overflow-hidden border border-[#2d3d56]">
                   <div
                     className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-100"
                     style={{ width: `${playerAttackProgress}%` }}
@@ -350,22 +350,22 @@ const CombatScreen = memo(function CombatScreen() {
 
             {/* Clash Swords Icon in Center */}
             <div className="flex flex-col items-center justify-center shrink-0">
-              <div className="w-12 h-12 rounded-2xl bg-red-500/15 border border-red-500/40 flex items-center justify-center text-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse">
+              <div className="w-12 h-12 rounded-2xl bg-red-500/20 border border-red-500/50 flex items-center justify-center text-2xl shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse">
                 ⚔️
               </div>
               <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-widest mt-1">VS</span>
             </div>
 
             {/* Enemy Side */}
-            <div className="flex-1 w-full text-center space-y-2.5 bg-slate-950/60 p-4 rounded-2xl border border-red-500/30">
-              <div className="flex items-center justify-between text-xs font-mono text-slate-400">
+            <div className="flex-1 w-full text-center space-y-2.5 bg-[#172130] p-4 rounded-2xl border border-red-500/40">
+              <div className="flex items-center justify-between text-xs font-mono text-slate-300">
                 <span className="font-bold text-red-300 truncate">{currentMonster?.name}</span>
-                <span className="bg-red-950/60 border border-red-500/30 px-2 py-0.5 rounded-md font-bold text-red-400">
-                  Lvl {currentMonster?.combatLevel}
+                <span className="bg-red-950/80 border border-red-500/50 px-2 py-0.5 rounded-md font-bold text-red-400">
+                  Ур. {currentMonster?.combatLevel}
                 </span>
               </div>
 
-              <div className="text-5xl py-1 filter drop-shadow-[0_0_12px_rgba(239,68,68,0.3)]">
+              <div className="text-5xl py-1 filter drop-shadow-[0_0_12px_rgba(239,68,68,0.4)]">
                 {currentMonster?.isBoss ? '🐉' : '👹'}
               </div>
 
@@ -373,13 +373,13 @@ const CombatScreen = memo(function CombatScreen() {
               <div className="space-y-1">
                 <div className="flex justify-between text-xs font-mono">
                   <span className="text-red-400 font-bold flex items-center gap-1">
-                    <Heart className="w-3 h-3 fill-current" /> HP
+                    <Heart className="w-3 h-3 fill-current" /> ОЗ
                   </span>
-                  <span className="text-slate-200 font-bold">{enemyHp} / {enemyMaxHp}</span>
+                  <span className="text-slate-100 font-bold">{enemyHp} / {enemyMaxHp}</span>
                 </div>
-                <div className="h-4 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                <div className="h-4 w-full bg-[#121924] rounded-full overflow-hidden border border-[#2d3d56] p-0.5 shadow-inner">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-red-600 to-rose-400 shadow-[0_0_12px_rgba(239,68,68,0.5)] transition-all duration-300"
+                    className="h-full rounded-full bg-gradient-to-r from-red-600 to-rose-400 shadow-[0_0_12px_rgba(239,68,68,0.6)] transition-all duration-300"
                     style={{ width: `${enemyHpPct}%` }}
                   />
                 </div>
@@ -388,10 +388,10 @@ const CombatScreen = memo(function CombatScreen() {
               {/* Enemy Attack Timer Bar */}
               <div className="space-y-0.5">
                 <div className="flex justify-between text-[10px] font-mono text-slate-400">
-                  <span>Attack Speed</span>
-                  <span>{(enemyAttackTimer / 1000).toFixed(1)}s</span>
+                  <span>Скорость атаки</span>
+                  <span>{(enemyAttackTimer / 1000).toFixed(1)} сек.</span>
                 </div>
-                <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                <div className="h-1.5 w-full bg-[#121924] rounded-full overflow-hidden border border-[#2d3d56]">
                   <div
                     className="h-full bg-gradient-to-r from-orange-500 to-amber-400 transition-all duration-100"
                     style={{ width: `${enemyAttackProgress}%` }}
@@ -403,9 +403,9 @@ const CombatScreen = memo(function CombatScreen() {
           </div>
 
           {/* Combat Toggles & Kill Counter */}
-          <div className="mt-4 pt-3 border-t border-slate-800 flex flex-wrap gap-x-6 gap-y-2 justify-between items-center">
+          <div className="mt-4 pt-3 border-t border-[#2d3d56] flex flex-wrap gap-x-6 gap-y-2 justify-between items-center">
             <div className="flex gap-4">
-              <label className="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-xs font-bold text-slate-200 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={autoEat}
@@ -414,7 +414,7 @@ const CombatScreen = memo(function CombatScreen() {
                 />
                 {t('combat.autoEat')}
               </label>
-              <label className="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-xs font-bold text-slate-200 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={autoLoot}
@@ -425,7 +425,7 @@ const CombatScreen = memo(function CombatScreen() {
               </label>
             </div>
             
-            <div className="text-xs font-mono text-slate-400 flex items-center gap-1.5">
+            <div className="text-xs font-mono text-slate-300 flex items-center gap-1.5">
               <Skull className="w-3.5 h-3.5 text-red-400" />
               {t('combat.killCount')}: <span className="text-amber-300 font-bold">{formatNumber(killCount)}</span>
             </div>
@@ -441,7 +441,7 @@ const CombatScreen = memo(function CombatScreen() {
 const FoodPanel = memo(function FoodPanel() {
   const { t } = useTranslation();
   const eatFood = useCombatStore(s => s.eatFood);
-  const bankItems = useBankStore(s => s.items);
+  const bankItems = useInventoryStore(s => s.items);
 
   const foodItems = bankItems
     .map(s => ({ slot: s, item: getItem(s.itemId) }))
@@ -477,7 +477,7 @@ const FoodPanel = memo(function FoodPanel() {
 function EquipSlotBox({ slot, label }: { slot: EquipSlot; label: string }) {
   const itemId = usePlayerStore(s => s.equipment[slot]);
   const unequip = usePlayerStore(s => s.unequipItem);
-  const addItem = useBankStore(s => s.addItem);
+  const addItem = useInventoryStore(s => s.addItem);
 
   const handleUnequip = () => {
     if (itemId) {
@@ -490,18 +490,18 @@ function EquipSlotBox({ slot, label }: { slot: EquipSlot; label: string }) {
     <button
       type="button"
       onClick={handleUnequip}
-      className={`w-12 h-12 rounded-2xl border flex items-center justify-center relative transition-all active:scale-95 ${
+      className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border flex items-center justify-center relative transition-all active:scale-95 shadow-md ${
         itemId
-          ? 'bg-slate-900 border-amber-500/60 shadow-[0_0_10px_rgba(245,158,11,0.2)] hover:border-red-500'
-          : 'bg-slate-950/70 border-slate-800/80 hover:border-slate-700 opacity-60'
+          ? 'bg-[#202c40] border-amber-400/60 shadow-[0_0_12px_rgba(245,158,11,0.25)] hover:border-red-500'
+          : 'bg-[#141b28] border-[#2a374c] hover:border-[#3a4d6b]'
       }`}
-      title={itemId ? `Click to unequip ${slot}` : slot}
+      title={itemId ? `Кликните, чтобы снять ${label}` : label}
     >
       {itemId ? (
         <ItemIcon itemId={itemId} size="md" showTooltip={true} />
       ) : (
-        <span className="text-[10px] text-slate-500 font-mono font-bold uppercase leading-tight text-center">
-          {label.substring(0, 3)}
+        <span className="text-[10px] text-slate-400 font-mono font-bold uppercase leading-tight text-center">
+          {label.substring(0, 4)}
         </span>
       )}
     </button>

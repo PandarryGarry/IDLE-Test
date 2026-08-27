@@ -7,17 +7,13 @@ import {
   Home, 
   Sword, 
   Backpack, 
-  Coins, 
   Layers, 
   X,
-  Trees,
-  Pickaxe,
-  Fish,
-  Flame,
-  ChefHat,
-  Hammer
+  Settings
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { getSkillIcon } from '@/shared/icons/skillIcons';
+import type { SkillId } from '@/data/types';
 
 interface MobileNavProps {
   className?: string;
@@ -30,15 +26,14 @@ export function MobileNav({ className = '' }: MobileNavProps) {
 
   const activeSkill = useGameStore(s => s.activeSkill);
   const inCombat = useCombatStore(s => s.inCombat);
-  const isTrainingAny = activeSkill !== null || inCombat;
 
   const skillsList = [
-    { href: '/woodcutting', name: t('skill.woodcutting'), icon: '🪓', id: 'woodcutting', color: 'text-emerald-400' },
-    { href: '/mining',      name: t('skill.mining'),      icon: '⛏️', id: 'mining',      color: 'text-amber-400' },
-    { href: '/fishing',     name: t('skill.fishing'),     icon: '🎣', id: 'fishing',     color: 'text-cyan-400' },
-    { href: '/firemaking',  name: t('skill.firemaking'),  icon: '🔥', id: 'firemaking',  color: 'text-rose-400' },
-    { href: '/cooking',     name: t('skill.cooking'),     icon: '🍳', id: 'cooking',     color: 'text-yellow-400' },
-    { href: '/smithing',    name: t('skill.smithing'),    icon: '🔨', id: 'smithing',    color: 'text-orange-400' },
+    { href: '/woodcutting', name: t('skill.woodcutting'), icon: '🪓', id: 'woodcutting' },
+    { href: '/mining',      name: t('skill.mining'),      icon: '⛏️', id: 'mining' },
+    { href: '/fishing',     name: t('skill.fishing'),     icon: '🎣', id: 'fishing' },
+    { href: '/firemaking',  name: t('skill.firemaking'),  icon: '🔥', id: 'firemaking' },
+    { href: '/cooking',     name: t('skill.cooking'),     icon: '🍳', id: 'cooking' },
+    { href: '/smithing',    name: t('skill.smithing'),    icon: '🔨', id: 'smithing' },
   ];
 
   const isSkillsPage = skillsList.some(s => s.href === location);
@@ -85,7 +80,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
           
           {/* Home */}
           <Link href="/" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] transition-all ${
-            location === '/' ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200'
+            location === '/' ? 'text-amber-400 font-bold' : 'text-slate-400 hover:text-slate-200'
           }`}>
             <Home className="w-5 h-5 mb-0.5" />
             <span className="text-[10px] font-bold">{t('nav.home')}</span>
@@ -125,12 +120,12 @@ export function MobileNav({ className = '' }: MobileNavProps) {
             <span className="text-[10px] font-bold">{t('nav.inventory')}</span>
           </Link>
 
-          {/* Bank */}
-          <Link href="/bank" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] transition-all ${
-            location === '/bank' ? 'text-amber-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+          {/* Settings */}
+          <Link href="/settings" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] transition-all ${
+            location === '/settings' ? 'text-amber-400 font-bold' : 'text-slate-400 hover:text-slate-200'
           }`}>
-            <Coins className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] font-bold">{t('nav.bank')}</span>
+            <Settings className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] font-bold">{t('nav.settings')}</span>
           </Link>
 
         </div>
@@ -140,7 +135,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
 }
 
 function SkillNavButton({ skill, onClick, currentPath }: { skill: any; onClick: () => void; currentPath: string }) {
-  const level = usePlayerStore(s => s.skills[skill.id as any]?.level ?? 1);
+  const level = usePlayerStore(s => s.skills[skill.id as SkillId]?.level ?? 1);
   const activeSkill = useGameStore(s => s.activeSkill);
   const isTraining = activeSkill === skill.id;
   const isCurrent = currentPath === skill.href;
@@ -159,7 +154,7 @@ function SkillNavButton({ skill, onClick, currentPath }: { skill: any; onClick: 
         <span className="text-2xl">{skill.icon}</span>
         <div className="text-left">
           <div className="text-xs font-bold text-foreground">{skill.name}</div>
-          <div className="text-[10px] text-muted-foreground font-mono">Lvl {level}</div>
+          <div className="text-[10px] text-muted-foreground font-mono">Ур. {level}</div>
         </div>
       </div>
       {isTraining && (

@@ -175,7 +175,7 @@ export function ItemInfoPopover({
  */
 function getEquipmentComparison(
   item: ReturnType<typeof getItem>,
-  equipment: Record<string, string | null>,
+  equipment: any,
   getPlayerState: () => any
 ): [string, number][] | null {
   if (!item?.equipSlot || !item.combatStats) return null;

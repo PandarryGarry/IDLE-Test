@@ -1,6 +1,7 @@
 import React from 'react';
 import { getItem } from '@/data/items';
 import { formatNumber } from '@/lib/utils';
+import { getItemVisual } from '@/shared/icons/itemIcons';
 import {
   Tooltip,
   TooltipContent,
@@ -49,6 +50,7 @@ export function ItemIcon({ itemId, size = 'md', quantity, className = '', showTo
 
   const rarity = getItemRarity(item.id, item.sellValue, item.equipSlot);
   const rarityStyle = RARITY_STYLES[rarity];
+  const visual = getItemVisual(itemId);
 
   const sizeClasses = {
     xs: 'w-6 h-6 text-sm rounded-lg',
@@ -60,9 +62,15 @@ export function ItemIcon({ itemId, size = 'md', quantity, className = '', showTo
 
   const badgeSize = size === 'xs' || size === 'sm' ? 'text-[9px] px-1 -bottom-1 -right-1' : 'text-[10px] px-1.5 -bottom-1.5 -right-1.5';
 
+  const iconContent = visual.type === 'image' ? (
+    <img src={visual.value} alt={item.name} className="w-full h-full object-contain p-1" />
+  ) : (
+    <span className="drop-shadow-sm transition-transform hover:scale-110">{visual.value}</span>
+  );
+
   const icon = (
     <div className={`relative flex items-center justify-center border transition-all duration-200 select-none ${rarityStyle} ${sizeClasses[size]} ${className}`}>
-      <span className="drop-shadow-sm transition-transform hover:scale-110">{item.icon || '📦'}</span>
+      {iconContent}
       {quantity !== undefined && quantity > 1 && (
         <span className={`absolute bg-slate-950/90 border border-amber-500/40 text-amber-300 font-mono font-black rounded-full shadow-md z-10 leading-tight ${badgeSize}`}>
           {formatNumber(quantity)}

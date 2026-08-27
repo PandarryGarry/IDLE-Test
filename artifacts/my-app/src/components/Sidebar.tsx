@@ -7,7 +7,6 @@ import { Link, useLocation } from 'wouter';
 import { 
   Settings, 
   Sword, 
-  Coins, 
   Backpack, 
   Flame, 
   Pickaxe, 
@@ -17,7 +16,8 @@ import {
   Hammer,
   Shield,
   Sparkles,
-  Award
+  Award,
+  Home
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -115,37 +115,42 @@ export function Sidebar({ onCloseMobile }: SidebarProps) {
   const inCombat = useCombatStore(s => s.inCombat);
 
   return (
-    <aside className="w-64 bg-slate-950/95 backdrop-blur-xl border-r border-slate-800/80 h-screen flex flex-col fixed left-0 top-0 overflow-hidden z-50">
+    <aside className="w-64 bg-[#1b2537] border-r border-[#2d3d56] h-screen flex flex-col fixed left-0 top-0 overflow-hidden z-50 shadow-2xl">
       
       {/* Brand Header */}
-      <div className="p-4 border-b border-slate-800/80 bg-slate-900/50 flex items-center justify-between">
+      <div className="p-4 border-b border-[#2d3d56] bg-[#222e44] flex items-center justify-between">
         <Link href="/" onClick={onCloseMobile} className="flex items-center gap-2.5 cursor-pointer group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500/20 via-rose-500/10 to-indigo-500/20 flex items-center justify-center border border-amber-500/40 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.25)] group-hover:scale-105 transition-all">
-            <Sword className="w-5 h-5 text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500/30 to-amber-600/20 flex items-center justify-center border border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.3)] group-hover:scale-105 transition-all overflow-hidden p-1">
+            <img src="/assets/images/hud/game_crest.png" alt="Aethelia" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="font-display font-black text-base tracking-wider text-slate-100 flex items-center gap-1">
-              Aethelia<span className="text-amber-400 font-sans font-extrabold text-sm">IDLE</span>
+              Aethelia<span className="text-amber-400 font-sans font-extrabold text-sm">RPG</span>
             </div>
-            <div className="text-[10px] font-mono text-slate-400 -mt-0.5 flex items-center gap-1">
-              <Sparkles className="w-2.5 h-2.5 text-amber-400" /> Dark Fantasy RPG
+            <div className="text-[10px] font-mono text-slate-300 -mt-0.5 flex items-center gap-1">
+              <Sparkles className="w-2.5 h-2.5 text-amber-400" /> Живой мир IDLE
             </div>
           </div>
         </Link>
       </div>
 
       {/* Nav List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto p-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
         
+        {/* MAIN / HOME */}
+        <div>
+          <SidebarItem href="/" icon={<Home className="w-4 h-4 text-amber-400" />} label={t('nav.home')} colorScheme="amber" />
+        </div>
+
         {/* COMBAT */}
         <div>
           <div className="flex items-center justify-between mb-1.5 px-2">
-            <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest font-mono flex items-center gap-1.5">
+            <h3 className="text-[10px] font-extrabold text-red-300 uppercase tracking-widest font-mono flex items-center gap-1.5">
               <span className="text-red-400">⚔️</span> {t('group.combat')}
             </h3>
             {inCombat && (
-              <span className="text-[9px] font-mono font-bold bg-red-500/20 text-red-300 border border-red-500/30 px-1 rounded animate-pulse">
-                IN BATTLE
+              <span className="text-[9px] font-mono font-bold bg-red-500/25 text-red-300 border border-red-500/40 px-1 rounded animate-pulse">
+                В БОЮ
               </span>
             )}
           </div>
@@ -154,7 +159,7 @@ export function Sidebar({ onCloseMobile }: SidebarProps) {
 
         {/* GATHERING */}
         <div>
-          <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1.5 px-2 font-mono flex items-center gap-1.5">
+          <h3 className="text-[10px] font-extrabold text-emerald-300 uppercase tracking-widest mb-1.5 px-2 font-mono flex items-center gap-1.5">
             <span className="text-emerald-400">🌲</span> {t('group.gathering')}
           </h3>
           <SidebarItem href="/woodcutting" icon="🪓" label={t('skill.woodcutting')} skillId="woodcutting" colorScheme="green" />
@@ -164,7 +169,7 @@ export function Sidebar({ onCloseMobile }: SidebarProps) {
 
         {/* ARTISAN */}
         <div>
-          <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1.5 px-2 font-mono flex items-center gap-1.5">
+          <h3 className="text-[10px] font-extrabold text-amber-300 uppercase tracking-widest mb-1.5 px-2 font-mono flex items-center gap-1.5">
             <span className="text-amber-400">⚒️</span> {t('group.artisan')}
           </h3>
           <SidebarItem href="/firemaking" icon="🔥" label={t('skill.firemaking')} skillId="firemaking" colorScheme="red" />
@@ -175,18 +180,17 @@ export function Sidebar({ onCloseMobile }: SidebarProps) {
       </div>
 
       {/* Footer Utilities */}
-      <div className="p-3 border-t border-slate-800/80 bg-slate-900/60 space-y-1">
-        <SidebarItem href="/inventory" icon={<Backpack className="w-4 h-4 text-sky-400" />}   label={t('nav.inventory')} />
-        <SidebarItem href="/bank"      icon={<Coins    className="w-4 h-4 text-amber-400" />} label={t('nav.bank')} />
-        <SidebarItem href="/settings"  icon={<Settings className="w-4 h-4 text-slate-400" />} label={t('nav.settings')} />
+      <div className="p-3 border-t border-[#2d3d56] bg-[#1e2a3e] space-y-1">
+        <SidebarItem href="/inventory" icon={<Backpack className="w-4 h-4 text-sky-400" />} label={t('nav.inventory')} />
+        <SidebarItem href="/settings"  icon={<Settings className="w-4 h-4 text-slate-300" />} label={t('nav.settings')} />
 
         {/* Player Combat Level Widget */}
-        <div className="mt-2 pt-2.5 border-t border-slate-800 flex items-center justify-between px-2 bg-slate-950/60 p-2 rounded-xl border border-slate-800/60">
-          <div className="flex items-center gap-2 text-xs text-slate-300">
+        <div className="mt-2 pt-2.5 border-t border-[#2d3d56] flex items-center justify-between px-2 bg-[#172030] p-2 rounded-xl border border-[#2d3d56]">
+          <div className="flex items-center gap-2 text-xs text-slate-200">
             <Shield className="w-4 h-4 text-red-400" />
             <span className="font-semibold">{t('combat.combatLevel')}</span>
           </div>
-          <span className="font-mono text-xs font-black text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
+          <span className="font-mono text-xs font-black text-amber-300 bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/40">
             {combatLevel}
           </span>
         </div>

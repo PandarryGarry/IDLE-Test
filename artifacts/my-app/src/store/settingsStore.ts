@@ -7,7 +7,7 @@ export interface GameSettings {
   showXpDrops: boolean;
   showLootDrops: boolean;
   showCombatSplats: boolean;
-  language: 'en' | 'ru';
+  language: 'ru' | 'en';
   tickRate: number; // ms (lower = faster UI updates)
   maxOfflineHours: number;
   confirmSell: boolean;
@@ -27,7 +27,7 @@ const DEFAULT_SETTINGS: GameSettings = {
   showXpDrops: true,
   showLootDrops: true,
   showCombatSplats: true,
-  language: 'en',
+  language: 'ru',
   tickRate: 100,
   maxOfflineHours: 24,
   confirmSell: true,

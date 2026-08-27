@@ -155,15 +155,23 @@ export function exportSaveAsFile(): void {
 // ── Game initialization ───────────────────────────────────────
 
 export function initGame(): void {
-  // Try to load auto-save
-  const autoSave = loadFromSlot(AUTO_SAVE_SLOT);
-  if (autoSave) {
-    applySaveData(autoSave);
+  try {
+    // Try to load auto-save
+    const autoSave = loadFromSlot(AUTO_SAVE_SLOT);
+    if (autoSave && autoSave.player && autoSave.bank) {
+      applySaveData(autoSave);
+    }
+  } catch (e) {
+    console.warn('Could not load existing save, initializing fresh game state:', e);
   }
 
-  // Start auto-save timer
-  const settings = useSettingsStore.getState();
-  if (settings.autoSaveEnabled) {
-    startAutoSave(settings.autoSaveInterval);
+  try {
+    // Start auto-save timer
+    const settings = useSettingsStore.getState();
+    if (settings && settings.autoSaveEnabled) {
+      startAutoSave(settings.autoSaveInterval || 30);
+    }
+  } catch (e) {
+    console.error('Failed to start auto-save:', e);
   }
 }
