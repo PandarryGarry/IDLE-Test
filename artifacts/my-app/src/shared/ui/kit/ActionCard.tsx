@@ -105,7 +105,7 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: '#f0c840' }}>Темп</span>
-            <span style={{ fontWeight: 700, color: 'var(--accent-emerald)' }}>{xpPerHour(action.xp, action.interval)}</span>
+            <span style={{ fontWeight: 700, color: '#4ade80' }}>{xpPerHour(action.xp, action.interval)}</span>
           </div>
           {renderExtra && (
             <div style={{ paddingTop: 6, marginTop: 2, borderTop: '1px solid rgba(200,150,50,0.25)', fontFamily: 'var(--app-font-sans)' }}>
@@ -121,7 +121,7 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
               🔒 Ур. {action.levelRequired}
             </div>
           ) : isActive ? (
-            <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: 'var(--accent-emerald)', background: 'var(--accent-emerald-bg)', border: '1px solid var(--accent-emerald)', borderRadius: 8, padding: '6px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#4ade80', background: 'var(--accent-emerald-bg)', border: '1px solid var(--accent-emerald)', borderRadius: 8, padding: '6px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent-emerald)', boxShadow: '0 0 6px var(--accent-emerald)', display: 'inline-block' }} />
               В процессе…
             </div>
