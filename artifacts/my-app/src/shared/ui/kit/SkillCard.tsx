@@ -155,8 +155,8 @@ export const SkillCard = memo(function SkillCard({ skillId, href, diameter=72 }:
       <div
         onClick={() => setPopup(true)}
         style={{
-          display:'flex',flexDirection:'column',alignItems:'center',gap:4,
-          padding:'6px 4px 6px',borderRadius:14,
+          display:'flex',flexDirection:'column',alignItems:'center',gap:2,
+          padding:'6px 4px 2px',borderRadius:14,
           background:cardBg,border:`2px solid ${cardBorder}`,
           cursor:'pointer',transition:'all 0.14s ease',
           position:'relative',userSelect:'none',
@@ -172,19 +172,33 @@ export const SkillCard = memo(function SkillCard({ skillId, href, diameter=72 }:
         {/* ── Круг: SVG кольцо + иконка + badge внутри ── */}
         <div style={{ position:'relative',width:D,height:D,flexShrink:0 }}>
 
-          {/* SVG кольцо */}
-          <svg width={D} height={D} viewBox={`0 0 ${D} ${D}`}
-            style={{ position:'absolute',inset:0,transform:'rotate(-90deg)' }}>
-            <circle cx={C} cy={C} r={R} fill="none" stroke={track} strokeWidth={SW} />
-            {progress > 0 && (
-              <circle cx={C} cy={C} r={R} fill="none"
-                stroke={ring} strokeWidth={SW}
-                strokeDasharray={circ} strokeDashoffset={offs}
-                strokeLinecap="round"
-                style={{ transition:'stroke-dashoffset 0.5s ease',
-                  filter:isActive?`drop-shadow(0 0 4px ${ring})`:'none' }} />
-            )}
-          </svg>
+          {/* SVG кольцо 270° с разрывом снизу */}
+          {(() => {
+            const arcFraction = 0.75; // 270° из 360°
+            const arcLen = circ * arcFraction;
+            const gap = circ * (1 - arcFraction);
+            // Прогресс — заполняем 0..arcLen
+            const fillLen = arcLen * Math.min(1, progress);
+            return (
+              <svg width={D} height={D} viewBox={`0 0 ${D} ${D}`}
+                style={{ position:'absolute',inset:0,transform:'rotate(135deg)' }}>
+                {/* Трек — 270° */}
+                <circle cx={C} cy={C} r={R} fill="none"
+                  stroke={track} strokeWidth={SW}
+                  strokeDasharray={`${arcLen} ${gap}`}
+                  strokeLinecap="round" />
+                {/* Прогресс */}
+                {progress > 0 && (
+                  <circle cx={C} cy={C} r={R} fill="none"
+                    stroke={ring} strokeWidth={SW}
+                    strokeDasharray={`${fillLen} ${circ - fillLen}`}
+                    strokeLinecap="round"
+                    style={{ transition:'stroke-dasharray 0.5s ease',
+                      filter:isActive?`drop-shadow(0 0 4px ${ring})`:'none' }} />
+                )}
+              </svg>
+            );
+          })()}
 
           {/* Иконка */}
           <div style={{
@@ -203,21 +217,23 @@ export const SkillCard = memo(function SkillCard({ skillId, href, diameter=72 }:
           </div>
 
 
-          {/* Badge уровня — строго внутри круга, по центру снизу */}
+          {/* Badge уровня — в разрыве кольца снизу */}
           <div style={{
             position:'absolute',
-            bottom: SW + 1,
+            bottom: -Math.round(badgeH * 0.35),
             left:'50%', transform:'translateX(-50%)',
-            minWidth: Math.round(D*0.36), height: badgeH,
+            minWidth: Math.round(D*0.42), height: badgeH,
             borderRadius:9999, zIndex:4,
-            background:'rgba(12,5,0,0.9)',
-            border:`1.5px solid ${isActive?'#f0c030':'#7a4818'}`,
-            boxShadow: isActive?'0 0 8px rgba(240,192,48,0.6)':'0 1px 3px rgba(0,0,0,0.8)',
+            background:`linear-gradient(180deg, ${isActive?'#3d2808':'#1e0e04'}, ${isActive?'#2a1c06':'#140a02'})`,
+            border:`2px solid ${isActive?'#f0c030':'#8b5020'}`,
+            boxShadow: isActive
+              ? '0 0 10px rgba(240,192,48,0.55), 0 2px 0 #2a1005'
+              : '0 1px 4px rgba(0,0,0,0.8), 0 2px 0 #1a0804',
             display:'flex', alignItems:'center', justifyContent:'center',
             fontFamily:'var(--app-font-mono)',
             fontSize:badgeFS, fontWeight:900,
             color:isActive?'#f5d060':'#c8a040',
-            lineHeight:1, padding:'0 5px',
+            lineHeight:1, padding:'0 6px',
           }}>
             {st.level}
           </div>
