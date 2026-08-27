@@ -51,7 +51,8 @@ export const SkillCard = memo(function SkillCard({
   const R   = (D - SW) / 2;                                       // радиус
   const C   = D / 2;                                              // центр
   const circ = 2 * Math.PI * R;
-  const offset = circ * (1 - Math.min(1, progress));
+  const progressVis = progress < 0.02 ? 0 : progress;  // скрываем при 0
+  const offset = circ * (1 - Math.min(1, progressVis));
 
   // Диаметр внутреннего круга иконки (≈73% от D)
   const iconD    = Math.round(D * 0.80);
@@ -81,7 +82,7 @@ export const SkillCard = memo(function SkillCard({
     flexDirection:  'column',
     alignItems:     'center',
     gap:            5,
-    padding:        '8px 6px 7px',
+    padding:        '10px 8px 8px',
     borderRadius:   16,
     background:     outerBg,
     border:         `2px solid ${outerBorder}`,
@@ -137,7 +138,7 @@ export const SkillCard = memo(function SkillCard({
             <circle
               cx={C} cy={C} r={R}
               fill="none"
-              stroke="#3d1e08"
+              stroke="#5a3018"
               strokeWidth={SW}
             />
             {/* Заполнение */}
@@ -164,7 +165,7 @@ export const SkillCard = memo(function SkillCard({
             width:      iconD, height: iconD,
             borderRadius: '50%',
             background: 'linear-gradient(160deg,#2e1608,#1e0e04)',
-            border:     `2px solid ${isActive ? ringColor + '99' : '#5a3010'}`,
+            border:     `2px solid ${isActive ? ringColor + 'cc' : '#6b3818'}`,
             boxShadow:  'inset 0 2px 8px rgba(0,0,0,0.6)',
             display:    'flex', alignItems: 'center', justifyContent: 'center',
             overflow:   'hidden',
