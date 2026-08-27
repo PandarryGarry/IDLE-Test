@@ -92,8 +92,8 @@ function SkillGrid({ ids }: { ids: readonly string[] }) {
   return (
     <div style={{
       display:'grid',
-      gridTemplateColumns:'repeat(auto-fill, minmax(60px,1fr))',
-      gap:10,
+      gridTemplateColumns:'repeat(4, 1fr)',
+      gap:8,
       justifyItems:'center',
     }}>
       {ids.map(id => <SkillCard key={id} skillId={id} diameter={72} />)}
