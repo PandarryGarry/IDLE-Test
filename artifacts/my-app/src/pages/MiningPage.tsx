@@ -91,7 +91,7 @@ export function MiningPage() {
         renderExtra={(action) => action.gemChance ? (
           <div className="flex items-center justify-between text-xs text-amber-300 font-mono bg-amber-50 px-2 py-1 rounded-lg border border-amber-500/20">
             <span className="flex items-center gap-1 text-[11px] text-amber-400">
-              <Gem className="w-3 h-3 style={{ color: "#f0c030" }} className="" /> Gem Drop:
+              <Gem className="w-3 h-3 style={{ color: "#f0c030" }} /> Gem Drop:
             </span>
             <span className="font-bold">{(action.gemChance * 100).toFixed(1)}%</span>
           </div>
