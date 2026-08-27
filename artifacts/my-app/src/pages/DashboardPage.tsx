@@ -161,7 +161,7 @@ export function DashboardPage() {
           {/* Quick Metrics Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full lg:w-auto">
             <div className="g-card rounded-xl p-2.5 text-center border border-red-200">
-              <div className="text-[9px] text-red-300 font-mono uppercase font-bold tracking-wider mb-0.5">
+              <div className="text-[9px] font-mono uppercase font-bold tracking-wider mb-0.5" style={{ color: '#ff8060' }}>
                 Боевой Lvl
               </div>
               <div className="text-xl sm:text-2xl font-mono font-black text-red-400">
@@ -170,7 +170,7 @@ export function DashboardPage() {
             </div>
 
             <div className="g-card rounded-xl p-2.5 text-center border border-emerald-200">
-              <div className="text-[9px] text-emerald-300 font-mono uppercase font-bold tracking-wider mb-0.5">
+              <div className="text-[9px] font-mono uppercase font-bold tracking-wider mb-0.5" style={{ color: '#4ade80' }}>
                 Total Lvl
               </div>
               <div className="text-xl sm:text-2xl font-mono font-black text-emerald-400">
@@ -179,7 +179,7 @@ export function DashboardPage() {
             </div>
 
             <div className="g-card rounded-xl p-2.5 text-center border border-amber-200">
-              <div className="text-[9px] text-amber-300 font-mono uppercase font-bold tracking-wider mb-0.5">
+              <div className="text-[9px] font-mono uppercase font-bold tracking-wider mb-0.5" style={{ color: '#fbbf24' }}>
                 Кошелек
               </div>
               <div className="pt-0.5">
@@ -188,7 +188,7 @@ export function DashboardPage() {
             </div>
 
             <div className="g-card rounded-xl p-2.5 text-center border border-sky-200">
-              <div className="text-[9px] text-sky-300 font-mono uppercase font-bold tracking-wider mb-0.5">
+              <div className="text-[9px] font-mono uppercase font-bold tracking-wider mb-0.5" style={{ color: '#7dd3fc' }}>
                 Сумка
               </div>
               <div className="text-base sm:text-xl font-mono font-black text-[var(--text-primary)]">
@@ -268,7 +268,7 @@ export function DashboardPage() {
           <div className="py-4 text-center text-[var(--text-secondary)] flex flex-col items-center gap-2.5">
             <p className="text-xs text-[var(--text-secondary)] font-medium">{t('dashboard.noActive')}</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full pt-1">
-              <Link href="/woodcutting" className="p-3 rounded-xl g-btn-secondary hover:border-emerald-400 text-xs font-bold flex items-center justify-center gap-2.5 active:scale-95 transition-all">
+              <Link href="/woodcutting" className="p-3 rounded-xl g-btn-secondary hover:border-emerald-400 text-xs font-bold flex items-center justify-center gap-2.5 active:scale-95 transition-all" style={{ color: '#fff8d0' }}>
                 <SkillIcon skillId="woodcutting" size="sm" /> 
                 <span>Рубить лес</span>
               </Link>
