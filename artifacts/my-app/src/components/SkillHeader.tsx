@@ -78,7 +78,7 @@ export function SkillHeader({ skillId, skillName, skillIcon }: SkillHeaderProps)
               {skillName}
             </h1>
             {descriptionKey && (
-              <p className="text-xs text-[var(--text-muted)] line-clamp-1 mt-0.5">{t(descriptionKey)}</p>
+              <p className="text-xs line-clamp-1 mt-0.5" style={{ color: "#d4a840", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>{t(descriptionKey)}</p>
             )}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1.5 text-xs font-mono">
               <span className="text-[var(--text-muted)]">
@@ -97,20 +97,20 @@ export function SkillHeader({ skillId, skillName, skillIcon }: SkillHeaderProps)
           <div className="shrink-0 text-center px-3.5 py-2 rounded-xl"
             style={{ background: 'var(--bg-card-dark)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-slot)' }}>
             <div className={`text-3xl font-mono font-black leading-none ${theme.accent}`}>{level}</div>
-            <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest font-mono mt-0.5">Уровень</div>
+            <div className="text-[9px] uppercase tracking-widest font-mono mt-0.5" style={{ color: "#a07030" }}>Уровень</div>
           </div>
         </div>
 
         {/* ── Полоса прогресса XP ── */}
         <div className="space-y-1">
-          <div className="flex justify-between text-[10px] font-mono text-[var(--text-muted)]">
+          <div className="flex justify-between text-[10px] font-mono" style={{ color: "#c8a040" }}>
             <span>{level >= 99 ? 'Максимальный уровень' : `→ Ур. ${level + 1}`}</span>
-            <span className="text-stone-400 font-bold">
+            <span style={{ color: "#d4a840", fontWeight: 700 }}>
               {level >= 99 ? '100%' : `${formatNumber(Math.floor(xpIntoLevel))} / ${formatNumber(Math.floor(xpRequiredForLevel))} XP`}
             </span>
           </div>
           <div className="h-2.5 w-full rounded-full overflow-hidden"
-            style={{ background: '#2a1408', border: '2px solid #6b3810', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)' }}>
+            style={{ background: '#1a0a04', border: '2px solid #5a3010', borderRadius: 9999, overflow: 'hidden', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6)' }}>
             <div
               className={`h-full rounded-full bg-gradient-to-r ${theme.barGrad} transition-all duration-300`}
               style={{
