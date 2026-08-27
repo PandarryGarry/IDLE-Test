@@ -192,14 +192,14 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
 
         {/* Hero Visual & Name Row */}
         <div className="flex items-center gap-3.5">
-          <div className={`relative w-20 h-20 rounded-2xl border-2 flex items-center justify-center text-4xl shadow-inner shrink-0 ${rarity.bg} ${rarity.border}`}>
+          <div className={`relative w-20 h-20 rounded-2xl border-2 flex items-center justify-center text-4xl shadow-inner shrink-0 overflow-hidden ${rarity.bg} ${rarity.border}`}>
             {visual.type === 'image' ? (
-              <img src={visual.value} alt={item.name} className="w-full h-full object-contain p-2" />
+              <img src={visual.value} alt={item.name} className="w-full h-full max-w-[85%] max-h-[85%] object-contain select-none pointer-events-none p-1" />
             ) : (
               <span className="drop-shadow-md">{visual.value}</span>
             )}
             {quantity > 1 && (
-              <span className="absolute -bottom-2 -right-1 bg-slate-950 border border-amber-500/40 text-amber-300 font-mono text-[11px] font-black px-1.5 py-0.2 rounded-full shadow">
+              <span className="absolute -bottom-1 -right-1 bg-[#141b28] border border-amber-400/50 text-amber-300 font-mono text-[10px] font-black px-1.5 py-0.2 rounded-full shadow">
                 x{formatNumber(quantity)}
               </span>
             )}

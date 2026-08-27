@@ -5,6 +5,7 @@ import { getItemTier } from '@/components/modals/UniversalInfoModal';
 import { getItemRarity } from '@/components/ItemIcon';
 import { Lock, Plus } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
+import { TierBadge } from './TierBadge';
 
 interface SquircleSlotProps {
   itemId?: string;
@@ -37,9 +38,9 @@ export function SquircleSlot({
   if (isEmptyPlaceholder || !itemId) {
     return (
       <div 
-        className={`aspect-square bg-slate-950/40 border border-slate-800/40 rounded-2xl flex items-center justify-center text-slate-700/60 transition-colors ${className}`}
+        className={`aspect-square bg-[#151d2a]/60 border border-[#28364c]/50 rounded-2xl flex items-center justify-center text-slate-600/50 transition-colors ${className}`}
       >
-        <Plus className="w-3.5 h-3.5 opacity-30" />
+        <Plus className="w-4 h-4 opacity-30" />
       </div>
     );
   }
@@ -54,34 +55,39 @@ export function SquircleSlot({
     <button
       type="button"
       onClick={onClick}
-      className={`group relative aspect-square bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-1.5 flex flex-col items-center justify-center transition-all duration-150 active:scale-95 shadow-md hover:shadow-lg cursor-pointer select-none ${className}`}
+      className={`group relative aspect-square bg-[#1c2738] hover:bg-[#223046] border border-[#31435e] hover:border-amber-400/60 rounded-2xl p-1 flex flex-col items-center justify-center transition-all duration-150 active:scale-95 shadow-md hover:shadow-xl cursor-pointer select-none ${className}`}
     >
       {/* Top-Left: Tier Badge */}
-      <span className="absolute top-1 left-1.5 text-[9px] font-mono font-extrabold text-slate-400/80 group-hover:text-amber-300">
-        {tier}
+      <span className="absolute top-1 left-1.5 z-10">
+        <TierBadge tier={tier} size="sm" />
       </span>
 
       {/* Top-Right: Rarity Dot or Lock icon */}
-      <div className="absolute top-1.5 right-1.5 flex items-center">
+      <div className="absolute top-1.5 right-1.5 z-10 flex items-center">
         {locked ? (
-          <Lock className="w-2.5 h-2.5 text-amber-400" />
+          <Lock className="w-3 h-3 text-amber-400" />
         ) : (
-          <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
+          <span className={`w-2 h-2 rounded-full ${dotColor}`} />
         )}
       </div>
 
-      {/* Center Visual Art / Emoji */}
-      <div className="text-2xl sm:text-3xl my-auto drop-shadow-sm transition-transform group-hover:scale-110">
+      {/* Center Visual Art — generous scaling (95% of slot), clear and vibrant */}
+      <div className="w-full h-full flex items-center justify-center overflow-hidden pointer-events-none p-1">
         {visual.type === 'image' ? (
-          <img src={visual.value} alt={item?.name || ''} className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
+          <img 
+            src={visual.value} 
+            alt={item?.name || ''} 
+            className="w-full h-full max-w-[95%] max-h-[95%] object-contain drop-shadow-md select-none" 
+            loading="lazy"
+          />
         ) : (
-          <span>{visual.value}</span>
+          <span className="text-3xl sm:text-4xl drop-shadow-md">{visual.value}</span>
         )}
       </div>
 
       {/* Bottom-Right: Quantity Number */}
       {quantity !== undefined && quantity > 1 ? (
-        <span className="absolute bottom-1 right-1.5 text-[10px] sm:text-[11px] font-mono font-extrabold text-slate-300 group-hover:text-amber-300 leading-tight">
+        <span className="absolute bottom-1 right-1.5 text-[10px] sm:text-[11px] font-mono font-black text-slate-100 group-hover:text-amber-300 leading-tight drop-shadow-md bg-[#131b27]/90 px-1.5 py-0.2 rounded-md border border-[#2a384e]">
           {formatNumber(quantity)}
         </span>
       ) : null}

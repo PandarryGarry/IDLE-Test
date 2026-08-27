@@ -176,10 +176,17 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     return getLevelForXp(masteryXp);
   },
 
-  loadFromSave: (skills, equipment) => {
-    const combatLevel = computeCombatLevel(skills);
-    const maxPrayerPoints = computeMaxPrayerPoints(skills.prayer.level);
-    set({ skills, equipment, combatLevel, maxPrayerPoints, prayerPoints: maxPrayerPoints });
+  loadFromSave: (savedSkills, equipment) => {
+    const initial = createInitialSkills();
+    const mergedSkills = { ...initial, ...savedSkills };
+    for (const id of ALL_SKILL_IDS) {
+      if (!mergedSkills[id]) {
+        mergedSkills[id] = initial[id];
+      }
+    }
+    const combatLevel = computeCombatLevel(mergedSkills);
+    const maxPrayerPoints = computeMaxPrayerPoints(mergedSkills.prayer?.level ?? 1);
+    set({ skills: mergedSkills, equipment: equipment || { ...INITIAL_EQUIPMENT }, combatLevel, maxPrayerPoints, prayerPoints: maxPrayerPoints });
   },
 
   reset: () => {

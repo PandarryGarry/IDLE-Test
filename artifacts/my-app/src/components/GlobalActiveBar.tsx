@@ -11,6 +11,7 @@ import { ActionProgressBar } from '@/components/ActionProgressBar';
 import { Link } from 'wouter';
 import { Square, ArrowUpRight, Flame, ShieldAlert } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { SkillIcon } from '@/components/SkillIcon';
 
 const SKILL_THEMES: Record<string, { nameKey: string; icon: string; path: string; color: 'green' | 'blue' | 'amber' | 'red'; accent: string }> = {
   woodcutting: { nameKey: 'skill.woodcutting', icon: '🪓', path: '/woodcutting', color: 'green', accent: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' },
@@ -124,16 +125,16 @@ export function GlobalActiveBar() {
       <div className="fantasy-card border-emerald-500/30 bg-slate-950/90 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 shadow-[0_0_20px_rgba(16,185,129,0.15)] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border animate-in fade-in slide-in-from-top-2">
         {/* Left info */}
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className={`w-9 h-9 rounded-xl border flex items-center justify-center text-lg shrink-0 shadow-inner ${theme.accent}`}>
-            {theme.icon}
+          <div className="w-9 h-9 rounded-xl border border-emerald-500/40 bg-emerald-500/15 flex items-center justify-center shrink-0 shadow-inner overflow-hidden p-1">
+            <SkillIcon skillId={activeSkill} size="sm" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400 font-mono">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-300 font-mono">
                 {t(theme.nameKey as any) || activeSkill}
               </span>
-              <span className="text-muted-foreground text-xs">•</span>
-              <span className="text-xs font-bold text-foreground truncate">
+              <span className="text-slate-400 text-xs">•</span>
+              <span className="text-xs font-bold text-slate-100 truncate">
                 {actionName}
               </span>
             </div>

@@ -8,18 +8,13 @@ import {
   Settings, 
   Sword, 
   Backpack, 
-  Flame, 
-  Pickaxe, 
-  Trees, 
-  Fish, 
-  ChefHat, 
-  Hammer,
-  Shield,
-  Sparkles,
-  Award,
+  Shield, 
+  Sparkles, 
   Home
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { getSkillVisual } from '@/shared/icons/skillIcons';
+import { IconFrame } from '@/shared/ui/kit/IconFrame';
 
 interface SidebarItemProps {
   href: string;
@@ -39,34 +34,34 @@ function SidebarItem({ href, icon, label, skillId, colorScheme = 'default' }: Si
 
   const colorStyles = {
     green: {
-      activeBg: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.15)]',
+      activeBg: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/50 shadow-md',
       dot: 'bg-emerald-400 shadow-[0_0_8px_#34d399]',
-      badge: 'border-emerald-500/30 text-emerald-300 bg-emerald-950/40',
+      badge: 'border-emerald-500/40 text-emerald-300 bg-emerald-950/50',
     },
     amber: {
-      activeBg: 'bg-amber-500/15 text-amber-300 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.15)]',
+      activeBg: 'bg-amber-500/20 text-amber-200 border-amber-400/50 shadow-md',
       dot: 'bg-amber-400 shadow-[0_0_8px_#fbbf24]',
-      badge: 'border-amber-500/30 text-amber-300 bg-amber-950/40',
+      badge: 'border-amber-500/40 text-amber-300 bg-amber-950/50',
     },
     blue: {
-      activeBg: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.15)]',
+      activeBg: 'bg-cyan-500/20 text-cyan-200 border-cyan-400/50 shadow-md',
       dot: 'bg-cyan-400 shadow-[0_0_8px_#22d3ee]',
-      badge: 'border-cyan-500/30 text-cyan-300 bg-cyan-950/40',
+      badge: 'border-cyan-500/40 text-cyan-300 bg-cyan-950/50',
     },
     red: {
-      activeBg: 'bg-rose-500/15 text-rose-300 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.15)]',
+      activeBg: 'bg-rose-500/20 text-rose-200 border-rose-400/50 shadow-md',
       dot: 'bg-rose-400 shadow-[0_0_8px_#fb7185]',
-      badge: 'border-rose-500/30 text-rose-300 bg-rose-950/40',
+      badge: 'border-rose-500/40 text-rose-300 bg-rose-950/50',
     },
     purple: {
-      activeBg: 'bg-purple-500/15 text-purple-300 border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.15)]',
+      activeBg: 'bg-purple-500/20 text-purple-200 border-purple-400/50 shadow-md',
       dot: 'bg-purple-400 shadow-[0_0_8px_#c084fc]',
-      badge: 'border-purple-500/30 text-purple-300 bg-purple-950/40',
+      badge: 'border-purple-500/40 text-purple-300 bg-purple-950/50',
     },
     default: {
-      activeBg: 'bg-amber-500/15 text-amber-300 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.15)]',
+      activeBg: 'bg-amber-500/20 text-amber-200 border-amber-400/50 shadow-md',
       dot: 'bg-amber-400 shadow-[0_0_8px_#fbbf24]',
-      badge: 'border-slate-700 text-slate-300 bg-slate-900',
+      badge: 'border-[#334460] text-slate-200 bg-[#172030]',
     },
   };
 
@@ -74,13 +69,13 @@ function SidebarItem({ href, icon, label, skillId, colorScheme = 'default' }: Si
 
   return (
     <Link href={href} className="block group">
-      <div className={`flex items-center justify-between px-3 py-2 rounded-xl mb-1 transition-all duration-200 border ${
+      <div className={`flex items-center justify-between px-3 py-2 rounded-xl mb-1 transition-all duration-150 border ${
         isActiveRoute 
           ? scheme.activeBg
-          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900/80 border-transparent hover:border-slate-800'
+          : 'text-slate-300 hover:text-white hover:bg-[#222f44] border-transparent hover:border-[#334460]'
       }`}>
         <div className="flex items-center gap-2.5 min-w-0">
-          <span className="text-lg flex-shrink-0 w-6 flex justify-center transition-transform group-hover:scale-110 duration-200">
+          <span className="w-6 flex justify-center shrink-0 transition-transform group-hover:scale-110">
             {icon}
           </span>
           <span className="font-semibold text-xs tracking-wide truncate">{label}</span>
@@ -120,8 +115,8 @@ export function Sidebar({ onCloseMobile }: SidebarProps) {
       {/* Brand Header */}
       <div className="p-4 border-b border-[#2d3d56] bg-[#222e44] flex items-center justify-between">
         <Link href="/" onClick={onCloseMobile} className="flex items-center gap-2.5 cursor-pointer group">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500/30 to-amber-600/20 flex items-center justify-center border border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.3)] group-hover:scale-105 transition-all overflow-hidden p-1">
-            <img src="/assets/images/hud/game_crest.png" alt="Aethelia" className="w-full h-full object-contain" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500/30 to-amber-600/20 flex items-center justify-center border border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.3)] group-hover:scale-105 transition-all text-amber-300">
+            <Sword className="w-5 h-5" />
           </div>
           <div>
             <div className="font-display font-black text-base tracking-wider text-slate-100 flex items-center gap-1">
@@ -146,7 +141,7 @@ export function Sidebar({ onCloseMobile }: SidebarProps) {
         <div>
           <div className="flex items-center justify-between mb-1.5 px-2">
             <h3 className="text-[10px] font-extrabold text-red-300 uppercase tracking-widest font-mono flex items-center gap-1.5">
-              <span className="text-red-400">⚔️</span> {t('group.combat')}
+              <IconFrame icon={getSkillVisual('combat')} shape="none" size="xs" /> {t('group.combat')}
             </h3>
             {inCombat && (
               <span className="text-[9px] font-mono font-bold bg-red-500/25 text-red-300 border border-red-500/40 px-1 rounded animate-pulse">
@@ -154,27 +149,27 @@ export function Sidebar({ onCloseMobile }: SidebarProps) {
               </span>
             )}
           </div>
-          <SidebarItem href="/combat" icon="⚔️" label={t('nav.combat')} colorScheme="red" />
+          <SidebarItem href="/combat" icon={<IconFrame icon={getSkillVisual('combat')} shape="none" size="xs" />} label={t('nav.combat')} colorScheme="red" />
         </div>
 
         {/* GATHERING */}
         <div>
           <h3 className="text-[10px] font-extrabold text-emerald-300 uppercase tracking-widest mb-1.5 px-2 font-mono flex items-center gap-1.5">
-            <span className="text-emerald-400">🌲</span> {t('group.gathering')}
+            <IconFrame icon={getSkillVisual('woodcutting')} shape="none" size="xs" /> {t('group.gathering')}
           </h3>
-          <SidebarItem href="/woodcutting" icon="🪓" label={t('skill.woodcutting')} skillId="woodcutting" colorScheme="green" />
-          <SidebarItem href="/mining"      icon="⛏️" label={t('skill.mining')}      skillId="mining"      colorScheme="amber" />
-          <SidebarItem href="/fishing"     icon="🎣" label={t('skill.fishing')}     skillId="fishing"     colorScheme="blue" />
+          <SidebarItem href="/woodcutting" icon={<IconFrame icon={getSkillVisual('woodcutting')} shape="none" size="xs" />} label={t('skill.woodcutting')} skillId="woodcutting" colorScheme="green" />
+          <SidebarItem href="/mining"      icon={<IconFrame icon={getSkillVisual('mining')}      shape="none" size="xs" />} label={t('skill.mining')}      skillId="mining"      colorScheme="amber" />
+          <SidebarItem href="/fishing"     icon={<IconFrame icon={getSkillVisual('fishing')}     shape="none" size="xs" />} label={t('skill.fishing')}     skillId="fishing"     colorScheme="blue" />
         </div>
 
         {/* ARTISAN */}
         <div>
           <h3 className="text-[10px] font-extrabold text-amber-300 uppercase tracking-widest mb-1.5 px-2 font-mono flex items-center gap-1.5">
-            <span className="text-amber-400">⚒️</span> {t('group.artisan')}
+            <IconFrame icon={getSkillVisual('smithing')} shape="none" size="xs" /> {t('group.artisan')}
           </h3>
-          <SidebarItem href="/firemaking" icon="🔥" label={t('skill.firemaking')} skillId="firemaking" colorScheme="red" />
-          <SidebarItem href="/cooking"    icon="🍳" label={t('skill.cooking')}    skillId="cooking"    colorScheme="amber" />
-          <SidebarItem href="/smithing"   icon="🔨" label={t('skill.smithing')}   skillId="smithing"   colorScheme="amber" />
+          <SidebarItem href="/firemaking" icon={<IconFrame icon={getSkillVisual('firemaking')} shape="none" size="xs" />} label={t('skill.firemaking')} skillId="firemaking" colorScheme="red" />
+          <SidebarItem href="/cooking"    icon={<IconFrame icon={getSkillVisual('cooking')}    shape="none" size="xs" />} label={t('skill.cooking')}    skillId="cooking"    colorScheme="amber" />
+          <SidebarItem href="/smithing"   icon={<IconFrame icon={getSkillVisual('smithing')}   shape="none" size="xs" />} label={t('skill.smithing')}   skillId="smithing"   colorScheme="amber" />
         </div>
 
       </div>

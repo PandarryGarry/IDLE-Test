@@ -63,7 +63,12 @@ export function ItemIcon({ itemId, size = 'md', quantity, className = '', showTo
   const badgeSize = size === 'xs' || size === 'sm' ? 'text-[9px] px-1 -bottom-1 -right-1' : 'text-[10px] px-1.5 -bottom-1.5 -right-1.5';
 
   const iconContent = visual.type === 'image' ? (
-    <img src={visual.value} alt={item.name} className="w-full h-full object-contain p-1" />
+    <img 
+      src={visual.value} 
+      alt={item.name} 
+      className="w-full h-full object-contain p-1.5 drop-shadow-sm select-none pointer-events-none" 
+      loading="lazy"
+    />
   ) : (
     <span className="drop-shadow-sm transition-transform hover:scale-110">{visual.value}</span>
   );

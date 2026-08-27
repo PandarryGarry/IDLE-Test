@@ -64,8 +64,8 @@ export function TopNavBar({ onOpenMobileMenu }: TopNavBarProps) {
           </button>
 
           <Link href="/" className="flex items-center gap-2 group md:hidden">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500/30 to-emerald-500/20 border border-amber-400/50 flex items-center justify-center overflow-hidden shadow-[0_0_12px_rgba(245,158,11,0.4)] transition-all">
-              <img src="/assets/images/hud/game_crest.png" alt="Aethelia" className="w-7 h-7 object-contain" />
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500/30 to-emerald-500/20 border border-amber-400/50 flex items-center justify-center text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.4)] transition-all">
+              <Sword className="w-4 h-4" />
             </div>
             <span className="font-display font-black text-sm tracking-wide text-foreground">
               Aethelia<span className="text-amber-400 font-sans font-extrabold text-xs">RPG</span>

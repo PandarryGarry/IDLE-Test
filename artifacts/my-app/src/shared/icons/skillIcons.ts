@@ -1,20 +1,14 @@
 /**
  * Централизованный реестр иконок для всех профессий и навыков.
- * Поддерживает как сгенерированные графические изображения (PNG), так и эмодзи-фоллбэки.
+ * Сюда будут привязаны распакованные арты из ваших архивов.
  */
 
 export const SKILL_IMAGES: Record<string, string> = {
-  woodcutting: '/assets/images/skills/woodcutting.png',
-  mining:      '/assets/images/skills/mining.png',
-  fishing:     '/assets/images/skills/fishing.png',
-  smithing:    '/assets/images/skills/smithing.png',
-  cooking:     '/assets/images/skills/cooking.png',
-  firemaking:  '/assets/images/skills/firemaking.png',
-  combat:      '/assets/images/skills/combat.png',
-  attack:      '/assets/images/skills/combat.png',
+  // Будет заполнено вашими готовыми файлами из public/assets/skills/
 };
 
 export const SKILL_ICONS: Record<string, string> = {
+  combat: '⚔️',
   attack: '⚔️',
   strength: '💪',
   defence: '🛡️',
@@ -41,13 +35,41 @@ export const SKILL_ICONS: Record<string, string> = {
   township: '🏘️',
 };
 
+export const SKILL_SHORT_NAMES: Record<string, string> = {
+  combat: 'Бой',
+  attack: 'Атака',
+  strength: 'Сила',
+  defence: 'Защита',
+  hitpoints: 'Здоровье',
+  ranged: 'Стрельба',
+  magic: 'Магия',
+  prayer: 'Молитва',
+  slayer: 'Истребление',
+  woodcutting: 'Лесоруб',
+  mining: 'Горное дело',
+  fishing: 'Рыбалка',
+  firemaking: 'Огонь',
+  cooking: 'Кулинария',
+  smithing: 'Кузница',
+  fletching: 'Стрелы',
+  crafting: 'Ремесло',
+  runecrafting: 'Руны',
+  herblore: 'Травы',
+  farming: 'Ферма',
+  agility: 'Ловкость',
+  thieving: 'Воровство',
+  summoning: 'Призыв',
+  astrology: 'Звезды',
+  township: 'Город',
+};
+
 export function getSkillVisual(skillId: string): { type: 'image' | 'emoji'; value: string } {
   if (SKILL_IMAGES[skillId]) {
     return { type: 'image', value: SKILL_IMAGES[skillId] };
   }
-  return { type: 'emoji', value: SKILL_ICONS[skillId] || '❓' };
+  return { type: 'emoji', value: SKILL_ICONS[skillId] || '⚔️' };
 }
 
-export function getSkillIcon(skillId: string): string {
-  return SKILL_ICONS[skillId] || '❓';
+export function getSkillShortName(skillId: string): string {
+  return SKILL_SHORT_NAMES[skillId] || skillId;
 }
