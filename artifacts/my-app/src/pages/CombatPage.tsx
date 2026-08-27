@@ -87,7 +87,7 @@ export function CombatPage() {
 
           {/* Combat Areas Selection */}
           <div className="g-card border border-[var(--border-default)] p-4 rounded-3xl shadow-xl">
-            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-red-400 mb-3 flex items-center gap-1.5">
+            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest mb-3 flex items-center gap-1.5" style={{ color: '#ff7060' }}>
               <Skull className="w-3.5 h-3.5" /> {t('combat.areas')}
             </h2>
             
@@ -194,7 +194,7 @@ export function CombatPage() {
             <div
               ref={combatLogRef}
               onScroll={handleLogScroll}
-              className="relative flex-1 min-h-0 overflow-y-auto space-y-1 font-mono text-xs p-3 bg-[var(--bg-card-dark)] rounded-xl border border-[var(--border-light)] shadow-inner scrollbar-thin"
+              className="relative flex-1 min-h-0 overflow-y-auto space-y-1 font-mono text-xs p-3 rounded-xl scrollbar-thin" style={{ background: 'rgba(40,20,8,0.6)', border: '2px solid #6b3810', boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.4)' }}
             >
               {combatLog.length === 0 && (
                 <div className="text-center py-10 text-slate-500 text-xs">
@@ -538,7 +538,7 @@ function EquipSlotBox({ slot, label }: { slot: EquipSlot; label: string }) {
         )}
       </div>
       {/* Подпись под ячейкой */}
-      <span className="text-[9px] font-mono tracking-wide leading-none mt-0.5 truncate max-w-[64px] text-center" style={{ color: itemId ? 'rgba(200,150,80,0.8)' : 'rgba(100,65,25,0.55)' }}>
+      <span className="text-[9px] font-mono tracking-wide leading-none mt-0.5 truncate max-w-[64px] text-center" style={{ color: itemId ? '#f0d070' : '#c8a050' }}>
         {label}
       </span>
     </button>
