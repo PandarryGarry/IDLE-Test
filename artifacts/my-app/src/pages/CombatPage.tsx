@@ -87,7 +87,7 @@ export function CombatPage() {
 
           {/* Combat Areas Selection */}
           <div className="g-card border border-[var(--border-default)] p-4 rounded-3xl shadow-xl">
-            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest mb-3 flex items-center gap-1.5" style={{ color: '#ff9070', textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>
+            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest mb-3 flex items-center gap-1.5" style={{ color: '#ffb090', textShadow: '0 1px 4px rgba(0,0,0,0.8)', letterSpacing: '0.08em' }}>
               <Skull className="w-3.5 h-3.5" /> {t('combat.areas')}
             </h2>
             
@@ -110,7 +110,7 @@ export function CombatPage() {
                     }`}
                   >
                     <div className="flex justify-between items-center mb-1">
-                      <h3 className="font-bold text-xs sm:text-sm" style={{ color: isActive ? '#ff8060' : '#fff8d0', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                      <h3 className="font-bold text-xs sm:text-sm" style={{ color: isActive ? '#ff8060' : '#f5e0b0', textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}>
                         {area.name}
                       </h3>
                       {isLocked ? (
