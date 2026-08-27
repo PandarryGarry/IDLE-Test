@@ -156,7 +156,7 @@ export const SkillCard = memo(function SkillCard({ skillId, href, diameter=72 }:
         onClick={() => setPopup(true)}
         style={{
           display:'flex',flexDirection:'column',alignItems:'center',gap:4,
-          padding:'6px 4px 8px',borderRadius:14,
+          padding:'6px 4px 4px',borderRadius:14,
           background:cardBg,border:`2px solid ${cardBorder}`,
           cursor:'pointer',transition:'all 0.14s ease',
           position:'relative',userSelect:'none',
@@ -207,7 +207,7 @@ export const SkillCard = memo(function SkillCard({ skillId, href, diameter=72 }:
 
         {/* Badge уровня — поверх нижней части круга */}
         <div style={{
-          marginTop: -badgeH * 0.5 - 1,
+          marginTop: -badgeH * 0.45,
           minWidth: Math.round(D * 0.38), height: badgeH,
           borderRadius: 9999, zIndex: 3, position: 'relative',
           background: 'rgba(15,6,0,0.9)',
