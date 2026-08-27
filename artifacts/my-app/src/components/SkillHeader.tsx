@@ -110,7 +110,7 @@ export function SkillHeader({ skillId, skillName, skillIcon }: SkillHeaderProps)
             </span>
           </div>
           <div className="h-2.5 w-full rounded-full overflow-hidden"
-            style={{ background: 'var(--bar-track)', border: '1px solid var(--border-light)' }}>
+            style={{ background: '#2a1408', border: '2px solid #6b3810', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)' }}>
             <div
               className={`h-full rounded-full bg-gradient-to-r ${theme.barGrad} transition-all duration-300`}
               style={{
