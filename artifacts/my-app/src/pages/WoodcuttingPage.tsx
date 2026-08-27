@@ -64,7 +64,7 @@ export function WoodcuttingPage() {
             </div>
 
             <div className="pt-1">
-              <ActionProgressBar height="h-3" color="green" />
+              <ActionProgressBar height="h-3" color="amber" />
             </div>
           </div>
         ) : (
