@@ -41,7 +41,7 @@ export function FishingPage() {
           <div className="space-y-3.5 relative z-10">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(16,60,70,0.6)', border: '2px solid #2a7080', boxShadow: '0 0 12px rgba(6,182,212,0.15)' }}>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(16,60,70,0.6)', border: '2px solid #2a7080', boxShadow: '0 0 12px rgba(200,136,10,0.3)' }}>
                   <SkillIcon skillId="fishing" size="md" />
                 </div>
                 <div>
@@ -50,7 +50,7 @@ export function FishingPage() {
                     <span className="text-cyan-300 font-extrabold">{activeSpot.name}</span>
                   </h3>
                   <p className="text-[var(--text-secondary)] text-xs font-mono mt-0.5 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-cyan-400" />
+                    <Clock className="w-3.5 h-3.5 style={{ color: "#f0c030" }} className="" />
                     <span>{(activeSpot.interval / 1000).toFixed(1)} сек. за действие</span>
                   </p>
                 </div>
