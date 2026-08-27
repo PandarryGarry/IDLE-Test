@@ -21,6 +21,19 @@ export interface ActionResult {
   preserved?: boolean;
 }
 
+export interface OfflineReward {
+  icon: string;
+  skill: string;
+  xp: number;
+  items?: string;
+}
+
+export interface OfflineData {
+  totalMinutes: number;
+  rewards: OfflineReward[];
+  goldEarned: number;
+}
+
 export interface GameStore {
   // Gameplay state
   activeSkill: SkillId | null;
@@ -40,6 +53,10 @@ export interface GameStore {
 
   // XP trackers for current session
   xpGainedThisSession: Partial<Record<SkillId, number>>;
+
+  // Оффлайн данные
+  offlineData: OfflineData | null;
+  clearOfflineData: () => void;
 
   // Actions
   startSkillAction: (skillId: SkillId, actionId: string) => boolean;
@@ -171,6 +188,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   isRunning: false,
   isPaused: false,
   xpGainedThisSession: {},
+  offlineData: null,
+  clearOfflineData: () => set({ offlineData: null }),
 
   startSkillAction: (skillId, actionId) => {
     const interval = getActionInterval(skillId, actionId);
