@@ -92,11 +92,11 @@ function SkillGrid({ ids }: { ids: readonly string[] }) {
   return (
     <div style={{
       display:'grid',
-      gridTemplateColumns:'repeat(auto-fill, minmax(65px,1fr))',
+      gridTemplateColumns:'repeat(auto-fill, minmax(60px,1fr))',
       gap:10,
       justifyItems:'center',
     }}>
-      {ids.map(id => <SkillCard key={id} skillId={id} diameter={80} />)}
+      {ids.map(id => <SkillCard key={id} skillId={id} diameter={72} />)}
     </div>
   );
 }
@@ -239,7 +239,7 @@ export function DashboardPage() {
         {/* 3 метрики — одинаковый размер */}
         <div style={{ display:'flex', gap:6 }}>
           <Stat label="Боевой Lvl"  value={combatLevel} />
-          <Stat label="Кошелёк"     value={<CoinsDisplay amount={gp} size="xs" />} />
+          <Stat label="Кошелёк"     value={<span style={{ fontSize:14, fontWeight:900, color:"#f5d060" }}><CoinsDisplay amount={gp} size="xs" /></span>} />
           <Stat label="Сумка"       value={`${usedSlots}/${maxSlots}`} />
         </div>
       </div>
