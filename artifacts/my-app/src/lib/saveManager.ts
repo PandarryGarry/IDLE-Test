@@ -58,9 +58,32 @@ export function applySaveData(data: SaveData): void {
     lastSaveTime: data.savedAt,
   });
 
-  // Calculate offline progress
+  // Calculate offline progress and store result for Dashboard display
   if (data.game.activeSkill && data.game.activeActionId) {
-    calculateOfflineProgress(data.game.activeSkill, data.game.activeActionId, data.savedAt);
+    const offlineResult = calculateOfflineProgress(data.game.activeSkill, data.game.activeActionId, data.savedAt);
+    if (offlineResult && offlineResult.xpGained > 0) {
+      const { useGameStore } = require('@/store/gameStore');
+      const skillNames: Record<string, string> = {
+        woodcutting: 'Лесорубство', mining: 'Горное дело', fishing: 'Рыбалка',
+        cooking: 'Кулинария', smithing: 'Кузнечество', firemaking: 'Огонь', combat: 'Бой',
+      };
+      const skillIcons: Record<string, string> = {
+        woodcutting: '🪓', mining: '⛏️', fishing: '🎣',
+        cooking: '🍖', smithing: '🔨', firemaking: '🔥', combat: '⚔️',
+      };
+      useGameStore.setState({
+        offlineData: {
+          totalMinutes: Math.floor(offlineResult.offlineMs / 60_000),
+          rewards: [{
+            icon: skillIcons[data.game.activeSkill] || '⚡',
+            skill: skillNames[data.game.activeSkill] || data.game.activeSkill,
+            xp: Math.floor(offlineResult.xpGained),
+            items: offlineResult.itemsGained.map(i => `+${i.quantity} ${i.itemId.replace(/_/g,' ')}`).join(', ') || undefined,
+          }],
+          goldEarned: 0,
+        }
+      });
+    }
   }
 }
 
