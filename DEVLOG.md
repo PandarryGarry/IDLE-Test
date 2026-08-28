@@ -47,12 +47,26 @@
 
 ## 📍 ТЕКУЩИЙ СТАТУС
 
-**Завершены: Этапы 1 и 2 из ROADMAP.md. Этап 2 полностью закрыт финальной анимацией SplashScreen. Следующий: ЭТАП 3 — Авторизация (Supabase).**
+**Завершены: Этапы 1 и 2. Этап 3 начат: визуальный auth-shell для Login/Register внедрён, но Supabase-логика ещё НЕ подключена.**
 
-Для Этапа 3 решено (детали в ROADMAP.md):
-- Supabase, email/пароль + Google OAuth; проект создаёт владелец, ключи передаёт через Replit Secrets;
-- гостевой режим: sessionStorage, 2 навыка (лесорубство+рыбалка), 24 слота, без боя/крафта/облака;
-- экраны Login/Register на gameUI-примитивах.
+Где продолжать следующему агенту:
+- сначала прочитать `STAGE3_AUTH_HANDOFF.md`;
+- затем проверить live routes `/login` и `/register` в Replit/Webview;
+- если владелец подтверждает визуал — продолжать с Supabase foundation/authStore/AuthGate/guest restrictions.
+
+Что уже зафиксировано по Stage 3 visual:
+- approved background: тёплая живая таверна у камина с гербом Aethelia (топор + перо), bard, elf+dwarf, правая часть без пустой заглушки;
+- runtime asset: `artifacts/my-app/public/assets/art/auth_tavern_background.webp`;
+- clean seal asset оставлен: `artifacts/my-app/public/assets/icons/ui/auth/aethelia_seal_clean.webp` / `artifacts/my-app/public/assets/icons/ui/auth/aethelia_seal_clean.png`;
+- auth routes: `/auth`, `/login`, `/register`;
+- файлы реализации: `src/pages/AuthPage.tsx`, `src/App.tsx`, `src/index.css`;
+- визуальный принцип: без общей рамки, без рамки auth-panel, прозрачный frameless glass/tint, компактные controls;
+- mobile: фокус на камине/гербе, auth поднят выше, поля и кнопки короче/меньше, registration scroll-safe.
+
+Для Supabase (следующий шаг):
+- ключи только через Replit Secrets / `.env.local`: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`;
+- не просить секреты в чат и не использовать `service_role` во frontend;
+- гостевой режим: sessionStorage, лесорубство+рыбалка+24 слота, без боя/крафта/облака, баннер «Зарегистрируйся, чтобы сохранить прогресс.»
 
 После Этапа 3 → Этап 4 (создание персонажа), далее по роадмапу.
 Параллельная большая задача (Этапы 7–8): привязка 900+ иконок к предметам —
@@ -62,6 +76,31 @@
 ---
 
 ## 📜 ЖУРНАЛ СЕССИЙ (новые записи — СВЕРХУ)
+
+### Сессия 4 — 2026-08-29 — Этап 3: визуальный auth-shell Login/Register (внедрён, Supabase ещё нет)
+**Ветка:** `arena/01a049b7-idle-test`
+
+**Сделано:**
+- После серии визуальных итераций утверждён auth background: тёплая таверна у камина, герб Aethelia с топором+пером над камином, bard, elf+dwarf, правая часть без пустой заглушки.
+- Approved background оптимизирован и добавлен в приложение: `public/assets/art/auth_tavern_background.webp`.
+- Clean-печать сохранена отдельным asset-файлом: `public/assets/icons/ui/auth/aethelia_seal_clean.webp` / `public/assets/icons/ui/auth/aethelia_seal_clean.png`; в маленькую auth-форму её не ставить, т.к. на малом размере выглядит шумно/криво.
+- Добавлена страница `src/pages/AuthPage.tsx` с визуальными режимами login/register.
+- `App.tsx`: routes `/auth`, `/login`, `/register` выводят fullscreen auth-screen без sidebar/topnav.
+- `index.css`: добавлены стили Stage 3 visual auth — прозрачный frameless glass/tint, компактные поля/кнопки, desktop/mobile адаптив, fire glow, embers/dust, soft entrance, reduced-motion.
+- Mobile-правка владельца учтена: поля и кнопки короче и меньше, auth поднят выше, фокус crop на камине/гербе.
+- Временные review-мокапи удалены перед коммитом; подробный handoff оставлен в `STAGE3_AUTH_HANDOFF.md`.
+
+**Проверки:**
+- `corepack pnpm --dir artifacts/my-app typecheck` — успешно.
+- `corepack pnpm --dir artifacts/my-app build` — успешно; остались только старые Vite warnings про sourcemap `tooltip.tsx` и chunk size >500 kB.
+- Dev preview поднимался командой `corepack pnpm --dir artifacts/my-app dev --host 0.0.0.0`; маршруты `/login` и `/register` отдавали HTML 200.
+
+**Что ещё НЕ сделано:**
+- Supabase клиент/пакет не добавлен.
+- `authStore`, session restore, Google OAuth, sign out, AuthGate и guest restrictions ещё не реализованы.
+
+**Следующий шаг:**
+Сначала владелец проверяет live-визуал `/login` и `/register`; после подтверждения — Supabase foundation по `STAGE3_AUTH_HANDOFF.md` и `ROADMAP.md`.
 
 ### Сессия 3 — 2026-08-28 — Этап 2: финальная полировка SplashScreen (завершён)
 **Ветка:** `arena/01a049b7-idle-test`
