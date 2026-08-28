@@ -16,6 +16,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Предзагрузка заставочного арта: стартует ДО исполнения JS-бандла.
+         Логика выбора варианта дублирует pickSplashArt() из artRegistry.ts. -->
+    <script>
+      (function () {
+        var a = window.innerWidth / Math.max(1, window.innerHeight);
+        var v = a >= 1.15 ? 'wide' : a <= 0.85 ? 'tall' : 'square';
+        var l = document.createElement('link');
+        l.rel = 'preload';
+        l.as = 'image';
+        l.href = '/assets/art/splash_' + v + '.webp';
+        document.head.appendChild(l);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

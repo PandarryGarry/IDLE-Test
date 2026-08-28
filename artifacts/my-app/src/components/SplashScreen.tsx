@@ -64,6 +64,9 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 2600 }: SplashScreen
   // Режим заставки задан реестром ('sign'); ждём только факт загрузки файла.
   const probe = useArtMode(art.src, art.mode);
   const hasArt = probe.loaded && probe.mode !== null;
+  // Фолбэк-герб показываем ТОЛЬКО если арт реально не загрузился (ошибка/таймаут).
+  // Пока арт в пути — держим нейтральный тёмный фон, чтобы не мелькал «старый» экран.
+  const artFailed = probe.error || (artWaitTimedOut && !hasArt);
   // Арт «решён»: загрузился, упал с ошибкой или вышли по таймауту.
   const artSettled = probe.mode !== null || probe.error || artWaitTimedOut;
 
@@ -144,9 +147,9 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 2600 }: SplashScreen
         pointerEvents: isFadingOut ? 'none' : 'auto',
       }}
     >
-      {/* Оживлённый арт на весь экран */}
+      {/* Оживлённый арт на весь экран — мягко проявляется из тёмного фона */}
       {hasArt && (
-        <div style={{ position: 'absolute', inset: 0 }}>
+        <div style={{ position: 'absolute', inset: 0, animation: 'fadeIn 0.5s ease' }}>
           <AnimatedArt
             src={art.src}
             mode={art.mode}
@@ -200,8 +203,9 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 2600 }: SplashScreen
           </span>
         </div>
 
-        {hasArt ? (
-          /* Логотип уже на арте — снизу только шкала и подсказка */
+        {!artFailed ? (
+          /* Арт загружен или в пути — снизу только шкала и подсказка.
+             Пока арт грузится, фон нейтральный тёмный: никакого «старого» экрана. */
           <div
             style={{
               width: '100%',
