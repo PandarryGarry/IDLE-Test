@@ -58,6 +58,17 @@ export function applySaveData(data: SaveData): void {
     lastSaveTime: data.savedAt,
   });
 
+  // Автоматически возобновляем активный навык
+  if (data.game.activeSkill && data.game.activeActionId) {
+    // Небольшая задержка чтобы tickManager успел запуститься
+    setTimeout(() => {
+      const gs = useGameStore.getState();
+      if (!gs.isRunning && data.game.activeSkill && data.game.activeActionId) {
+        gs.startSkillAction(data.game.activeSkill as any, data.game.activeActionId);
+      }
+    }, 500);
+  }
+
   // Calculate offline progress and store result for Dashboard display
   // Используем leaveTime (точное время ухода) если есть, иначе savedAt
   const leaveTime = Number(localStorage.getItem('aethelia_leave_time') || '0') || data.savedAt;
