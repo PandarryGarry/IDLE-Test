@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { usePlayerStore } from '@/store/playerStore';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { useGameStore } from '@/store/gameStore';
@@ -89,15 +89,13 @@ function OfflineSummary({ data, onClaim }: { data: OfflineData; onClaim: () => v
         ))}
       </div>
 
-      <button onClick={onClaim} style={{
-        width: '100%', padding: '11px 0', borderRadius: 12, cursor: 'pointer',
-        background: 'linear-gradient(180deg,#c8880a,#9a6008)',
-        border: '2px solid #6b4008', color: '#fff8d0',
-        fontSize: 13, fontWeight: 800, fontFamily: 'var(--app-font-sans)',
-        boxShadow: '0 3px 0 #3d2005',
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+        padding: '8px 0', fontSize: 11, color: '#8b6030',
+        fontFamily: 'var(--app-font-mono)',
       }}>
-        ✓ Забрать награды
-      </button>
+        ✓ Лут уже добавлен в инвентарь
+      </div>
     </div>
   );
 }
