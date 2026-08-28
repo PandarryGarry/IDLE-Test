@@ -12,6 +12,8 @@ import { MobileNav } from '@/components/MobileNav';
 import { GlobalActiveBar } from '@/components/GlobalActiveBar';
 import { NotificationToast } from '@/components/NotificationToast';
 import { SplashScreen } from '@/components/SplashScreen';
+import { WhatsNewModal } from '@/components/WhatsNewModal';
+import { getUnseenChangelog, markChangelogSeen, type VersionEntry } from '@/data/changelog';
 
 import { DashboardPage } from '@/pages/DashboardPage';
 import { WoodcuttingPage } from '@/pages/WoodcuttingPage';
@@ -104,6 +106,24 @@ function Router() {
 function App() {
   const [isReady, setIsReady] = useState(false);
 
+  // «Что нового» — показываем ПОСЛЕ заставки, если есть непросмотренные записи.
+  const [unseenChangelog, setUnseenChangelog] = useState<VersionEntry[]>([]);
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
+
+  const handleSplashLoaded = () => {
+    setIsReady(true);
+    const unseen = getUnseenChangelog();
+    if (unseen.length > 0) {
+      setUnseenChangelog(unseen);
+      setWhatsNewOpen(true);
+    }
+  };
+
+  const handleWhatsNewClose = () => {
+    setWhatsNewOpen(false);
+    markChangelogSeen();
+  };
+
   useEffect(() => {
     try {
       initGame();
@@ -127,7 +147,8 @@ function App() {
   return (
     <ErrorBoundary>
       <TooltipProvider delayDuration={200}>
-        <SplashScreen onLoaded={() => setIsReady(true)} minDisplayTimeMs={500} />
+        <SplashScreen onLoaded={handleSplashLoaded} />
+        <WhatsNewModal open={whatsNewOpen} entries={unseenChangelog} onClose={handleWhatsNewClose} />
         {basePath ? (
           <WouterRouter base={basePath}>
             <Router />

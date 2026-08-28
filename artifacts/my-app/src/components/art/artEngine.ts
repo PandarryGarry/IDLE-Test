@@ -84,6 +84,12 @@ export interface ArtEngineOptions {
   intensity?: number;
   sigil?: SigilConfig;
   createCanvas?: CanvasFactory;
+  /**
+   * Как вписывать арт в область:
+   *  - 'contain' (по умолчанию) — целиком, с полями; фон добивается блюр-подложкой.
+   *  - 'cover' — на весь экран с обрезкой краёв (для полноэкранных сцен).
+   */
+  fit?: 'cover' | 'contain';
 }
 
 export class ArtEngine {
@@ -107,6 +113,8 @@ export class ArtEngine {
   tint: ArtTint;
   intensity: number;
 
+  private readonly fitMode: 'cover' | 'contain';
+
   constructor(img: ImageLike, options: ArtEngineOptions) {
     this.img = img;
     this.mode = options.mode;
@@ -114,6 +122,7 @@ export class ArtEngine {
     this.intensity = options.intensity ?? 1;
     this.createCanvas = options.createCanvas ?? defaultCanvasFactory;
     this.sigil = options.sigil ?? { cx: 0.5, cy: 0.42, r: 0.34 };
+    this.fitMode = options.fit ?? 'contain';
   }
 
   /** Пересчёт под новый размер области (вызывается на resize и при старте). */
@@ -522,8 +531,17 @@ export class ArtEngine {
     ctx.restore();
   }
 
-  /** contain-fit с небольшим отступом — для sign/sigil показываем арт целиком. */
+  /**
+   * Раскладка основного слоя для sign/sigil.
+   *  - 'contain' — арт целиком с небольшим отступом (фон добивает блюр-подложка);
+   *  - 'cover'   — арт на весь экран с запасом ~4% под покачивание, края обрезаются.
+   */
   private fitContain() {
+    if (this.fitMode === 'cover') {
+      const cover = Math.max(this.width / this.img.width, this.height / this.img.height);
+      const scale = cover * 1.04;
+      return { dw: this.img.width * scale, dh: this.img.height * scale };
+    }
     const contain = Math.min(this.width / this.img.width, this.height / this.img.height);
     const scale = contain * 0.92;
     return { dw: this.img.width * scale, dh: this.img.height * scale };

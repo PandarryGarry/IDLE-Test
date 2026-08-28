@@ -24,6 +24,8 @@ export interface AnimatedArtProps {
   intensity?: number;
   /** Цвет свечения и пылинок. */
   tint?: ArtTint;
+  /** 'cover' — на весь экран с обрезкой, 'contain' (дефолт) — целиком с полями. */
+  fit?: 'cover' | 'contain';
   /** Геометрия рунного круга для режима 'sigil'. */
   sigil?: SigilConfig;
   onModeDetected?: (mode: ArtMode) => void;
@@ -37,6 +39,7 @@ export function AnimatedArt({
   className,
   intensity = 1,
   tint = DEFAULT_TINT,
+  fit,
   sigil,
   onModeDetected,
   onReady,
@@ -114,6 +117,7 @@ export function AnimatedArt({
         tint: tintRef.current,
         intensity: intensityRef.current,
         sigil,
+        fit,
       });
       setStatus('ready');
       callbacksRef.current.onModeDetected?.(resolved);
@@ -148,7 +152,7 @@ export function AnimatedArt({
       observer?.disconnect();
       window.removeEventListener('pointermove', onPointerMove);
     };
-  }, [src, mode, sigil]);
+  }, [src, mode, sigil, fit]);
 
   return (
     <canvas

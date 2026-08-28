@@ -136,12 +136,12 @@ export function calculateOfflineProgress(lastSaveTime: number): OfflineResult | 
 
 /** Применяет оффлайн-прогресс к стейту */
 export function applyOfflineProgress(result: OfflineResult): void {
-  const addSkillXp  = usePlayerStore.getState().addSkillXp;
-  const addItem     = useInventoryStore.getState().addItem;
+  const addXp   = usePlayerStore.getState().addXp;
+  const addItem = useInventoryStore.getState().addItem;
 
   for (const skill of result.skills) {
     if (skill.xpGained > 0) {
-      addSkillXp(skill.skillId as any, skill.xpGained);
+      addXp(skill.skillId as any, skill.xpGained);
     }
     for (const item of skill.items) {
       addItem(item.id, item.quantity);
