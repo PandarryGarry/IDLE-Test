@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { usePlayerStore } from '@/store/playerStore';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { useGameStore } from '@/store/gameStore';
@@ -6,8 +6,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { CoinsDisplay } from '@/shared/ui/CoinsDisplay';
 import { formatNumber } from '@/lib/utils';
 import { Moon } from 'lucide-react';
-import { calculateOfflineProgress, applyOfflineProgress } from '@/gameEngine/offlineProgress';
-import type { OfflineResult } from '@/gameEngine/offlineProgress';
+import type { OfflineData } from '@/store/gameStore';
 
 const PANEL: React.CSSProperties = {
   background: 'linear-gradient(160deg,#7a5028,#5a3818)',
@@ -45,9 +44,9 @@ function StatCell({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 /* ── Оффлайн сводка ── */
-function OfflineSummary({ result, onClaim }: { result: OfflineResult; onClaim: () => void }) {
-  const h = Math.floor(result.durationMinutes / 60);
-  const m = result.durationMinutes % 60;
+function OfflineSummary({ data, onClaim }: { data: OfflineData; onClaim: () => void }) {
+  const h = Math.floor(data.totalMinutes / 60);
+  const m = data.totalMinutes % 60;
   const timeStr = h > 0 ? `${h}ч ${m}м` : `${m}м`;
 
   return (
@@ -68,7 +67,7 @@ function OfflineSummary({ result, onClaim }: { result: OfflineResult; onClaim: (
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
-        {result.skills.map((sk, i) => (
+        {data.rewards.map((sk, i) => (
           <div key={i} style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '8px 10px', borderRadius: 10,
@@ -77,20 +76,13 @@ function OfflineSummary({ result, onClaim }: { result: OfflineResult; onClaim: (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 18 }}>{sk.icon}</span>
               <div>
-                <div style={{ fontSize: 12, color: '#f0d070', fontWeight: 700 }}>{sk.skillName}</div>
-                {sk.items.map(item => (
-                  <div key={item.id} style={{ fontSize: 10, color: '#a07838', fontFamily: 'var(--app-font-mono)' }}>
-                    +{formatNumber(item.quantity)} {item.name}
-                  </div>
-                ))}
+                <div style={{ fontSize: 12, color: '#f0d070', fontWeight: 700 }}>{sk.skill}</div>
+                {sk.items && <div style={{ fontSize: 10, color: '#a07838', fontFamily: 'var(--app-font-mono)' }}>{sk.items}</div>}
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 12, color: '#f5d060', fontFamily: 'var(--app-font-mono)', fontWeight: 800 }}>
-                +{formatNumber(sk.xpGained)} XP
-              </div>
-              <div style={{ fontSize: 10, color: '#8b6030', fontFamily: 'var(--app-font-mono)' }}>
-                {sk.actionsCount} действий
+                +{formatNumber(sk.xp)} XP
               </div>
             </div>
           </div>
@@ -117,24 +109,11 @@ export function DashboardPage() {
   const gp           = useInventoryStore(s => s.gp);
   const items        = useInventoryStore(s => s.items);
   const maxSlots     = useInventoryStore(s => s.maxSlots);
-  const lastSaveTime = useGameStore(s => s.lastSaveTime);
+  const offlineData   = useGameStore(s => s.offlineData);
+  const clearOffline  = useGameStore(s => s.clearOfflineData);
   const usedSlots    = items ? items.filter(s => s.quantity > 0).length : 0;
 
-  const [offline, setOffline] = useState<OfflineResult | null>(null);
-  const checked = useRef(false);
-
-  useEffect(() => {
-    if (checked.current) return;
-    checked.current = true;
-    if (lastSaveTime > 0) {
-      const result = calculateOfflineProgress(lastSaveTime);
-      if (result) setOffline(result);
-    }
-  }, [lastSaveTime]);
-
-  const handleClaim = () => {
-    if (offline) { applyOfflineProgress(offline); setOffline(null); }
-  };
+  const handleClaim = () => { clearOffline(); };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -174,8 +153,8 @@ export function DashboardPage() {
       </div>
 
       {/* ── ОФФЛАЙН СВОДКА ── */}
-      {offline
-        ? <OfflineSummary result={offline} onClaim={handleClaim} />
+      {offlineData
+        ? <OfflineSummary data={offlineData} onClaim={handleClaim} />
         : (
           /* Заглушка когда нет оффлайн данных */
           <div style={{
