@@ -62,7 +62,6 @@ export function applySaveData(data: SaveData): void {
   if (data.game.activeSkill && data.game.activeActionId) {
     const offlineResult = calculateOfflineProgress(data.game.activeSkill, data.game.activeActionId, data.savedAt);
     if (offlineResult && offlineResult.xpGained > 0) {
-      const { useGameStore } = require('@/store/gameStore');
       const skillNames: Record<string, string> = {
         woodcutting: 'Лесорубство', mining: 'Горное дело', fishing: 'Рыбалка',
         cooking: 'Кулинария', smithing: 'Кузнечество', firemaking: 'Огонь', combat: 'Бой',
