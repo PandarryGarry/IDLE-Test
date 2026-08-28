@@ -147,7 +147,7 @@ function App() {
   return (
     <ErrorBoundary>
       <TooltipProvider delayDuration={200}>
-        <SplashScreen onLoaded={handleSplashLoaded} minDisplayTimeMs={500} />
+        <SplashScreen onLoaded={handleSplashLoaded} />
         <WhatsNewModal open={whatsNewOpen} entries={unseenChangelog} onClose={handleWhatsNewClose} />
         {basePath ? (
           <WouterRouter base={basePath}>

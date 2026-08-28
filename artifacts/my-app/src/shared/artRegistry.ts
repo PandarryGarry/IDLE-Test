@@ -17,14 +17,34 @@ import type { ArtMode, SigilConfig } from '@/components/art/artEngine';
 export interface ArtEntry {
   src: string;
   mode: ArtMode;
+  /** cover — на весь экран (для полноэкранных сцен), contain — целиком с полями. */
+  fit?: 'cover' | 'contain';
   sigil?: SigilConfig;
 }
 
-/** Заставочный арт — деревянная вывеска таверны. */
-export const SPLASH_ART: ArtEntry = {
-  src: '/assets/art/splash.png',
-  mode: 'sign',
+/**
+ * Заставочный арт — три варианта сцены таверны под разные экраны.
+ * Все — лёгкие WebP (~110 КБ вместо 2.4 МБ PNG), грузятся быстро.
+ */
+export const SPLASH_ART_VARIANTS: Record<'wide' | 'tall' | 'square', ArtEntry> = {
+  /** Десктоп / ландшафт (16:9) */
+  wide:   { src: '/assets/art/splash_wide.webp',   mode: 'sign', fit: 'cover' },
+  /** Телефон / портрет (9:16) */
+  tall:   { src: '/assets/art/splash_tall.webp',   mode: 'sign', fit: 'cover' },
+  /** Квадратные и промежуточные экраны */
+  square: { src: '/assets/art/splash_square.webp', mode: 'sign', fit: 'cover' },
 };
+
+/** Выбирает вариант заставки под пропорции экрана. */
+export function pickSplashArt(width: number, height: number): ArtEntry {
+  const aspect = width / Math.max(1, height);
+  if (aspect >= 1.15) return SPLASH_ART_VARIANTS.wide;
+  if (aspect <= 0.85) return SPLASH_ART_VARIANTS.tall;
+  return SPLASH_ART_VARIANTS.square;
+}
+
+/** Заставочный арт (дефолт) — оставлен для обратной совместимости. */
+export const SPLASH_ART: ArtEntry = SPLASH_ART_VARIANTS.square;
 
 /** Второй арт — рунный круг (под будущий экран: призыв/босс/магия). */
 export const RESERVED_ART: ArtEntry = {

@@ -11,7 +11,6 @@ interface ActionProgressBarProps {
 
 const COLOR_MAP = {
   green: { bar: 'bg-amber-500', glow: '0 0 12px rgba(200,136,10,0.7)', track: 'bg-amber-900/30' },
-  amber: { bar: 'bg-amber-500', glow: '0 0 12px rgba(200,136,10,0.7)', track: 'bg-amber-900/30' },
   blue:  { bar: 'bg-blue-500', glow: '0 0 12px rgba(59,130,246,0.6)', track: 'bg-blue-500/15' },
   amber: { bar: 'bg-amber-400', glow: '0 0 12px rgba(251,191,36,0.6)', track: 'bg-amber-400/15' },
   red:   { bar: 'bg-red-500', glow: '0 0 12px rgba(239,68,68,0.6)', track: 'bg-red-500/15' },

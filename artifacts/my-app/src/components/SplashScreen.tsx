@@ -16,7 +16,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Sword, Sparkles, ShieldCheck } from 'lucide-react';
 import { AnimatedArt } from '@/components/art/AnimatedArt';
 import { useArtMode } from '@/hooks/useArtMode';
-import { SPLASH_ART, ART_TINT } from '@/shared/artRegistry';
+import { pickSplashArt, ART_TINT } from '@/shared/artRegistry';
 import { CURRENT_VERSION } from '@/data/changelog';
 
 const LORE_TIPS = [
@@ -43,7 +43,14 @@ const FONTS_WAIT_CAP_MS = 2500;
  */
 const WEIGHTS = { base: 15, fonts: 30, art: 40, minTime: 15 } as const;
 
-export function SplashScreen({ onLoaded, minDisplayTimeMs = 500 }: SplashScreenProps) {
+export function SplashScreen({ onLoaded, minDisplayTimeMs = 2600 }: SplashScreenProps) {
+  // Вариант арта выбираем один раз по пропорциям экрана (wide / tall / square).
+  const [art] = useState(() =>
+    pickSplashArt(
+      typeof window !== 'undefined' ? window.innerWidth : 1,
+      typeof window !== 'undefined' ? window.innerHeight : 1,
+    ),
+  );
   const [progress, setProgress] = useState(0);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [isDone, setIsDone] = useState(false);
@@ -55,7 +62,7 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 500 }: SplashScreenP
   const [artWaitTimedOut, setArtWaitTimedOut] = useState(false);
 
   // Режим заставки задан реестром ('sign'); ждём только факт загрузки файла.
-  const probe = useArtMode(SPLASH_ART.src, SPLASH_ART.mode);
+  const probe = useArtMode(art.src, art.mode);
   const hasArt = probe.loaded && probe.mode !== null;
   // Арт «решён»: загрузился, упал с ошибкой или вышли по таймауту.
   const artSettled = probe.mode !== null || probe.error || artWaitTimedOut;
@@ -141,9 +148,10 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 500 }: SplashScreenP
       {hasArt && (
         <div style={{ position: 'absolute', inset: 0 }}>
           <AnimatedArt
-            src={SPLASH_ART.src}
-            mode={SPLASH_ART.mode}
-            sigil={SPLASH_ART.sigil}
+            src={art.src}
+            mode={art.mode}
+            fit={art.fit}
+            sigil={art.sigil}
             tint={ART_TINT}
             intensity={1}
             className="absolute inset-0 w-full h-full"
