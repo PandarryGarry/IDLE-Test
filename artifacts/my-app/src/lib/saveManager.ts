@@ -200,3 +200,48 @@ export function initGame(): void {
     console.error('Failed to start auto-save:', e);
   }
 }
+
+
+// ── Оффлайн: сохраняем момент ухода игрока ──────────────────────
+
+const LEAVE_TIME_KEY = 'aethelia_leave_time';
+
+/** Вызывается когда игрок уходит с вкладки/закрывает браузер */
+export function saveOnLeave(): void {
+  try {
+    // Сохраняем игру
+    manualSave();
+    // Записываем точное время ухода
+    localStorage.setItem(LEAVE_TIME_KEY, String(Date.now()));
+  } catch (e) {
+    // silent fail
+  }
+}
+
+/** Читает время ухода и возвращает сколько прошло (ms) */
+export function getOfflineDuration(): number {
+  try {
+    const leaveTime = Number(localStorage.getItem(LEAVE_TIME_KEY) || '0');
+    if (!leaveTime) return 0;
+    const elapsed = Date.now() - leaveTime;
+    // Сбрасываем время ухода
+    localStorage.removeItem(LEAVE_TIME_KEY);
+    return elapsed;
+  } catch {
+    return 0;
+  }
+}
+
+/** Инициализирует обработчики ухода игрока */
+export function setupOfflineTracking(): void {
+  // Закрытие вкладки/браузера
+  window.addEventListener('beforeunload', saveOnLeave);
+  // Переход на другую вкладку / скрытие
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      saveOnLeave();
+    }
+  });
+  // Мобильные устройства — приложение уходит в фон
+  window.addEventListener('pagehide', saveOnLeave);
+}
