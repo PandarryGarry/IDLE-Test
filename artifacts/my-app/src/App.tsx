@@ -5,7 +5,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { ErrorBoundary } from '@/components/error-boundary';
 
 import { tickManager } from '@/gameEngine/tickManager';
-import { initGame } from '@/lib/saveManager';
+import { initGame, setupOfflineTracking } from '@/lib/saveManager';
 import { Sidebar } from '@/components/Sidebar';
 import { TopNavBar } from '@/components/TopNavBar';
 import { MobileNav } from '@/components/MobileNav';
@@ -107,6 +107,7 @@ function App() {
   useEffect(() => {
     try {
       initGame();
+      setupOfflineTracking();
       tickManager.start();
       document.documentElement.classList.add('dark');
     } catch (e) {
