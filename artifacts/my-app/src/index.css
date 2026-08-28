@@ -355,5 +355,14 @@
   0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+/* Используются GModal (gameUI.tsx) — оверлей и появление окна */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 16px)); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
+}
 
 .animate-pulse-gold { animation: pulse-gold 2s ease-in-out infinite; }
