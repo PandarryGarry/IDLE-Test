@@ -75,10 +75,7 @@ export function calculateOfflineProgress(
     }
   }
 
-  notifs.notifyInfo(
-    `Welcome back! Away for ${formatOfflineTime(offlineMs)}. ` +
-    `+${Math.floor(totalXp).toLocaleString()} ${skillId} XP.`
-  );
+  // Notification removed — Dashboard shows offline summary instead
 
   return { offlineMs, actions: totalActions, xpGained: totalXp, itemsGained, levelUps };
 }
