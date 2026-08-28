@@ -77,7 +77,10 @@ export function applySaveData(data: SaveData): void {
             icon: skillIcons[data.game.activeSkill] || '⚡',
             skill: skillNames[data.game.activeSkill] || data.game.activeSkill,
             xp: Math.floor(offlineResult.xpGained),
-            items: offlineResult.itemsGained.map(i => `+${i.quantity} ${i.itemId.replace(/_/g,' ')}`).join(', ') || undefined,
+            items: offlineResult.itemsGained.map(i => {
+              const name = i.itemId.replace(/_/g,' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+              return `+${i.quantity} ${name}`;
+            }).join(', ') || undefined,
           }],
           goldEarned: 0,
         }
