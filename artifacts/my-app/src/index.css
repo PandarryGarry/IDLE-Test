@@ -365,4 +365,110 @@
   to   { opacity: 1; transform: translate(-50%, -50%); }
 }
 
+
+/* SplashScreen — финальная полировка: мягкий вход, shimmer и уважение reduce motion */
+@keyframes splash-art-reveal {
+  from { opacity: 0; transform: scale(1.025); filter: saturate(0.9); }
+  to   { opacity: 1; transform: scale(1);     filter: saturate(1); }
+}
+@keyframes splash-hud-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes splash-progress-shimmer {
+  from { transform: translateX(-150%) skewX(-18deg); }
+  to   { transform: translateX(260%) skewX(-18deg); }
+}
+@keyframes splash-progress-complete {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.26); }
+}
+@keyframes splash-percent-breathe {
+  0%, 100% { opacity: 0.78; transform: translateY(0); }
+  50%      { opacity: 1;    transform: translateY(-1px); }
+}
+@keyframes splash-tip-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+@keyframes splash-emblem-float {
+  0%, 100% { transform: translateY(0) rotate(-0.6deg); }
+  50%      { transform: translateY(-4px) rotate(0.6deg); }
+}
+@keyframes splash-sword-glint {
+  0%, 100% { filter: none; transform: scale(1); }
+  50%      { filter: drop-shadow(0 0 10px var(--accent-gold)); transform: scale(1.035); }
+}
+
+.splash-root {
+  will-change: opacity, transform, filter;
+}
+.splash-root--out {
+  transform: scale(1.01);
+  filter: blur(2px);
+}
+.splash-art-layer {
+  animation: splash-art-reveal 0.72s ease-out both;
+  will-change: opacity, transform, filter;
+}
+.splash-bottom-hud {
+  animation: splash-hud-rise 0.55s ease-out 0.12s both;
+  will-change: opacity, transform;
+}
+.splash-progress-fill {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.splash-progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  width: 42%;
+  background: linear-gradient(90deg, transparent, var(--text-white), transparent);
+  opacity: 0.28;
+  animation: splash-progress-shimmer 1.55s ease-in-out infinite;
+}
+.splash-progress-fill[data-complete='true'] {
+  animation: splash-progress-complete 0.55s ease-out both;
+}
+.splash-percent {
+  display: inline-block;
+  animation: splash-percent-breathe 1.8s ease-in-out infinite;
+}
+.splash-tip-box {
+  animation:
+    fadeIn 0.45s ease-out both,
+    splash-tip-float 4.4s ease-in-out 0.45s infinite;
+  will-change: opacity, transform;
+}
+.splash-fallback-emblem {
+  animation: splash-emblem-float 3.8s ease-in-out infinite;
+  will-change: transform;
+}
+.splash-fallback-sword {
+  animation: splash-sword-glint 2.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-root,
+  .splash-root--out,
+  .splash-art-layer,
+  .splash-bottom-hud,
+  .splash-progress-fill,
+  .splash-percent,
+  .splash-tip-box,
+  .splash-fallback-emblem,
+  .splash-fallback-sword {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    filter: none !important;
+  }
+  .splash-progress-fill::after {
+    display: none;
+  }
+}
+
 .animate-pulse-gold { animation: pulse-gold 2s ease-in-out infinite; }
