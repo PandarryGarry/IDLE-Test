@@ -59,8 +59,10 @@ export function applySaveData(data: SaveData): void {
   });
 
   // Calculate offline progress and store result for Dashboard display
+  // Используем leaveTime (точное время ухода) если есть, иначе savedAt
+  const leaveTime = Number(localStorage.getItem('aethelia_leave_time') || '0') || data.savedAt;
   if (data.game.activeSkill && data.game.activeActionId) {
-    const offlineResult = calculateOfflineProgress(data.game.activeSkill, data.game.activeActionId, data.savedAt);
+    const offlineResult = calculateOfflineProgress(data.game.activeSkill, data.game.activeActionId, leaveTime);
     if (offlineResult && offlineResult.xpGained > 0) {
       const skillNames: Record<string, string> = {
         woodcutting: 'Лесорубство', mining: 'Горное дело', fishing: 'Рыбалка',
