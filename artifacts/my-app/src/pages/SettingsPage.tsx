@@ -81,26 +81,40 @@ export function SettingsPage() {
             <div className="text-[11px] font-mono text-[var(--text-muted)] leading-relaxed">
               Прогресс гостя хранится только в этой сессии: доступны лесорубство и рыбалка, 24 слота инвентаря.
             </div>
-            <button
-              onClick={() => navigate('/login')}
-              className="flex-1 sm:flex-none px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-2xl text-xs transition-all active:scale-95 shadow-[0_0_15px_rgba(245,158,11,0.25)]"
-            >
-              Создать аккаунт
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2.5">
+              <button
+                onClick={() => navigate('/login')}
+                className="flex-1 px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-2xl text-xs transition-all active:scale-95 shadow-[0_0_15px_rgba(245,158,11,0.25)]"
+              >
+                Создать аккаунт
+              </button>
+              <button
+                onClick={() => { stopActiveActivities(); void signOut().then(() => navigate('/login')); }}
+                className="flex-1 px-5 py-3 bg-[var(--bg-card-dark)] border border-[var(--border-default)] hover:border-[var(--border-accent)] text-[var(--text-secondary)] font-bold rounded-2xl text-xs transition-all active:scale-95"
+              >
+                Выйти из гостевого режима
+              </button>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="text-sm font-semibold text-[var(--text-primary)]">
-              {profile?.nickname || user?.email || 'Игрок'}
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full bg-[var(--bg-slot)] border border-[var(--border-default)] flex items-center justify-center text-lg shrink-0">🛡️</div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-[var(--text-primary)] truncate">
+                  {profile?.nickname || user?.email || 'Игрок'}
+                </div>
+                {user?.email && (
+                  <div className="text-[11px] font-mono text-[var(--text-muted)] truncate">{user.email}</div>
+                )}
+              </div>
             </div>
-            {user?.email && (
-              <div className="text-[11px] font-mono text-[var(--text-muted)]">{user.email}</div>
-            )}
+            <div className="text-[11px] font-mono text-[var(--text-muted)]">Аккаунт подключён к Supabase — прогресс сохраняется в облаке.</div>
             <button
               onClick={() => { stopActiveActivities(); void signOut().then(() => navigate('/login')); }}
-              className="flex-1 sm:flex-none px-5 py-2.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-[var(--text-primary)] border border-red-500/30 font-bold rounded-2xl text-xs transition-all active:scale-95"
+              className="w-full sm:w-auto px-5 py-3 bg-red-500 hover:bg-red-400 text-white font-extrabold rounded-2xl text-xs transition-all active:scale-95 shadow-[0_0_15px_rgba(239,68,68,0.25)] flex items-center justify-center gap-2"
             >
-              Выйти
+              Выйти из аккаунта
             </button>
           </div>
         )}
