@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <title>My App</title>
-    <meta name="description" content="My App — built on Replit. Update this description to reflect the app." />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aethelia — Idle RPG</title>
+    <meta name="description" content="Aethelia — браузерная idle RPG о ремёслах, героях и приключениях." />
     <meta name="robots" content="index, follow" />
-    <meta property="og:title" content="My App" />
-    <meta property="og:description" content="My App — built on Replit. Update this description to reflect the app." />
+    <meta property="og:title" content="Aethelia — Idle RPG" />
+    <meta property="og:description" content="Ремёсла, герои и приключения в мире Aethelia." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="My App" />
-    <meta name="twitter:description" content="My App — built on Replit. Update this description to reflect the app." />
+    <meta name="twitter:title" content="Aethelia — Idle RPG" />
+    <meta name="twitter:description" content="Ремёсла, герои и приключения в мире Aethelia." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,11 +22,16 @@
       (function () {
         var a = window.innerWidth / Math.max(1, window.innerHeight);
         var v = a >= 1.15 ? 'wide' : a <= 0.85 ? 'tall' : 'square';
-        var l = document.createElement('link');
-        l.rel = 'preload';
-        l.as = 'image';
-        l.href = '/assets/art/splash_' + v + '.webp';
-        document.head.appendChild(l);
+        var preload = function (href) {
+          var link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'image';
+          link.href = href;
+          document.head.appendChild(link);
+        };
+        preload('/assets/art/splash_' + v + '.webp');
+        // Входная сцена идёт сразу после заставки у незалогиненного игрока.
+        preload('/assets/art/cutscene_tavern_entrance.webp');
       })();
     </script>
   </head>

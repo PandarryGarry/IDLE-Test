@@ -87,7 +87,6 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordRepeat, setPasswordRepeat] = useState('');
-  const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -148,16 +147,6 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
     }
 
     return [
-      <AuthTextField
-        key="name"
-        id="auth-name"
-        label="Имя"
-        placeholder="Garry"
-        icon="♙"
-        autoComplete="nickname"
-        value={name}
-        onChange={setName}
-      />,
       ...shared,
       <AuthTextField
         key="password-repeat"
@@ -171,7 +160,7 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
         onChange={setPasswordRepeat}
       />,
     ];
-  }, [email, password, name, passwordRepeat, isRegister]);
+  }, [email, password, passwordRepeat, isRegister]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -204,11 +193,7 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
     setSubmitting(true);
     try {
       if (isRegister) {
-        const result = await signUp(
-          email.trim(),
-          password,
-          { nickname: name.trim() || undefined },
-        );
+        const result = await signUp(email.trim(), password);
         if (!result.ok) return;
         if (result.needsEmailConfirmation) return;
         navigate('/');

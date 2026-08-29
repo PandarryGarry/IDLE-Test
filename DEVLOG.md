@@ -47,26 +47,23 @@
 
 ## 📍 ТЕКУЩИЙ СТАТУС
 
-**Завершены: Этапы 1 и 2. Этап 3 (auth foundation) реализован и смёржен в main; awaits owner's live testing in Replit. Следующий этап — 4 (создание персонажа).**
+**Завершены: Этапы 1–3. Функциональный код Этапа 4 (герой, правила, выбор, три уровня сейва) перенесён из PR #5; на текущей ветке добавлен цельный cinematic onboarding. Перед мержем в `main` нужен live-тест владельца в Replit.**
 
 Где продолжать следующему агенту:
-- сначала прочитать `DEVLOG.md`, `ROADMAP.md`, `STAGE3_AUTH_HANDOFF.md` (или создать `STAGE4_CHARACTER_HANDOFF.md`);
-- в Replit у владельца уже должны быть Secrets: `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (инструкция `SUPABASE_SETUP.md`);
-- первый шаг нового чата: владелец тестирует `/login`, `/register`, guest-realm, session restore, Google OAuth, sign out;
-- после подтверждения этапа 4: экран создания персонажа, nickname + аватар, start-характеристики, переход в игру.
+- сначала прочитать `DEVLOG.md`, `ROADMAP.md` и `STAGE4_CHARACTER_HANDOFF.md`;
+- в Replit у владельца должны быть Secrets: `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (инструкция `SUPABASE_SETUP.md`);
+- проверить полный маршрут: cold start → вход в таверну → registration → rules → ложа/create → выход в город → игра; затем returning user → выбор героя → выход → игра;
+- проверить iPhone/mobile crop, пропуск тапом/кликом/клавишами и `prefers-reduced-motion`;
+- production-арты онбординга: `character_creation_lodge.webp`, `cutscene_tavern_entrance.webp`, `cutscene_character_departure.webp`. Review-арты и неиспользуемые крупные PNG очищены.
 
-Что уже зафиксировано по Stage 3:
+Что уже зафиксировано:
 - visual auth-shell: `AuthPage.tsx`, routes `/auth`, `/login`, `/register`, `index.css` (frameless glass, compact controls, mobile focus на камине/гербе, reduced-motion);
-- assets: `public/assets/art/auth_tavern_background.webp`, `public/assets/icons/ui/auth/aethelia_seal_clean.*`;
-- Supabase: `@supabase/supabase-js`, `src/lib/supabase.ts`, `src/store/authStore.ts`, `src/lib/guestMode.ts`, `src/lib/authActions.ts`;
-- AuthGate: незалогиненный → `/login`, гость → limited shell, registered → full shell;
+- onboarding: `CinematicDirector.tsx`, `CinematicScene.tsx`, `OnboardingScene.tsx`, transient queue в `cinematicState.ts`; сцены короткие, пропускаемые и не запускаются при reduced motion;
+- Stage 4: `RulesPage`, `CreateCharacterPage`, `SelectCharacterPage`; никнейм создаётся только как имя персонажа, не при регистрации;
+- Supabase: `@supabase/supabase-js`, `src/lib/supabase.ts`, `src/store/authStore.ts`, `src/lib/characterApi.ts`, `src/lib/characterSave.ts`;
+- AuthGate: незалогиненный → `/login`, гость → limited shell, registered → rules/hero gate → full shell;
 - guest mode: sessionStorage, лесорубство+рыбалка+24 слота, без боя/крафта/mining/расширения инвентаря, баннер «Зарегистрируйся, чтобы сохранить прогресс.»;
-- helper-документ: `SUPABASE_SETUP.md`.
-
-Пока не сделано (намеренно, на следующий этап):
-- cloud save / profile-логика (запись/чтение прогресса через Supabase);
-- google provider в Supabase может быть ещё не настроен, но код `signInWithGoogle` готов;
-- этап 4: создание персонажа.
+- helper-документы: `SUPABASE_SETUP.md`, `STAGE4_CHARACTER_HANDOFF.md`.
 
 Параллельная большая задача (Этапы 7–8): привязка 900+ иконок к предметам —
 агент сканирует папки скриптом, генерирует каркас данных (id/iconPath/тир из имён файлов),
@@ -75,6 +72,44 @@
 ---
 
 ## 📜 ЖУРНАЛ СЕССИЙ (новые записи — СВЕРХУ)
+
+### Сессия 9 — 2026-08-29 — Цельный cinematic onboarding Aethelia
+**Ветка:** `arena/01a04e4b-idle-test`
+
+**Сделано:**
+- Утверждённые кадры безопасно переведены в компактные production WebP и подключены как
+  `character_creation_lodge.webp`, `cutscene_tavern_entrance.webp`,
+  `cutscene_character_departure.webp`.
+- Добавлены `CinematicDirector`, `CinematicScene` и `cinematicState`: после splash
+  незалогиненный путник один раз за вкладку видит короткий вход в таверну, а после
+  успешного создания/выбора героя — короткий выход в город. Сцену можно пропустить
+  тапом/кликом/Escape/Enter/Space; `prefers-reduced-motion` не рисует даже один кадр
+  и сразу продолжает маршрут.
+- `OnboardingScene` объединил атмосферные background/UI-слои: правила в общей зале,
+  двухшаговый create в правой зоне обжитой ложи, выбор героя в левой зоне у выхода.
+  Добавлены тёплый свет, пылинки, glass-панели, safe-area и mobile/reduced-motion ветки.
+- Ник аккаунта удалён из registration: имя теперь появляется только у героя. Первый герой
+  корректно берёт authenticated `userId`, а departure ставится в очередь лишь после
+  успешного сохранения героя/выбора.
+- Модалка «Что нового» теперь ждёт playable-состояния и окончания перебивки; добавлена
+  пользовательская версия `0.2.0 «Первый шаг»`.
+- Очищены неиспользуемые runtime/черновые арты: legacy `splash.png`, `reserved.png`,
+  review-исходники и неиспользуемая пара `aethelia_seal_clean.*`. Обновлены asset README,
+  README проекта, ROADMAP и Stage 4 handoff; метаданные страницы переименованы из `My App`.
+
+**Проверено агентом:**
+- `corepack pnpm --dir artifacts/my-app typecheck` — чисто.
+- `corepack pnpm --dir artifacts/my-app build` — успешно, 2247 modules transformed.
+- Dev server и маршруты `/`, `/login`, `/register`, `/rules`, `/create-character`,
+  `/select-character` возвращают HTTP 200; новые WebP отдаются как `image/webp`.
+- Визуально просмотрены исходные кадры и representative mobile-crops 390×844:
+  вход сохраняет герб/двери/камин, ложа — камин и барда, выход — свободный проём и город.
+  Полный browser screenshot-тест в sandbox не выполнен: установленного браузера нет,
+  а скачивание Chromium оборвалось сетевым `ECONNRESET`. Нужен финальный Replit/iPhone QA.
+
+**Ожидается от владельца:** пройти оба маршрута в Replit и сообщить, если требуется
+изменить crop, плотность панели, длительность или текст конкретной сцены. Не мержить в
+`main` до этого подтверждения.
 
 ### Сессия 7 — 2026-08-29 — Согласование Этапа 4 (персонаж) + контракт реализации
 **Ветка:** `arena/01a04ceb-idle-test`

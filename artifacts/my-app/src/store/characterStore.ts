@@ -9,6 +9,7 @@ import {
   type Character,
 } from '@/lib/characterApi';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { useAuthStore } from '@/store/authStore';
 import { resetGameToFresh } from '@/lib/saveManager';
 import type { RaceId } from '@/data/characters';
 
@@ -114,8 +115,9 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
 
   createNewCharacter: async (input) => {
     const { characters } = get();
-    const userId = characters[0]?.userId;
-    if (!userId) throw new Error('Нет пользователя');
+    // У первого героя ещё нет строки в characters, поэтому берём id из auth.
+    const userId = useAuthStore.getState().user?.id ?? characters[0]?.userId;
+    if (!userId) throw new Error('Нет активного аккаунта. Войдите снова и повторите попытку.');
 
     // Уникальность ника — до создания.
     if (await isNicknameTaken(input.nickname)) {

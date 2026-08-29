@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { GPanel, GButton, GAvatar, GBadge } from '@/shared/ui/gameUI';
 import { getAvatarPath, getRaceLabel } from '@/data/characters';
 import { formatDuration } from '@/lib/utils';
+import { OnboardingScene } from '@/components/OnboardingScene';
+import { queueCinematic } from '@/lib/cinematicState';
 
 export function SelectCharacterPage() {
   const [, navigate] = useLocation();
@@ -13,106 +15,127 @@ export function SelectCharacterPage() {
   const characters = useCharacterStore(s => s.characters);
   const selectCharacterById = useCharacterStore(s => s.selectCharacterById);
   const loading = useCharacterStore(s => s.loading);
-  const error = useCharacterStore(s => s.error);
+  const storeError = useCharacterStore(s => s.error);
+  const [selectingId, setSelectingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
       void loadCharacters(user.id);
     }
-  }, [user]);
+  }, [loadCharacters, user]);
 
-  const hasAny = characters.some(c => !c.isDeleted);
+  const liveCharacters = characters.filter(character => !character.isDeleted);
+  const hasAny = liveCharacters.length > 0;
+  const displayedError = actionError || storeError;
 
   const handlePlay = async (characterId: string) => {
-    await selectCharacterById(characterId);
-    navigate('/');
+    if (selectingId) return;
+    setSelectingId(characterId);
+    setActionError(null);
+    try {
+      await selectCharacterById(characterId);
+      // Экран растворяется в короткой сцене выхода, затем открывается сама игра.
+      queueCinematic('departure');
+      navigate('/');
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'Не удалось подготовить героя к пути.');
+    } finally {
+      setSelectingId(null);
+    }
   };
 
   return (
-    <main className="min-h-screen w-full flex items-center justify-center px-3 py-6"
-      style={{
-        background:
-          'linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.55) 100%), url(/assets/art/auth_tavern_background.webp) center / cover no-repeat',
-      }}>
-      <div style={{ width: 'min(540px, 100%)', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <GPanel variant="gold" style={{ padding: '16px 18px', background: 'rgba(30,18,8,0.88)' }}>
-          <h1 style={{
-            fontFamily: 'var(--app-font-display)', fontSize: 22, fontWeight: 900,
-            color: 'var(--text-primary)', margin: 0, textShadow: '0 2px 6px rgba(0,0,0,0.5)',
-          }}>
-            Выбор персонажа
-          </h1>
-          <div style={{ fontFamily: 'var(--app-font-mono)', fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>
-            Выберите, за кого хотите играть
-          </div>
-        </GPanel>
+    <OnboardingScene variant="selection" ariaLabel="Выбор персонажа">
+      <div className="character-select-layout">
+        <section className="character-select-panel" aria-labelledby="character-select-title">
+          <header className="character-select-panel__header">
+            <span className="onboarding-eyebrow">У ПОРОГА ТАВЕРНЫ</span>
+            <h1 id="character-select-title">Кого ждёт Этелия?</h1>
+            <p>Выберите героя — и город снова откроет перед ним свой путь.</p>
+          </header>
 
-        {loading && (
-          <GPanel variant="plain" style={{ padding: 24, textAlign: 'center' }}>
-            <div style={{ fontFamily: 'var(--app-font-mono)', fontSize: 12, color: 'var(--text-muted)' }}>
-              Загрузка персонажей...
-            </div>
-          </GPanel>
-        )}
-
-        {error && (
-          <GPanel variant="combat" style={{ padding: 12 }}>
-            <div style={{ fontFamily: 'var(--app-font-sans)', fontSize: 12, color: '#ff8060' }}>⚠ {error}</div>
-          </GPanel>
-        )}
-
-        {!loading && hasAny && (
-          characters.filter(c => !c.isDeleted).map(character => (
-            <GPanel key={character.id} variant="gold" style={{ background: 'rgba(30,18,8,0.86)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <GAvatar src={getAvatarPath(character.avatarId)} size={72} borderColor="var(--border-accent)" glow={character.selected} />
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontFamily: 'var(--app-font-display)', fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {character.nickname}
-                  </div>
-                  <div style={{ fontFamily: 'var(--app-font-mono)', fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>
-                    {getRaceLabel(character.raceId, 'ru')}
-                  </div>
-                  <div style={{ fontFamily: 'var(--app-font-mono)', fontSize: 10, color: 'var(--text-dim, #8b6030)', marginTop: 2 }}>
-                    ⏱ Играет: {formatDuration(character.saveData?.totalPlayTime ?? 0)}
-                  </div>
-                </div>
-                {character.selected && <GBadge variant="green">Активен</GBadge>}
-              </div>
-
-              <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-                <GButton variant="primary" fullWidth onClick={() => handlePlay(character.id)}>
-                  Играть за этого персонажа
-                </GButton>
-                <GButton variant="secondary" onClick={() => navigate('/create-character')}>
-                  Создать нового
-                </GButton>
-              </div>
+          {loading && (
+            <GPanel variant="dark" className="character-select-state" style={{ background: 'var(--onboarding-panel)' }}>
+              <span className="character-select-state__spark" aria-hidden="true">✦</span>
+              Загрузка историй…
             </GPanel>
-          ))
-        )}
+          )}
 
-        {!loading && !hasAny && (
-          <GPanel variant="plain" style={{ padding: 24, textAlign: 'center' }}>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>🛡️</div>
-            <div style={{ fontFamily: 'var(--app-font-display)', fontSize: 16, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 4 }}>
-              У вас пока нет персонажа
-            </div>
-            <div style={{ fontFamily: 'var(--app-font-sans)', fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
-              Создайте первого героя, чтобы начать путешествие по Этелии.
-            </div>
-            <GButton variant="primary" fullWidth onClick={() => navigate('/create-character')}>
-              Создать персонажа
-            </GButton>
-          </GPanel>
-        )}
+          {displayedError && (
+            <GPanel variant="combat" className="character-select-state character-select-state--error">
+              ⚠ {displayedError}
+            </GPanel>
+          )}
 
-        {/* Подсказка про переключение */}
-        <div style={{ textAlign: 'center' }}>
-          <GBadge variant="gray">Создание нового персонажа удаляет текущего</GBadge>
-        </div>
+          {!loading && hasAny && (
+            <div className="character-select-list">
+              {liveCharacters.map(character => (
+                <GPanel
+                  key={character.id}
+                  variant="gold"
+                  className="character-select-card"
+                  style={{ background: 'var(--onboarding-panel)', border: '1px solid var(--onboarding-panel-edge)', boxShadow: 'var(--onboarding-panel-shadow)' }}
+                >
+                  <div className="character-select-card__hero">
+                    <GAvatar
+                      src={getAvatarPath(character.avatarId)}
+                      size={76}
+                      borderColor="var(--border-accent)"
+                      glow={character.selected}
+                    />
+                    <div className="character-select-card__identity">
+                      <span>Путник Этелии</span>
+                      <strong>{character.nickname}</strong>
+                      <p>{getRaceLabel(character.raceId, 'ru')}</p>
+                    </div>
+                    {character.selected && <GBadge variant="green" size="sm">Активен</GBadge>}
+                  </div>
+
+                  <div className="character-select-card__memory">
+                    <span>Пройдено вместе</span>
+                    <strong>⌛ {formatDuration(character.saveData?.totalPlayTime ?? 0)}</strong>
+                  </div>
+
+                  <div className="character-select-card__actions">
+                    <GButton
+                      variant="primary"
+                      fullWidth
+                      disabled={Boolean(selectingId)}
+                      onClick={() => void handlePlay(character.id)}
+                    >
+                      {selectingId === character.id ? 'Открываем путь…' : 'Продолжить путь'}
+                    </GButton>
+                    <GButton variant="ghost" onClick={() => navigate('/create-character')}>
+                      Новая история
+                    </GButton>
+                  </div>
+                </GPanel>
+              ))}
+            </div>
+          )}
+
+          {!loading && !hasAny && (
+            <GPanel
+              variant="dark"
+              className="character-select-empty"
+              style={{ background: 'var(--onboarding-panel)', border: '1px solid var(--onboarding-panel-edge)' }}
+            >
+              <span aria-hidden="true">✦</span>
+              <strong>Здесь ещё нет истории</strong>
+              <p>Создайте первого героя, чтобы сделать шаг в город Этелии.</p>
+              <GButton variant="primary" fullWidth onClick={() => navigate('/create-character')}>
+                Создать героя
+              </GButton>
+            </GPanel>
+          )}
+
+          {!loading && hasAny && (
+            <p className="character-select-note">Новая история заменит текущего героя после подтверждения.</p>
+          )}
+        </section>
       </div>
-    </main>
+    </OnboardingScene>
   );
 }
 

@@ -529,12 +529,14 @@ interface GCardProps {
   selected?: boolean;
   disabled?: boolean;
   style?: React.CSSProperties;
+  className?: string;
   hoverEffect?: boolean;
 }
 
-export function GCard({ children, onClick, selected, disabled, style, hoverEffect = true }: GCardProps) {
+export function GCard({ children, onClick, selected, disabled, style, className, hoverEffect = true }: GCardProps) {
   return (
     <div
+      className={className}
       onClick={disabled ? undefined : onClick}
       style={{
         borderRadius: C.radiusMd,

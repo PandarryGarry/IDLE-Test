@@ -12,8 +12,10 @@ import { MobileNav } from '@/components/MobileNav';
 import { GlobalActiveBar } from '@/components/GlobalActiveBar';
 import { NotificationToast } from '@/components/NotificationToast';
 import { SplashScreen } from '@/components/SplashScreen';
+import { CinematicDirector } from '@/components/CinematicDirector';
 import { WhatsNewModal } from '@/components/WhatsNewModal';
 import { getUnseenChangelog, markChangelogSeen, type VersionEntry } from '@/data/changelog';
+import { getQueuedCinematic } from '@/lib/cinematicState';
 
 import { DashboardPage } from '@/pages/DashboardPage';
 import { WoodcuttingPage } from '@/pages/WoodcuttingPage';
@@ -215,20 +217,33 @@ function Router() {
 }
 
 function App() {
-  const [isReady, setIsReady] = useState(false);
+  const [splashComplete, setSplashComplete] = useState(false);
+  const [cinematicBusy, setCinematicBusy] = useState(false);
 
-  // «Что нового» — показываем ПОСЛЕ заставки, если есть непросмотренные записи.
+  // «Что нового» должно появляться только когда игрок уже дошёл до игры,
+  // а не поверх входной/выходной сцен или создания героя.
   const [unseenChangelog, setUnseenChangelog] = useState<VersionEntry[]>([]);
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
+  const [changelogChecked, setChangelogChecked] = useState(false);
+  const isGuest = useAuthStore(s => s.isGuest);
+  const activeCharacter = useCharacterStore(s => s.activeCharacter);
 
   const handleSplashLoaded = () => {
-    setIsReady(true);
+    setSplashComplete(true);
+  };
+
+  useEffect(() => {
+    if (changelogChecked || !splashComplete || cinematicBusy || getQueuedCinematic()) return;
+    // У аккаунта «Что нового» ждёт выбранного героя; гость попадает в игру сразу.
+    if (!isGuest && !activeCharacter) return;
+
     const unseen = getUnseenChangelog();
     if (unseen.length > 0) {
       setUnseenChangelog(unseen);
       setWhatsNewOpen(true);
     }
-  };
+    setChangelogChecked(true);
+  }, [activeCharacter, changelogChecked, cinematicBusy, isGuest, splashComplete]);
 
   const handleWhatsNewClose = () => {
     setWhatsNewOpen(false);
@@ -277,6 +292,7 @@ function App() {
     <ErrorBoundary>
       <TooltipProvider delayDuration={200}>
         <SplashScreen onLoaded={handleSplashLoaded} />
+        <CinematicDirector splashComplete={splashComplete} onBusyChange={setCinematicBusy} />
         <WhatsNewModal open={whatsNewOpen} entries={unseenChangelog} onClose={handleWhatsNewClose} />
         {basePath ? (
           <WouterRouter base={basePath}>

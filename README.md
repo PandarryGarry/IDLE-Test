@@ -14,6 +14,9 @@ artifacts/my-app/src/
 │
 ├── components/                 # Компоненты интерфейса игры
 │   ├── SplashScreen.tsx        # Загрузочный экран с анимированным гербом и подсказками
+│   ├── CinematicDirector.tsx   # Очередь коротких сцен входа/выхода
+│   ├── CinematicScene.tsx      # Полноэкранная перебивка: арт, текст, свет, пропуск
+│   ├── OnboardingScene.tsx     # Общая атмосферная подложка Rules/Create/Select
 │   ├── TopNavBar.tsx           # Верхняя статус-панель (уровень боя, золото, сумка, сейв)
 │   ├── Sidebar.tsx             # Боковая панель навигации (для ПК)
 │   ├── MobileNav.tsx           # Нижняя панель и шторка профессий (для смартфонов)
@@ -31,11 +34,17 @@ artifacts/my-app/src/
 │       ├── skillIcons.ts       # Иконки всех профессий и навыков
 │       └── itemIcons.ts        # Модульный реестр иконок предметов (оружие, броня, еда, руда)
 │
-├── public/assets/icons/characters/  # Аватары и персонажи
-│   ├── avatars/                # 30 аватаров: 5 рас × 6 (avatars/<race>/<race>_male_01..03.png)
-│   └── heroes/                 # Заготовки героев (для будущих систем)
+├── public/assets/              # Runtime-ассеты
+│   ├── art/                    # Splash, auth и утверждённые сцены онбординга (WebP)
+│   └── icons/characters/       # Аватары и персонажи
+│       ├── avatars/            # 30 аватаров: 5 рас × 6 (avatars/<race>/<race>_male_01..03.png)
+│       └── heroes/             # Заготовки героев (для будущих систем)
 │
 ├── pages/                      # Экраны игры
+│   ├── AuthPage.tsx            # Вход / регистрация
+│   ├── RulesPage.tsx           # Принятие правил перед созданием героя
+│   ├── CreateCharacterPage.tsx # Двухшаговое создание: раса → облик + ник
+│   ├── SelectCharacterPage.tsx # Выбор созданного героя у выхода в город
 │   ├── DashboardPage.tsx       # Командный центр героя (сводка, статус, обзор навыков)
 │   ├── CombatPage.tsx          # Боевая арена (дуэль, кукла экипировки, лог урона)
 │   ├── InventoryPage.tsx       # Сумка и казна героя (фильтры, продажа, улучшение слотов)
@@ -53,6 +62,8 @@ artifacts/my-app/src/
 │   ├── gameStore.ts            # Игровой цикл, активное действие, прирост опыта
 │   ├── combatStore.ts          # Боевой движок, монстры, расчет урона, авто-еда
 │   ├── settingsStore.ts        # Пользовательские настройки (язык, автосохранение)
+│   ├── authStore.ts            # Сессия Supabase, профиль, правила, guest mode
+│   ├── characterStore.ts       # Герои аккаунта, выбор, создание и мягкое удаление
 │   └── notificationsStore.ts   # Всплывающие уведомления о добыче и level up
 │
 ├── gameEngine/                 # Математика и системные модули
@@ -64,7 +75,10 @@ artifacts/my-app/src/
 │
 └── lib/                        # Утилиты и локализация
     ├── i18n.ts                 # Словарь локализации (Русский — основной)
-    ├── saveManager.ts          # Менеджер сохранения и загрузки (IndexedDB / LocalStorage)
+    ├── saveManager.ts          # Менеджер локального сохранения и загрузки
+    ├── characterApi.ts         # Supabase CRUD профиля/персонажей
+    ├── characterSave.ts        # Сверка local/cloud и отложенный cloud-save
+    ├── cinematicState.ts       # Короткая очередь переходных сцен (sessionStorage)
     └── utils.ts                # Форматирование чисел, времени и случайных чисел
 ```
 

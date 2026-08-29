@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
 import {
-  GPanel, GButton, GInput, GModal, GDivider, GBadge, GAvatar, GCard,
+  GButton, GInput, GModal, GBadge, GAvatar, GCard,
 } from '@/shared/ui/gameUI';
 import {
   RACES, RACE_MAP, getAvatarsForRace, getAvatarPath, getRaceLabel, getRaceBlurb,
@@ -9,6 +9,10 @@ import {
 } from '@/data/characters';
 import { useCharacterStore } from '@/store/characterStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
+import { OnboardingScene } from '@/components/OnboardingScene';
+import { queueCinematic } from '@/lib/cinematicState';
+
+type CreationStep = 'race' | 'identity';
 
 export function CreateCharacterPage() {
   const [, navigate] = useLocation();
@@ -18,6 +22,7 @@ export function CreateCharacterPage() {
 
   const hasExisting = useMemo(() => characters.some(c => !c.isDeleted), [characters]);
 
+  const [step, setStep] = useState<CreationStep>('race');
   const [selectedRace, setSelectedRace] = useState<RaceId>('human');
   const [avatarId, setAvatarId] = useState<string>('human_male_01');
   const [nickname, setNickname] = useState('');
@@ -26,10 +31,11 @@ export function CreateCharacterPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const avatars = useMemo(() => getAvatarsForRace(selectedRace), [selectedRace]);
+  const race = RACE_MAP[selectedRace];
 
   const handleRaceClick = (raceId: RaceId) => {
     setSelectedRace(raceId);
-    // авто-выбираем первый аватар новой расы
+    // При смене расы сразу показываем первый подходящий облик, ник не трогаем.
     setAvatarId(getAvatarsForRace(raceId)[0]);
     setLocalError(null);
   };
@@ -39,11 +45,13 @@ export function CreateCharacterPage() {
     setLocalError(null);
     try {
       await createNewCharacter({ nickname: name, avatarId, raceId: selectedRace });
+      // После того как герой действительно создан, даём истории выйти из таверны.
+      queueCinematic('departure');
       navigate('/');
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Не удалось создать персонажа.';
-      setLocalError(msg);
-      notifyError(msg);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Не удалось создать персонажа.';
+      setLocalError(message);
+      notifyError(message);
     } finally {
       setSubmitting(false);
       setConfirmOpen(false);
@@ -64,148 +72,162 @@ export function CreateCharacterPage() {
     }
   };
 
-  const confirmDelete = () => {
-    void performCreate(nickname.trim());
+  const continueToIdentity = () => {
+    setLocalError(null);
+    setStep('identity');
   };
 
-  const race = RACE_MAP[selectedRace];
-
   return (
-    <main className="min-h-screen w-full flex items-start justify-center px-3 py-6 overflow-y-auto"
-      style={{ background: 'linear-gradient(180deg,#2a1508 0%,#1a0e04 100%)' }}>
-      <div style={{ width: 'min(560px, 100%)', display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <OnboardingScene variant="creation" ariaLabel="Создание персонажа">
+      <div className="character-create-layout">
+        <section className="character-create-panel" aria-labelledby="character-create-title">
+          <header className="character-create-panel__header">
+            <span className="onboarding-eyebrow">ЛОЖА ТАВЕРНЫ</span>
+            <h1 id="character-create-title">Кем тебя узнает Этелия?</h1>
+            <p>
+              {step === 'race'
+                ? 'Выберите наследие героя. Его черты станут частью будущего пути.'
+                : 'Выберите облик и имя, с которыми герой сделает первый шаг.'}
+            </p>
+            <div className="character-create-steps" aria-label={`Шаг ${step === 'race' ? '1' : '2'} из 2`}>
+              <span className={step === 'race' ? 'is-active' : 'is-done'}><b>1</b> Наследие</span>
+              <i aria-hidden="true" />
+              <span className={step === 'identity' ? 'is-active' : ''}><b>2</b> Имя и облик</span>
+            </div>
+          </header>
 
-        {/* Заголовок */}
-        <GPanel variant="gold" style={{ padding: '16px 18px' }}>
-          <h1 style={{
-            fontFamily: 'var(--app-font-display)', fontSize: 22, fontWeight: 900,
-            color: 'var(--text-primary)', margin: 0, textShadow: '0 2px 6px rgba(0,0,0,0.5)',
-          }}>
-            Создание персонажа
-          </h1>
-          <div style={{ fontFamily: 'var(--app-font-mono)', fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>
-            Шаг 1 из 2: выберите расу
-          </div>
-        </GPanel>
+          {step === 'race' ? (
+            <div className="character-create-section character-create-section--race">
+              <div className="character-create-section__label">Выберите расу</div>
+              <div className="character-create-race-grid">
+                {RACES.map(candidate => {
+                  const active = selectedRace === candidate.id;
+                  return (
+                    <GCard
+                      key={candidate.id}
+                      className="character-create-race-card"
+                      selected={active}
+                      onClick={() => handleRaceClick(candidate.id)}
+                      style={{ padding: '0.62rem' }}
+                    >
+                      <GAvatar
+                        src={getAvatarPath(getAvatarsForRace(candidate.id)[0])}
+                        size={36}
+                        borderColor={active ? 'var(--border-accent)' : 'var(--border-light)'}
+                        glow={active}
+                      />
+                      <span className="character-create-race-card__copy">
+                        <strong>{getRaceLabel(candidate.id, 'ru')}</strong>
+                        <small>{getRaceBlurb(candidate.id, 'ru')}</small>
+                      </span>
+                    </GCard>
+                  );
+                })}
+              </div>
 
-        {/* Шаг 1: раса */}
-        <GPanel variant="plain" style={{ padding: 14 }}>
-          <div style={{ fontFamily: 'var(--app-font-mono)', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-dim, #8b6030)', marginBottom: 10 }}>
-            Раса
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 }}>
-            {RACES.map(r => {
-              const isActive = selectedRace === r.id;
-              return (
-                <GCard key={r.id} selected={isActive} onClick={() => handleRaceClick(r.id)} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 20 }}>{r.id === 'human' ? '🧑' : r.id === 'elf' ? '🧝' : r.id === 'dwarf' ? '🧔' : r.id === 'orc' ? '👹' : '🐺'}</span>
-                    <span style={{ fontFamily: 'var(--app-font-display)', fontWeight: 800, fontSize: 14, color: 'var(--text-primary)' }}>
-                      {getRaceLabel(r.id, 'ru')}
-                    </span>
-                  </div>
-                  <div style={{ fontFamily: 'var(--app-font-sans)', fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.4 }}>
-                    {getRaceBlurb(r.id, 'ru')}
-                  </div>
-                </GCard>
-              );
-            })}
-          </div>
-        </GPanel>
-
-        {/* Бонусы выбранной расы */}
-        <GPanel variant="dark" style={{ padding: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <span style={{ fontFamily: 'var(--app-font-display)', fontWeight: 800, fontSize: 13, color: 'var(--text-secondary)' }}>
-              Бонусы расы: {getRaceLabel(selectedRace, 'ru')}
-            </span>
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {race.bonuses.map((b, i) => (
-              <GBadge key={i} variant={b.positive ? 'green' : 'red'} size="md">
-                {b.positive ? '+' : '−'}{b.value} {STAT_LABELS_RU[b.stat]}
-              </GBadge>
-            ))}
-          </div>
-        </GPanel>
-
-        {/* Шаг 2: аватар */}
-        <GPanel variant="plain" style={{ padding: 14 }}>
-          <div style={{ fontFamily: 'var(--app-font-mono)', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-dim, #8b6030)', marginBottom: 10 }}>
-            Аватар — {getRaceLabel(selectedRace, 'ru')} ({avatars.length})
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 10 }}>
-            {avatars.map(aid => (
-              <GCard key={aid} selected={avatarId === aid} hoverEffect={!hasExisting} onClick={() => { setAvatarId(aid); setLocalError(null); }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: 10 }}>
-                <GAvatar src={getAvatarPath(aid)} size={56} borderColor={avatarId === aid ? 'var(--border-accent)' : 'var(--border-default)'} glow={avatarId === aid} />
-                <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 9, color: 'var(--text-muted)' }}>
-                  {aid.split('_').slice(1).join(' ')}
+              <div className="character-create-bonus-card">
+                <span className="character-create-bonus-card__label">
+                  Наследие: {getRaceLabel(selectedRace, 'ru')}
                 </span>
-              </GCard>
-            ))}
-          </div>
-        </GPanel>
+                <div className="character-create-bonus-list">
+                  {race.bonuses.map((bonus, index) => (
+                    <GBadge key={`${bonus.stat}-${index}`} variant={bonus.positive ? 'green' : 'red'} size="sm">
+                      {bonus.positive ? '+' : '−'}{bonus.value} {STAT_LABELS_RU[bonus.stat]}
+                    </GBadge>
+                  ))}
+                </div>
+                <p>Бонусы станут активны вместе с будущей системой характеристик.</p>
+              </div>
 
-        {/* Ник */}
-        <GPanel variant="plain" style={{ padding: 14 }}>
-          <GInput
-            label="Никнейм персонажа"
-            placeholder="Введите имя героя"
-            value={nickname}
-            onChange={v => { setNickname(v); setLocalError(null); }}
-            maxLength={20}
-            icon="♙"
-            autoFocus
-          />
-          {localError && (
-            <div style={{ marginTop: 8, fontFamily: 'var(--app-font-mono)', fontSize: 11, color: '#ff7060' }}>
-              ⚠ {localError}
+              <GButton variant="primary" size="md" fullWidth onClick={continueToIdentity}>
+                Выбрать облик
+              </GButton>
+            </div>
+          ) : (
+            <div className="character-create-section character-create-section--identity">
+              <div className="character-create-section__label">
+                Облик · {getRaceLabel(selectedRace, 'ru')}
+              </div>
+              <div className="character-create-avatar-grid">
+                {avatars.map((candidate, index) => {
+                  const active = avatarId === candidate;
+                  return (
+                    <GCard
+                      key={candidate}
+                      className="character-create-avatar-card"
+                      selected={active}
+                      onClick={() => { setAvatarId(candidate); setLocalError(null); }}
+                      style={{ padding: '0.48rem' }}
+                    >
+                      <GAvatar
+                        src={getAvatarPath(candidate)}
+                        size={48}
+                        borderColor={active ? 'var(--border-accent)' : 'var(--border-light)'}
+                        glow={active}
+                      />
+                      <span>Облик {index + 1}</span>
+                    </GCard>
+                  );
+                })}
+              </div>
+
+              <div className="character-create-name-field">
+                <GInput
+                  label="Никнейм персонажа"
+                  placeholder="Введите имя героя"
+                  value={nickname}
+                  onChange={value => { setNickname(value); setLocalError(null); }}
+                  maxLength={20}
+                  icon="✦"
+                  autoFocus
+                />
+              </div>
+
+              <div className="character-create-preview" aria-live="polite">
+                <GAvatar src={getAvatarPath(avatarId)} size={62} borderColor="var(--border-accent)" glow />
+                <div>
+                  <span>Будущий герой</span>
+                  <strong>{nickname.trim() || 'Безымянный путник'}</strong>
+                  <p>{getRaceLabel(selectedRace, 'ru')} · Уровень 1 · Здоровье 10</p>
+                </div>
+              </div>
+
+              {localError && <p className="character-create-error">⚠ {localError}</p>}
+
+              {hasExisting && (
+                <div className="character-create-replace-warning">
+                  <GBadge variant="red">Новый герой заменит текущего после подтверждения</GBadge>
+                </div>
+              )}
+
+              <div className="character-create-actions">
+                <GButton variant="secondary" size="md" onClick={() => setStep('race')}>
+                  Назад
+                </GButton>
+                <GButton variant="primary" size="md" fullWidth disabled={submitting} onClick={handleSubmit}>
+                  {submitting ? 'Создаём историю…' : hasExisting ? 'Начать новую историю' : 'Создать героя'}
+                </GButton>
+              </div>
             </div>
           )}
-        </GPanel>
-
-        {/* Превью */}
-        <GPanel variant="gold" style={{ padding: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <GAvatar src={getAvatarPath(avatarId)} size={64} borderColor="var(--border-accent)" glow />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--app-font-display)', fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {nickname.trim() || '…'}
-              </div>
-              <div style={{ fontFamily: 'var(--app-font-mono)', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                {getRaceLabel(selectedRace, 'ru')} • Ур. 1 • ❤ 10
-              </div>
-            </div>
-          </div>
-        </GPanel>
-
-        <GButton variant="primary" size="lg" fullWidth disabled={submitting} onClick={handleSubmit}>
-          {submitting ? '...' : hasExisting ? 'Создать нового (удалить старого)' : 'Создать персонажа'}
-        </GButton>
-
-        {hasExisting && (
-          <div style={{ textAlign: 'center' }}>
-            <GBadge variant="red">⚠ При создании нового — старый персонаж будет удалён навсегда</GBadge>
-          </div>
-        )}
+        </section>
       </div>
 
-      {/* Двойное подтверждение удаления старого */}
-      <GModal open={confirmOpen} onClose={() => setConfirmOpen(false)} title="⚠ Удалить старого персонажа?" width={380}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <p style={{ fontFamily: 'var(--app-font-sans)', fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5, margin: 0 }}>
-            Создание нового персонажа <b>безвозвратно удалит</b> текущего персонажа со всем его инвентарём и прогрессом.
-            Донат-валюта на аккаунте не будет затронута.
+      <GModal open={confirmOpen} onClose={() => setConfirmOpen(false)} title="Начать новую историю?" width={390}>
+        <div className="character-create-confirm">
+          <p>
+            Новый герой заменит текущего вместе с его инвентарём и прогрессом.
+            Донат-валюта останется на аккаунте.
           </p>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <GButton variant="secondary" fullWidth onClick={() => setConfirmOpen(false)}>Отмена</GButton>
-            <GButton variant="danger" fullWidth disabled={submitting} onClick={confirmDelete}>
+          <div>
+            <GButton variant="secondary" fullWidth onClick={() => setConfirmOpen(false)}>Остаться с текущим</GButton>
+            <GButton variant="danger" fullWidth disabled={submitting} onClick={() => void performCreate(nickname.trim())}>
               {submitting ? '...' : 'Удалить и создать'}
             </GButton>
           </div>
         </div>
       </GModal>
-    </main>
+    </OnboardingScene>
   );
 }
 
