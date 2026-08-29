@@ -54,15 +54,13 @@ export async function pushCharacterCloud(force = false): Promise<void> {
 export async function reconcileCharacterSave(character: Character): Promise<void> {
   if (!isSupabaseConfigured) return;
 
-  const local = isValidSave(loadFromSlot(AUTO_SAVE_SLOT))
-    ? loadFromSlot(AUTO_SAVE_SLOT)
-    : null;
+  const localRaw = loadFromSlot(AUTO_SAVE_SLOT);
+  const local = isValidSave(localRaw) ? localRaw : null;
 
   let cloud: SaveData | null = null;
   try {
-    cloud = isValidSave(await loadCharacterFromCloud(character.id))
-      ? await loadCharacterFromCloud(character.id)
-      : null;
+    const raw = await loadCharacterFromCloud(character.id);
+    cloud = isValidSave(raw) ? raw : null;
   } catch (e) {
     console.warn('loadCharacterFromCloud failed:', e);
   }
