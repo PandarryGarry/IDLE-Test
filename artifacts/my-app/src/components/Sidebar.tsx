@@ -83,6 +83,7 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
     <aside style={{
       width: 240,
       height: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       position: 'fixed',
@@ -192,17 +193,19 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
           type="button"
           onClick={handleAuth}
           style={{
-            width: '100%', marginTop: 8, padding: '8px 12px', borderRadius: 10,
+            width: '100%', marginTop: 8, padding: '10px 12px', borderRadius: 10,
             background: isGuest
               ? 'linear-gradient(180deg,#c8880a,#9a6008)'
-              : 'rgba(100,20,10,0.35)',
-            border: isGuest ? '1px solid #c8880a' : '1px solid rgba(192,40,30,0.4)',
-            color: isGuest ? '#fff8ee' : '#e0a080',
+              : 'linear-gradient(180deg,#b52a1a,#8a1c10)',
+            border: isGuest ? '1px solid #c8880a' : '1px solid #6b1808',
+            color: '#fff8ee',
             fontFamily: 'var(--app-font-mono)', fontSize: 11, fontWeight: 800,
             cursor: 'pointer', textAlign: 'center',
+            boxShadow: isGuest ? '0 3px 0 #3d2005' : '0 3px 0 #4a0e06',
+            transition: 'filter 0.12s ease, transform 0.1s ease',
           }}
         >
-          {isGuest ? 'Зарегистрироваться' : 'Выйти'}
+          {isGuest ? 'Зарегистрироваться' : 'Выйти из аккаунта'}
         </button>
       </div>
     </aside>
