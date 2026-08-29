@@ -6,13 +6,38 @@ import { usePlayerStore } from '../store/playerStore';
 import { useBankStore } from '../store/bankStore';
 import { useGameStore } from '../store/gameStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { useAuthStore } from '../store/authStore';
+import { GUEST_NOTICE } from './guestMode';
 import { calculateOfflineProgress } from '../gameEngine/offlineCalc';
 
 const SAVE_VERSION = '1.0.0';
 const SAVE_KEY_PREFIX = 'melvor_save_';
+const GUEST_SAVE_KEY_PREFIX = 'aethelia_guest_save_';
 const AUTO_SAVE_SLOT = 'auto';
 export const SAVE_SLOTS = ['slot1', 'slot2', 'slot3'] as const;
 export type SaveSlot = typeof SAVE_SLOTS[number] | typeof AUTO_SAVE_SLOT;
+
+function isGuestMode(): boolean {
+  // Load safely in case this is called before the auth store is hydrated.
+  try {
+    return useAuthStore.getState().isGuest;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Guests keep progress in sessionStorage only (disappears when the tab
+ * closes). Registered players keep their saves in localStorage.
+ */
+function saveKey(slot: SaveSlot): string {
+  const prefix = isGuestMode() ? GUEST_SAVE_KEY_PREFIX : SAVE_KEY_PREFIX;
+  return `${prefix}${slot}`;
+}
+
+function leaveTimeKey(): string {
+  return isGuestMode() ? 'aethelia_guest_leave_time' : 'aethelia_leave_time';
+}
 
 export function collectSaveData(): SaveData {
   const player = usePlayerStore.getState();
@@ -71,7 +96,8 @@ export function applySaveData(data: SaveData): void {
 
   // Calculate offline progress and store result for Dashboard display
   // Используем leaveTime (точное время ухода) если есть, иначе savedAt
-  const leaveTime = Number(localStorage.getItem('aethelia_leave_time') || '0') || data.savedAt;
+  const leaveStore = isGuestMode() ? window.sessionStorage : window.localStorage;
+  const leaveTime = Number(leaveStore.getItem(leaveTimeKey()) || '0') || data.savedAt;
   if (data.game.activeSkill && data.game.activeActionId) {
     const offlineResult = calculateOfflineProgress(data.game.activeSkill, data.game.activeActionId, leaveTime);
     if (offlineResult && offlineResult.xpGained > 0) {
@@ -108,7 +134,8 @@ export function saveToSlot(slot: SaveSlot): void {
   try {
     const data = collectSaveData();
     const json = JSON.stringify(data);
-    localStorage.setItem(`${SAVE_KEY_PREFIX}${slot}`, json);
+    const store = isGuestMode() ? window.sessionStorage : window.localStorage;
+    store.setItem(saveKey(slot), json);
   } catch (e) {
     console.error('Failed to save game:', e);
   }
@@ -116,7 +143,8 @@ export function saveToSlot(slot: SaveSlot): void {
 
 export function loadFromSlot(slot: SaveSlot): SaveData | null {
   try {
-    const json = localStorage.getItem(`${SAVE_KEY_PREFIX}${slot}`);
+    const store = isGuestMode() ? window.sessionStorage : window.localStorage;
+    const json = store.getItem(saveKey(slot));
     if (!json) return null;
     return JSON.parse(json) as SaveData;
   } catch (e) {
@@ -126,7 +154,22 @@ export function loadFromSlot(slot: SaveSlot): SaveData | null {
 }
 
 export function deleteSaveSlot(slot: SaveSlot): void {
-  localStorage.removeItem(`${SAVE_KEY_PREFIX}${slot}`);
+  try {
+    const store = isGuestMode() ? window.sessionStorage : window.localStorage;
+    store.removeItem(saveKey(slot));
+  } catch (e) {
+    console.error('Failed to delete save:', e);
+  }
+}
+
+/** True when the current player is a guest (progress is session-only). */
+export function isGuestProgress(): boolean {
+  return isGuestMode();
+}
+
+/** The message shown to guests when they hit a restricted feature. */
+export function guestProgressNotice(): string {
+  return GUEST_NOTICE;
 }
 
 export function getSaveMetadata(slot: SaveSlot): { savedAt: number; gameMode: string; totalPlayTime: number } | null {
@@ -217,15 +260,14 @@ export function initGame(): void {
 
 // ── Оффлайн: сохраняем момент ухода игрока ──────────────────────
 
-const LEAVE_TIME_KEY = 'aethelia_leave_time';
-
 /** Вызывается когда игрок уходит с вкладки/закрывает браузер */
 export function saveOnLeave(): void {
   try {
     // Сохраняем игру
     manualSave();
     // Записываем точное время ухода
-    localStorage.setItem(LEAVE_TIME_KEY, String(Date.now()));
+    const store = isGuestMode() ? window.sessionStorage : window.localStorage;
+    store.setItem(leaveTimeKey(), String(Date.now()));
   } catch (e) {
     // silent fail
   }
@@ -234,11 +276,12 @@ export function saveOnLeave(): void {
 /** Читает время ухода и возвращает сколько прошло (ms) */
 export function getOfflineDuration(): number {
   try {
-    const leaveTime = Number(localStorage.getItem(LEAVE_TIME_KEY) || '0');
+    const store = isGuestMode() ? window.sessionStorage : window.localStorage;
+    const leaveTime = Number(store.getItem(leaveTimeKey()) || '0');
     if (!leaveTime) return 0;
     const elapsed = Date.now() - leaveTime;
     // Сбрасываем время ухода
-    localStorage.removeItem(LEAVE_TIME_KEY);
+    store.removeItem(leaveTimeKey());
     return elapsed;
   } catch {
     return 0;

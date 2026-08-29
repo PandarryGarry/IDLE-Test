@@ -30,6 +30,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          if (id.includes('node_modules/@supabase')) {
+            return 'vendor-auth';
+          }
           if (id.includes('node_modules')) {
             return 'vendor';
           }
@@ -37,6 +40,7 @@ export default defineConfig({
         },
       },
     },
+    chunkSizeWarningLimit: 700,
   },
   server: {
     port,

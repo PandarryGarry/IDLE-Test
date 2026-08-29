@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
+import { useAuthStore } from '@/store/authStore';
+import { GUEST_NOTICE } from '@/lib/guestMode';
 import { UniversalInfoModal } from '@/components/modals/UniversalInfoModal';
 import { SquircleSlot } from '@/shared/ui/kit/SquircleSlot';
 import { CoinsDisplay } from '@/shared/ui/CoinsDisplay';
@@ -22,6 +24,7 @@ export function InventoryPage() {
   const upgradeSlots = useInventoryStore(s => s.upgradeSlots);
   const getUpgradeCost = useInventoryStore(s => s.getUpgradeCost);
   const notifyInfo = useNotificationsStore(s => s.notifyInfo);
+  const isGuest = useAuthStore(s => s.isGuest);
 
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -31,6 +34,10 @@ export function InventoryPage() {
   const upgradeCost = Math.floor(getUpgradeCost());
 
   const handleUpgradeSlots = () => {
+    if (isGuest) {
+      notifyInfo(GUEST_NOTICE);
+      return;
+    }
     if (gp < upgradeCost) {
       notifyInfo(`Недостаточно монет! Нужно ${formatNumber(upgradeCost)}`);
       return;
@@ -78,16 +85,25 @@ export function InventoryPage() {
         </div>
 
         {/* Upgrade Slots Button */}
-        <button
-          type="button"
-          onClick={handleUpgradeSlots}
-          className="px-4 py-2.5 rounded-xl font-extrabold text-xs transition-all active:scale-95 flex items-center gap-1.5 shrink-0 text-[var(--text-primary)]"
-          style={{ background: 'linear-gradient(135deg,#d97706,#f59e0b)', border: '1px solid #f59e0b', boxShadow: '0 2px 10px rgba(245,158,11,0.3)' }}
-          title={`Купить +10 ячеек`}
-        >
-          <Plus className="w-4 h-4 stroke-[3]" />
-          <span>+ Слоты</span>
-        </button>
+        {isGuest ? (
+          <div
+            className="px-3 py-2.5 rounded-xl font-mono font-bold text-[10px] leading-tight text-center shrink-0 text-amber-300/85"
+            style={{ background: 'rgba(212,134,10,0.12)', border: '1px solid rgba(212,134,10,0.28)' }}
+          >
+            Гость · 24 слота
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={handleUpgradeSlots}
+            className="px-4 py-2.5 rounded-xl font-extrabold text-xs transition-all active:scale-95 flex items-center gap-1.5 shrink-0 text-[var(--text-primary)]"
+            style={{ background: 'linear-gradient(135deg,#d97706,#f59e0b)', border: '1px solid #f59e0b', boxShadow: '0 2px 10px rgba(245,158,11,0.3)' }}
+            title={`Купить +10 ячеек`}
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>+ Слоты</span>
+          </button>
+        )}
 
       </div>
 

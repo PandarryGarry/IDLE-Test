@@ -5,6 +5,8 @@ import { calcMaxHitMelee, calcAttackRating, calcDefenceRating, calcHitChance, ca
 import { usePlayerStore } from './playerStore';
 import { useBankStore } from './bankStore';
 import { useNotificationsStore } from './notificationsStore';
+import { useAuthStore } from './authStore';
+import { GUEST_NOTICE } from '../lib/guestMode';
 import { getItem } from '../data/items';
 
 export interface CombatLogEntry {
@@ -75,6 +77,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   enemyAttackTimer: 0,
 
   startCombat: (areaId, monsterId) => {
+    // Combat is locked for guests until they register.
+    if (useAuthStore.getState().isGuest) {
+      useNotificationsStore.getState().notifyInfo(GUEST_NOTICE);
+      return;
+    }
+
     const area = AREAS_MAP[areaId];
     if (!area) return;
 

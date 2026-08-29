@@ -1,13 +1,24 @@
 import React, { useState } from 'react';
+import { useLocation } from 'wouter';
 import { useSettingsStore } from '@/store/settingsStore';
-import { exportSaveAsFile, importSave, manualSave } from '@/lib/saveManager';
+import { useAuthStore } from '@/store/authStore';
+import { stopActiveActivities } from '@/lib/authActions';
+import { importSave, manualSave, exportSaveAsFile } from '@/lib/saveManager';
+import { GUEST_NOTICE } from '@/lib/guestMode';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Settings, Globe, ShieldAlert, Save, Download, Upload, Trash2, Moon, Sparkles } from 'lucide-react';
 
 export function SettingsPage() {
   const { t } = useTranslation();
-  
+  const [, navigate] = useLocation();
+
+  const isGuest = useAuthStore(s => s.isGuest);
+  const user = useAuthStore(s => s.user);
+  const profile = useAuthStore(s => s.profile);
+  const authLoading = useAuthStore(s => s.loading);
+  const signOut = useAuthStore(s => s.signOut);
+
   const language = useSettingsStore(s => s.language);
   const autoSaveEnabled = useSettingsStore(s => s.autoSaveEnabled);
   const autoSaveInterval = useSettingsStore(s => s.autoSaveInterval);
@@ -54,6 +65,45 @@ export function SettingsPage() {
           <h1 className="text-xl sm:text-2xl font-display font-black text-[var(--text-primary)]">{t('settings.title')}</h1>
           <p className="text-xs text-[var(--text-muted)]">Manage realms configuration and character data</p>
         </div>
+      </div>
+
+      {/* Account / Auth status */}
+      <div className="fantasy-card border-amber-500/30 p-4 sm:p-5 rounded-3xl shadow-lg space-y-3">
+        <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
+          <ShieldAlert className="w-3.5 h-3.5" /> Аккаунт
+        </h2>
+
+        {authLoading ? (
+          <p className="text-xs text-[var(--text-muted)] font-mono">Загрузка сессии...</p>
+        ) : isGuest ? (
+          <div className="space-y-3">
+            <p className="text-xs text-[var(--text-muted)] leading-relaxed">{GUEST_NOTICE}</p>
+            <div className="text-[11px] font-mono text-[var(--text-muted)] leading-relaxed">
+              Прогресс гостя хранится только в этой сессии: доступны лесорубство и рыбалка, 24 слота инвентаря.
+            </div>
+            <button
+              onClick={() => navigate('/login')}
+              className="flex-1 sm:flex-none px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-2xl text-xs transition-all active:scale-95 shadow-[0_0_15px_rgba(245,158,11,0.25)]"
+            >
+              Создать аккаунт
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="text-sm font-semibold text-[var(--text-primary)]">
+              {profile?.nickname || user?.email || 'Игрок'}
+            </div>
+            {user?.email && (
+              <div className="text-[11px] font-mono text-[var(--text-muted)]">{user.email}</div>
+            )}
+            <button
+              onClick={() => { stopActiveActivities(); void signOut().then(() => navigate('/login')); }}
+              className="flex-1 sm:flex-none px-5 py-2.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-[var(--text-primary)] border border-red-500/30 font-bold rounded-2xl text-xs transition-all active:scale-95"
+            >
+              Выйти
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Language Selector */}
@@ -154,6 +204,12 @@ export function SettingsPage() {
         <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
           <Save className="w-3.5 h-3.5" /> {t('settings.saveManagement')}
         </h2>
+
+        {isGuest && (
+          <div className="text-[11px] font-mono text-amber-300/80 leading-relaxed">
+            {GUEST_NOTICE} Прогресс гостя сохраняется только в текущей сессии браузера.
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-2.5">
           <button

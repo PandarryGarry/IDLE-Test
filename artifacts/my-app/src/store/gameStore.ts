@@ -9,6 +9,8 @@ import { FIREMAKING_MAP } from '../data/firemaking';
 import { usePlayerStore } from './playerStore';
 import { useBankStore } from './bankStore';
 import { useNotificationsStore } from './notificationsStore';
+import { useAuthStore } from './authStore';
+import { isSkillAllowedForGuest, GUEST_NOTICE } from '../lib/guestMode';
 import { calcBurnChance, calcXpPerHour } from '../gameEngine/formulas';
 import { getItem } from '../data/items';
 import { chance, randomRange } from '../lib/utils';
@@ -192,6 +194,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   clearOfflineData: () => set({ offlineData: null }),
 
   startSkillAction: (skillId, actionId) => {
+    // Guests may only train woodcutting and fishing; other skills and combat
+    // are locked until the player registers and signs in.
+    if (useAuthStore.getState().isGuest && !isSkillAllowedForGuest(skillId)) {
+      useNotificationsStore.getState().notifyInfo(GUEST_NOTICE);
+      return false;
+    }
+
     const interval = getActionInterval(skillId, actionId);
     // Use performance.now() (monotonic) — same clock the tick manager passes to tick().
     const now = performance.now();

@@ -26,6 +26,8 @@ import { CombatPage } from '@/pages/CombatPage';
 import { InventoryPage } from '@/pages/InventoryPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { AuthPage } from '@/pages/AuthPage';
+import { useAuthStore } from '@/store/authStore';
+import { isGuestBlockedPath } from '@/lib/guestMode';
 
 function NotFound() {
   return (
@@ -39,14 +41,41 @@ function NotFound() {
   );
 }
 
+function AuthLoadingScreen() {
+  return (
+    <main className="min-h-screen flex items-center justify-center bg-[var(--bg-page)] text-[var(--text-primary)]">
+      <div className="text-center">
+        <div className="text-4xl font-display font-black text-amber-400 mb-2">Aethelia</div>
+        <div className="text-xs font-mono text-[var(--text-muted)] tracking-widest uppercase">Загрузка...</div>
+      </div>
+    </main>
+  );
+}
+
 function Router() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [location] = useLocation();
   const pathname = location.split(/[?#]/)[0] || '/';
 
-  if (pathname === '/auth' || pathname === '/login' || pathname === '/register') {
+  const authLoading = useAuthStore(s => s.loading);
+  const isGuest = useAuthStore(s => s.isGuest);
+  const hasUser = useAuthStore(s => Boolean(s.user));
+
+  const isAuthPath = pathname === '/auth' || pathname === '/login' || pathname === '/register';
+
+  // Auth routes: wait for session restore, then send signed-in/guest users home.
+  if (isAuthPath) {
+    if (authLoading) return <AuthLoadingScreen />;
+    if (hasUser || isGuest) return <Redirect to="/" />;
     return <AuthPage initialMode={pathname === '/register' ? 'register' : 'login'} />;
   }
+
+  // Protected game shell: guests are allowed in, signed-out users go to login.
+  if (authLoading) return <AuthLoadingScreen />;
+  if (!hasUser && !isGuest) return <Redirect to="/login" />;
+
+  // Guests can only open the limited game shell.
+  if (isGuest && isGuestBlockedPath(pathname)) return <Redirect to="/" />;
 
   return (
     <div className="flex min-h-screen bg-[var(--bg-page)] text-[var(--text-primary)] selection:bg-amber-500/30">
@@ -132,15 +161,33 @@ function App() {
   };
 
   useEffect(() => {
-    try {
-      initGame();
-      setupOfflineTracking();
-      tickManager.start();
-      document.documentElement.classList.add('dark');
-    } catch (e) {
-      console.error('Failed to init game:', e);
-    }
+    let cancelled = false;
+
+    (async () => {
+      try {
+        await useAuthStore.getState().restoreSession();
+        if (cancelled) return;
+        initGame();
+        setupOfflineTracking();
+        tickManager.start();
+        document.documentElement.classList.add('dark');
+      } catch (e) {
+        console.error('Failed to init auth/game:', e);
+        if (!cancelled) {
+          try {
+            initGame();
+            setupOfflineTracking();
+            tickManager.start();
+            document.documentElement.classList.add('dark');
+          } catch (inner) {
+            console.error('Failed to init game:', inner);
+          }
+        }
+      }
+    })();
+
     return () => {
+      cancelled = true;
       try {
         tickManager.stop();
       } catch (e) {
