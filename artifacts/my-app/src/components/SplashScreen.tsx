@@ -67,8 +67,9 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 2600 }: SplashScreen
   // Фолбэк-герб показываем ТОЛЬКО если арт реально не загрузился (ошибка/таймаут).
   // Пока арт в пути — держим нейтральный тёмный фон, чтобы не мелькал «старый» экран.
   const artFailed = probe.error || (artWaitTimedOut && !hasArt);
-  // Арт «решён»: загрузился, упал с ошибкой или вышли по таймауту.
-  const artSettled = probe.mode !== null || probe.error || artWaitTimedOut;
+  // Арт «решён»: файл реально декодирован, упал с ошибкой или вышли по таймауту.
+  // fixed-mode знает режим сразу, но картинка ещё может быть в пути.
+  const artSettled = probe.loaded || probe.error || artWaitTimedOut;
 
   const finishedRef = useRef(false);
 
@@ -127,7 +128,7 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 2600 }: SplashScreen
     const t = setTimeout(() => {
       setIsDone(true);
       onLoaded?.();
-    }, 350);
+    }, 480);
     return () => clearTimeout(t);
   }, [progress, isDone, onLoaded]);
 
@@ -135,6 +136,7 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 2600 }: SplashScreen
 
   return (
     <div
+      className={`splash-root${isFadingOut ? ' splash-root--out' : ''}`}
       style={{
         position: 'fixed',
         inset: 0,
@@ -142,19 +144,21 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 2600 }: SplashScreen
         overflow: 'hidden',
         userSelect: 'none',
         background: 'var(--bg-header)',
-        transition: 'opacity 0.3s ease',
+        transition: 'opacity 0.45s ease, transform 0.45s ease, filter 0.45s ease',
         opacity: isFadingOut ? 0 : 1,
         pointerEvents: isFadingOut ? 'none' : 'auto',
       }}
     >
       {/* Оживлённый арт на весь экран — мягко проявляется из тёмного фона */}
       {hasArt && (
-        <div style={{ position: 'absolute', inset: 0, animation: 'fadeIn 0.5s ease' }}>
+        <div className="splash-art-layer" style={{ position: 'absolute', inset: 0 }}>
           <AnimatedArt
             src={art.src}
             mode={art.mode}
             fit={art.fit}
             sigil={art.sigil}
+            signMotion={art.signMotion}
+            lightBlooms={art.lightBlooms}
             tint={ART_TINT}
             intensity={1}
             className="absolute inset-0 w-full h-full"
@@ -207,6 +211,7 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 2600 }: SplashScreen
           /* Арт загружен или в пути — снизу только шкала и подсказка.
              Пока арт грузится, фон нейтральный тёмный: никакого «старого» экрана. */
           <div
+            className="splash-bottom-hud"
             style={{
               width: '100%',
               maxWidth: 448,
@@ -219,6 +224,7 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 2600 }: SplashScreen
           >
             <SplashProgressBar progress={progress} />
             <span
+              className="splash-percent"
               style={{
                 fontFamily: 'var(--app-font-mono)',
                 fontSize: 10,
@@ -255,6 +261,7 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 2600 }: SplashScreen
                   }}
                 />
                 <div
+                  className="splash-fallback-emblem"
                   style={{
                     position: 'relative',
                     width: 80,
@@ -268,7 +275,7 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 2600 }: SplashScreen
                     boxShadow: 'var(--shadow-gold)',
                   }}
                 >
-                  <Sword size={40} style={{ color: 'var(--text-gold)' }} />
+                  <Sword className="splash-fallback-sword" size={40} style={{ color: 'var(--text-gold)' }} />
                 </div>
               </div>
 
@@ -312,6 +319,7 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 2600 }: SplashScreen
 
               <SplashProgressBar progress={progress} />
               <span
+                className="splash-percent"
                 style={{
                   fontFamily: 'var(--app-font-mono)',
                   fontSize: 10,
@@ -337,6 +345,11 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 2600 }: SplashScreen
 function SplashProgressBar({ progress }: { progress: number }) {
   return (
     <div
+      role="progressbar"
+      aria-label="Загрузка Aethelia"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={progress}
       style={{
         width: 'min(320px, 80vw)',
         height: 8,
@@ -349,6 +362,8 @@ function SplashProgressBar({ progress }: { progress: number }) {
       }}
     >
       <div
+        className="splash-progress-fill"
+        data-complete={progress >= 100}
         style={{
           height: '100%',
           borderRadius: 9999,
@@ -365,6 +380,7 @@ function SplashProgressBar({ progress }: { progress: number }) {
 function TipBox({ tip }: { tip: string }) {
   return (
     <div
+      className="splash-tip-box"
       style={{
         maxWidth: 448,
         textAlign: 'center',
@@ -377,6 +393,10 @@ function TipBox({ tip }: { tip: string }) {
     >
       <p
         style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
           fontFamily: 'var(--app-font-sans)',
           fontSize: 12,
           lineHeight: 1.6,
@@ -384,6 +404,7 @@ function TipBox({ tip }: { tip: string }) {
           margin: 0,
         }}
       >
+        <Sparkles size={13} style={{ color: 'var(--text-gold)', flexShrink: 0 }} />
         {tip}
       </p>
     </div>

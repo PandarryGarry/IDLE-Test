@@ -19,6 +19,7 @@
 - [x] Dashboard: Герой (3 ячейки) + оффлайн-сводка
 - [x] 814 иконок в репозитории (структурированы)
 - [x] THEME_GUIDE.md — документация по токенам
+- [x] SplashScreen: адаптивный WebP-арт, реальный прогресс, fade-out, «Что нового», живая вывеска и свечной свет
 
 ---
 
@@ -48,8 +49,10 @@
 
 ---
 
-### ЭТАП 2: SplashScreen — Загрузочный экран
+### ✅ ЭТАП 2: SplashScreen — Загрузочный экран (завершён)
 **Цель:** Красивый первый экран в стиле Wooden Tavern.
+
+**Статус:** ✅ завершён. Финальная версия: адаптивный полноэкранный WebP-арт, реальный прогресс загрузки, fade-out, «Что нового» после заставки, отдельное спокойное покачивание вывески/щита на цепях, локальное дыхание света от фонарей/камина/свечей и мягкая полировка HUD.
 
 **Что должно быть:**
 - Герб / логотип Aethelia (анимированный, с свечением)
@@ -73,20 +76,37 @@
 ### ЭТАП 3: Авторизация + Регистрация (Supabase)
 **Решено:** Supabase (email/пароль + Google OAuth)
 
-**Что нужно сделать:**
-1. Создать Supabase проект (нужны credentials от тебя)
-2. Установить `@supabase/supabase-js`
-3. Создать `src/lib/supabase.ts` — клиент
-4. Создать `src/store/authStore.ts` — стейт авторизации
-5. Экраны: LoginPage, RegisterPage (в нашем стиле)
-6. Защищённые маршруты — незарегистрированный → на Login
-7. Токены сессии — авто-обновление
+**Статус:** 🟡 в работе. Визуальный auth-shell Login/Register внедрён; Supabase-логика ещё не подключена.
 
-**Дизайн экранов:**
-- Полноэкранный фон в стиле игры
-- Форма в центре (GCard + GInput + GButton)
-- Логотип сверху
-- Переход Login ↔ Register
+**Уже сделано — visual foundation:**
+- [x] Утверждён фон auth: живая тёплая таверна у камина, герб Aethelia с топором+пером, bard, elf+dwarf, правая часть без пустой заглушки.
+- [x] Runtime asset: `public/assets/art/auth_tavern_background.webp`.
+- [x] Clean-печать сохранена: `public/assets/icons/ui/auth/aethelia_seal_clean.webp` / `public/assets/icons/ui/auth/aethelia_seal_clean.png`.
+- [x] `src/pages/AuthPage.tsx` — визуальная страница login/register.
+- [x] Routes `/auth`, `/login`, `/register` открываются отдельным fullscreen auth-screen без sidebar/topnav.
+- [x] CSS: frameless transparent glass/tint, компактные поля/кнопки, desktop/mobile адаптив, fire glow, embers/dust, reduced-motion.
+- [x] Mobile: фокус на камине/гербе, auth поднят выше, поля и кнопки короче/меньше.
+
+**Важно по дизайну:**
+- Не делать общую декоративную рамку вокруг auth-интерфейса.
+- Не делать рамку вокруг auth-panel; максимум лёгкий transparent tint/blur.
+- Не закрывать прекрасный фон тяжёлой панелью.
+- На mobile поля/кнопки должны быть короче, не во всю ширину.
+- Google-кнопка коротко: `Google`.
+- Маленькую печать внутрь формы не ставить; использовать готовую clean-печать только там, где она достаточно крупная.
+- Подробности и rejected-направления: `STAGE3_AUTH_HANDOFF.md`.
+
+**Что нужно сделать дальше — Supabase/auth:**
+1. Создать Supabase проект (нужны URL + ANON_KEY через Secrets/`.env.local`, не в чат).
+2. Установить `@supabase/supabase-js`.
+3. Создать `src/lib/supabase.ts` — клиент + graceful missing-config state.
+4. Создать `src/store/authStore.ts` — стейт авторизации/session/user/profile/isGuest.
+5. Подключить email/password login/register к текущему `AuthPage`.
+6. Подключить Google OAuth.
+7. Защищённые маршруты — незарегистрированный → `/login`.
+8. Токены/сессии — авто-обновление и restore при старте.
+9. Sign out.
+10. Guest mode с ограничениями.
 
 **Решено:**
 - Supabase проект создаём новый (нужны URL + ANON_KEY после создания)
@@ -94,7 +114,7 @@
   - Прогресс только до закрытия браузера (sessionStorage)
   - Доступны: 2 навыка (лесорубство + рыбалка), базовый инвентарь (24 слота)
   - Нельзя: бой, крафт, расширение инвентаря, сохранение в облако
-  - Баннер "Зарегистрируйся чтобы сохранить прогресс"
+  - Баннер "Зарегистрируйся, чтобы сохранить прогресс."
 
 ---
 
@@ -225,6 +245,8 @@ interface Item {
 
 ## 📅 Текущий статус
 
-**Следующий шаг: ЭТАП 1 — UI Foundation (gameUI.tsx)**
+**Завершены: Этапы 1 и 2. Этап 3 визуально начат: Login/Register auth-shell внедрён.**
 
-Жду подтверждения перед стартом.
+**Следующий шаг: проверить `/login` и `/register`, затем подключить Supabase/authStore/AuthGate/guest mode.**
+
+Для Supabase нужны `VITE_SUPABASE_URL` и `VITE_SUPABASE_ANON_KEY` через Replit Secrets / `.env.local` (секреты в чат не вставлять).

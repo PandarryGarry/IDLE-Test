@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArtEngine, detectMode, DEFAULT_TINT, type ArtMode, type ArtTint, type SigilConfig } from './artEngine';
+import { ArtEngine, detectMode, DEFAULT_TINT, type ArtMode, type ArtTint, type SigilConfig, type SignMotionConfig, type LightBloomConfig } from './artEngine';
 
-export type { ArtMode, ArtTint, SigilConfig } from './artEngine';
+export type { ArtMode, ArtTint, SigilConfig, SignMotionConfig, LightBloomConfig } from './artEngine';
 export { ArtEngine, detectMode } from './artEngine';
 
 /**
@@ -28,6 +28,10 @@ export interface AnimatedArtProps {
   fit?: 'cover' | 'contain';
   /** Геометрия рунного круга для режима 'sigil'. */
   sigil?: SigilConfig;
+  /** Область вывески, которая покачивается отдельно от фона в режиме 'sign'. */
+  signMotion?: SignMotionConfig;
+  /** Локальные мягкие свечения: фонари, камин, свечи. */
+  lightBlooms?: LightBloomConfig[];
   onModeDetected?: (mode: ArtMode) => void;
   onReady?: (info: { width: number; height: number; mode: ArtMode }) => void;
   onError?: () => void;
@@ -41,6 +45,8 @@ export function AnimatedArt({
   tint = DEFAULT_TINT,
   fit,
   sigil,
+  signMotion,
+  lightBlooms,
   onModeDetected,
   onReady,
   onError,
@@ -118,6 +124,8 @@ export function AnimatedArt({
         intensity: intensityRef.current,
         sigil,
         fit,
+        signMotion,
+        lightBlooms,
       });
       setStatus('ready');
       callbacksRef.current.onModeDetected?.(resolved);
@@ -152,7 +160,7 @@ export function AnimatedArt({
       observer?.disconnect();
       window.removeEventListener('pointermove', onPointerMove);
     };
-  }, [src, mode, sigil, fit]);
+  }, [src, mode, sigil, fit, signMotion, lightBlooms]);
 
   return (
     <canvas

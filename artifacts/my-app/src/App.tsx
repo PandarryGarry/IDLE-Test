@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Route, Switch, Router as WouterRouter, Redirect } from 'wouter';
+import { Route, Switch, Router as WouterRouter, Redirect, useLocation } from 'wouter';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -25,6 +25,7 @@ import { FiremakingPage } from '@/pages/FiremakingPage';
 import { CombatPage } from '@/pages/CombatPage';
 import { InventoryPage } from '@/pages/InventoryPage';
 import { SettingsPage } from '@/pages/SettingsPage';
+import { AuthPage } from '@/pages/AuthPage';
 
 function NotFound() {
   return (
@@ -40,6 +41,12 @@ function NotFound() {
 
 function Router() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [location] = useLocation();
+  const pathname = location.split(/[?#]/)[0] || '/';
+
+  if (pathname === '/auth' || pathname === '/login' || pathname === '/register') {
+    return <AuthPage initialMode={pathname === '/register' ? 'register' : 'login'} />;
+  }
 
   return (
     <div className="flex min-h-screen bg-[var(--bg-page)] text-[var(--text-primary)] selection:bg-amber-500/30">

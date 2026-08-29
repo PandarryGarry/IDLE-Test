@@ -14,6 +14,63 @@ export interface SigilConfig {
   r: number;
 }
 
+export interface NormalizedRect {
+  /** X в долях ширины исходной картинки. */
+  x: number;
+  /** Y в долях высоты исходной картинки. */
+  y: number;
+  /** Ширина в долях исходной картинки. */
+  w: number;
+  /** Высота в долях исходной картинки. */
+  h: number;
+}
+
+export interface NormalizedPoint {
+  /** X внутри выделенной области: 0..1. */
+  x: number;
+  /** Y внутри выделенной области: 0..1. */
+  y: number;
+}
+
+export interface SignMotionConfig {
+  /** Область исходной картинки, где находится вывеска/щит с цепями. */
+  region: NormalizedRect;
+  /** Точка подвеса внутри region. По умолчанию — центр у верхнего края. */
+  pivot?: NormalizedPoint;
+  /** Амплитуда покачивания в градусах. Для тяжёлой вывески держим < 1°. */
+  amplitudeDeg?: number;
+  /** Длительность одного спокойного качка. */
+  periodMs?: number;
+  /** Насколько вывеска реагирует на курсор/палец по X, в градусах. */
+  pointerDeg?: number;
+  /** Едва заметный горизонтальный дрейф, px. */
+  driftPx?: number;
+  /** Едва заметное вертикальное дыхание цепей, px. */
+  bobPx?: number;
+  /** Мягкая маска: shield вырезает в основном щит и цепи, rect — вся область. */
+  mask?: 'shield' | 'rect';
+}
+
+export interface LightBloomConfig {
+  /** Центр источника света в долях исходной картинки. */
+  x: number;
+  /** Центр источника света в долях исходной картинки. */
+  y: number;
+  /** Радиус мягкого свечения относительно большей стороны отрисованной картинки. */
+  radius: number;
+  /** Сила свечения. Держим маленькой: это дыхание света, не прожектор. */
+  alpha?: number;
+  /** Сдвиг фазы, чтобы свечи мерцали не синхронно. */
+  phase?: number;
+}
+
+interface ImageFrame {
+  dx: number;
+  dy: number;
+  dw: number;
+  dh: number;
+}
+
 export interface ArtTint {
   r: number;
   g: number;
@@ -39,6 +96,14 @@ export interface ImageLike {
 export const DEFAULT_TINT: ArtTint = { r: 245, g: 158, b: 11 }; // amber-500
 
 export const defaultCanvasFactory: CanvasFactory = () => document.createElement('canvas');
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
+
+function degToRad(value: number): number {
+  return (value * Math.PI) / 180;
+}
 
 interface Mote {
   x: number;
@@ -90,6 +155,10 @@ export interface ArtEngineOptions {
    *  - 'cover' — на весь экран с обрезкой краёв (для полноэкранных сцен).
    */
   fit?: 'cover' | 'contain';
+  /** Точная область вывески, которую можно покачивать отдельно от фона. */
+  signMotion?: SignMotionConfig;
+  /** Локальные источники света: фонари, камин, свечи. */
+  lightBlooms?: LightBloomConfig[];
 }
 
 export class ArtEngine {
@@ -107,7 +176,10 @@ export class ArtEngine {
   private backdrop: HTMLCanvasElement | null = null;
   private signLayer: HTMLCanvasElement | null = null;
   private signMask: HTMLCanvasElement | null = null;
+  private signPlate: HTMLCanvasElement | null = null;
   private sigil: SigilConfig;
+  private signMotion: SignMotionConfig | null = null;
+  private lightBlooms: LightBloomConfig[] = [];
 
   /** Живые параметры — можно менять между кадрами. */
   tint: ArtTint;
@@ -123,6 +195,8 @@ export class ArtEngine {
     this.createCanvas = options.createCanvas ?? defaultCanvasFactory;
     this.sigil = options.sigil ?? { cx: 0.5, cy: 0.42, r: 0.34 };
     this.fitMode = options.fit ?? 'contain';
+    this.signMotion = options.signMotion ?? null;
+    this.lightBlooms = options.lightBlooms ?? [];
   }
 
   /** Пересчёт под новый размер области (вызывается на resize и при старте). */
@@ -372,67 +446,242 @@ export class ArtEngine {
   /** «Вывеска на цепях»: покачивание-маятник вокруг верхней точки + мерцание света. */
   /** Слой вывески с «пером» по краям — чтобы резкий арт бесшовно растворялся в блюре. */
   private buildSignLayer(): void {
-    const { dw, dh } = this.fitContain();
-    const w = Math.max(1, Math.round(dw));
-    const h = Math.max(1, Math.round(dh));
-    const layer = this.createCanvas();
-    layer.width = w;
-    layer.height = h;
+    const region = this.signMotion?.region ?? { x: 0, y: 0, w: 1, h: 1 };
+    const sx = Math.round(clamp01(region.x) * this.img.width);
+    const sy = Math.round(clamp01(region.y) * this.img.height);
+    const sw = Math.max(1, Math.round(clamp01(region.w) * this.img.width));
+    const sh = Math.max(1, Math.round(clamp01(region.h) * this.img.height));
+
     const mask = this.createCanvas();
-    mask.width = w;
-    mask.height = h;
+    mask.width = sw;
+    mask.height = sh;
     const mctx = mask.getContext('2d');
     if (!mctx) return;
+    this.drawSignMask(mctx, sw, sh);
+    this.signMask = mask;
 
-    mctx.fillStyle = '#fff';
-    mctx.fillRect(0, 0, w, h);
-    mctx.globalCompositeOperation = 'destination-out';
-    const f = Math.max(8, Math.round(Math.min(w, h) * 0.07));
+    // Резкий слой самой вывески: щит + цепи, без таверны вокруг.
+    const layer = this.createCanvas();
+    layer.width = sw;
+    layer.height = sh;
+    const lctx = layer.getContext('2d');
+    if (!lctx) return;
+
+    lctx.drawImage(this.img as CanvasImageSource, sx, sy, sw, sh, 0, 0, sw, sh);
+    lctx.globalCompositeOperation = 'destination-in';
+    lctx.drawImage(mask, 0, 0);
+    lctx.globalCompositeOperation = 'source-over';
+    this.signLayer = layer;
+
+    // Clean-plate под вывеской: скрывает статичный щит на исходной картинке,
+    // чтобы при микропокачивании не было «двойного» силуэта по краям.
+    const plate = this.createCanvas();
+    plate.width = sw;
+    plate.height = sh;
+    const pctx = plate.getContext('2d');
+    if (!pctx) return;
+
+    let supportsFilter = false;
+    try {
+      pctx.filter = 'blur(4px)';
+      supportsFilter = pctx.filter === 'blur(4px)';
+      pctx.filter = 'none';
+    } catch {
+      supportsFilter = false;
+    }
+
+    if (supportsFilter) {
+      pctx.filter = `blur(${Math.max(8, Math.round(Math.min(sw, sh) * 0.025))}px)`;
+      pctx.drawImage(this.img as CanvasImageSource, sx, sy, sw, sh, 0, 0, sw, sh);
+      pctx.filter = 'none';
+    } else {
+      const step = Math.max(2, Math.round(Math.min(sw, sh) * 0.01));
+      pctx.globalAlpha = 0.32;
+      for (let ox = -2; ox <= 2; ox++) {
+        for (let oy = -2; oy <= 2; oy++) {
+          pctx.drawImage(this.img as CanvasImageSource, sx, sy, sw, sh, ox * step, oy * step, sw, sh);
+        }
+      }
+      pctx.globalAlpha = 1;
+    }
+
+    pctx.fillStyle = 'rgba(5, 4, 3, 0.32)';
+    pctx.fillRect(0, 0, sw, sh);
+    pctx.globalCompositeOperation = 'destination-in';
+    pctx.drawImage(mask, 0, 0);
+    pctx.globalCompositeOperation = 'source-over';
+    this.signPlate = plate;
+  }
+
+  /** Маска вывески: отделяем щит и цепи от таверны, чтобы фон не «ездил». */
+  private drawSignMask(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const maskType = this.signMotion?.mask ?? 'rect';
+    if (maskType === 'rect') {
+      this.drawFeatheredRectMask(ctx, width, height);
+      return;
+    }
+
+    const hard = this.createCanvas();
+    hard.width = width;
+    hard.height = height;
+    const hctx = hard.getContext('2d');
+    if (!hctx) {
+      this.drawFeatheredRectMask(ctx, width, height);
+      return;
+    }
+
+    const roundRect = (x: number, y: number, w: number, h: number, r: number) => {
+      const rr = Math.min(r, w / 2, h / 2);
+      hctx.beginPath();
+      hctx.moveTo(x + rr, y);
+      hctx.lineTo(x + w - rr, y);
+      hctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+      hctx.lineTo(x + w, y + h - rr);
+      hctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+      hctx.lineTo(x + rr, y + h);
+      hctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+      hctx.lineTo(x, y + rr);
+      hctx.quadraticCurveTo(x, y, x + rr, y);
+      hctx.closePath();
+      hctx.fill();
+    };
+
+    hctx.fillStyle = '#fff';
+
+    // Две цепи: широкая мягкая зона, чтобы не резать отдельные звенья.
+    const chainW = width * 0.105;
+    const chainTop = 0;
+    const chainBottom = height * 0.42;
+    roundRect(width * 0.235 - chainW / 2, chainTop, chainW, chainBottom, chainW * 0.5);
+    roundRect(width * 0.765 - chainW / 2, chainTop, chainW, chainBottom, chainW * 0.5);
+
+    // Крепления цепей к щиту.
+    roundRect(width * 0.095, height * 0.255, width * 0.22, height * 0.19, width * 0.035);
+    roundRect(width * 0.685, height * 0.255, width * 0.22, height * 0.19, width * 0.035);
+
+    // Основной щит-вывеска: форма намеренно чуть шире реального контура,
+    // чтобы золото букв, металл и деревянные края не подрезались при качке.
+    hctx.beginPath();
+    hctx.moveTo(width * 0.10, height * 0.34);
+    hctx.lineTo(width * 0.31, height * 0.24);
+    hctx.quadraticCurveTo(width * 0.43, height * 0.15, width * 0.50, height * 0.13);
+    hctx.quadraticCurveTo(width * 0.57, height * 0.15, width * 0.69, height * 0.24);
+    hctx.lineTo(width * 0.90, height * 0.34);
+    hctx.lineTo(width * 0.86, height * 0.68);
+    hctx.quadraticCurveTo(width * 0.78, height * 0.84, width * 0.50, height * 0.99);
+    hctx.quadraticCurveTo(width * 0.22, height * 0.84, width * 0.14, height * 0.68);
+    hctx.closePath();
+    hctx.fill();
+
+    const feather = Math.max(5, Math.round(Math.min(width, height) * 0.018));
+    ctx.clearRect(0, 0, width, height);
+
+    let supportsFilter = false;
+    try {
+      ctx.filter = 'blur(2px)';
+      supportsFilter = ctx.filter === 'blur(2px)';
+      ctx.filter = 'none';
+    } catch {
+      supportsFilter = false;
+    }
+
+    if (supportsFilter) {
+      ctx.filter = `blur(${feather}px)`;
+      ctx.drawImage(hard, 0, 0);
+      ctx.filter = 'none';
+    }
+    ctx.globalAlpha = 0.96;
+    ctx.drawImage(hard, 0, 0);
+    ctx.globalAlpha = 1;
+  }
+
+  /** Старый мягкий прямоугольник — нужен как безопасный fallback для не-splash вывесок. */
+  private drawFeatheredRectMask(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, width, height);
+    ctx.globalCompositeOperation = 'destination-out';
+    const f = Math.max(8, Math.round(Math.min(width, height) * 0.07));
 
     const edge = (x0: number, y0: number, x1: number, y1: number, rx: number, ry: number, rw: number, rh: number) => {
-      const g = mctx.createLinearGradient(x0, y0, x1, y1);
+      const g = ctx.createLinearGradient(x0, y0, x1, y1);
       g.addColorStop(0, 'rgba(0,0,0,1)');
       g.addColorStop(1, 'rgba(0,0,0,0)');
-      mctx.fillStyle = g;
-      mctx.fillRect(rx, ry, rw, rh);
+      ctx.fillStyle = g;
+      ctx.fillRect(rx, ry, rw, rh);
     };
-    edge(0, 0, f, 0, 0, 0, f, h); // left
-    edge(w, 0, w - f, 0, w - f, 0, f, h); // right
-    edge(0, 0, 0, f, 0, 0, w, f); // top
-    edge(0, h, 0, h - f, 0, h - f, w, f); // bottom
-
-    this.signLayer = layer;
-    this.signMask = mask;
+    edge(0, 0, f, 0, 0, 0, f, height); // left
+    edge(width, 0, width - f, 0, width - f, 0, f, height); // right
+    edge(0, 0, 0, f, 0, 0, width, f); // top
+    edge(0, height, 0, height - f, 0, height - f, width, f); // bottom
+    ctx.globalCompositeOperation = 'source-over';
   }
 
   private drawSign(ctx: CanvasRenderingContext2D, t: number, dt: number, pointer: Pointer): void {
-    this.drawBackdrop(ctx, pointer);
+    const motion = this.signMotion;
 
     const { dw, dh } = this.fitContain();
     const cx = this.width / 2;
-    const dx = cx - dw / 2 + pointer.x * 8;
-    const dy = (this.height - dh) / 2 + pointer.y * 6;
+    const imageFrame: ImageFrame = {
+      dx: cx - dw / 2,
+      dy: (this.height - dh) / 2,
+      dw,
+      dh,
+    };
+    const layer = this.signLayer;
+
+    if (motion && layer) {
+      const plate = this.signPlate;
+      const region = motion.region;
+      const baseDx = imageFrame.dx + dw * region.x;
+      const baseDy = imageFrame.dy + dh * region.y;
+      const baseDw = dw * region.w;
+      const baseDh = dh * region.h;
+
+      // Статичный оригинал: таверна не «плавает», живёт только свет и сама вывеска.
+      ctx.drawImage(this.img as CanvasImageSource, imageFrame.dx, imageFrame.dy, dw, dh);
+      if (plate) ctx.drawImage(plate, baseDx, baseDy, baseDw, baseDh);
+
+      const period = Math.max(1000, motion.periodMs ?? 7800);
+      const phase = (t / period) * Math.PI * 2;
+      const amplitude = degToRad(motion.amplitudeDeg ?? 0.42) * Math.max(0, this.intensity);
+      const secondary = Math.sin(phase * 0.47 + 1.15) * amplitude * 0.22;
+      const sway = Math.sin(phase) * amplitude + secondary + pointer.x * degToRad(motion.pointerDeg ?? 0.08);
+
+      // Очень маленький дрейф — не «полёт», а вес тяжёлой таблички на цепях.
+      const drift = Math.sin(phase + 0.8) * (motion.driftPx ?? 1.15) * this.intensity;
+      const bob = Math.sin(phase * 1.08 + 2.4) * (motion.bobPx ?? 0.65) * this.intensity;
+
+      const drawDx = baseDx + drift;
+      const drawDy = baseDy + bob;
+      const pivot = motion.pivot ?? { x: 0.5, y: 0.08 };
+      const pivotX = drawDx + baseDw * pivot.x;
+      const pivotY = drawDy + baseDh * pivot.y;
+
+      ctx.save();
+      ctx.translate(pivotX, pivotY);
+      ctx.rotate(sway);
+      ctx.translate(-pivotX, -pivotY);
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.42)';
+      ctx.shadowBlur = Math.max(4, Math.min(18, baseDw * 0.025));
+      ctx.shadowOffsetY = Math.max(1, baseDh * 0.006);
+      ctx.drawImage(layer, drawDx, drawDy, baseDw, baseDh);
+      ctx.restore();
+
+      this.drawFlicker(ctx, t, imageFrame);
+      this.drawMotes(ctx, t, dt);
+      this.drawVignette(ctx);
+      return;
+    }
+
+    this.drawBackdrop(ctx, pointer);
+    const dx = imageFrame.dx + pointer.x * 8;
+    const dy = imageFrame.dy + pointer.y * 6;
 
     // маятник: медленное затухающее покачивание + лёгкий отклик на курсор
     const sway =
       Math.sin(t / 2400) * 0.016 * (0.6 + 0.4 * Math.sin(t / 9000)) +
       Math.sin(t / 5300) * 0.006 +
       pointer.x * 0.012;
-
-    // собираем резкий слой с пером и кладём его с покачиванием
-    const layer = this.signLayer;
-    const mask = this.signMask;
-    if (layer && mask) {
-      const lctx = layer.getContext('2d');
-      if (lctx) {
-        lctx.setTransform(1, 0, 0, 1, 0, 0);
-        lctx.clearRect(0, 0, layer.width, layer.height);
-        lctx.drawImage(this.img as CanvasImageSource, 0, 0, layer.width, layer.height);
-        lctx.globalCompositeOperation = 'destination-in';
-        lctx.drawImage(mask, 0, 0);
-        lctx.globalCompositeOperation = 'source-over';
-      }
-    }
 
     ctx.save();
     const pivotY = dy - dh * 0.06; // точка подвеса чуть выше верхнего края
@@ -443,7 +692,7 @@ export class ArtEngine {
     else ctx.drawImage(this.img as CanvasImageSource, dx, dy, dw, dh);
     ctx.restore();
 
-    this.drawFlicker(ctx, t);
+    this.drawFlicker(ctx, t, { dx, dy, dw, dh });
     this.drawMotes(ctx, t, dt);
     this.drawVignette(ctx);
   }
@@ -508,26 +757,47 @@ export class ArtEngine {
   }
 
   /** Мерцание тёплого света (факелы/свечи) — лёгкий шум по синусоиде. */
-  private drawFlicker(ctx: CanvasRenderingContext2D, t: number): void {
+  private drawFlicker(ctx: CanvasRenderingContext2D, t: number, imageFrame?: ImageFrame): void {
     const { r, g, b } = this.tint;
     const n =
       Math.sin(t / 130) * 0.4 + Math.sin(t / 331 + 1.7) * 0.35 + Math.sin(t / 761 + 0.4) * 0.25;
     const alpha = Math.max(0, (0.05 + n * 0.028) * this.intensity);
-    if (alpha <= 0.001) return;
+    if (alpha <= 0.001 && this.lightBlooms.length === 0) return;
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    const grad = ctx.createRadialGradient(
-      this.width * 0.5,
-      this.height * 0.45,
-      0,
-      this.width * 0.5,
-      this.height * 0.45,
-      Math.max(this.width, this.height) * 0.7,
-    );
-    grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alpha})`);
-    grad.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, this.width, this.height);
+
+    if (alpha > 0.001) {
+      const grad = ctx.createRadialGradient(
+        this.width * 0.5,
+        this.height * 0.45,
+        0,
+        this.width * 0.5,
+        this.height * 0.45,
+        Math.max(this.width, this.height) * 0.7,
+      );
+      grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alpha})`);
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, this.width, this.height);
+    }
+
+    const frame = imageFrame ?? { dx: 0, dy: 0, dw: this.width, dh: this.height };
+    for (const bloom of this.lightBlooms) {
+      const phase = bloom.phase ?? 0;
+      const pulse = 0.5 + 0.5 * Math.sin(t / 430 + phase + n * 0.8);
+      const slow = 0.5 + 0.5 * Math.sin(t / 1900 + phase * 1.7);
+      const localAlpha = (bloom.alpha ?? 0.055) * this.intensity * (0.66 + pulse * 0.24 + slow * 0.1);
+      const x = frame.dx + frame.dw * bloom.x;
+      const y = frame.dy + frame.dh * bloom.y;
+      const radius = Math.max(frame.dw, frame.dh) * bloom.radius * (0.96 + 0.06 * pulse);
+      const local = ctx.createRadialGradient(x, y, 0, x, y, radius);
+      local.addColorStop(0, `rgba(255, 236, 190, ${localAlpha * 0.85})`);
+      local.addColorStop(0.42, `rgba(${r}, ${g}, ${b}, ${localAlpha * 0.5})`);
+      local.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = local;
+      ctx.fillRect(0, 0, this.width, this.height);
+    }
+
     ctx.restore();
   }
 
