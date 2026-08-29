@@ -175,6 +175,24 @@ function setConfigError(set: AuthSet): AuthResult {
   return { ok: false, message: SUPABASE_CONFIG_MESSAGE };
 }
 
+/** True when the API failed at the network/transport layer (not an API response). */
+function isNetworkError(err: unknown): boolean {
+  const msg = String((err as { message?: string })?.message ?? err ?? '').toLowerCase();
+  return (
+    /failed to fetch|load failed|networkerror|network error|fetch failed|typeerror|aborted|econnrefused|offline|internet/i.test(msg) ||
+    /Failed to fetch/i.test(msg)
+  );
+}
+
+/** Returns a user-facing, human readable message for an auth/API error. */
+function describeAuthError(err: unknown, fallback: string): string {
+  const msg = String((err as { message?: string })?.message ?? err ?? '').trim();
+  if (!msg || isNetworkError(err)) {
+    return 'Не удаётся связаться с сервером. Проверьте интернет, а также переменные VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY в Replit Secrets.';
+  }
+  return msg;
+}
+
 export const useAuthStore = create<AuthState>((set) => ({
   session: null,
   user: null,
@@ -246,15 +264,17 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
 
       if (error) {
-        set({ authError: error.message });
-        return { ok: false, message: error.message };
+        console.error('signIn API error:', error);
+        const message = describeAuthError(error, 'Не удалось войти. Проверьте email и пароль.');
+        set({ authError: message });
+        return { ok: false, message };
       }
 
       await applyAuthSession(set, data.session);
       return { ok: true };
     } catch (error) {
-      const message = 'Не удалось войти. Попробуйте ещё раз.';
       console.error('signIn failed:', error);
+      const message = describeAuthError(error, 'Не удалось войти. Попробуйте ещё раз.');
       set({ authError: message });
       return { ok: false, message };
     }
@@ -275,8 +295,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
 
       if (error) {
-        set({ authError: error.message });
-        return { ok: false, message: error.message };
+        console.error('signUp API error:', error);
+        const message = describeAuthError(error, 'Не удалось создать аккаунт. Проверьте email и пароль.');
+        set({ authError: message });
+        return { ok: false, message };
       }
 
       if (data.session) {
@@ -288,8 +310,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ authMessage: message });
       return { ok: true, needsEmailConfirmation: true, message };
     } catch (error) {
-      const message = 'Не удалось создать аккаунт. Попробуйте ещё раз.';
       console.error('signUp failed:', error);
+      const message = describeAuthError(error, 'Не удалось создать аккаунт. Попробуйте ещё раз.');
       set({ authError: message });
       return { ok: false, message };
     }
@@ -313,14 +335,16 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
 
       if (error) {
-        set({ authError: error.message });
-        return { ok: false, message: error.message };
+        console.error('Google sign-in API error:', error);
+        const message = describeAuthError(error, 'Не удалось открыть Google-вход. Проверьте настройку Google provider.');
+        set({ authError: message });
+        return { ok: false, message };
       }
 
       return { ok: true };
     } catch (error) {
-      const message = 'Не удалось открыть Google-вход. Попробуйте ещё раз.';
       console.error('Google sign-in failed:', error);
+      const message = describeAuthError(error, 'Не удалось открыть Google-вход. Попробуйте ещё раз.');
       set({ authError: message });
       return { ok: false, message };
     }
