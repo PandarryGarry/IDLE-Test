@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { usePlayerStore } from '@/store/playerStore';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { useGameStore } from '@/store/gameStore';
+import { useAuthStore } from '@/store/authStore';
+import { GUEST_NOTICE } from '@/lib/guestMode';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CoinsDisplay } from '@/shared/ui/CoinsDisplay';
 import { formatNumber } from '@/lib/utils';
@@ -109,6 +111,7 @@ export function DashboardPage() {
   const maxSlots     = useInventoryStore(s => s.maxSlots);
   const offlineData   = useGameStore(s => s.offlineData);
   const clearOffline  = useGameStore(s => s.clearOfflineData);
+  const isGuest       = useAuthStore(s => s.isGuest);
   const usedSlots    = items ? items.filter(s => s.quantity > 0).length : 0;
 
   const handleClaim = () => { clearOffline(); };
@@ -149,6 +152,23 @@ export function DashboardPage() {
           <StatCell label="🎒 Сумка"     value={`${usedSlots}/${maxSlots}`} />
         </div>
       </div>
+
+      {/* ── GUEST NOTICE ── */}
+      {isGuest && (
+        <div style={{
+          ...PANEL,
+          background: 'linear-gradient(160deg,#3a2808,#2a1a06)',
+          border: '1px solid #c8880a',
+          padding: '10px 12px',
+        }}>
+          <span style={{
+            fontFamily: 'var(--app-font-mono)', fontSize: 10, fontWeight: 800,
+            letterSpacing: '0.06em', color: '#f0d070', lineHeight: 1.4,
+          }}>
+            {GUEST_NOTICE}
+          </span>
+        </div>
+      )}
 
       {/* ── ОФФЛАЙН СВОДКА ── */}
       {offlineData

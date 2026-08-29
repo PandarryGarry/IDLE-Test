@@ -1,11 +1,19 @@
 # Stage 3 Auth — handoff для следующего чата
 
 Дата фиксации: **2026-08-29**  
-Ветка Arena: `arena/01a049b7-idle-test`
+Ветка Arena: `arena/01a04c15-idle-test`  
+Статус: **Supabase/auth foundation реализован и смёржен (PR #4); остаётся тест в Replit.**
+
+> 🔄 **Обновление (Сессия 5):** Supabase больше НЕ «визуальный» — добавлены
+> `@supabase/supabase-js`, `src/lib/supabase.ts`, `src/store/authStore.ts`,
+> `src/lib/guestMode.ts`, `src/lib/authActions.ts`, AuthGate в `App.tsx`,
+> реальные email/password + Google OAuth + guest-mode. Инструкция для владельца:
+> `SUPABASE_SETUP.md`.
+> Следующий этап: **Этап 4 — создание персонажа**.
 
 ## Текущий статус
 
-Stage 3 начат с визуальной части авторизации/регистрации. После нескольких rejected-направлений утверждён новый визуальный подход и внедрён **визуальный auth-shell** в React/CSS.
+Визуальная часть auth-экрана утверждена и сохранена. Поверх неё подключён реальный auth-фундамент.
 
 Сейчас готово:
 - полноэкранные routes `/auth`, `/login`, `/register`;
@@ -15,9 +23,9 @@ Stage 3 начат с визуальной части авторизации/р�
 - desktop login/register визуально зафиксированы;
 - mobile login/register визуально зафиксированы как направление: фокус на камине/гербе, auth поднят выше, поля/кнопки короче и компактнее;
 - лёгкие ambient-анимации: fire glow, embers/dust, soft entrance;
-- `prefers-reduced-motion` учтён.
-
-**Важно:** Supabase/authStore/AuthGate/реальная авторизация пока НЕ подключены. Формы сейчас визуальные: `submit` делает `preventDefault`, Google-кнопка не выполняет OAuth, guest-кнопка ведёт на `/`.
+- `prefers-reduced-motion` учтён;
+- реальная авторизация: email/password, Google OAuth, session restore, sign out;
+- guest mode с ограничениями и сообщением «Зарегистрируйся, чтобы сохранить прогресс.».
 
 ## Утверждённая визуальная концепция
 
@@ -81,56 +89,35 @@ Stage 3 начат с визуальной части авторизации/р�
 
 ## Реализованные файлы
 
-Основные изменения:
-- `artifacts/my-app/src/pages/AuthPage.tsx` — визуальная auth-страница и переключение login/register;
-- `artifacts/my-app/src/App.tsx` — routes `/auth`, `/login`, `/register` отрисовываются отдельным fullscreen auth-screen без game shell;
-- `artifacts/my-app/src/index.css` — весь auth visual CSS, responsive rules, анимации и reduced-motion;
+Основные изменения (visual + auth):
+- `artifacts/my-app/src/pages/AuthPage.tsx` — auth-страница login/register + реальные формы;
+- `artifacts/my-app/src/App.tsx` — auth routes + AuthGate/protected routes;
+- `artifacts/my-app/src/index.css` — auth visual CSS, responsive, анимации, reduced-motion, сообщения auth;
 - `artifacts/my-app/public/assets/art/auth_tavern_background.webp` — approved фон таверны;
-- `artifacts/my-app/public/assets/icons/ui/auth/aethelia_seal_clean.webp` / `artifacts/my-app/public/assets/icons/ui/auth/aethelia_seal_clean.png` — clean-печать.
+- `artifacts/my-app/public/assets/icons/ui/auth/aethelia_seal_clean.webp` / `aethelia_seal_clean.png` — clean-печать;
+- `artifacts/my-app/src/lib/supabase.ts` — Supabase-клиент и missing-config state;
+- `artifacts/my-app/src/store/authStore.ts` — auth-стейт и методы;
+- `artifacts/my-app/src/lib/guestMode.ts` — guest-ограничения;
+- `artifacts/my-app/src/lib/authActions.ts` — сброс/остановка действий при смене аккаунта;
+- `artifacts/my-app/SUPABASE_SETUP.md` — инструкция подключения в Replit.
 
 ## Что намеренно НЕ сделано
 
-- Не установлен `@supabase/supabase-js`.
-- Нет `src/lib/supabase.ts`.
-- Нет `src/store/authStore.ts`.
-- Нет route protection/AuthGate.
-- Нет реального email/password login/register.
-- Нет Google OAuth.
-- Нет session restore/sign out.
-- Нет guest-mode restrictions.
-- Нет cloud-save/profiles.
+- Cloud save / профиль прогресса (запись/чтение сейвов в Supabase) — отложено.
+- Google provider может быть ещё не настроен в Supabase (код `signInWithGoogle` готов).
+- Этап 4 (создание персонажа).
 
 ## Следующие шаги
 
-1. Владелец должен проверить live-визуал в Replit/Webview:
-   - `/login`
-   - `/register`
+1. Владелец проверяет в Replit на ветке `arena/01a04c15-idle-test`:
+   - `/login` и `/register` (email/password, ошибки/подтверждение);
+   - session restore после перезагрузки;
+   - Google OAuth (если provider настроен);
+   - guest mode: лесорубство+рыбалка+24 слота, блок остального, сообщение «Зарегистрируйся, чтобы сохранить прогресс.»;
+   - sign out из Sidebar и Settings;
    - desktop/tablet/mobile widths.
-2. Если визуал подтверждён — перейти к Supabase foundation:
-   - добавить `@supabase/supabase-js`;
-   - создать `src/lib/supabase.ts`;
-   - читать только frontend env:
-     - `VITE_SUPABASE_URL`
-     - `VITE_SUPABASE_ANON_KEY`
-   - при missing config показывать аккуратное состояние, не ломать UI.
-3. Создать `src/store/authStore.ts`:
-   - `session`, `user`, `profile`, `loading`, `isGuest`;
-   - `restoreSession()`;
-   - `signIn(email,password)`;
-   - `signUp(email,password,metadata)`;
-   - `signInWithGoogle()`;
-   - `signOut()`;
-   - `continueAsGuest()`.
-4. Подключить AuthGate/route protection:
-   - незалогиненный → `/login`;
-   - guest mode допускает limited game shell;
-   - registered user допускает полный game shell.
-5. Guest mode правила владельца:
-   - progress only in `sessionStorage`;
-   - доступны: лесорубство + рыбалка + 24 inventory slots;
-   - заблокированы: combat, crafting, inventory expansion, cloud save;
-   - показывать сообщение: `Зарегистрируйся, чтобы сохранить прогресс.`
-6. После Supabase — Stage 4: создание персонажа.
+2. Если тест успешен — начать Этап 4: создание персонажа.
+3. Cloud-save/profile можно оформить либо внутри Этапа 4 (при привязке профиля), либо отдельным шагом после авторизации.
 
 ## Проверки/команды
 

@@ -6,6 +6,9 @@ import { SkillId } from '@/data/types';
 import { Link, useLocation } from 'wouter';
 import { Settings, Backpack, Home, Sword, Flame, Fish, Pickaxe, Trees, ChefHat, Hammer } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuthStore } from '@/store/authStore';
+import { stopActiveActivities } from '@/lib/authActions';
+import { GUEST_NOTICE } from '@/lib/guestMode';
 
 interface NavItemProps {
   href: string;
@@ -63,6 +66,18 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
   const { t }       = useTranslation();
   const combatLevel = usePlayerStore(s => s.combatLevel);
   const inCombat    = useCombatStore(s => s.inCombat);
+  const isGuest     = useAuthStore(s => s.isGuest);
+  const signOut     = useAuthStore(s => s.signOut);
+  const [, navigate] = useLocation();
+
+  const handleAuth = () => {
+    if (isGuest) {
+      navigate('/login');
+      return;
+    }
+    stopActiveActivities();
+    void signOut().then(() => navigate('/login'));
+  };
 
   return (
     <aside style={{
@@ -109,29 +124,35 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
           <NavItem href="/" icon={<Home size={16} />} label={t('nav.home')} />
         </div>
 
-        <div>
-          <SectionLabel color="rgba(192,40,30,0.9)">⚔ {t('group.combat')}</SectionLabel>
-          <NavItem href="/combat" icon={<Sword size={15} />} label={t('nav.combat')} />
-          {inCombat && (
-            <div style={{ margin: '4px 12px', fontSize: 10, fontFamily: 'var(--app-font-mono)', fontWeight: 700, color: '#e04040', background: 'rgba(192,40,30,0.12)', border: '1px solid rgba(192,40,30,0.3)', borderRadius: 6, padding: '3px 8px' }}>
-              ● В бою
-            </div>
-          )}
-        </div>
+        {!isGuest && (
+          <div>
+            <SectionLabel color="rgba(192,40,30,0.9)">⚔ {t('group.combat')}</SectionLabel>
+            <NavItem href="/combat" icon={<Sword size={15} />} label={t('nav.combat')} />
+            {inCombat && (
+              <div style={{ margin: '4px 12px', fontSize: 10, fontFamily: 'var(--app-font-mono)', fontWeight: 700, color: '#e04040', background: 'rgba(192,40,30,0.12)', border: '1px solid rgba(192,40,30,0.3)', borderRadius: 6, padding: '3px 8px' }}>
+                ● В бою
+              </div>
+            )}
+          </div>
+        )}
 
         <div>
           <SectionLabel color="rgba(26,158,90,0.9)">◈ {t('group.gathering')}</SectionLabel>
-          <NavItem href="/woodcutting" icon={<Trees size={15} />}   label={t('skill.woodcutting')} skillId="woodcutting" dotColor="#1a9e5a" />
-          <NavItem href="/mining"      icon={<Pickaxe size={15} />} label={t('skill.mining')}      skillId="mining"      dotColor="#d4860a" />
+          <NavItem href="/woodcutting" icon={<Trees size={15} />} label={t('skill.woodcutting')} skillId="woodcutting" dotColor="#1a9e5a" />
+          {!isGuest && (
+            <NavItem href="/mining"      icon={<Pickaxe size={15} />} label={t('skill.mining')}      skillId="mining"      dotColor="#d4860a" />
+          )}
           <NavItem href="/fishing"     icon={<Fish size={15} />}    label={t('skill.fishing')}     skillId="fishing"     dotColor="#0e8a7a" />
         </div>
 
-        <div>
-          <SectionLabel color="rgba(208,96,16,0.9)">⚒ {t('group.artisan')}</SectionLabel>
-          <NavItem href="/firemaking" icon={<Flame size={15} />}    label={t('skill.firemaking')} skillId="firemaking" dotColor="#d06010" />
-          <NavItem href="/cooking"    icon={<ChefHat size={15} />}  label={t('skill.cooking')}    skillId="cooking"    dotColor="#d4860a" />
-          <NavItem href="/smithing"   icon={<Hammer size={15} />}   label={t('skill.smithing')}   skillId="smithing"   dotColor="#8090a0" />
-        </div>
+        {!isGuest && (
+          <div>
+            <SectionLabel color="rgba(208,96,16,0.9)">⚒ {t('group.artisan')}</SectionLabel>
+            <NavItem href="/firemaking" icon={<Flame size={15} />}    label={t('skill.firemaking')} skillId="firemaking" dotColor="#d06010" />
+            <NavItem href="/cooking"    icon={<ChefHat size={15} />}  label={t('skill.cooking')}    skillId="cooking"    dotColor="#d4860a" />
+            <NavItem href="/smithing"   icon={<Hammer size={15} />}   label={t('skill.smithing')}   skillId="smithing"   dotColor="#8090a0" />
+          </div>
+        )}
       </div>
 
       {/* ── Футер ── */}
@@ -155,6 +176,34 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
             padding: '1px 8px', borderRadius: 6,
           }}>{combatLevel}</span>
         </div>
+
+        {isGuest && (
+          <div style={{
+            marginTop: 8, padding: '7px 8px', borderRadius: 10,
+            background: 'rgba(212,134,10,0.10)', border: '1px solid rgba(212,134,10,0.28)',
+            fontSize: 10, fontFamily: 'var(--app-font-mono)', fontWeight: 700,
+            color: 'rgba(239,181,47,0.84)', lineHeight: 1.4,
+          }}>
+            {GUEST_NOTICE}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={handleAuth}
+          style={{
+            width: '100%', marginTop: 8, padding: '8px 12px', borderRadius: 10,
+            background: isGuest
+              ? 'linear-gradient(180deg,#c8880a,#9a6008)'
+              : 'rgba(100,20,10,0.35)',
+            border: isGuest ? '1px solid #c8880a' : '1px solid rgba(192,40,30,0.4)',
+            color: isGuest ? '#fff8ee' : '#e0a080',
+            fontFamily: 'var(--app-font-mono)', fontSize: 11, fontWeight: 800,
+            cursor: 'pointer', textAlign: 'center',
+          }}
+        >
+          {isGuest ? 'Зарегистрироваться' : 'Выйти'}
+        </button>
       </div>
     </aside>
   );

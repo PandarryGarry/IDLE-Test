@@ -1,0 +1,365 @@
+import { create } from 'zustand';
+import type { Session, User } from '@supabase/supabase-js';
+import {
+  supabase,
+  isSupabaseConfigured,
+  SUPABASE_CONFIG_MESSAGE,
+} from '@/lib/supabase';
+
+export interface AuthProfile {
+  id: string;
+  email: string | null;
+  nickname?: string;
+  avatarId?: string;
+  createdAt?: string;
+}
+
+export interface AuthResult {
+  ok: boolean;
+  message?: string;
+  needsEmailConfirmation?: boolean;
+}
+
+interface AuthState {
+  session: Session | null;
+  user: User | null;
+  profile: AuthProfile | null;
+  loading: boolean;
+  isGuest: boolean;
+  isSupabaseConfigured: boolean;
+  authError: string | null;
+  authMessage: string | null;
+
+  restoreSession: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<AuthResult>;
+  signUp: (
+    email: string,
+    password: string,
+    metadata?: Record<string, unknown>,
+  ) => Promise<AuthResult>;
+  signInWithGoogle: () => Promise<AuthResult>;
+  signOut: () => Promise<void>;
+  continueAsGuest: () => void;
+  clearAuthFeedback: () => void;
+}
+
+const GUEST_KEY = 'aethelia_guest';
+
+type AuthListener = {
+  data: {
+    subscription: {
+      unsubscribe: () => void;
+    };
+  };
+};
+let authSubscription: AuthListener | null = null;
+
+function isStorageAvailable(storage: Storage): boolean {
+  try {
+    const probe = '__aethelia_probe__';
+    storage.setItem(probe, '1');
+    storage.removeItem(probe);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function readGuest(): boolean {
+  try {
+    if (!isStorageAvailable(window.sessionStorage)) return false;
+    return window.sessionStorage.getItem(GUEST_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeGuest(value: boolean): void {
+  try {
+    if (value) {
+      window.sessionStorage.setItem(GUEST_KEY, '1');
+    } else {
+      window.sessionStorage.removeItem(GUEST_KEY);
+    }
+  } catch {
+    // ignore storage failures
+  }
+}
+
+type AuthSet = (partial: Partial<AuthState>) => void;
+
+function rowToProfile(row: Record<string, unknown>, user: User): AuthProfile {
+  const nicknameValue = row.nickname ?? row.username ?? null;
+  const metadata = user.user_metadata ?? {};
+
+  return {
+    id: (row.id as string) ?? user.id,
+    email: (row.email as string | null) ?? user.email ?? null,
+    nickname:
+      (nicknameValue as string | null) ??
+      (metadata.nickname as string | undefined) ??
+      undefined,
+    avatarId:
+      (row.avatar_id as string | undefined) ??
+      (row.avatarId as string | undefined) ??
+      (metadata.avatar_id as string | undefined) ??
+      (metadata.avatarId as string | undefined) ??
+      undefined,
+    createdAt: (row.created_at as string | undefined) ?? user.created_at,
+  };
+}
+
+function fallbackProfile(user: User): AuthProfile {
+  const metadata = user.user_metadata ?? {};
+  return {
+    id: user.id,
+    email: user.email ?? null,
+    nickname: (metadata.nickname as string | undefined) ?? undefined,
+    avatarId:
+      (metadata.avatar_id as string | undefined) ??
+      (metadata.avatarId as string | undefined) ??
+      undefined,
+    createdAt: user.created_at,
+  };
+}
+
+async function applyAuthSession(set: AuthSet, session: Session | null) {
+  if (!session) {
+    set({
+      session: null,
+      user: null,
+      profile: null,
+      isGuest: readGuest(),
+      authError: null,
+    });
+    return;
+  }
+
+  const user = session.user;
+  set({
+    session,
+    user,
+    profile: fallbackProfile(user),
+    isGuest: false,
+    authError: null,
+    authMessage: null,
+  });
+
+  if (!supabase) return;
+
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (!error && data) {
+      set({ profile: rowToProfile(data as Record<string, unknown>, user) });
+    }
+  } catch (error) {
+    console.warn('Failed to load profile:', error);
+  }
+}
+
+function attachAuthListener(set: AuthSet) {
+  if (authSubscription || !supabase) return;
+
+  authSubscription = supabase.auth.onAuthStateChange((_event, session) => {
+    void applyAuthSession(set, session);
+  });
+}
+
+function setConfigError(set: AuthSet): AuthResult {
+  set({ authError: SUPABASE_CONFIG_MESSAGE });
+  return { ok: false, message: SUPABASE_CONFIG_MESSAGE };
+}
+
+export const useAuthStore = create<AuthState>((set) => ({
+  session: null,
+  user: null,
+  profile: null,
+  loading: true,
+  isGuest: readGuest(),
+  isSupabaseConfigured,
+  authError: null,
+  authMessage: null,
+
+  restoreSession: async () => {
+    set({ loading: true, authError: null });
+
+    if (!supabase) {
+      set({
+        session: null,
+        user: null,
+        profile: null,
+        isGuest: readGuest(),
+        loading: false,
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        set({
+          authError: error.message,
+          session: null,
+          user: null,
+          profile: null,
+          isGuest: readGuest(),
+        });
+      } else {
+        await applyAuthSession(set, data.session);
+      }
+    } catch (error) {
+      console.warn('Failed to restore auth session:', error);
+      set({
+        session: null,
+        user: null,
+        profile: null,
+        isGuest: readGuest(),
+        authError: 'Не удалось восстановить сессию.',
+      });
+    } finally {
+      attachAuthListener(set);
+      set({ loading: false });
+    }
+  },
+
+  signIn: async (email, password) => {
+    set({
+      authError: null,
+      authMessage: null,
+      session: null,
+      user: null,
+      profile: null,
+      isGuest: false,
+    });
+
+    if (!supabase) return setConfigError(set);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        set({ authError: error.message });
+        return { ok: false, message: error.message };
+      }
+
+      await applyAuthSession(set, data.session);
+      return { ok: true };
+    } catch (error) {
+      const message = 'Не удалось войти. Попробуйте ещё раз.';
+      console.error('signIn failed:', error);
+      set({ authError: message });
+      return { ok: false, message };
+    }
+  },
+
+  signUp: async (email, password, metadata) => {
+    set({ authError: null, authMessage: null });
+
+    if (!supabase) return setConfigError(set);
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: metadata ?? {},
+        },
+      });
+
+      if (error) {
+        set({ authError: error.message });
+        return { ok: false, message: error.message };
+      }
+
+      if (data.session) {
+        await applyAuthSession(set, data.session);
+        return { ok: true };
+      }
+
+      const message = 'Аккаунт создан. Проверьте почту, чтобы подтвердить email.';
+      set({ authMessage: message });
+      return { ok: true, needsEmailConfirmation: true, message };
+    } catch (error) {
+      const message = 'Не удалось создать аккаунт. Попробуйте ещё раз.';
+      console.error('signUp failed:', error);
+      set({ authError: message });
+      return { ok: false, message };
+    }
+  },
+
+  signInWithGoogle: async () => {
+    set({ authError: null, authMessage: null });
+
+    if (!supabase) return setConfigError(set);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+          queryParams: {
+            access_type: 'online',
+            prompt: 'select_account',
+          },
+        },
+      });
+
+      if (error) {
+        set({ authError: error.message });
+        return { ok: false, message: error.message };
+      }
+
+      return { ok: true };
+    } catch (error) {
+      const message = 'Не удалось открыть Google-вход. Попробуйте ещё раз.';
+      console.error('Google sign-in failed:', error);
+      set({ authError: message });
+      return { ok: false, message };
+    }
+  },
+
+  signOut: async () => {
+    writeGuest(false);
+
+    if (supabase) {
+      try {
+        await supabase.auth.signOut();
+      } catch (error) {
+        console.warn('signOut failed:', error);
+      }
+    }
+
+    set({
+      session: null,
+      user: null,
+      profile: null,
+      isGuest: false,
+      authError: null,
+      authMessage: null,
+    });
+  },
+
+  continueAsGuest: () => {
+    writeGuest(true);
+    set({
+      session: null,
+      user: null,
+      profile: null,
+      isGuest: true,
+      authError: null,
+      authMessage: null,
+    });
+  },
+
+  clearAuthFeedback: () => {
+    set({ authError: null, authMessage: null });
+  },
+}));

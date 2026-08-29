@@ -75,6 +75,7 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.4",
     "dexie": "^4.4.4",
     "lz-string": "^1.5.0",
     "zustand": "^5.0.14"

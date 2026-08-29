@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { BankSlot as InventorySlot } from '../data/types';
 import { getItem } from '../data/items';
+import { useAuthStore } from './authStore';
 
 const DEFAULT_MAX_SLOTS = 24;
 const SLOTS_PER_UPGRADE = 10;
@@ -216,6 +217,9 @@ export const useInventoryStore = create<InventoryStore>((set, get) => ({
   },
 
   upgradeSlots: () => {
+    // Guests are limited to the base 24 inventory slots; expansion is locked.
+    if (useAuthStore.getState().isGuest) return false;
+
     const cost = Math.floor(get().getUpgradeCost());
     const ok = get().spendGp(cost);
     if (!ok) return false;
@@ -227,7 +231,15 @@ export const useInventoryStore = create<InventoryStore>((set, get) => ({
   setSort: (mode) => set({ sortMode: mode }),
   setCategory: (category) => set({ activeCategory: category }),
 
-  loadFromSave: (items, gp, maxSlots) => set({ items, gp, maxSlots: maxSlots || DEFAULT_MAX_SLOTS }),
+  loadFromSave: (items, gp, maxSlots) => {
+    const isGuest = useAuthStore.getState().isGuest;
+    set({
+      items,
+      gp,
+      // Guests always stay capped at the base 24 slots.
+      maxSlots: isGuest ? DEFAULT_MAX_SLOTS : (maxSlots || DEFAULT_MAX_SLOTS),
+    });
+  },
 
   reset: () => set({ 
     items: [], 

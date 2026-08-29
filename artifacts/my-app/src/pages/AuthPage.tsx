@@ -1,5 +1,8 @@
 import { FormEvent, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useLocation } from 'wouter';
+import { useAuthStore } from '@/store/authStore';
+import { resetForGuestStart } from '@/lib/authActions';
+import { isSupabaseConfigured, SUPABASE_CONFIG_MESSAGE } from '@/lib/supabase';
 
 type AuthMode = 'login' | 'register';
 
@@ -46,6 +49,8 @@ function AuthTextField({
   type = 'text',
   icon,
   autoComplete,
+  value,
+  onChange,
 }: {
   id: string;
   label: string;
@@ -53,13 +58,23 @@ function AuthTextField({
   type?: string;
   icon: string;
   autoComplete?: string;
+  value: string;
+  onChange: (value: string) => void;
 }) {
   return (
     <label className="auth-field" htmlFor={id}>
       <span className="auth-field__label">{label}</span>
       <span className="auth-field__control">
         <span className="auth-field__icon" aria-hidden="true">{icon}</span>
-        <input id={id} type={type} placeholder={placeholder} autoComplete={autoComplete} />
+        <input
+          id={id}
+          type={type}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          required
+        />
       </span>
     </label>
   );
@@ -69,8 +84,26 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
   const [, navigate] = useLocation();
   const [mode, setMode] = useState<AuthMode>(initialMode);
 
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordRepeat, setPasswordRepeat] = useState('');
+  const [name, setName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  const authError = useAuthStore(s => s.authError);
+  const authMessage = useAuthStore(s => s.authMessage);
+  const clearAuthFeedback = useAuthStore(s => s.clearAuthFeedback);
+  const signIn = useAuthStore(s => s.signIn);
+  const signUp = useAuthStore(s => s.signUp);
+  const signInWithGoogle = useAuthStore(s => s.signInWithGoogle);
+  const continueAsGuest = useAuthStore(s => s.continueAsGuest);
+
   useEffect(() => {
     setMode(initialMode);
+    setLocalError(null);
+    clearAuthFeedback();
   }, [initialMode]);
 
   const copy = modeCopy[mode];
@@ -78,6 +111,8 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
 
   const switchMode = () => {
     const nextMode: AuthMode = isRegister ? 'login' : 'register';
+    setLocalError(null);
+    clearAuthFeedback();
     setMode(nextMode);
     navigate(nextMode === 'register' ? '/register' : '/login');
   };
@@ -92,6 +127,8 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
         type="email"
         icon="✉"
         autoComplete="email"
+        value={email}
+        onChange={setEmail}
       />,
       <AuthTextField
         key="password"
@@ -101,6 +138,8 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
         type="password"
         icon="◆"
         autoComplete={isRegister ? 'new-password' : 'current-password'}
+        value={password}
+        onChange={setPassword}
       />,
     ];
 
@@ -116,6 +155,8 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
         placeholder="Garry"
         icon="♙"
         autoComplete="nickname"
+        value={name}
+        onChange={setName}
       />,
       ...shared,
       <AuthTextField
@@ -126,13 +167,91 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
         type="password"
         icon="✓"
         autoComplete="new-password"
+        value={passwordRepeat}
+        onChange={setPasswordRepeat}
       />,
     ];
-  }, [isRegister]);
+  }, [email, password, name, passwordRepeat, isRegister]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submitting) return;
+
+    setLocalError(null);
+    clearAuthFeedback();
+
+    if (!isSupabaseConfigured) {
+      setLocalError(SUPABASE_CONFIG_MESSAGE);
+      return;
+    }
+
+    if (!email.trim() || !password) {
+      setLocalError('Заполните email и пароль.');
+      return;
+    }
+
+    if (isRegister) {
+      if (password.length < 6) {
+        setLocalError('Пароль должен быть не короче 6 символов.');
+        return;
+      }
+      if (password !== passwordRepeat) {
+        setLocalError('Пароли не совпадают.');
+        return;
+      }
+    }
+
+    setSubmitting(true);
+    try {
+      if (isRegister) {
+        const result = await signUp(
+          email.trim(),
+          password,
+          { nickname: name.trim() || undefined },
+        );
+        if (!result.ok) return;
+        if (result.needsEmailConfirmation) return;
+        navigate('/');
+      } else {
+        const result = await signIn(email.trim(), password);
+        if (!result.ok) return;
+        navigate('/');
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  const handleGoogle = async () => {
+    if (submitting || googleLoading) return;
+
+    setLocalError(null);
+    clearAuthFeedback();
+
+    if (!isSupabaseConfigured) {
+      setLocalError(SUPABASE_CONFIG_MESSAGE);
+      return;
+    }
+
+    setGoogleLoading(true);
+    try {
+      const result = await signInWithGoogle();
+      if (!result.ok) return;
+      // Supabase handles the OAuth redirect.
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleGuest = () => {
+    clearAuthFeedback();
+    setLocalError(null);
+    resetForGuestStart();
+    continueAsGuest();
+    navigate('/');
+  };
+
+  const displayedError = localError || authError;
 
   return (
     <main className={`auth-screen auth-screen--${mode}`} aria-label="Aethelia authorization">
@@ -161,17 +280,38 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
 
               {!isRegister && (
                 <label className="auth-remember">
-                  <input type="checkbox" />
+                  <input type="checkbox" defaultChecked />
                   <span>Запомнить</span>
                 </label>
               )}
 
+              {!isSupabaseConfigured && (
+                <div className="auth-config-warning">
+                  Supabase не настроен. Добавьте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY.
+                </div>
+              )}
+
+              {(displayedError || authMessage) && (
+                <div className={displayedError ? 'auth-error' : 'auth-message'}>
+                  {displayedError || authMessage}
+                </div>
+              )}
+
               <div className="auth-actions">
-                <button className="auth-button auth-button--primary" type="submit">
-                  {copy.submit}
+                <button
+                  className="auth-button auth-button--primary"
+                  type="submit"
+                  disabled={submitting}
+                >
+                  {submitting ? '...' : copy.submit}
                 </button>
-                <button className="auth-button auth-button--secondary" type="button">
-                  Google
+                <button
+                  className="auth-button auth-button--secondary"
+                  type="button"
+                  onClick={handleGoogle}
+                  disabled={submitting || googleLoading}
+                >
+                  {googleLoading ? '...' : 'Google'}
                 </button>
               </div>
 
@@ -179,7 +319,7 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
                 {copy.switchLabel}
               </button>
               {!isRegister && (
-                <button className="auth-link auth-link--guest" type="button" onClick={() => navigate('/')}>
+                <button className="auth-link auth-link--guest" type="button" onClick={handleGuest}>
                   Войти гостем
                 </button>
               )}

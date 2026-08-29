@@ -12,6 +12,8 @@ import {
   Settings
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuthStore } from '@/store/authStore';
+import { GUEST_NOTICE } from '@/lib/guestMode';
 import { getSkillVisual } from '@/shared/icons/skillIcons';
 import { IconFrame } from '@/shared/ui/kit/IconFrame';
 import type { SkillId } from '@/data/types';
@@ -27,8 +29,9 @@ export function MobileNav({ className = '' }: MobileNavProps) {
 
   const activeSkill = useGameStore(s => s.activeSkill);
   const inCombat = useCombatStore(s => s.inCombat);
+  const isGuest = useAuthStore(s => s.isGuest);
 
-  const skillsList = [
+  const allSkillsList = [
     { href: '/woodcutting', name: t('skill.woodcutting'), id: 'woodcutting' },
     { href: '/mining',      name: t('skill.mining'),      id: 'mining' },
     { href: '/fishing',     name: t('skill.fishing'),     id: 'fishing' },
@@ -36,6 +39,10 @@ export function MobileNav({ className = '' }: MobileNavProps) {
     { href: '/cooking',     name: t('skill.cooking'),     id: 'cooking' },
     { href: '/smithing',    name: t('skill.smithing'),    id: 'smithing' },
   ];
+
+  const skillsList = isGuest
+    ? allSkillsList.filter(s => s.id === 'woodcutting' || s.id === 'fishing')
+    : allSkillsList;
 
   const isSkillsPage = skillsList.some(s => s.href === location);
 
@@ -72,6 +79,12 @@ export function MobileNav({ className = '' }: MobileNavProps) {
                 />
               ))}
             </div>
+
+            {isGuest && (
+              <div className="mb-4 text-[11px] font-mono leading-tight text-amber-300/80 bg-amber-500/10 border border-amber-500/25 rounded-xl p-3">
+                {GUEST_NOTICE}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -90,15 +103,17 @@ export function MobileNav({ className = '' }: MobileNavProps) {
           </Link>
 
           {/* Combat */}
-          <Link href="/combat" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] relative transition-all ${
-            location === '/combat' ? 'text-red-400 font-bold' : 'text-stone-300 hover:text-[var(--text-primary)]'
-          }`}>
-            {inCombat && (
-              <span className="absolute top-0 right-2 w-2 h-2 rounded-full bg-red-500 animate-ping" />
-            )}
-            <Sword className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] font-bold">{t('nav.combat')}</span>
-          </Link>
+          {!isGuest && (
+            <Link href="/combat" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] relative transition-all ${
+              location === '/combat' ? 'text-red-400 font-bold' : 'text-stone-300 hover:text-[var(--text-primary)]'
+            }`}>
+              {inCombat && (
+                <span className="absolute top-0 right-2 w-2 h-2 rounded-full bg-red-500 animate-ping" />
+              )}
+              <Sword className="w-5 h-5 mb-0.5" />
+              <span className="text-[10px] font-bold">{t('nav.combat')}</span>
+            </Link>
+          )}
 
           {/* Skills Drawer Trigger */}
           <button
