@@ -15,7 +15,7 @@ import { SplashScreen } from '@/components/SplashScreen';
 import { CinematicDirector } from '@/components/CinematicDirector';
 import { WhatsNewModal } from '@/components/WhatsNewModal';
 import { getUnseenChangelog, markChangelogSeen, type VersionEntry } from '@/data/changelog';
-import { getQueuedCinematic } from '@/lib/cinematicState';
+import { getQueuedCinematic, hasSeenEntranceCinematic } from '@/lib/cinematicState';
 
 import { DashboardPage } from '@/pages/DashboardPage';
 import { WoodcuttingPage } from '@/pages/WoodcuttingPage';
@@ -219,18 +219,35 @@ function Router() {
 function App() {
   const [splashComplete, setSplashComplete] = useState(false);
   const [cinematicBusy, setCinematicBusy] = useState(false);
+  // Маршруты монтируются только когда заставка И входная катсцена завершены:
+  // тогда формы auth появляются на экране авторизации, а не живут в DOM под
+  // загрузочным экраном (иначе iOS поднимает автозаполнение поверх заставки).
+  const [entranceFinished, setEntranceFinished] = useState(hasSeenEntranceCinematic);
+  const [routerMounted, setRouterMounted] = useState(false);
+
+  const authLoading = useAuthStore(s => s.loading);
+  const hasUser = useAuthStore(s => Boolean(s.user));
+  const isGuest = useAuthStore(s => s.isGuest);
 
   // «Что нового» должно появляться только когда игрок уже дошёл до игры,
   // а не поверх входной/выходной сцен или создания героя.
   const [unseenChangelog, setUnseenChangelog] = useState<VersionEntry[]>([]);
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const [changelogChecked, setChangelogChecked] = useState(false);
-  const isGuest = useAuthStore(s => s.isGuest);
   const activeCharacter = useCharacterStore(s => s.activeCharacter);
 
   const handleSplashLoaded = () => {
     setSplashComplete(true);
   };
+
+  // Односторонняя защёлка: маршруты не монтируются, пока играется входная
+  // катсцена. Гость и уже залогиненный игрок катсцену не ждут.
+  useEffect(() => {
+    if (routerMounted || !splashComplete || authLoading) return;
+    const entrancePending = !entranceFinished && !hasUser && !isGuest;
+    if (entrancePending) return;
+    setRouterMounted(true);
+  }, [routerMounted, splashComplete, authLoading, entranceFinished, hasUser, isGuest]);
 
   useEffect(() => {
     if (changelogChecked || !splashComplete || cinematicBusy || getQueuedCinematic()) return;
@@ -292,14 +309,22 @@ function App() {
     <ErrorBoundary>
       <TooltipProvider delayDuration={200}>
         <SplashScreen onLoaded={handleSplashLoaded} />
-        <CinematicDirector splashComplete={splashComplete} onBusyChange={setCinematicBusy} />
+        <CinematicDirector
+          splashComplete={splashComplete}
+          onBusyChange={setCinematicBusy}
+          onEntranceFinished={() => setEntranceFinished(true)}
+        />
         <WhatsNewModal open={whatsNewOpen} entries={unseenChangelog} onClose={handleWhatsNewClose} />
-        {basePath ? (
-          <WouterRouter base={basePath}>
+        {routerMounted ? (
+          basePath ? (
+            <WouterRouter base={basePath}>
+              <Router />
+            </WouterRouter>
+          ) : (
             <Router />
-          </WouterRouter>
+          )
         ) : (
-          <Router />
+          <AuthLoadingScreen />
         )}
       </TooltipProvider>
     </ErrorBoundary>

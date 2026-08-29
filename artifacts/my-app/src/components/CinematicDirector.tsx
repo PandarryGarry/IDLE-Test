@@ -14,6 +14,8 @@ interface CinematicDirectorProps {
   /** SplashScreen уже завершился; до этого поверх него ничего не рисуем. */
   splashComplete: boolean;
   onBusyChange?: (busy: boolean) => void;
+  /** Входная катсцена закончилась — можно показывать маршруты (auth). */
+  onEntranceFinished?: () => void;
 }
 
 /**
@@ -25,6 +27,7 @@ interface CinematicDirectorProps {
 export function CinematicDirector({
   splashComplete,
   onBusyChange,
+  onEntranceFinished,
 }: CinematicDirectorProps) {
   const authLoading = useAuthStore((s) => s.loading);
   const hasUser = useAuthStore((s) => Boolean(s.user));
@@ -68,6 +71,7 @@ export function CinematicDirector({
     if (activeScene === "entrance") {
       markEntranceCinematicSeen();
       setEntranceSeen(true);
+      onEntranceFinished?.();
       return;
     }
 
