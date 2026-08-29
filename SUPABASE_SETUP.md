@@ -5,6 +5,9 @@
 > - `VITE_SUPABASE_ANON_KEY`
 >
 > `service_role` в браузер НЕ вставлять и НЕ использовать. Ключи в чат не пишем.
+>
+> **Этапа 4 SQL** (персонажи + профиль аккаунта) — см. раздел 6а:
+> `artifacts/my-app/SUPABASE_STAGE4.sql`.
 
 ---
 
@@ -137,6 +140,32 @@ create policy "Users can update own profile"
   on public.profiles for update
   using (auth.uid() = id);
 ```
+
+---
+
+## 6а. SQL этапа 4 (персонажи + профиль аккаунта) — РЕКОМЕНДУЕТСЯ
+
+После того как вход/регистрация работают, выполни SQL для системы персонажей.
+
+**Как выполнить:**
+1. Открой Supabase → **SQL Editor**.
+2. Скопируй содержимое файла `artifacts/my-app/SUPABASE_STAGE4.sql` (он в репозитории).
+3. Вставь в SQL Editor и нажми **Run** (можно повторно — скрипт идемпотентный).
+
+**Что он делает:**
+- **`profiles`** (аккаунт): добавляет `role`, `donate_currency` (донат-валюта на акаунте),
+  `rules_accepted_at`, `rules_version`, `selected_character_id` — если их нет.
+- **`characters`** (персонаж): `nickname`, `avatar_id`, `race_id`, `save_data` (jsonb),
+  `has_changed_nickname/avatar`, `selected`, `last_saved_at`, `is_deleted` + `deleted_at`.
+- **RLS**: пользователь видит/меняет только свои строки (`profiles`, `characters`).
+- **RPC `is_nickname_taken(text)`** — глобальная проверка уникальности ника (`security definer`,
+  обходит RLS). Разрешена ролям `anon`, `authenticated`.
+- **Триггер** авто-обновления `updated_at` на `characters`.
+
+**Заметки:**
+- Поле `nickname`, `avatar_id` в `profiles` оставлены для обратной совместимости —
+  но на Этапе 4 они переезжают на персонажа и не используются.
+- Если таблица `profiles` уже создана вручную — скрипт просто добавит недостающие колонки.
 
 ---
 
