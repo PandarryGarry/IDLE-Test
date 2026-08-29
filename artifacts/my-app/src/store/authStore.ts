@@ -12,6 +12,12 @@ export interface AuthProfile {
   nickname?: string;
   avatarId?: string;
   createdAt?: string;
+  // ── Этап 4: аккаунт ────────────────────────────────────────
+  role?: 'user' | 'admin';
+  donateCurrency?: number;
+  rulesAcceptedAt?: string | null;
+  rulesVersion?: string | null;
+  selectedCharacterId?: string | null;
 }
 
 export interface AuthResult {
@@ -41,6 +47,7 @@ interface AuthState {
   signOut: () => Promise<void>;
   continueAsGuest: () => void;
   clearAuthFeedback: () => void;
+  acceptRules: (version: string) => Promise<void>;
 }
 
 const GUEST_KEY = 'aethelia_guest';
@@ -106,6 +113,23 @@ function rowToProfile(row: Record<string, unknown>, user: User): AuthProfile {
       (metadata.avatarId as string | undefined) ??
       undefined,
     createdAt: (row.created_at as string | undefined) ?? user.created_at,
+    role: (row.role as 'user' | 'admin' | undefined) ?? (metadata.role as 'user' | 'admin' | undefined) ?? 'user',
+    donateCurrency:
+      (row.donate_currency as number | undefined) ??
+      (metadata.donate_currency as number | undefined) ??
+      0,
+    rulesAcceptedAt:
+      (row.rules_accepted_at as string | null | undefined) ??
+      (metadata.rules_accepted_at as string | undefined) ??
+      null,
+    rulesVersion:
+      (row.rules_version as string | null | undefined) ??
+      (metadata.rules_version as string | undefined) ??
+      null,
+    selectedCharacterId:
+      (row.selected_character_id as string | null | undefined) ??
+      (metadata.selected_character_id as string | undefined) ??
+      null,
   };
 }
 
@@ -120,6 +144,11 @@ function fallbackProfile(user: User): AuthProfile {
       (metadata.avatarId as string | undefined) ??
       undefined,
     createdAt: user.created_at,
+    role: (metadata.role as 'user' | 'admin' | undefined) ?? 'user',
+    donateCurrency: (metadata.donate_currency as number | undefined) ?? 0,
+    rulesAcceptedAt: (metadata.rules_accepted_at as string | undefined) ?? null,
+    rulesVersion: (metadata.rules_version as string | undefined) ?? null,
+    selectedCharacterId: (metadata.selected_character_id as string | undefined) ?? null,
   };
 }
 
@@ -173,6 +202,24 @@ function attachAuthListener(set: AuthSet) {
 function setConfigError(set: AuthSet): AuthResult {
   set({ authError: SUPABASE_CONFIG_MESSAGE });
   return { ok: false, message: SUPABASE_CONFIG_MESSAGE };
+}
+
+/** True when the API failed at the network/transport layer (not an API response). */
+function isNetworkError(err: unknown): boolean {
+  const msg = String((err as { message?: string })?.message ?? err ?? '').toLowerCase();
+  return (
+    /failed to fetch|load failed|networkerror|network error|fetch failed|typeerror|aborted|econnrefused|offline|internet/i.test(msg) ||
+    /Failed to fetch/i.test(msg)
+  );
+}
+
+/** Returns a user-facing, human readable message for an auth/API error. */
+function describeAuthError(err: unknown, fallback: string): string {
+  const msg = String((err as { message?: string })?.message ?? err ?? '').trim();
+  if (!msg || isNetworkError(err)) {
+    return 'Не удаётся связаться с сервером. Проверьте интернет, а также переменные VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY в Replit Secrets.';
+  }
+  return msg;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -246,15 +293,17 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
 
       if (error) {
-        set({ authError: error.message });
-        return { ok: false, message: error.message };
+        console.error('signIn API error:', error);
+        const message = describeAuthError(error, 'Не удалось войти. Проверьте email и пароль.');
+        set({ authError: message });
+        return { ok: false, message };
       }
 
       await applyAuthSession(set, data.session);
       return { ok: true };
     } catch (error) {
-      const message = 'Не удалось войти. Попробуйте ещё раз.';
       console.error('signIn failed:', error);
+      const message = describeAuthError(error, 'Не удалось войти. Попробуйте ещё раз.');
       set({ authError: message });
       return { ok: false, message };
     }
@@ -275,8 +324,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
 
       if (error) {
-        set({ authError: error.message });
-        return { ok: false, message: error.message };
+        console.error('signUp API error:', error);
+        const message = describeAuthError(error, 'Не удалось создать аккаунт. Проверьте email и пароль.');
+        set({ authError: message });
+        return { ok: false, message };
       }
 
       if (data.session) {
@@ -288,8 +339,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ authMessage: message });
       return { ok: true, needsEmailConfirmation: true, message };
     } catch (error) {
-      const message = 'Не удалось создать аккаунт. Попробуйте ещё раз.';
       console.error('signUp failed:', error);
+      const message = describeAuthError(error, 'Не удалось создать аккаунт. Попробуйте ещё раз.');
       set({ authError: message });
       return { ok: false, message };
     }
@@ -313,14 +364,16 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
 
       if (error) {
-        set({ authError: error.message });
-        return { ok: false, message: error.message };
+        console.error('Google sign-in API error:', error);
+        const message = describeAuthError(error, 'Не удалось открыть Google-вход. Проверьте настройку Google provider.');
+        set({ authError: message });
+        return { ok: false, message };
       }
 
       return { ok: true };
     } catch (error) {
-      const message = 'Не удалось открыть Google-вход. Попробуйте ещё раз.';
       console.error('Google sign-in failed:', error);
+      const message = describeAuthError(error, 'Не удалось открыть Google-вход. Попробуйте ещё раз.');
       set({ authError: message });
       return { ok: false, message };
     }
@@ -361,5 +414,41 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   clearAuthFeedback: () => {
     set({ authError: null, authMessage: null });
+  },
+
+  acceptRules: async (version) => {
+    const now = new Date().toISOString();
+
+    set(state => ({
+      profile: state.profile
+        ? { ...state.profile, rulesAcceptedAt: now, rulesVersion: version }
+        : state.profile,
+    }));
+
+    if (supabase) {
+      try {
+        const { data: { user: signedIn } } = await supabase.auth.getUser();
+        if (signedIn) {
+          await supabase
+            .from('profiles')
+            .upsert(
+              { id: signedIn.id, rules_accepted_at: now, rules_version: version },
+              { onConflict: 'id' },
+            );
+          await supabase.auth.updateUser({
+            data: { rules_accepted_at: now, rules_version: version },
+          });
+        }
+      } catch (e) {
+        console.warn('acceptRules: failed to persist rules acceptance:', e);
+      }
+    }
+
+    set(state => ({
+      profile: state.profile
+        ? { ...state.profile, rulesAcceptedAt: now, rulesVersion: version }
+        : state.profile,
+      authMessage: null,
+    }));
   },
 }));

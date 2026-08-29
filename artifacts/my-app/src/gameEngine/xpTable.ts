@@ -1,4 +1,4 @@
-// XP table matching Melvor Idle / RuneScape formula
+// XP table for Aethelia Idle RPG
 // cumXP[level] = total XP needed to reach that level (1-indexed, 0 = unused, 1 = 0 XP)
 
 function buildXpTable(): number[] {

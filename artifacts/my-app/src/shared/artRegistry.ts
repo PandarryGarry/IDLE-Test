@@ -113,12 +113,5 @@ export function pickSplashArt(width: number, height: number): ArtEntry {
 /** Заставочный арт (дефолт) — оставлен для обратной совместимости. */
 export const SPLASH_ART: ArtEntry = SPLASH_ART_VARIANTS.square;
 
-/** Второй арт — рунный круг (под будущий экран: призыв/босс/магия). */
-export const RESERVED_ART: ArtEntry = {
-  src: '/assets/art/reserved.png',
-  mode: 'sigil',
-  sigil: { cx: 0.5, cy: 0.4, r: 0.36 },
-};
-
 /** Палитра свечения/пылинок (amber-500 дизайн-системы). */
 export const ART_TINT = { r: 245, g: 158, b: 11 };

@@ -9,6 +9,13 @@
 > `src/lib/guestMode.ts`, `src/lib/authActions.ts`, AuthGate в `App.tsx`,
 > реальные email/password + Google OAuth + guest-mode. Инструкция для владельца:
 > `SUPABASE_SETUP.md`.
+>
+> 🔄 **Обновление (Сессия 6):** доводка мобильного auth-экрана —
+> раскладка переведена с абсолютных координат на flex-центрирование
+> (`justify-content: safe center`), поля/кнопки стали читаемыми и аккуратными,
+> кнопки заменили текстовые ссылки (порядок: «Войти → Создать аккаунт → или →
+> Google → гостем»). «Load failed» при регистрации — это ошибка превью/сети до
+> Supabase, НЕ отсутствие SQL (регистрация работает без таблицы `profiles`).
 > Следующий этап: **Этап 4 — создание персонажа**.
 
 ## Текущий статус
@@ -48,12 +55,13 @@
 
 ### Печать
 
-Печать нужна игре как отдельный UI-ассет, но **не используется маленькой внутри текущей auth-формы**, потому что на малом размере выглядела криво/шумно. Её нужно использовать только там, где она достаточно крупная и не портит композицию.
+Отдельная clean-печать не использовалась в текущей auth-форме: на малом размере она
+выглядела шумно, а герб уже хорошо читается в утверждённой сцене таверны. Поэтому
+неиспользуемая пара `aethelia_seal_clean.*` очищена из runtime assets.
 
-Файл в приложении:
-- `artifacts/my-app/public/assets/icons/ui/auth/aethelia_seal_clean.webp` / `artifacts/my-app/public/assets/icons/ui/auth/aethelia_seal_clean.png`
-
-Правило: если снова использовать печать — не кропать заново из source на глаз; использовать готовый clean asset.
+Правило на будущее: не добавлять маленькую печать ради декора. Если для нового крупного
+экрана она действительно понадобится, подготовить отдельный утверждённый production-asset,
+а не кропать герб из фоновой сцены на глаз.
 
 ### Desktop auth
 
@@ -94,7 +102,6 @@
 - `artifacts/my-app/src/App.tsx` — auth routes + AuthGate/protected routes;
 - `artifacts/my-app/src/index.css` — auth visual CSS, responsive, анимации, reduced-motion, сообщения auth;
 - `artifacts/my-app/public/assets/art/auth_tavern_background.webp` — approved фон таверны;
-- `artifacts/my-app/public/assets/icons/ui/auth/aethelia_seal_clean.webp` / `aethelia_seal_clean.png` — clean-печать;
 - `artifacts/my-app/src/lib/supabase.ts` — Supabase-клиент и missing-config state;
 - `artifacts/my-app/src/store/authStore.ts` — auth-стейт и методы;
 - `artifacts/my-app/src/lib/guestMode.ts` — guest-ограничения;
@@ -105,7 +112,7 @@
 
 - Cloud save / профиль прогресса (запись/чтение сейвов в Supabase) — отложено.
 - Google provider может быть ещё не настроен в Supabase (код `signInWithGoogle` готов).
-- Этап 4 (создание персонажа).
+- Этап 4 (создание персонажа) реализован позднее; его актуальный контракт и визуальный поток — в `STAGE4_CHARACTER_HANDOFF.md`.
 
 ## Следующие шаги
 

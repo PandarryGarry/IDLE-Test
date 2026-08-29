@@ -7,6 +7,8 @@ import { Link, useLocation } from 'wouter';
 import { Settings, Backpack, Home, Sword, Flame, Fish, Pickaxe, Trees, ChefHat, Hammer } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuthStore } from '@/store/authStore';
+import { useCharacterStore } from '@/store/characterStore';
+import { getAvatarPath, getRaceLabel } from '@/data/characters';
 import { stopActiveActivities } from '@/lib/authActions';
 import { GUEST_NOTICE } from '@/lib/guestMode';
 
@@ -68,6 +70,7 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
   const inCombat    = useCombatStore(s => s.inCombat);
   const isGuest     = useAuthStore(s => s.isGuest);
   const signOut     = useAuthStore(s => s.signOut);
+  const activeCharacter = useCharacterStore(s => s.activeCharacter);
   const [, navigate] = useLocation();
 
   const handleAuth = () => {
@@ -83,6 +86,7 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
     <aside style={{
       width: 240,
       height: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       position: 'fixed',
@@ -116,6 +120,43 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
           </div>
         </div>
       </Link>
+
+      {/* ── Активный персонаж ── */}
+      {!isGuest && activeCharacter && (
+        <Link href="/settings" onClick={onCloseMobile}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            margin: '10px 12px', padding: '9px 10px', borderRadius: 12,
+            background: 'linear-gradient(160deg,#4a2c0a,#2e1a06)',
+            border: '1px solid #c8880a',
+            boxShadow: '0 0 14px rgba(200,136,10,0.2)',
+            cursor: 'pointer', transition: 'filter 0.15s',
+          }}
+            onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')}
+            onMouseLeave={e => (e.currentTarget.style.filter = '')}>
+            <div style={{
+              width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+              background: 'linear-gradient(160deg,#2e1608,#1e0e04)',
+              border: '2px solid #c8880a', overflow: 'hidden',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <img src={getAvatarPath(activeCharacter.avatarId)} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{
+                fontFamily: 'var(--app-font-display)', fontSize: 13, fontWeight: 900,
+                color: '#f5d880', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>
+                {activeCharacter.nickname}
+              </div>
+              <div style={{ fontFamily: 'var(--app-font-mono)', fontSize: 9, color: '#a07838' }}>
+                {getRaceLabel(activeCharacter.raceId, 'ru')}
+              </div>
+            </div>
+            <span style={{ color: '#a07838', fontSize: 11 }}>⚙</span>
+          </div>
+        </Link>
+      )}
 
       {/* ── Навигация ── */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -192,17 +233,19 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
           type="button"
           onClick={handleAuth}
           style={{
-            width: '100%', marginTop: 8, padding: '8px 12px', borderRadius: 10,
+            width: '100%', marginTop: 8, padding: '10px 12px', borderRadius: 10,
             background: isGuest
               ? 'linear-gradient(180deg,#c8880a,#9a6008)'
-              : 'rgba(100,20,10,0.35)',
-            border: isGuest ? '1px solid #c8880a' : '1px solid rgba(192,40,30,0.4)',
-            color: isGuest ? '#fff8ee' : '#e0a080',
+              : 'linear-gradient(180deg,#b52a1a,#8a1c10)',
+            border: isGuest ? '1px solid #c8880a' : '1px solid #6b1808',
+            color: '#fff8ee',
             fontFamily: 'var(--app-font-mono)', fontSize: 11, fontWeight: 800,
             cursor: 'pointer', textAlign: 'center',
+            boxShadow: isGuest ? '0 3px 0 #3d2005' : '0 3px 0 #4a0e06',
+            transition: 'filter 0.12s ease, transform 0.1s ease',
           }}
         >
-          {isGuest ? 'Зарегистрироваться' : 'Выйти'}
+          {isGuest ? 'Зарегистрироваться' : 'Выйти из аккаунта'}
         </button>
       </div>
     </aside>

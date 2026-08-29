@@ -18,7 +18,7 @@ const modeCopy: Record<AuthMode, {
   formTitle: string;
   formSubtitle: string;
   submit: string;
-  switchLabel: string;
+  switchWord: string;
 }> = {
   login: {
     eyebrow: 'ЖИВАЯ ТАВЕРНА',
@@ -28,7 +28,7 @@ const modeCopy: Record<AuthMode, {
     formTitle: 'Вход',
     formSubtitle: 'Продолжи путь.',
     submit: 'Войти',
-    switchLabel: 'Создать аккаунт',
+    switchWord: 'Создать аккаунт',
   },
   register: {
     eyebrow: 'ЖИВАЯ ТАВЕРНА',
@@ -38,7 +38,7 @@ const modeCopy: Record<AuthMode, {
     formTitle: 'Регистрация',
     formSubtitle: 'Сохрани прогресс.',
     submit: 'Создать',
-    switchLabel: 'Уже есть аккаунт? Войти',
+    switchWord: 'Уже есть аккаунт? Войти',
   },
 };
 
@@ -87,7 +87,6 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordRepeat, setPasswordRepeat] = useState('');
-  const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -148,16 +147,6 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
     }
 
     return [
-      <AuthTextField
-        key="name"
-        id="auth-name"
-        label="Имя"
-        placeholder="Garry"
-        icon="♙"
-        autoComplete="nickname"
-        value={name}
-        onChange={setName}
-      />,
       ...shared,
       <AuthTextField
         key="password-repeat"
@@ -171,7 +160,7 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
         onChange={setPasswordRepeat}
       />,
     ];
-  }, [email, password, name, passwordRepeat, isRegister]);
+  }, [email, password, passwordRepeat, isRegister]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -204,11 +193,7 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
     setSubmitting(true);
     try {
       if (isRegister) {
-        const result = await signUp(
-          email.trim(),
-          password,
-          { nickname: name.trim() || undefined },
-        );
+        const result = await signUp(email.trim(), password);
         if (!result.ok) return;
         if (result.needsEmailConfirmation) return;
         navigate('/');
@@ -263,6 +248,7 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
       </div>
 
       <div className="auth-stage">
+        <div className="auth-stage__body">
         <section className="auth-story" aria-label="Описание мира Aethelia">
           <span className="auth-pill">{copy.eyebrow}</span>
           <h1>{copy.headline}</h1>
@@ -308,16 +294,28 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
                 <button
                   className="auth-button auth-button--secondary"
                   type="button"
-                  onClick={handleGoogle}
-                  disabled={submitting || googleLoading}
+                  onClick={switchMode}
                 >
-                  {googleLoading ? '...' : 'Google'}
+                  {copy.switchWord}
                 </button>
               </div>
 
-              <button className="auth-link" type="button" onClick={switchMode}>
-                {copy.switchLabel}
-              </button>
+              {!isRegister && (
+                <>
+                  <div className="auth-or" aria-hidden="true">
+                    <span>или</span>
+                  </div>
+                  <button
+                    className="auth-button auth-button--secondary auth-button--google"
+                    type="button"
+                    onClick={handleGoogle}
+                    disabled={submitting || googleLoading}
+                  >
+                    {googleLoading ? '...' : 'Google'}
+                  </button>
+                </>
+              )}
+
               {!isRegister && (
                 <button className="auth-link auth-link--guest" type="button" onClick={handleGuest}>
                   Войти гостем
@@ -326,6 +324,7 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
             </form>
           </div>
         </section>
+        </div>
       </div>
     </main>
   );

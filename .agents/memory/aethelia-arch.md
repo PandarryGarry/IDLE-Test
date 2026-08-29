@@ -1,6 +1,6 @@
 ---
-name: Melvor Idle Clone Architecture
-description: Key architectural decisions, patterns, and gotchas for the Melvor Idle clone in artifacts/my-app
+name: Aethelia Idle RPG Architecture
+description: Key architectural decisions, patterns, and gotchas for the Aethelia Idle RPG in artifacts/my-app
 ---
 
 ## Routing
