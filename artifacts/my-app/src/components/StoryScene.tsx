@@ -55,15 +55,22 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
-  const beat = beats[Math.min(index, beats.length - 1)];
+  const beat = beats.length > 0 ? beats[Math.min(index, beats.length - 1)] : undefined;
   const isLast = index === beats.length - 1;
+
+  /* Страховка: пустой список битов не должен блокировать «дорогу». */
+  useEffect(() => {
+    if (beats.length > 0 || completedRef.current) return;
+    completedRef.current = true;
+    onCompleteRef.current();
+  }, [beats.length]);
 
   /* Арт бита: onLoad/onError/complete — картинка «решена». */
   useEffect(() => {
     setImageReady(false);
     setImageSettled(false);
     if (imageRef.current?.complete) setImageReady(true);
-  }, [beat.image]);
+  }, [beat?.image]);
 
   useEffect(() => {
     if (imageReady) {
@@ -117,6 +124,9 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [finish, next]);
+
+  /* Все хуки выше; пустая история рендерит «ничего» и тут же завершается. */
+  if (!beat) return null;
 
   return (
     <section
