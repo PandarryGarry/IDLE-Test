@@ -50,11 +50,15 @@
 **Завершены: Этапы 1–3. Функциональный код Этапа 4 (герой, правила, выбор, три уровня сейва) перенесён из PR #5; на текущей ветке добавлен цельный cinematic onboarding. Перед мержем в `main` нужен live-тест владельца в Replit.**
 
 Где продолжать следующему агенту:
-- сначала прочитать `DEVLOG.md`, `ROADMAP.md` и `STAGE4_CHARACTER_HANDOFF.md`;
+- сначала прочитать `DEVLOG.md`, `ROADMAP.md`, `STAGE4_CHARACTER_HANDOFF.md` и
+  `STAGE5_FOUR_PILLARS_HANDOFF.md`;
 - в Replit у владельца должны быть Secrets: `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (инструкция `SUPABASE_SETUP.md`);
 - проверить полный маршрут: cold start → вход в таверну → registration → rules → ложа/create → выход в город → игра; затем returning user → выбор героя → выход → игра;
 - проверить iPhone/mobile crop, пропуск тапом/кликом/клавишами и `prefers-reduced-motion`;
-- production-арты онбординга: `character_creation_lodge.webp`, `cutscene_tavern_entrance.webp`, `cutscene_character_departure.webp`. Review-арты и неиспользуемые крупные PNG очищены.
+- production-арты онбординга: `character_creation_lodge.webp`, `cutscene_tavern_entrance.webp`, `cutscene_character_departure.webp`. Review-арты и неиспользуемые крупные PNG очищены;
+- после подтверждения Stage 4 начать **Этап 5 «Четыре Столпа»** строго по
+  `STAGE5_FOUR_PILLARS_HANDOFF.md`: 4 характеристики, 12 ветвей, 6 специализаций,
+  новая расовая матрица, синергии, миграция и безопасная интеграция combat/offline.
 
 Что уже зафиксировано:
 - visual auth-shell: `AuthPage.tsx`, routes `/auth`, `/login`, `/register`, `index.css` (frameless glass, compact controls, mobile focus на камине/гербе, reduced-motion);
@@ -63,7 +67,8 @@
 - Supabase: `@supabase/supabase-js`, `src/lib/supabase.ts`, `src/store/authStore.ts`, `src/lib/characterApi.ts`, `src/lib/characterSave.ts`;
 - AuthGate: незалогиненный → `/login`, гость → limited shell, registered → rules/hero gate → full shell;
 - guest mode: sessionStorage, лесорубство+рыбалка+24 слота, без боя/крафта/mining/расширения инвентаря, баннер «Зарегистрируйся, чтобы сохранить прогресс.»;
-- helper-документы: `SUPABASE_SETUP.md`, `STAGE4_CHARACTER_HANDOFF.md`.
+- helper-документы: `SUPABASE_SETUP.md`, `STAGE4_CHARACTER_HANDOFF.md`,
+  `STAGE5_FOUR_PILLARS_HANDOFF.md`.
 
 Параллельная большая задача (Этапы 7–8): привязка 900+ иконок к предметам —
 агент сканирует папки скриптом, генерирует каркас данных (id/iconPath/тир из имён файлов),
@@ -72,6 +77,30 @@
 ---
 
 ## 📜 ЖУРНАЛ СЕССИЙ (новые записи — СВЕРХУ)
+
+### Сессия 10 — 2026-08-29 — Этап 5 «Четыре Столпа»: контракт принят
+**Ветка:** `arena/01a04e4b-idle-test`
+
+**Зафиксировано по решению владельца:**
+- Следующий большой этап — **Этап 5 «Четыре Столпа»**, а не прежняя отдельная
+  задача визуальной доводки Sidebar/MobileNav.
+- Четыре характеристики: Стойкость, Мощь, Сноровка, Чутьё; у каждой ровно три
+  ветви, всего 12. Их общая логика связывает active RPG и idle/offline.
+- Шесть ролей называются **специализациями**, чтобы не смешивать их с ремёслами
+  (лесорубство, рыбалка, кузница и др.).
+- Утверждены: diminishing-return кривая, 6 видимых пороговых синергий, матрица
+  рас «2 плюса + 1 минус» в процентах столпов, отсутствие штрафа Сноровке и
+  5 расовых/6 специализационных пассивов.
+- Создан полный технический handoff `STAGE5_FOUR_PILLARS_HANDOFF.md`: данные,
+  формулы, миграция character save, UI, phased implementation, Definition of Done
+  и открытые числовые решения, которые нельзя самовольно выбирать в коде.
+- `ROADMAP.md` обновлён: Stage 5 заменён на эту систему; старый sidebar/mobile
+  follow-up сохранён отдельной технической задачей, не потерян.
+
+**Важно следующему чату:** сначала завершить live QA и merge PR #6 (он включает
+весь Stage 4 и cinematic onboarding), затем читать handoff Stage 5 перед первым
+изменением кода. Не оставлять временные расовые `StatKey`-бонусы действующими
+параллельно с новой матрицей.
 
 ### Сессия 9 — 2026-08-29 — Цельный cinematic onboarding Aethelia
 **Ветка:** `arena/01a04e4b-idle-test`
