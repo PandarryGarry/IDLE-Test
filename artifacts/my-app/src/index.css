@@ -358,6 +358,21 @@
 ::-webkit-scrollbar-thumb  { background: var(--border-default); border-radius: 9999px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
 
+/* Поля ввода на touch-устройствах — без авто-зума iOS.
+   Safari/WebView приближают страницу при фокусе в поле со шрифтом < 16px
+   и не возвращают масштаб после закрытия клавиатуры. Поднимаем шрифт всех
+   текстовых полей до 16px только там, где есть тач (десктоп не затронут).
+   `max(16px, 1em)` сохраняет намеренно крупные шрифты; !important нужен,
+   чтобы перекрыть inline-стили примитивов (GInput и др.). */
+@media (pointer: coarse) {
+  input:where([type='text'], [type='email'], [type='password'], [type='number'],
+               [type='search'], [type='tel'], [type='url']),
+  textarea,
+  select {
+    font-size: max(16px, 1em) !important;
+  }
+}
+
 /* Анимации */
 @keyframes pulse-gold {
   0%, 100% { box-shadow: 0 0 8px rgba(212,134,10,0.3); }
