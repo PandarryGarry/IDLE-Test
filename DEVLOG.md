@@ -92,7 +92,7 @@
 
 **Проверки:**
 - `corepack pnpm --dir artifacts/my-app typecheck` — успешно.
-- `corepack pnpm --dir artifacts/my-app build` — успешно; остались только старые Vite warnings про sourcemap `tooltip.tsx` и chunk size >500 kB.
+- `corepack pnpm --dir artifacts/my-app build` — успешно, без Vite warnings после тех-правки `tooltip.tsx`/`vite.config.ts`.
 - Dev preview поднимался командой `corepack pnpm --dir artifacts/my-app dev --host 0.0.0.0`; маршруты `/login` и `/register` отдавали HTML 200.
 
 **Что ещё НЕ сделано:**

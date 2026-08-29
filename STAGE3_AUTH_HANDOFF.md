@@ -143,9 +143,9 @@ corepack pnpm --dir artifacts/my-app typecheck
 corepack pnpm --dir artifacts/my-app build
 ```
 
-Build прошёл успешно. Остались только старые предупреждения Vite:
-- `src/components/ui/tooltip.tsx` sourcemap original location unresolved;
-- chunk size > 500 kB.
+Build прошёл успешно. Vite warnings устранены:
+- из `src/components/ui/tooltip.tsx` убрана лишняя Next.js-директива `'use client'`, которая в Vite не нужна;
+- в `vite.config.ts` добавлен `manualChunks` для `node_modules` → `vendor`, поэтому основной app chunk стал меньше 500 kB.
 
 Dev server:
 
