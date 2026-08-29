@@ -12,6 +12,12 @@ export interface AuthProfile {
   nickname?: string;
   avatarId?: string;
   createdAt?: string;
+  // ── Этап 4: аккаунт ────────────────────────────────────────
+  role?: 'user' | 'admin';
+  donateCurrency?: number;
+  rulesAcceptedAt?: string | null;
+  rulesVersion?: string | null;
+  selectedCharacterId?: string | null;
 }
 
 export interface AuthResult {
@@ -41,6 +47,7 @@ interface AuthState {
   signOut: () => Promise<void>;
   continueAsGuest: () => void;
   clearAuthFeedback: () => void;
+  acceptRules: (version: string) => Promise<void>;
 }
 
 const GUEST_KEY = 'aethelia_guest';
@@ -106,6 +113,23 @@ function rowToProfile(row: Record<string, unknown>, user: User): AuthProfile {
       (metadata.avatarId as string | undefined) ??
       undefined,
     createdAt: (row.created_at as string | undefined) ?? user.created_at,
+    role: (row.role as 'user' | 'admin' | undefined) ?? (metadata.role as 'user' | 'admin' | undefined) ?? 'user',
+    donateCurrency:
+      (row.donate_currency as number | undefined) ??
+      (metadata.donate_currency as number | undefined) ??
+      0,
+    rulesAcceptedAt:
+      (row.rules_accepted_at as string | null | undefined) ??
+      (metadata.rules_accepted_at as string | undefined) ??
+      null,
+    rulesVersion:
+      (row.rules_version as string | null | undefined) ??
+      (metadata.rules_version as string | undefined) ??
+      null,
+    selectedCharacterId:
+      (row.selected_character_id as string | null | undefined) ??
+      (metadata.selected_character_id as string | undefined) ??
+      null,
   };
 }
 
@@ -120,6 +144,11 @@ function fallbackProfile(user: User): AuthProfile {
       (metadata.avatarId as string | undefined) ??
       undefined,
     createdAt: user.created_at,
+    role: (metadata.role as 'user' | 'admin' | undefined) ?? 'user',
+    donateCurrency: (metadata.donate_currency as number | undefined) ?? 0,
+    rulesAcceptedAt: (metadata.rules_accepted_at as string | undefined) ?? null,
+    rulesVersion: (metadata.rules_version as string | undefined) ?? null,
+    selectedCharacterId: (metadata.selected_character_id as string | undefined) ?? null,
   };
 }
 
@@ -385,5 +414,41 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   clearAuthFeedback: () => {
     set({ authError: null, authMessage: null });
+  },
+
+  acceptRules: async (version) => {
+    const now = new Date().toISOString();
+
+    set(state => ({
+      profile: state.profile
+        ? { ...state.profile, rulesAcceptedAt: now, rulesVersion: version }
+        : state.profile,
+    }));
+
+    if (supabase) {
+      try {
+        const { data: { user: signedIn } } = await supabase.auth.getUser();
+        if (signedIn) {
+          await supabase
+            .from('profiles')
+            .upsert(
+              { id: signedIn.id, rules_accepted_at: now, rules_version: version },
+              { onConflict: 'id' },
+            );
+          await supabase.auth.updateUser({
+            data: { rules_accepted_at: now, rules_version: version },
+          });
+        }
+      } catch (e) {
+        console.warn('acceptRules: failed to persist rules acceptance:', e);
+      }
+    }
+
+    set(state => ({
+      profile: state.profile
+        ? { ...state.profile, rulesAcceptedAt: now, rulesVersion: version }
+        : state.profile,
+      authMessage: null,
+    }));
   },
 }));

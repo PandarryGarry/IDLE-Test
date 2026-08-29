@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { usePlayerStore } from '@/store/playerStore';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { useGameStore } from '@/store/gameStore';
 import { useAuthStore } from '@/store/authStore';
+import { useCharacterStore } from '@/store/characterStore';
+import { getAvatarPath, getRaceLabel } from '@/data/characters';
 import { GUEST_NOTICE } from '@/lib/guestMode';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CoinsDisplay } from '@/shared/ui/CoinsDisplay';
@@ -112,6 +114,7 @@ export function DashboardPage() {
   const offlineData   = useGameStore(s => s.offlineData);
   const clearOffline  = useGameStore(s => s.clearOfflineData);
   const isGuest       = useAuthStore(s => s.isGuest);
+  const activeCharacter = useCharacterStore(s => s.activeCharacter);
   const usedSlots    = items ? items.filter(s => s.quantity > 0).length : 0;
 
   const handleClaim = () => { clearOffline(); };
@@ -128,20 +131,30 @@ export function DashboardPage() {
             background: 'linear-gradient(160deg,#2e1608,#1e0e04)',
             border: '2px solid #c8880a',
             boxShadow: '0 2px 0 #2a1005,0 0 14px rgba(200,136,10,0.35)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
           }}>
-            <span style={{ fontSize: 22 }}>🛡️</span>
+            {activeCharacter && !isGuest ? (
+              <img src={getAvatarPath(activeCharacter.avatarId)} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            ) : (
+              <span style={{ fontSize: 22 }}>🛡️</span>
+            )}
           </div>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 8, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#8b6030', marginBottom: 2 }}>
               Герой
             </div>
             <div style={{
               fontFamily: 'var(--app-font-display)', fontSize: 20, fontWeight: 900,
               color: '#fff8d0', lineHeight: 1.05, textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>
-              Странник
+              {activeCharacter && !isGuest ? activeCharacter.nickname : 'Странник'}
             </div>
+            {activeCharacter && !isGuest && (
+              <div style={{ fontFamily: 'var(--app-font-mono)', fontSize: 9, color: '#a07838', marginTop: 2 }}>
+                {getRaceLabel(activeCharacter.raceId, 'ru')}
+              </div>
+            )}
           </div>
         </div>
 
