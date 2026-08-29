@@ -104,14 +104,15 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 16px', borderBottom: '2px solid #5a3010', cursor: 'pointer', transition: 'background 0.15s' }}
           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,134,10,0.08)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: 'linear-gradient(180deg, #c8880a, #9a6008)',
-            boxShadow: '0 2px 0 #3d2005, 0 0 12px rgba(200,136,10,0.4)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          }}>
-            <Sword size={18} color="#fff8ee" />
-          </div>
+          <img
+            src="/assets/art/emblem_pair.webp"
+            alt="Топор и Перо"
+            draggable={false}
+            style={{
+              width: 60, height: 60, flexShrink: 0, display: 'block',
+              filter: 'drop-shadow(0 0 10px rgba(212,134,10,0.38))',
+            }}
+          />
           <div>
             <div style={{ fontFamily: 'var(--app-font-display)', fontWeight: 900, fontSize: 15, color: '#f5d880', letterSpacing: '0.08em' }}>
               Aethelia<span style={{ color: '#f0a820', fontFamily: 'var(--app-font-sans)', fontWeight: 800, fontSize: 12, marginLeft: 2 }}>RPG</span>
