@@ -47,28 +47,27 @@
 
 ## 📍 ТЕКУЩИЙ СТАТУС
 
-**Завершены: Этапы 1 и 2. Этап 3 начат: визуальный auth-shell для Login/Register внедрён, но Supabase-логика ещё НЕ подключена.**
+**Завершены: Этапы 1 и 2. Этап 3 (auth foundation) реализован и смёржен в main; awaits owner's live testing in Replit. Следующий этап — 4 (создание персонажа).**
 
 Где продолжать следующему агенту:
-- сначала прочитать `STAGE3_AUTH_HANDOFF.md`;
-- затем проверить live routes `/login` и `/register` в Replit/Webview;
-- если владелец подтверждает визуал — продолжать с Supabase foundation/authStore/AuthGate/guest restrictions.
+- сначала прочитать `DEVLOG.md`, `ROADMAP.md`, `STAGE3_AUTH_HANDOFF.md` (или создать `STAGE4_CHARACTER_HANDOFF.md`);
+- в Replit у владельца уже должны быть Secrets: `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (инструкция `SUPABASE_SETUP.md`);
+- первый шаг нового чата: владелец тестирует `/login`, `/register`, guest-realm, session restore, Google OAuth, sign out;
+- после подтверждения этапа 4: экран создания персонажа, nickname + аватар, start-характеристики, переход в игру.
 
-Что уже зафиксировано по Stage 3 visual:
-- approved background: тёплая живая таверна у камина с гербом Aethelia (топор + перо), bard, elf+dwarf, правая часть без пустой заглушки;
-- runtime asset: `artifacts/my-app/public/assets/art/auth_tavern_background.webp`;
-- clean seal asset оставлен: `artifacts/my-app/public/assets/icons/ui/auth/aethelia_seal_clean.webp` / `artifacts/my-app/public/assets/icons/ui/auth/aethelia_seal_clean.png`;
-- auth routes: `/auth`, `/login`, `/register`;
-- файлы реализации: `src/pages/AuthPage.tsx`, `src/App.tsx`, `src/index.css`;
-- визуальный принцип: без общей рамки, без рамки auth-panel, прозрачный frameless glass/tint, компактные controls;
-- mobile: фокус на камине/гербе, auth поднят выше, поля и кнопки короче/меньше, registration scroll-safe.
+Что уже зафиксировано по Stage 3:
+- visual auth-shell: `AuthPage.tsx`, routes `/auth`, `/login`, `/register`, `index.css` (frameless glass, compact controls, mobile focus на камине/гербе, reduced-motion);
+- assets: `public/assets/art/auth_tavern_background.webp`, `public/assets/icons/ui/auth/aethelia_seal_clean.*`;
+- Supabase: `@supabase/supabase-js`, `src/lib/supabase.ts`, `src/store/authStore.ts`, `src/lib/guestMode.ts`, `src/lib/authActions.ts`;
+- AuthGate: незалогиненный → `/login`, гость → limited shell, registered → full shell;
+- guest mode: sessionStorage, лесорубство+рыбалка+24 слота, без боя/крафта/mining/расширения инвентаря, баннер «Зарегистрируйся, чтобы сохранить прогресс.»;
+- helper-документ: `SUPABASE_SETUP.md`.
 
-Для Supabase (следующий шаг):
-- ключи только через Replit Secrets / `.env.local`: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`;
-- не просить секреты в чат и не использовать `service_role` во frontend;
-- гостевой режим: sessionStorage, лесорубство+рыбалка+24 слота, без боя/крафта/облака, баннер «Зарегистрируйся, чтобы сохранить прогресс.»
+Пока не сделано (намеренно, на следующий этап):
+- cloud save / profile-логика (запись/чтение прогресса через Supabase);
+- google provider в Supabase может быть ещё не настроен, но код `signInWithGoogle` готов;
+- этап 4: создание персонажа.
 
-После Этапа 3 → Этап 4 (создание персонажа), далее по роадмапу.
 Параллельная большая задача (Этапы 7–8): привязка 900+ иконок к предметам —
 агент сканирует папки скриптом, генерирует каркас данных (id/iconPath/тир из имён файлов),
 пишет названия/описания/лор, владелец контролирует и правит.
@@ -76,6 +75,38 @@
 ---
 
 ## 📜 ЖУРНАЛ СЕССИЙ (новые записи — СВЕРХУ)
+
+### Сессия 5 — 2026-08-29 — Этап 3: Supabase foundation + AuthGate + guest mode (готово, смёржено)
+**Ветка/PR:** `arena/01a04c15-idle-test` → PR #4.
+
+**Сделано:**
+- Установлен `@supabase/supabase-js`.
+- `src/lib/supabase.ts` — frontend-safe клиент (только `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`), graceful missing-config state, `service_role` не используется.
+- `src/store/authStore.ts` — `session/user/profile/loading/isGuest`, `restoreSession`, `signIn`, `signUp`, `signInWithGoogle`, `signOut`, `continueAsGuest`, подписка `onAuthStateChange`.
+- `AuthPage` подключён к реальным формам: email/password, регистрация, Google OAuth, guest-вход, валидация и сообщения об ошибках/подтверждении.
+- `App.tsx` — AuthGate: незалогиненный → `/login`, гость → limited game shell, зарегистрированный → full shell; session restore при старте.
+- Guest mode в `src/lib/guestMode.ts` и `src/store/*`:
+  - прогресс в `sessionStorage` (изменён `saveManager.ts`);
+  - доступны лесорубство + рыбалка + 24 слота;
+  - заблокированы бой, крафт/cooking/firemaking/smithing, горное дело, расширение инвентаря;
+  - баннер «Зарегистрируйся, чтобы сохранить прогресс.» в Dashboard/Sidebar/MobileNav/Inventory/Settings.
+- `Sidebar`/`MobileNav` скрывают недоступные гостю разделы; в Sidebar/Settings добавлены статус аккаунта и sign out.
+- `vite.config.ts` — отдельный vendor-chunk для Supabase; build чистый.
+- Добавлен `SUPABASE_SETUP.md` — инструкция по подключению в Replit (URL + anon key, email/Google provider, таблица `profiles`).
+- `.gitignore` — исключены `.env`, `.env.local`, `.env.*.local`.
+
+**Проверки:**
+- `corepack pnpm --dir artifacts/my-app typecheck` — успешно.
+- `corepack pnpm --dir artifacts/my-app build` — успешно, без Vite warnings.
+
+**Что НЕ сделано (намеренно):**
+- Cloud save / профиль прогресса через Supabase (следующий этап).
+- Google provider может требовать настройки в Supabase (код готов, реальность зависит от владельца).
+- Этап 4 (создание персонажа).
+
+**Следующий шаг после мержа:**
+- Новый чат начинает с тестирования в Replit: `/login`, `/register`, guest-режим, session restore, Google OAuth, sign out.
+- Затем Этап 4: создание персонажа (nickname, аватар из `icons/characters/heroes/`, стартовые характеристики, переход в игру).
 
 ### Сессия 4 — 2026-08-29 — Этап 3: визуальный auth-shell Login/Register (внедрён, Supabase ещё нет)
 **Ветка:** `arena/01a049b7-idle-test`

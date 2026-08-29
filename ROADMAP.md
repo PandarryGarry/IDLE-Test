@@ -20,6 +20,8 @@
 - [x] 814 иконок в репозитории (структурированы)
 - [x] THEME_GUIDE.md — документация по токенам
 - [x] SplashScreen: адаптивный WebP-арт, реальный прогресс, fade-out, «Что нового», живая вывеска и свечной свет
+- [x] Этап 3 auth foundation: Supabase клиент, authStore, AuthPage на реальных формах, Google OAuth, AuthGate, guest mode
+- [x] Supabase подключение описано в `SUPABASE_SETUP.md`
 
 ---
 
@@ -76,7 +78,7 @@
 ### ЭТАП 3: Авторизация + Регистрация (Supabase)
 **Решено:** Supabase (email/пароль + Google OAuth)
 
-**Статус:** 🟡 в работе. Визуальный auth-shell Login/Register внедрён; Supabase-логика ещё не подключена.
+**Статус:** 🟢 функциональный auth-фундамент готов; ожидает теста владельцем в Replit. Cloud-save/profile-логика — не в этом этапе, перенесена в последующие этапы.
 
 **Уже сделано — visual foundation:**
 - [x] Утверждён фон auth: живая тёплая таверна у камина, герб Aethelia с топором+пером, bard, elf+dwarf, правая часть без пустой заглушки.
@@ -96,17 +98,26 @@
 - Маленькую печать внутрь формы не ставить; использовать готовую clean-печать только там, где она достаточно крупная.
 - Подробности и rejected-направления: `STAGE3_AUTH_HANDOFF.md`.
 
-**Что нужно сделать дальше — Supabase/auth:**
-1. Создать Supabase проект (нужны URL + ANON_KEY через Secrets/`.env.local`, не в чат).
-2. Установить `@supabase/supabase-js`.
-3. Создать `src/lib/supabase.ts` — клиент + graceful missing-config state.
-4. Создать `src/store/authStore.ts` — стейт авторизации/session/user/profile/isGuest.
-5. Подключить email/password login/register к текущему `AuthPage`.
-6. Подключить Google OAuth.
-7. Защищённые маршруты — незарегистрированный → `/login`.
-8. Токены/сессии — авто-обновление и restore при старте.
-9. Sign out.
-10. Guest mode с ограничениями.
+**Что сделано — авторизация:**
+- [x] Supabase-проект создан владельцем; Replit Secrets: `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (инструкция в `SUPABASE_SETUP.md`).
+- [x] Установлен `@supabase/supabase-js`.
+- [x] `src/lib/supabase.ts` — клиент + graceful missing-config state.
+- [x] `src/store/authStore.ts` — `session/user/profile/loading/isGuest`; `restoreSession/signIn/signUp/signInWithGoogle/signOut/continueAsGuest`.
+- [x] email/password login/register в `AuthPage`.
+- [x] Google OAuth `signInWithGoogle`.
+- [x] AuthGate в `App.tsx`: незалогиненный → `/login`, гость → limited shell, registered → full shell.
+- [x] Session restore при старте и подписка на `onAuthStateChange`.
+- [x] Sign out в Sidebar и Settings.
+- [x] Guest mode: sessionStorage, лесорубство+рыбалка+24 слота, блок бой/крафт/mining/расширение инвентаря, баннер «Зарегистрируйся, чтобы сохранить прогресс.».
+- [x] `vite.config.ts`: отдельный vendor-chunk для Supabase, чистый build.
+
+**Проверить (перед следующим этапом):**
+- [ ] В Replit: `/login`, `/register` (email/password).
+- [ ] Вход/регистрация работают при реальных Supabase-ключах.
+- [ ] Session restore: перезагрузка страницы не выкидывает на `/login`.
+- [ ] Google OAuth (после настройки Google provider в Supabase).
+- [ ] Guest mode: только лесорубство+рыбалка, 24 слота, блок остальных разделов, баннер «Зарегистрируйся, чтобы сохранить прогресс.».
+- [ ] Sign out из Sidebar и Settings.
 
 **Решено:**
 - Supabase проект создаём новый (нужны URL + ANON_KEY после создания)
