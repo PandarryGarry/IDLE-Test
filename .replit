@@ -18,10 +18,10 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Melvor Idle Web App"
+args = "Aethelia Idle RPG"
 
 [[workflows.workflow]]
-name = "Melvor Idle Web App"
+name = "Aethelia Idle RPG"
 author = "agent"
 
 [workflows.workflow.metadata]

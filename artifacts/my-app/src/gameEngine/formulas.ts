@@ -1,4 +1,4 @@
-// Game formulas matching Melvor Idle mechanics
+// Game formulas for Aethelia Idle RPG mechanics
 
 import type { Monster, CombatStats } from '../data/types';
 

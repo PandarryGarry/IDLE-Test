@@ -1,4 +1,4 @@
-// Save/Load manager for Melvor Idle Clone
+// Save/Load manager for Aethelia Idle RPG
 // Supports: localStorage auto-save, multiple save slots, JSON export/import
 
 import type { SaveData } from '../data/types';
@@ -11,7 +11,7 @@ import { GUEST_NOTICE } from './guestMode';
 import { calculateOfflineProgress } from '../gameEngine/offlineCalc';
 
 const SAVE_VERSION = '1.0.0';
-const SAVE_KEY_PREFIX = 'melvor_save_';
+const SAVE_KEY_PREFIX = 'aethelia_save_';
 const GUEST_SAVE_KEY_PREFIX = 'aethelia_guest_save_';
 const AUTO_SAVE_SLOT = 'auto';
 export const SAVE_SLOTS = ['slot1', 'slot2', 'slot3'] as const;
@@ -228,7 +228,7 @@ export function exportSaveAsFile(): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `melvor_save_${Date.now()}.json`;
+  a.download = `aethelia_save_${Date.now()}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
