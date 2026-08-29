@@ -3,7 +3,8 @@
  * ║          SplashScreen — загрузочный экран (Этап 2)          ║
  * ║                                                             ║
  * ║  • Живой арт-вывеска (canvas artEngine) или векторный герб  ║
- * ║  • РЕАЛЬНЫЙ прогресс: шрифты + заставочный арт + мин. время ║
+ * ║  • РЕАЛЬНЫЙ прогресс: шрифты + арт + прогрев артов дороги   ║
+ * ║    + мин. время показа (заставка сама регулирует скорость)  ║
  * ║  • Случайный совет внизу                                    ║
  * ║  • Плавный fade-out по готовности                           ║
  * ║  • Версия — из data/changelog.ts (единый источник правды)   ║
@@ -16,7 +17,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Sword, Sparkles, ShieldCheck } from 'lucide-react';
 import { AnimatedArt } from '@/components/art/AnimatedArt';
 import { useArtMode } from '@/hooks/useArtMode';
-import { pickSplashArt, ART_TINT } from '@/shared/artRegistry';
+import { pickSplashArt, ONBOARDING_ART_PRELOAD, ART_TINT } from '@/shared/artRegistry';
 import { CURRENT_VERSION } from '@/data/changelog';
 
 const LORE_TIPS = [
@@ -36,14 +37,17 @@ interface SplashScreenProps {
 const ART_WAIT_CAP_MS = 1500;
 /** Сколько максимум ждём шрифты (Cinzel/Inter/JetBrains с Google Fonts). */
 const FONTS_WAIT_CAP_MS = 2500;
+/** Сколько максимум греем арты дороги онбординга (заставка стала длиннее —
+    пусть это время работает на игру: катсцены откроются без «пустого» фона). */
+const ONBOARDING_ARTS_WAIT_CAP_MS = 4000;
 
 /**
  * Вес каждого этапа загрузки в итоговом проценте.
  * base — мгновенно (бандл уже исполнился), остальное — реальные задачи.
  */
-const WEIGHTS = { base: 15, fonts: 30, art: 40, minTime: 15 } as const;
+const WEIGHTS = { base: 10, fonts: 20, art: 25, onboardingArts: 30, minTime: 15 } as const;
 
-export function SplashScreen({ onLoaded, minDisplayTimeMs = 2600 }: SplashScreenProps) {
+export function SplashScreen({ onLoaded, minDisplayTimeMs = 4000 }: SplashScreenProps) {
   // Вариант арта выбираем один раз по пропорциям экрана (wide / tall / square).
   const [art] = useState(() =>
     pickSplashArt(
@@ -60,6 +64,7 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 2600 }: SplashScreen
   const [fontsReady, setFontsReady] = useState(false);
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
   const [artWaitTimedOut, setArtWaitTimedOut] = useState(false);
+  const [onboardingArtsReady, setOnboardingArtsReady] = useState(false);
 
   // Режим заставки задан реестром ('sign'); ждём только факт загрузки файла.
   const probe = useArtMode(art.src, art.mode);
@@ -99,12 +104,45 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 2600 }: SplashScreen
     return () => clearTimeout(t);
   }, [artSettled]);
 
+  // Прогрев артов «дороги» онбординга: входная/выходная катсцены, таверна,
+  // ложа. Пока заставка на экране, кэш наполняется — сцена начнётся сразу
+  // с готовой картинкой. Ошибки и таймаут не блокируют путь.
+  useEffect(() => {
+    let disposed = false;
+    let settled = 0;
+    const finish = () => {
+      settled += 1;
+      if (settled >= ONBOARDING_ART_PRELOAD.length && !disposed) {
+        setOnboardingArtsReady(true);
+      }
+    };
+    const images = ONBOARDING_ART_PRELOAD.map((src) => {
+      const img = new Image();
+      img.onload = finish;
+      img.onerror = finish;
+      img.src = src;
+      return img;
+    });
+    const cap = setTimeout(() => {
+      if (!disposed) setOnboardingArtsReady(true);
+    }, ONBOARDING_ARTS_WAIT_CAP_MS);
+    return () => {
+      disposed = true;
+      clearTimeout(cap);
+      images.forEach((img) => {
+        img.onload = null;
+        img.onerror = null;
+      });
+    };
+  }, []);
+
   // ── Плавная анимация процентов к реальной цели ────────────────
   const targetRef = useRef(0);
   targetRef.current =
     WEIGHTS.base +
     (fontsReady ? WEIGHTS.fonts : 0) +
     (artSettled ? WEIGHTS.art : 0) +
+    (onboardingArtsReady ? WEIGHTS.onboardingArts : 0) +
     (minTimeElapsed ? WEIGHTS.minTime : 0);
 
   useEffect(() => {

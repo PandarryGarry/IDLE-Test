@@ -110,6 +110,18 @@ export function pickSplashArt(width: number, height: number): ArtEntry {
   return SPLASH_ART_VARIANTS.square;
 }
 
+/**
+ * Ключевые арты «дороги» онбординга (вход → таверна → ложа → выход).
+ * Заставка греет их в кэш заранее, чтобы катсцены и экраны правил/ложи
+ * открывались без «пустого» фона на медленной сети.
+ */
+export const ONBOARDING_ART_PRELOAD: readonly string[] = [
+  '/assets/art/cutscene_tavern_entrance.webp',
+  '/assets/art/auth_tavern_background.webp',
+  '/assets/art/character_creation_lodge.webp',
+  '/assets/art/cutscene_character_departure.webp',
+];
+
 /** Заставочный арт (дефолт) — оставлен для обратной совместимости. */
 export const SPLASH_ART: ArtEntry = SPLASH_ART_VARIANTS.square;
 

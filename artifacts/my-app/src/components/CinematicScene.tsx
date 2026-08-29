@@ -48,6 +48,9 @@ function prefersReducedMotion(): boolean {
   );
 }
 
+/** Максимум ожидания арта до старта отсчёта сцены (страховка от вечного экрана). */
+const IMAGE_SETTLE_CAP_MS = 3500;
+
 /**
  * Полноэкранная, но очень короткая кинематографичная перебивка.
  * Арт — отдельный ключевой кадр, движение — только CSS: лёгкий camera push,
@@ -61,6 +64,9 @@ export function CinematicScene({
   const copy = SCENES[scene];
   const [leaving, setLeaving] = useState(false);
   const [imageReady, setImageReady] = useState(false);
+  // Арт «решён» (загружен или упал): с этого момента стартует отсчёт сцены.
+  // Иначе на медленной сети все 1.9 сек игрок смотрит тёмный фон без арта.
+  const [imageSettled, setImageSettled] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
   const completedRef = useRef(false);
   const onCompleteRef = useRef(onComplete);
@@ -95,11 +101,22 @@ export function CinematicScene({
     return () => window.clearTimeout(timer);
   }, [reducedMotion]);
 
+  // Страховка: если арт так и не пришёл (медленная сеть/ошибка) — не висеть
+  // вечно, максимум IMAGE_SETTLE_CAP_MS ждём появления картинки.
   useEffect(() => {
-    if (reducedMotion) return;
+    if (imageReady) {
+      setImageSettled(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setImageSettled(true), IMAGE_SETTLE_CAP_MS);
+    return () => window.clearTimeout(timer);
+  }, [imageReady]);
+
+  useEffect(() => {
+    if (reducedMotion || !imageSettled) return;
     const timer = window.setTimeout(finish, durationMs);
     return () => window.clearTimeout(timer);
-  }, [durationMs, finish, reducedMotion]);
+  }, [durationMs, finish, reducedMotion, imageSettled]);
 
   useEffect(() => {
     if (reducedMotion) return;
