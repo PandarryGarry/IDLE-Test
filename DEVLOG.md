@@ -105,6 +105,35 @@
 **Написано:** `STAGE4_CHARACTER_HANDOFF.md` (полный контракт), обновлены README/ROADMAP.
 Правки в самом коде НЕ начинались (по договорённости — сначала контракт).
 
+### Сессия 8 — 2026-08-29 — Этап 4: реализация кода персонажа (онбординг, выбор, перс в игре, сейвы)
+**Ветка:** `arena/01a04ceb-idle-test`
+
+**Сделано (код Этапа 4):**
+- `src/data/characters.ts` — 5 рас, бонусы строго «2+ / 1−» (значения черновые), 30 аватаров
+  (`{race}/{gender}_{NN}.png` в `avatars/`), хелперы `getAvatarPath`/`getAvatarsForRace`/`raceIdFromAvatar`.
+  Исправлены подпапки аватаров: `humans/elves/dwarves/orcs/beastfolk` (не совпадают с raceId).
+- `src/data/rules.ts` — `RULES_VERSION='1.0.0'`, блоки правил, локальный кэш принятия.
+- `src/lib/characterApi.ts` — CRUD `characters`, `is_nickname_taken` (RPC), облачные сейвы,
+  `setSelectedCharacter`, мягкое удаление; поля `profiles` (role/donate/rules/selected).
+- `src/store/characterStore.ts` — load/select/create/rename/avatar/delete; один перс + мягкое
+  удаление старого при создании; `resetGameToFresh` при создании (общие старт-статы).
+- Онбординг: `RulesPage` (галочка принять), `CreateCharacterPage` (раса → 6 аватаров → ник,
+  двойной confirm при замене), `SelectCharacterPage` (карточки + время в игре, always_select).
+- Перс в игре: Dashboard (Герой), Sidebar (карточка перса), Settings (секция «Персонаж»:
+  смена ника/аватара 1× бесплатно, смена/удаление с двойным confirm).
+- Сейвы 3-уровневые: `characterSave.ts` (reconcile «кто новее» + push в облако ~3 мин +
+  pagehide/visibilitychange), локальный 30с остаётся на `saveManager`.
+- `authStore.acceptRules` + профили; роутинг в `App.tsx` с гейтингом правил и персонажа.
+- `pnpm typecheck` + `pnpm build` — чисто.
+
+**Отложено/осознанно не сделано:** lz-string (опционально), «Что нового» как отдельный
+онбординг-шаг (используется существующая модалка Changelog), кинопревью/интро (deferred),
+полная система характеристик/профессий/скиллов (в следующие этапы), трата донат-валюты
+при смене ника/аватара во 2-й раз (заглушка, система доната позже).
+
+**Ожидается:** тест владельцем в Replit (найти VITE_SUPABASE_URL/ANON_KEY в Secrets, схему
+`SUPABASE_STAGE4.sql` уже вставил). Далее — команда «мержи».
+
 ### Сессия 6 — 2026-08-29 — Мобильная доводка auth-экрана (login/register) + разбор «Load failed»
 **Ветка:** `arena/01a04ceb-idle-test`
 

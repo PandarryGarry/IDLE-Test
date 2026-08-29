@@ -26,7 +26,17 @@ import { CombatPage } from '@/pages/CombatPage';
 import { InventoryPage } from '@/pages/InventoryPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { AuthPage } from '@/pages/AuthPage';
+import { RulesPage } from '@/pages/RulesPage';
+import { CreateCharacterPage } from '@/pages/CreateCharacterPage';
+import { SelectCharacterPage } from '@/pages/SelectCharacterPage';
 import { useAuthStore } from '@/store/authStore';
+import { useCharacterStore } from '@/store/characterStore';
+import {
+  reconcileCharacterSave,
+  startCharacterSaveLoop,
+  stopCharacterSaveLoop,
+} from '@/lib/characterSave';
+import { readLocalRulesAccepted, RULES_VERSION } from '@/data/rules';
 import { isGuestBlockedPath } from '@/lib/guestMode';
 
 function NotFound() {
@@ -60,8 +70,40 @@ function Router() {
   const authLoading = useAuthStore(s => s.loading);
   const isGuest = useAuthStore(s => s.isGuest);
   const hasUser = useAuthStore(s => Boolean(s.user));
+  const user = useAuthStore(s => s.user);
+  const profile = useAuthStore(s => s.profile);
+
+  const characters = useCharacterStore(s => s.characters);
+  const activeCharacter = useCharacterStore(s => s.activeCharacter);
+  const charactersLoading = useCharacterStore(s => s.loading);
+  const loadCharacters = useCharacterStore(s => s.loadCharacters);
 
   const isAuthPath = pathname === '/auth' || pathname === '/login' || pathname === '/register';
+  const isOnboardingPath =
+    pathname === '/rules' || pathname === '/create-character' || pathname === '/select-character';
+
+  // Загружаем персонажей, как только появился пользователь.
+  useEffect(() => {
+    if (hasUser && user) {
+      void loadCharacters(user.id);
+    } else if (!hasUser) {
+      useCharacterStore.getState().clear();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasUser, user]);
+
+  // Трёхуровневое сохранение: reconcile + облачный цикл для активного персонажа.
+  useEffect(() => {
+    if (!isGuest && activeCharacter) {
+      const id = activeCharacter.id;
+      void reconcileCharacterSave(activeCharacter).then(() => {
+        startCharacterSaveLoop(id);
+      });
+    } else {
+      stopCharacterSaveLoop();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isGuest, activeCharacter?.id]);
 
   // Auth routes: wait for session restore, then send signed-in/guest users home.
   if (isAuthPath) {
@@ -73,6 +115,39 @@ function Router() {
   // Protected game shell: guests are allowed in, signed-out users go to login.
   if (authLoading) return <AuthLoadingScreen />;
   if (!hasUser && !isGuest) return <Redirect to="/login" />;
+
+  // ─── Онбординг / выбор персонажа (только для аккаунтов) ───────────
+  if (!isGuest) {
+    const { acceptedVersion: localRules } = readLocalRulesAccepted();
+    const acceptedVersion = profile?.rulesVersion || localRules;
+    const rulesAccepted = acceptedVersion === RULES_VERSION;
+    const hasAny = characters.some(c => !c.isDeleted);
+
+    // Отдельные полноэкранные шаги без игрового шелла.
+    if (isOnboardingPath) {
+      if (pathname === '/rules') {
+        if (rulesAccepted) return <Redirect to={hasAny ? '/select-character' : '/create-character'} />;
+        return <RulesPage />;
+      }
+      if (pathname === '/select-character') {
+        if (!rulesAccepted) return <Redirect to="/rules" />;
+        if (charactersLoading) return <AuthLoadingScreen />;
+        if (!hasAny) return <Redirect to="/create-character" />;
+        return <SelectCharacterPage />;
+      }
+      if (pathname === '/create-character') {
+        if (rulesAccepted && hasAny && !activeCharacter) return <Redirect to="/select-character" />;
+        return <CreateCharacterPage />;
+      }
+    }
+
+    // Игровой шелл доступен только после правил + выбранного персонажа.
+    if (!rulesAccepted) return <Redirect to="/rules" />;
+    if (charactersLoading) return <AuthLoadingScreen />;
+    if (!hasAny) return <Redirect to="/create-character" />;
+    // always_select: при логине (без активного персонажа) показываем выбор.
+    if (!activeCharacter) return <Redirect to="/select-character" />;
+  }
 
   // Guests can only open the limited game shell.
   if (isGuest && isGuestBlockedPath(pathname)) return <Redirect to="/" />;
