@@ -1168,42 +1168,44 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   ONBOARDING CINEMATICS — путь героя между ключевыми экранами
+   STORY SCENES — «дорога» героя: катсцены-биты в темпе игрока
    ═══════════════════════════════════════════════════════════ */
 
-@keyframes cinematic-scene-in {
+@keyframes story-scene-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes cinematic-scene-out {
+@keyframes story-scene-out {
   from { opacity: 1; filter: blur(0); }
   to { opacity: 0; filter: blur(2px); }
 }
 
-@keyframes cinematic-camera-push {
-  from { transform: scale(1.035); }
-  to { transform: scale(1.105); }
+/* Медленный киношный дрейф камеры: бит не ограничен по времени,
+   поэтому движение бесконечно-спокойное, туда-обратно. */
+@keyframes story-scene-drift {
+  from { transform: scale(1.04) translate3d(-0.4%, -0.2%, 0); }
+  to { transform: scale(1.1) translate3d(0.5%, 0.25%, 0); }
 }
 
-@keyframes cinematic-copy-arrive {
+@keyframes story-copy-in {
   from { opacity: 0; transform: translateY(0.85rem); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes cinematic-cue-breathe {
-  0%, 100% { opacity: 0.52; letter-spacing: 0.16em; }
-  50% { opacity: 0.88; letter-spacing: 0.20em; }
+@keyframes story-next-breathe {
+  0%, 100% { opacity: 0.6; box-shadow: 0 0 0 rgba(239, 181, 47, 0); }
+  50% { opacity: 1; box-shadow: 0 0 1.1rem rgba(239, 181, 47, 0.28); }
 }
 
-@keyframes cinematic-mote-rise {
+@keyframes story-mote-rise {
   0% { opacity: 0; transform: translate3d(0, 1rem, 0) scale(0.65); }
   18% { opacity: 0.72; }
   78% { opacity: 0.2; }
   100% { opacity: 0; transform: translate3d(1.25rem, -108svh, 0) scale(1.2); }
 }
 
-.cinematic-scene {
+.story-scene {
   position: fixed;
   z-index: 1200;
   inset: 0;
@@ -1214,44 +1216,44 @@
   color: var(--cinematic-light);
   background: var(--bg-header);
   cursor: pointer;
-  animation: cinematic-scene-in 320ms ease-out both;
+  animation: story-scene-in 320ms ease-out both;
 }
 
-.cinematic-scene--leaving {
+.story-scene--leaving {
   pointer-events: none;
-  animation: cinematic-scene-out 340ms ease-in both;
+  animation: story-scene-out 340ms ease-in both;
 }
 
-.cinematic-scene__art,
-.cinematic-scene__veil,
-.cinematic-scene__flare,
-.cinematic-scene__motes {
+.story-scene__art,
+.story-scene__veil,
+.story-scene__flare,
+.story-scene__motes {
   position: absolute;
   inset: 0;
 }
 
-.cinematic-scene__art {
+.story-scene__art {
   z-index: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
   opacity: 0;
-  transition: opacity 280ms ease-out;
-  animation: cinematic-camera-push 2600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: opacity 420ms ease-out;
+  animation: story-scene-drift 16s ease-in-out alternate infinite;
+  will-change: transform;
 }
 
-.cinematic-scene--ready .cinematic-scene__art { opacity: 1; }
-.cinematic-scene--departure .cinematic-scene__art { object-position: 58% center; }
+.story-scene__art--ready { opacity: 1; }
 
-.cinematic-scene__veil {
+.story-scene__veil {
   z-index: 1;
   background:
     linear-gradient(180deg, var(--cinematic-ink-soft) 0%, transparent 34%, var(--cinematic-ink-strong) 100%),
     radial-gradient(ellipse at 50% 58%, transparent 18%, var(--cinematic-ink) 100%);
 }
 
-.cinematic-scene__flare {
+.story-scene__flare {
   z-index: 2;
   pointer-events: none;
   background: radial-gradient(ellipse at 50% 62%, var(--cinematic-gold-soft), transparent 43%);
@@ -1259,13 +1261,13 @@
   mix-blend-mode: screen;
 }
 
-.cinematic-scene__motes {
+.story-scene__motes {
   z-index: 3;
   overflow: hidden;
   pointer-events: none;
 }
 
-.cinematic-scene__motes span {
+.story-scene__motes span {
   position: absolute;
   left: var(--mote-left);
   bottom: calc(-0.5rem - (var(--mote-index) * 0.7rem));
@@ -1275,21 +1277,20 @@
   background: var(--cinematic-mote);
   box-shadow: 0 0 0.7rem var(--cinematic-gold-soft);
   opacity: 0;
-  animation: cinematic-mote-rise calc(4.8s + (var(--mote-index) * 0.18s)) linear calc(var(--mote-index) * -0.34s) infinite;
+  animation: story-mote-rise calc(4.8s + (var(--mote-index) * 0.18s)) linear calc(var(--mote-index) * -0.34s) infinite;
 }
 
-.cinematic-scene__content {
+.story-scene__content {
   position: relative;
   z-index: 4;
   width: min(42rem, calc(100% - 3rem));
   padding: 0 1.25rem clamp(4.25rem, 11vh, 6.25rem);
   text-align: center;
   text-shadow: 0 0.18rem 1.15rem var(--cinematic-ink-strong);
-  animation: cinematic-copy-arrive 560ms cubic-bezier(0.22, 1, 0.36, 1) 100ms both;
 }
 
-.cinematic-scene__eyebrow,
-.onboarding-eyebrow {
+/* Тексты бита проявляются по очереди; «Далее» ждёт их всех. */
+.story-scene__eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -1300,17 +1301,18 @@
   letter-spacing: 0.14em;
   line-height: 1.2;
   text-transform: uppercase;
+  animation: story-copy-in 560ms cubic-bezier(0.22, 1, 0.36, 1) 60ms both;
 }
 
-.cinematic-scene__eyebrow::before,
-.cinematic-scene__eyebrow::after {
+.story-scene__eyebrow::before,
+.story-scene__eyebrow::after {
   content: '';
   width: clamp(1rem, 3vw, 2.5rem);
   height: 1px;
   background: var(--cinematic-line);
 }
 
-.cinematic-scene h1 {
+.story-scene h1 {
   max-width: 34rem;
   margin: 0.7rem auto 0.45rem;
   color: var(--cinematic-light);
@@ -1319,30 +1321,78 @@
   font-weight: 800;
   letter-spacing: -0.035em;
   line-height: 1.08;
+  animation: story-copy-in 620ms cubic-bezier(0.22, 1, 0.36, 1) 240ms both;
 }
 
-.cinematic-scene p {
+.story-scene p {
   max-width: 31rem;
   margin: 0 auto;
   color: var(--cinematic-copy);
   font-family: var(--app-font-sans);
   font-size: clamp(0.78rem, 1.2vw, 0.96rem);
   line-height: 1.55;
+  animation: story-copy-in 680ms cubic-bezier(0.22, 1, 0.36, 1) 460ms both;
 }
 
-.cinematic-scene__cue {
-  display: inline-block;
-  margin-top: 1.15rem;
-  color: var(--cinematic-gold);
+/* Точки прогресса: игрок видит, сколько истории впереди. */
+.story-scene__progress {
+  display: inline-flex;
+  gap: 0.42rem;
+  margin-top: 1.05rem;
+  animation: story-copy-in 520ms ease-out 640ms both;
+}
+
+.story-scene__progress span {
+  width: 0.32rem;
+  height: 0.32rem;
+  border-radius: 999px;
+  background: var(--cinematic-line);
+  transition: background 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.story-scene__progress span.is-done { background: var(--cinematic-gold-soft); }
+.story-scene__progress span.is-active {
+  background: var(--cinematic-gold);
+  box-shadow: 0 0 0.5rem var(--cinematic-gold-soft);
+  transform: scale(1.25);
+}
+
+/* «Далее»/действие: скрыто, пока текст не проявился полностью. */
+.story-scene__next {
+  min-height: 2.55rem;
+  margin-top: 0.95rem;
+  padding: 0.55rem 1.5rem;
+  border: 1px solid var(--cinematic-line);
+  border-radius: 999px;
+  background: var(--cinematic-ink-soft);
+  color: var(--cinematic-light);
   font-family: var(--app-font-mono);
-  font-size: 0.55rem;
+  font-size: 0.66rem;
   font-weight: 800;
-  line-height: 1;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  animation: cinematic-cue-breathe 1.6s ease-in-out infinite;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(0.4rem);
+  transition: opacity 320ms ease, transform 320ms ease, border-color 160ms ease, background 160ms ease;
 }
 
-.cinematic-scene__skip {
+.story-scene--ready .story-scene__next {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  animation: story-next-breathe 1.7s ease-in-out infinite;
+}
+
+.story-scene__next:hover,
+.story-scene__next:focus-visible {
+  border-color: var(--cinematic-gold);
+  background: var(--cinematic-ink);
+  outline: none;
+}
+
+.story-scene__skip {
   position: absolute;
   z-index: 5;
   top: max(1rem, env(safe-area-inset-top));
@@ -1360,8 +1410,8 @@
   transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
 }
 
-.cinematic-scene__skip:hover,
-.cinematic-scene__skip:focus-visible {
+.story-scene__skip:hover,
+.story-scene__skip:focus-visible {
   border-color: var(--cinematic-gold-soft);
   background: var(--cinematic-ink);
   color: var(--cinematic-light);
@@ -2047,16 +2097,15 @@
 }
 
 @media (max-width: 760px) {
-  .cinematic-scene__art { object-position: 50% center; }
-  .cinematic-scene--departure .cinematic-scene__art { object-position: 62% center; }
-  .cinematic-scene__content {
+  .story-scene__art { object-position: 50% center; }
+  .story-scene__content {
     width: min(100%, 28rem);
     padding: 0 1rem max(3.75rem, env(safe-area-inset-bottom));
   }
-  .cinematic-scene h1 { font-size: clamp(1.45rem, 8vw, 2rem); }
-  .cinematic-scene p { font-size: 0.75rem; }
-  .cinematic-scene__skip { top: max(0.72rem, env(safe-area-inset-top)); right: max(0.72rem, env(safe-area-inset-right)); }
-  .cinematic-scene__motes span:nth-child(n + 9),
+  .story-scene h1 { font-size: clamp(1.45rem, 8vw, 2rem); }
+  .story-scene p { font-size: 0.75rem; }
+  .story-scene__skip { top: max(0.72rem, env(safe-area-inset-top)); right: max(0.72rem, env(safe-area-inset-right)); }
+  .story-scene__motes span:nth-child(n + 9),
   .onboarding-scene__motes span:nth-child(n + 8) { display: none; }
 
   .onboarding-scene--creation .onboarding-scene__art { background-position: 27% center; }
@@ -2107,12 +2156,16 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cinematic-scene,
-  .cinematic-scene--leaving,
-  .cinematic-scene__art,
-  .cinematic-scene__content,
-  .cinematic-scene__cue,
-  .cinematic-scene__motes span,
+  .story-scene,
+  .story-scene--leaving,
+  .story-scene__art,
+  .story-scene__content,
+  .story-scene__eyebrow,
+  .story-scene h1,
+  .story-scene p,
+  .story-scene__progress,
+  .story-scene__next,
+  .story-scene__motes span,
   .onboarding-scene__art,
   .onboarding-scene__motes span,
   .character-create-panel,
@@ -2123,5 +2176,12 @@
     transition: none !important;
     transform: none !important;
   }
-  .cinematic-scene__art { opacity: 1; }
+  /* Reduced-motion не лишает игрока истории: арт виден сразу,
+     «Далее» доступно сразу — темп и так в руках игрока. */
+  .story-scene__art { opacity: 1; }
+  .story-scene__next {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
 }

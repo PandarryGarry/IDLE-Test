@@ -5,6 +5,7 @@ import { RULES, RULES_VERSION, writeLocalRulesAccepted } from '@/data/rules';
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { OnboardingScene } from '@/components/OnboardingScene';
+import { queueCinematic } from '@/lib/cinematicState';
 
 export function RulesPage() {
   const [, navigate] = useLocation();
@@ -21,6 +22,8 @@ export function RulesPage() {
       writeLocalRulesAccepted(RULES_VERSION);
       await acceptRules(RULES_VERSION);
       const hasAny = characters.some(character => !character.isDeleted);
+      // Связка «трактирщик приводит в ложу» — только на пути к созданию героя.
+      if (!hasAny) queueCinematic('lodge');
       navigate(hasAny ? '/select-character' : '/create-character');
     } finally {
       setSubmitting(false);

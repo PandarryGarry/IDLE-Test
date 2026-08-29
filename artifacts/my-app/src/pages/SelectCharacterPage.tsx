@@ -36,7 +36,7 @@ export function SelectCharacterPage() {
     try {
       await selectCharacterById(characterId);
       // Экран растворяется в короткой сцене выхода, затем открывается сама игра.
-      queueCinematic('departure');
+      queueCinematic('departure-returning');
       navigate('/');
     } catch (error) {
       setActionError(error instanceof Error ? error.message : 'Не удалось подготовить героя к пути.');
