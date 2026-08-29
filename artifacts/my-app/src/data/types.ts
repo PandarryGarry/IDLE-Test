@@ -1,5 +1,5 @@
 // ============================================================
-// Core game types for Melvor Idle Clone
+// Core game types for Aethelia Idle RPG
 // ============================================================
 
 export type SkillId =
