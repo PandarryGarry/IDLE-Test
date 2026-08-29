@@ -2185,3 +2185,175 @@
     transform: none;
   }
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   RUNE INTRO — первый кадр игры: руна, чёрный фон, «ЭТЕЛИЯ»
+   (мини-загрузка перед прологом; стиль sigil-режима artEngine)
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes rune-intro-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes rune-intro-ring-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes rune-intro-glow {
+  0%, 100% { opacity: 0.5; filter: blur(38px); }
+  50% { opacity: 0.9; filter: blur(46px); }
+}
+
+@keyframes rune-intro-bar {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.rune-intro {
+  position: fixed;
+  z-index: 1100;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.6rem, 5vh, 2.6rem);
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--bg-header);
+  color: var(--text-primary);
+  animation: rune-intro-in 700ms ease-out both;
+}
+
+.rune-intro__glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 30rem;
+  height: 30rem;
+  max-width: 90vw;
+  max-height: 90vw;
+  transform: translate(-50%, -62%);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-gold) 0%, transparent 70%);
+  opacity: 0.5;
+  filter: blur(38px);
+  animation: rune-intro-glow 4.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.rune-intro__sigil {
+  position: relative;
+  width: clamp(9rem, 30vh, 12rem);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+
+.rune-intro__ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--accent-gold);
+  opacity: 0.4;
+  animation: rune-intro-ring-spin 52s linear infinite;
+}
+
+.rune-intro__ring circle {
+  stroke: currentColor;
+  stroke-width: 1.4;
+}
+
+.rune-intro__rune {
+  width: 34%;
+  color: var(--text-gold);
+  filter: drop-shadow(0 0 14px var(--accent-gold)) drop-shadow(0 0 34px rgba(239, 181, 47, 0.35));
+}
+
+.rune-intro__rune line {
+  stroke: currentColor;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.rune-intro__title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  text-align: center;
+  padding: 0 1.25rem;
+}
+
+.rune-intro__eyebrow {
+  color: var(--text-muted);
+  font-family: var(--app-font-mono);
+  font-size: clamp(0.5rem, 1.6vw, 0.62rem);
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.rune-intro__title h1 {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--app-font-display);
+  font-size: clamp(2.2rem, 7vw, 3.4rem);
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  line-height: 1;
+  text-indent: 0.22em;
+  text-shadow: 0 0 1.6rem var(--cinematic-gold-soft);
+}
+
+.rune-intro__load {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.66rem;
+  padding: 0 1.25rem max(1rem, env(safe-area-inset-bottom));
+}
+
+.rune-intro__bar {
+  width: min(240px, 64vw);
+  height: 4px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--bar-track);
+  border: 1px solid var(--border-light);
+  padding: 1px;
+}
+
+.rune-intro__bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--bar-xp-from), var(--bar-xp-to), var(--bar-xp-from));
+  background-size: 200% 100%;
+  animation: rune-intro-bar 2.4s linear infinite;
+  box-shadow: var(--shadow-gold);
+  transition: width 0.2s ease;
+}
+
+.rune-intro__hint {
+  color: var(--text-muted);
+  font-family: var(--app-font-mono);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rune-intro,
+  .rune-intro__glow,
+  .rune-intro__ring,
+  .rune-intro__bar span {
+    animation: none !important;
+    transition: none !important;
+  }
+}

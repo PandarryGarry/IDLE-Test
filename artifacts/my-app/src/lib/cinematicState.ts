@@ -1,10 +1,9 @@
 /**
  * Transient-состояние кинематографичных битов «дороги» героя.
  *
- * - Полный пролог — РАЗ ЗА УСТРОЙСТВО (localStorage): первый визит нового
- *   игрока видит историю континента и прихода в город.
- * - Короткий вход — раз за вкладку (sessionStorage): повторный визит
- *   незалогиненного не смотрит пролог целиком.
+ * - Полный пролог — РАЗ ЗА УСТРОЙСТВО (localStorage): первый запуск нового
+ *   игрока видит руна-карточку и историю континента ДО заставки.
+ *   Повторный вход с устройства начинается сразу с заставки.
  * - Связка в ложу и выходы в город ставятся в очередь страницами
  *   (rules/create/select) и переживают смену route в текущей вкладке.
  *
@@ -17,7 +16,6 @@ export type QueuedCinematic =
   | 'departure-returning';
 
 const FULL_PROLOGUE_SEEN_KEY = 'aethelia_prologue_seen_v1';
-const ENTRANCE_SEEN_KEY = 'aethelia_cinematic_entrance_seen_v1';
 const QUEUED_SCENE_KEY = 'aethelia_cinematic_queued_scene_v1';
 
 export const CINEMATIC_QUEUE_EVENT = 'aethelia:cinematic-queued';
@@ -72,16 +70,6 @@ export function hasSeenFullPrologue(): boolean {
 
 export function markFullPrologueSeen(): void {
   writeItem(getLocalSessionStorage(), FULL_PROLOGUE_SEEN_KEY, '1');
-}
-
-/* ── Короткий вход: раз за вкладку ──────────────────────────────── */
-
-export function hasSeenEntranceCinematic(): boolean {
-  return readItem(getTabSessionStorage(), ENTRANCE_SEEN_KEY) === '1';
-}
-
-export function markEntranceCinematicSeen(): void {
-  writeItem(getTabSessionStorage(), ENTRANCE_SEEN_KEY, '1');
 }
 
 /* ── Очередь оверлейных сцен (ложа/выходы) ──────────────────────── */

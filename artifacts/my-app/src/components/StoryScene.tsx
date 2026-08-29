@@ -144,6 +144,7 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
         ref={imageRef}
         className={`story-scene__art${imageSettled ? ' story-scene__art--ready' : ''}`}
         src={beat.image}
+        style={beat.imagePosition ? { objectPosition: beat.imagePosition } : undefined}
         alt=""
         onLoad={() => setImageReady(true)}
         onError={() => setImageReady(true)}
