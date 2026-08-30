@@ -115,8 +115,9 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
     if (completedRef.current) return;
     completedRef.current = true;
     setLeaving(true);
-    window.setTimeout(() => onCompleteRef.current(), 340);
-  }, []);
+    /* Финальный бит уходит дольше: камера успевает «толкнуть дверь». */
+    window.setTimeout(() => onCompleteRef.current(), isLast ? 720 : 340);
+  }, [isLast]);
 
   const next = useCallback(() => {
     if (completedRef.current) return;
@@ -149,7 +150,7 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
 
   return (
     <section
-      className={`story-scene${leaving ? ' story-scene--leaving' : ''}${copyShown ? ' story-scene--ready' : ''}${beat.atmosphere === 'dawn' ? ' story-scene--dawn' : ''}${beat.atmosphere === 'road' ? ' story-scene--road' : ''}${beat.atmosphere === 'city' ? ' story-scene--city' : ''}${beat.motion === 'ground' ? ' story-scene--ground' : ''}${beat.motion === 'push' ? ' story-scene--push' : ''}`}
+      className={`story-scene${leaving ? ' story-scene--leaving' : ''}${copyShown ? ' story-scene--ready' : ''}${beat.atmosphere === 'dawn' ? ' story-scene--dawn' : ''}${beat.atmosphere === 'road' ? ' story-scene--road' : ''}${beat.atmosphere === 'city' ? ' story-scene--city' : ''}${beat.atmosphere === 'threshold' ? ' story-scene--threshold' : ''}${isLast ? ' story-scene--finale' : ''}${beat.motion === 'ground' ? ' story-scene--ground' : ''}${beat.motion === 'push' ? ' story-scene--push' : ''}`}
       aria-label={ariaLabel ?? beat.title}
       aria-live="polite"
       onClick={(event) => {
@@ -185,6 +186,11 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
           <span className="story-scene__smoke story-scene__smoke--right" />
           <span className="story-scene__light story-scene__light--far" />
           <span className="story-scene__light story-scene__light--near" />
+        </div>
+      )}
+      {beat.atmosphere === 'threshold' && (
+        <div className="story-scene__threshold" aria-hidden="true">
+          <span className="story-scene__hearthglow" />
         </div>
       )}
       {beat.enter === 'glow' && (

@@ -1486,6 +1486,78 @@
   animation: story-glow-in 1650ms cubic-bezier(0.3, 0.5, 0.3, 1) 90ms both;
 }
 
+/* ── АКТ 4 «ПОРОГ»: свет из двери дышит теплом очага ── */
+
+/* Дыхание огня — чуть неровное, как живой очаг. */
+@keyframes story-hearth-breathe {
+  0% { opacity: 0.38; }
+  34% { opacity: 0.6; }
+  58% { opacity: 0.46; }
+  82% { opacity: 0.62; }
+  100% { opacity: 0.38; }
+}
+
+.story-scene__threshold {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.story-scene__hearthglow {
+  position: absolute;
+  left: 30%;
+  bottom: -6%;
+  width: 40%;
+  height: 66%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 92%,
+    rgba(255, 186, 92, 0.5),
+    rgba(255, 140, 48, 0.2) 42%,
+    transparent 72%
+  );
+  filter: blur(20px);
+  animation: story-hearth-breathe 4.7s ease-in-out infinite;
+}
+
+/* Переход-толчок: камера входит в дверной проём, свет заливает кадр. */
+@keyframes story-final-push {
+  from { transform: scale(1.08) translate3d(0, 0, 0); }
+  to { transform: scale(1.24) translate3d(0, -1.4%, 0); }
+}
+
+@keyframes story-final-flash {
+  0% { opacity: 0; }
+  55% { opacity: 0.96; }
+  100% { opacity: 0.9; }
+}
+
+.story-scene--finale.story-scene--leaving {
+  animation: story-scene-out 720ms ease-in both;
+}
+
+.story-scene--finale.story-scene--leaving .story-scene__art {
+  animation: story-final-push 720ms cubic-bezier(0.5, 0, 0.8, 0.4) both;
+}
+
+.story-scene--finale.story-scene--leaving::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 60%,
+    rgba(255, 208, 120, 0.95),
+    rgba(255, 160, 60, 0.5) 48%,
+    rgba(140, 70, 24, 0.22) 74%,
+    transparent 92%
+  );
+  animation: story-final-flash 720ms ease-in both;
+}
+
 .story-scene__mist {
   position: absolute;
   inset: 0;
@@ -2441,9 +2513,11 @@
   /* Атмосферные слои — часть движения: в покое их не видно. */
   .story-scene__dawn,
   .story-scene__city,
+  .story-scene__threshold,
   .story-scene__mist,
   .story-scene__glow-in,
-  .story-scene__art--out {
+  .story-scene__art--out,
+  .story-scene--finale.story-scene--leaving::after {
     display: none;
   }
   .story-scene--dawn .story-scene__flare {
@@ -2458,6 +2532,9 @@
   .story-scene__smoke,
   .story-scene__light {
     display: none;
+  }
+  .story-scene__hearthglow {
+    filter: blur(14px);
   }
   .story-scene__cloud--far {
     filter: blur(14px);

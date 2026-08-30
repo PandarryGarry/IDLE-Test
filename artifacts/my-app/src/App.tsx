@@ -297,15 +297,21 @@ function App() {
   return (
     <ErrorBoundary>
       <TooltipProvider delayDuration={200}>
-        {introDone ? (
-          <SplashScreen
-            onLoaded={handleSplashLoaded}
-            /* После пролога всё уже прогрето — заставка короче. */
-            minDisplayTimeMs={introPending ? 2600 : 4000}
+        {!introDone ? (
+          <FirstLaunchIntro
+            onFinished={() => {
+              /*
+               * Вывеска уже была в прологе (бит 5) — после «Толкни дверь»
+               * игрок попадает сразу ВНУТРЬ таверны, к экрану входа у камина.
+               * Заставка с вывеской остаётся только повторным заходам.
+               */
+              setIntroDone(true);
+              setSplashComplete(true);
+            }}
           />
-        ) : (
-          <FirstLaunchIntro onFinished={() => setIntroDone(true)} />
-        )}
+        ) : !splashComplete ? (
+          <SplashScreen onLoaded={handleSplashLoaded} minDisplayTimeMs={4000} />
+        ) : null}
         <CinematicDirector onBusyChange={setCinematicBusy} />
         <WhatsNewModal open={whatsNewOpen} entries={unseenChangelog} onClose={handleWhatsNewClose} />
         {splashComplete ? (
