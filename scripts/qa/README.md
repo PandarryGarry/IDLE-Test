@@ -8,6 +8,7 @@
 | `setup-browser.mjs` | Один раз на песочницу: Chromium из npm |
 | `road.mjs` | Холодный старт 0–6 + возвращение, без «Aethelia / Загрузка...» |
 | `auth.mjs login\|register` | Вход/регистрация живым UI |
+| `tour.mjs` | Снимки каждого кадра дороги (холодный + возвращение до auth) |
 
 Скриншоты эмблемы по-прежнему в `scripts/in-game-screenshots/` — тот же браузер.
 
