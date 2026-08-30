@@ -1,8 +1,9 @@
 import { FormEvent, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useLocation } from 'wouter';
 import { useAuthStore } from '@/store/authStore';
+import { useCharacterStore } from '@/store/characterStore';
 import { resetForGuestStart } from '@/lib/authActions';
-import { isSupabaseConfigured, SUPABASE_CONFIG_MESSAGE } from '@/lib/supabase';
+import { isAuthConfigured, SUPABASE_CONFIG_MESSAGE } from '@/lib/supabase';
 
 type AuthMode = 'login' | 'register';
 
@@ -169,7 +170,7 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
     setLocalError(null);
     clearAuthFeedback();
 
-    if (!isSupabaseConfigured) {
+    if (!isAuthConfigured()) {
       setLocalError(SUPABASE_CONFIG_MESSAGE);
       return;
     }
@@ -192,16 +193,14 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
 
     setSubmitting(true);
     try {
-      if (isRegister) {
-        const result = await signUp(email.trim(), password);
-        if (!result.ok) return;
-        if (result.needsEmailConfirmation) return;
-        navigate('/');
-      } else {
-        const result = await signIn(email.trim(), password);
-        if (!result.ok) return;
-        navigate('/');
-      }
+      const result = isRegister
+        ? await signUp(email.trim(), password)
+        : await signIn(email.trim(), password);
+      if (!result.ok) return;
+      if (result.needsEmailConfirmation) return;
+      const uid = useAuthStore.getState().user?.id;
+      if (uid) await useCharacterStore.getState().loadCharacters(uid);
+      navigate('/rules');
     } finally {
       setSubmitting(false);
     }
@@ -213,7 +212,7 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
     setLocalError(null);
     clearAuthFeedback();
 
-    if (!isSupabaseConfigured) {
+    if (!isAuthConfigured()) {
       setLocalError(SUPABASE_CONFIG_MESSAGE);
       return;
     }
@@ -271,7 +270,7 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
                 </label>
               )}
 
-              {!isSupabaseConfigured && (
+              {!isAuthConfigured() && (
                 <div className="auth-config-warning">
                   Supabase не настроен. Добавьте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY.
                 </div>

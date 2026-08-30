@@ -68,6 +68,45 @@ export async function skipOnboardingStorage(page, { prologueSeen = true } = {}) 
   }, prologueSeen);
 }
 
+/**
+ * Локальный QA-мок без Supabase. Только localhost (см. src/lib/qaMock.ts).
+ * reset — чистая учётка; dropSession — учётка и герой остаются, сессии нет.
+ */
+export async function enableQaMock(page, { reset = false, dropSession = false } = {}) {
+  await page.evaluateOnNewDocument((opts) => {
+    try {
+      localStorage.setItem('aethelia_qa_mock_v1', '1');
+      // Только один раз на вкладку: Vite/HMR reload не должен стирать учётку.
+      if (opts.reset && !sessionStorage.getItem('aethelia_qa_mock_inited')) {
+        localStorage.removeItem('aethelia_qa_db_v1');
+        sessionStorage.setItem('aethelia_qa_mock_inited', '1');
+      }
+      if (opts.dropSession && !sessionStorage.getItem('aethelia_qa_session_dropped')) {
+        const raw = localStorage.getItem('aethelia_qa_db_v1');
+        if (raw) {
+          const db = JSON.parse(raw);
+          db.sessionUserId = null;
+          localStorage.setItem('aethelia_qa_db_v1', JSON.stringify(db));
+        }
+        sessionStorage.setItem('aethelia_qa_session_dropped', '1');
+      }
+    } catch {
+      /* private mode */
+    }
+  }, { reset, dropSession });
+}
+
+export async function clickText(page, text) {
+  const ok = await page.evaluate((want) => {
+    const nodes = [...document.querySelectorAll('button, [role="button"]')];
+    const el = nodes.find((node) => (node.textContent || '').replace(/\s+/g, ' ').trim() === want);
+    if (!el) return false;
+    el.click();
+    return true;
+  }, text);
+  if (!ok) throw new Error(`нет кнопки «${text}»`);
+}
+
 export function pageHasForbiddenLoader(text) {
   return /Aethelia\s*Загрузка/i.test(text) || /Aethelia[\s\S]{0,80}Загрузка\.\.\./.test(text);
 }

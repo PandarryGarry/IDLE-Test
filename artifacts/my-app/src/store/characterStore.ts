@@ -8,7 +8,7 @@ import {
   isNicknameTaken,
   type Character,
 } from '@/lib/characterApi';
-import { isSupabaseConfigured } from '@/lib/supabase';
+import { isAuthConfigured } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
 import { resetGameToFresh } from '@/lib/saveManager';
 import type { RaceId } from '@/data/characters';
@@ -69,7 +69,7 @@ let inflightLoad: { userId: string; promise: Promise<void> } | null = null;
 export const useCharacterStore = create<CharacterStore>((set, get) => ({
   characters: [],
   activeCharacter: null,
-  loading: Boolean(isSupabaseConfigured),
+  loading: Boolean(isAuthConfigured()),
   error: null,
   loadedUserId: null,
   lastActiveCharacterId: readLastCharacterId(),
@@ -83,7 +83,7 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
     }
 
     const run = (async () => {
-      if (!isSupabaseConfigured) {
+      if (!isAuthConfigured()) {
         set({ characters: [], activeCharacter: null, loading: false, loadedUserId: userId });
         return;
       }

@@ -81,8 +81,14 @@ function Router() {
   const isOnboardingPath =
     pathname === '/rules' || pathname === '/create-character' || pathname === '/select-character';
 
+  useEffect(() => {
+    if (user && loadedUserId !== user.id) {
+      void useCharacterStore.getState().loadCharacters(user.id);
+    }
+  }, [loadedUserId, user]);
+
   // Персонажей грузит App ещё на вывеске/акте 0 (и при логине) —
-  // здесь повторный fetch дал бы мигание loading после заставки.
+  // повторный fetch с тем же userId no-op, если loadedUserId уже совпал.
 
   // Трёхуровневое сохранение: reconcile + облачный цикл для активного персонажа.
   useEffect(() => {
@@ -111,7 +117,9 @@ function Router() {
   // вывеска/акт 0 уже дождались authReady.
   if (authLoading) return null;
   if (!hasUser && !isGuest) return <Redirect to="/login" />;
-  if (hasUser && loadedUserId !== user?.id) return null;
+  if (hasUser && loadedUserId !== user?.id) {
+    return <AuthPage />;
+  }
 
   // ─── Онбординг / выбор персонажа (только для аккаунтов) ───────────
   if (!isGuest) {

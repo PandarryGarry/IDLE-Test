@@ -51,7 +51,18 @@ node scripts/qa/setup-browser.mjs
 cd artifacts/my-app && corepack pnpm dev --host 0.0.0.0 --port 3000
 ```
 
-## Учётка для auth
+## Тестовая среда без Supabase
+
+`tour.mjs` и живой UI-проход **не требуют облака**. Скрипт ставит
+`localStorage.aethelia_qa_mock_v1=1` до загрузки игры. Мок включается
+только на `localhost` / `127.0.0.1` (`src/lib/qaMock.ts`): регистрация,
+вход, правила, персонаж — в localStorage вкладки. В Replit не срабатывает.
+
+```bash
+node scripts/qa/tour.mjs
+```
+
+## Учётка для auth (реальный Supabase)
 
 Секреты в чат и в репозиторий не класть.
 
