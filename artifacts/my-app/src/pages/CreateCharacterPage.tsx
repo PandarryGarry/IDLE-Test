@@ -46,7 +46,7 @@ export function CreateCharacterPage() {
     try {
       await createNewCharacter({ nickname: name, avatarId, raceId: selectedRace });
       // После того как герой действительно создан, даём истории выйти из таверны.
-      queueCinematic('departure');
+      queueCinematic('departure-new-hero');
       navigate('/');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Не удалось создать персонажа.';
@@ -86,8 +86,8 @@ export function CreateCharacterPage() {
             <h1 id="character-create-title">Кем тебя узнает Этелия?</h1>
             <p>
               {step === 'race'
-                ? 'Выберите наследие героя. Его черты станут частью будущего пути.'
-                : 'Выберите облик и имя, с которыми герой сделает первый шаг.'}
+                ? 'Кто ты по крови? Ответь — и наследие станет частью будущего пути.'
+                : 'Какое лицо запомнит Этелия — и какое имя она произнесёт?'}
             </p>
             <div className="character-create-steps" aria-label={`Шаг ${step === 'race' ? '1' : '2'} из 2`}>
               <span className={step === 'race' ? 'is-active' : 'is-done'}><b>1</b> Наследие</span>
@@ -98,7 +98,7 @@ export function CreateCharacterPage() {
 
           {step === 'race' ? (
             <div className="character-create-section character-create-section--race">
-              <div className="character-create-section__label">Выберите расу</div>
+              <div className="character-create-section__label">Кто ты по крови?</div>
               <div className="character-create-race-grid">
                 {RACES.map(candidate => {
                   const active = selectedRace === candidate.id;
@@ -146,7 +146,7 @@ export function CreateCharacterPage() {
           ) : (
             <div className="character-create-section character-create-section--identity">
               <div className="character-create-section__label">
-                Облик · {getRaceLabel(selectedRace, 'ru')}
+                Лицо · {getRaceLabel(selectedRace, 'ru')}
               </div>
               <div className="character-create-avatar-grid">
                 {avatars.map((candidate, index) => {
@@ -173,8 +173,8 @@ export function CreateCharacterPage() {
 
               <div className="character-create-name-field">
                 <GInput
-                  label="Никнейм персонажа"
-                  placeholder="Введите имя героя"
+                  label="Как тебя будут звать?"
+                  placeholder="Имя, которое запомнит Этелия"
                   value={nickname}
                   onChange={value => { setNickname(value); setLocalError(null); }}
                   maxLength={20}

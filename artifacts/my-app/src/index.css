@@ -358,6 +358,21 @@
 ::-webkit-scrollbar-thumb  { background: var(--border-default); border-radius: 9999px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
 
+/* Поля ввода на touch-устройствах — без авто-зума iOS.
+   Safari/WebView приближают страницу при фокусе в поле со шрифтом < 16px
+   и не возвращают масштаб после закрытия клавиатуры. Поднимаем шрифт всех
+   текстовых полей до 16px только там, где есть тач (десктоп не затронут).
+   `max(16px, 1em)` сохраняет намеренно крупные шрифты; !important нужен,
+   чтобы перекрыть inline-стили примитивов (GInput и др.). */
+@media (pointer: coarse) {
+  input:where([type='text'], [type='email'], [type='password'], [type='number'],
+               [type='search'], [type='tel'], [type='url']),
+  textarea,
+  select {
+    font-size: max(16px, 1em) !important;
+  }
+}
+
 /* Анимации */
 @keyframes pulse-gold {
   0%, 100% { box-shadow: 0 0 8px rgba(212,134,10,0.3); }
@@ -1153,42 +1168,44 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   ONBOARDING CINEMATICS — путь героя между ключевыми экранами
+   STORY SCENES — «дорога» героя: катсцены-биты в темпе игрока
    ═══════════════════════════════════════════════════════════ */
 
-@keyframes cinematic-scene-in {
+@keyframes story-scene-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes cinematic-scene-out {
+@keyframes story-scene-out {
   from { opacity: 1; filter: blur(0); }
   to { opacity: 0; filter: blur(2px); }
 }
 
-@keyframes cinematic-camera-push {
-  from { transform: scale(1.035); }
-  to { transform: scale(1.105); }
+/* Медленный киношный дрейф камеры: бит не ограничен по времени,
+   поэтому движение бесконечно-спокойное, туда-обратно. */
+@keyframes story-scene-drift {
+  from { transform: scale(1.04) translate3d(-0.4%, -0.2%, 0); }
+  to { transform: scale(1.1) translate3d(0.5%, 0.25%, 0); }
 }
 
-@keyframes cinematic-copy-arrive {
+@keyframes story-copy-in {
   from { opacity: 0; transform: translateY(0.85rem); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes cinematic-cue-breathe {
-  0%, 100% { opacity: 0.52; letter-spacing: 0.16em; }
-  50% { opacity: 0.88; letter-spacing: 0.20em; }
+@keyframes story-next-breathe {
+  0%, 100% { opacity: 0.6; box-shadow: 0 0 0 rgba(239, 181, 47, 0); }
+  50% { opacity: 1; box-shadow: 0 0 1.1rem rgba(239, 181, 47, 0.28); }
 }
 
-@keyframes cinematic-mote-rise {
+@keyframes story-mote-rise {
   0% { opacity: 0; transform: translate3d(0, 1rem, 0) scale(0.65); }
   18% { opacity: 0.72; }
   78% { opacity: 0.2; }
   100% { opacity: 0; transform: translate3d(1.25rem, -108svh, 0) scale(1.2); }
 }
 
-.cinematic-scene {
+.story-scene {
   position: fixed;
   z-index: 1200;
   inset: 0;
@@ -1199,44 +1216,475 @@
   color: var(--cinematic-light);
   background: var(--bg-header);
   cursor: pointer;
-  animation: cinematic-scene-in 320ms ease-out both;
+  animation: story-scene-in 320ms ease-out both;
 }
 
-.cinematic-scene--leaving {
+.story-scene--leaving {
   pointer-events: none;
-  animation: cinematic-scene-out 340ms ease-in both;
+  animation: story-scene-out 340ms ease-in both;
 }
 
-.cinematic-scene__art,
-.cinematic-scene__veil,
-.cinematic-scene__flare,
-.cinematic-scene__motes {
+.story-scene__art,
+.story-scene__veil,
+.story-scene__flare,
+.story-scene__motes {
   position: absolute;
   inset: 0;
 }
 
-.cinematic-scene__art {
+.story-scene__art {
   z-index: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
   opacity: 0;
-  transition: opacity 280ms ease-out;
-  animation: cinematic-camera-push 2600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition:
+    opacity 420ms ease-out,
+    /* Панорама между битами одной картины — непрерывное движение камеры. */
+    object-position 2600ms cubic-bezier(0.37, 0.02, 0.2, 1);
+  animation: story-scene-drift 16s ease-in-out alternate infinite;
+  will-change: transform;
 }
 
-.cinematic-scene--ready .cinematic-scene__art { opacity: 1; }
-.cinematic-scene--departure .cinematic-scene__art { object-position: 58% center; }
+.story-scene__art--ready { opacity: 1; }
 
-.cinematic-scene__veil {
+/* Прежний арт тает под новым — смена картины без среза. */
+.story-scene__art--out {
+  animation: story-art-out 950ms ease-in both;
+}
+
+/* ── АКТ 1 «КОНТИНЕНТ»: рассветное дыхание над живописью ── */
+
+@keyframes story-art-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Пульс восхода: тёплый свет чуть дышит. */
+@keyframes story-flare-breathe {
+  0%, 100% { opacity: 0.16; }
+  50% { opacity: 0.27; }
+}
+
+/* Облачные полосы дрейфуют над долиной — очень медленно. */
+@keyframes story-cloud-far {
+  from { transform: translate3d(-5%, 0, 0); }
+  to { transform: translate3d(5%, 0, 0); }
+}
+
+@keyframes story-cloud-near {
+  from { transform: translate3d(4%, 0.8%, 0); }
+  to { transform: translate3d(-4%, -0.8%, 0); }
+}
+
+/* Туман ползёт в нижней кромке кадра. */
+@keyframes story-fog-drift {
+  from { transform: translate3d(-4%, 0, 0); }
+  to { transform: translate3d(4%, 0, 0); }
+}
+
+/* Новый кадр проступает сквозь тающую дымку. */
+@keyframes story-mist-in {
+  from { opacity: 0.58; }
+  to { opacity: 0; }
+}
+
+.story-scene__dawn {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.story-scene__cloud,
+.story-scene__fog {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.story-scene__cloud--far {
+  top: 6%;
+  left: -18%;
+  width: 136%;
+  height: 36%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(240, 200, 120, 0.12), transparent 70%);
+  filter: blur(18px);
+  animation: story-cloud-far 34s ease-in-out alternate infinite;
+}
+
+.story-scene__cloud--near {
+  top: 26%;
+  left: -22%;
+  width: 144%;
+  height: 30%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(255, 224, 168, 0.09), transparent 70%);
+  filter: blur(26px);
+  animation: story-cloud-near 48s ease-in-out alternate infinite;
+}
+
+.story-scene__fog {
+  bottom: -8%;
+  left: -16%;
+  width: 132%;
+  height: 24%;
+  background: radial-gradient(ellipse 62% 100% at 50% 100%, rgba(232, 212, 182, 0.15), transparent 72%);
+  filter: blur(14px);
+  animation: story-fog-drift 40s ease-in-out alternate infinite;
+}
+
+.story-scene--dawn .story-scene__flare {
+  animation: story-flare-breathe 6.5s ease-in-out infinite;
+}
+
+/* ── АКТ 2 «ТРАКТ»: ровнее, ближе к земле, дыхание шага ── */
+
+/* Не парение над картиной, а спокойный шаг: едва заметное покачивание
+   и мягкий вдох-выдох горизонта. */
+@keyframes story-scene-walk {
+  0%   { transform: scale(1.07)  translate3d(-0.2%,  0.28%, 0); }
+  25%  { transform: scale(1.076) translate3d(-0.05%, -0.16%, 0); }
+  50%  { transform: scale(1.08)  translate3d(0.1%,   0.28%, 0); }
+  75%  { transform: scale(1.086) translate3d(0.2%,  -0.16%, 0); }
+  100% { transform: scale(1.09)  translate3d(0.3%,   0.28%, 0); }
+}
+
+.story-scene--ground .story-scene__art {
+  animation: story-scene-walk 13s ease-in-out alternate infinite;
+}
+
+/* Пыль дороги: крупнее, ближе и медленнее — это земля под ногами,
+   а не утренний воздух. */
+.story-scene--road .story-scene__motes span {
+  width: calc(var(--mote-size) * 1.8);
+  height: calc(var(--mote-size) * 1.8);
+  animation-duration: calc(8.5s + (var(--mote-index) * 0.32s));
+}
+
+/* ── АКТ 3 «ГОРОД»: вечерний город живёт огнём и дымом ── */
+
+/* Тёплое сияние улицы дышит — город не спит. */
+@keyframes story-streetglow-breathe {
+  0%, 100% { opacity: 0.34; }
+  50% { opacity: 0.52; }
+}
+
+/* Дымки тянутся из труб и тают. */
+@keyframes story-smoke-rise {
+  0% { transform: translate3d(0, 12%, 0) scaleX(1); opacity: 0; }
+  22% { opacity: 0.5; }
+  78% { opacity: 0.22; }
+  100% { transform: translate3d(6%, -46%, 0) scaleX(1.5); opacity: 0; }
+}
+
+/* Огоньки бродят вдалеке — чьи-то фонари. */
+@keyframes story-light-wander {
+  0% { transform: translate3d(-2.6vw, 0.4vh, 0); opacity: 0; }
+  18% { opacity: 0.62; }
+  50% { transform: translate3d(1.2vw, -0.6vh, 0); }
+  82% { opacity: 0.5; }
+  100% { transform: translate3d(3vw, 0.2vh, 0); opacity: 0; }
+}
+
+/* Наезд к вывеске: камера ближе, чем над городом. */
+@keyframes story-scene-push {
+  from { transform: scale(1.1) translate3d(-0.3%, -0.15%, 0); }
+  to { transform: scale(1.17) translate3d(0.25%, 0.12%, 0); }
+}
+
+/* Кадр рождается из разгоревшегося тёплого света. */
+@keyframes story-glow-in {
+  from { opacity: 0.92; }
+  to { opacity: 0; }
+}
+
+.story-scene__city {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.story-scene__streetglow {
+  position: absolute;
+  left: 18%;
+  bottom: 6%;
+  width: 64%;
+  height: 52%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 78%, rgba(255, 176, 84, 0.34), rgba(240, 140, 40, 0.12) 46%, transparent 72%);
+  filter: blur(22px);
+  animation: story-streetglow-breathe 5.2s ease-in-out infinite;
+}
+
+.story-scene__smoke {
+  position: absolute;
+  width: 9%;
+  height: 30%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 100%, rgba(214, 200, 186, 0.4), transparent 68%);
+  filter: blur(12px);
+  opacity: 0;
+}
+
+.story-scene__smoke--left {
+  left: 26%;
+  top: 22%;
+  animation: story-smoke-rise 26s ease-in-out infinite;
+}
+
+.story-scene__smoke--right {
+  left: 63%;
+  top: 30%;
+  width: 7%;
+  animation: story-smoke-rise 34s ease-in-out 7s infinite;
+}
+
+.story-scene__light {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-gold);
+  box-shadow: 0 0 0.6rem 0.16rem rgba(255, 196, 96, 0.5);
+  opacity: 0;
+}
+
+.story-scene__light--far {
+  left: 36%;
+  top: 46%;
+  animation: story-light-wander 44s ease-in-out infinite;
+}
+
+.story-scene__light--near {
+  left: 58%;
+  top: 52%;
+  width: 5px;
+  height: 5px;
+  animation: story-light-wander 57s ease-in-out 12s infinite;
+}
+
+.story-scene--push .story-scene__art {
+  animation: story-scene-push 17s ease-in-out alternate infinite;
+}
+
+.story-scene__glow-in {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 58%,
+    rgba(255, 196, 96, 0.85),
+    rgba(240, 150, 50, 0.4) 44%,
+    rgba(120, 60, 20, 0.18) 72%,
+    transparent 88%
+  );
+  animation: story-glow-in 1650ms cubic-bezier(0.3, 0.5, 0.3, 1) 90ms both;
+}
+
+/* ── АКТ 6 «ЛОЖА»: лампа дышит, в луче плывут пылинки ── */
+
+/* Тёплый свет лампы чуть дышит — комната живая, но сонная. */
+@keyframes story-lamp-breathe {
+  0%, 100% { opacity: 0.42; }
+  50% { opacity: 0.6; }
+}
+
+/* Луч лампы: очень медленно чуть меняет наклон, как от сквозняка. */
+@keyframes story-shaft-sway {
+  from { transform: rotate(-1.6deg) translateX(-1.2%); opacity: 0.5; }
+  to { transform: rotate(1.2deg) translateX(1.4%); opacity: 0.68; }
+}
+
+.story-scene__lodge {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.story-scene__lampglow {
+  position: absolute;
+  left: 10%;
+  top: 34%;
+  width: 50%;
+  height: 58%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 42%,
+    rgba(255, 196, 104, 0.42),
+    rgba(232, 148, 52, 0.16) 44%,
+    transparent 72%
+  );
+  filter: blur(18px);
+  animation: story-lamp-breathe 5.6s ease-in-out infinite;
+}
+
+.story-scene__lightshaft {
+  position: absolute;
+  left: 16%;
+  top: 24%;
+  width: 36%;
+  height: 80%;
+  background: linear-gradient(
+    178deg,
+    rgba(255, 214, 138, 0.2),
+    rgba(255, 196, 104, 0.07) 58%,
+    transparent 82%
+  );
+  transform-origin: 50% 0;
+  filter: blur(12px);
+  animation: story-shaft-sway 21s ease-in-out alternate infinite;
+}
+
+/* Страница создания героя — та же ложа, что в связке: лампа дышит
+   и там (свет под вуалью, поверх — только пылинки и интерфейс). */
+.onboarding-scene--creation::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 30% 36% at 35% 62%, rgba(255, 196, 104, 0.36), transparent 72%),
+    linear-gradient(168deg, transparent 18%, rgba(255, 214, 138, 0.1) 46%, transparent 74%);
+  filter: blur(10px);
+  animation: story-lamp-breathe 5.6s ease-in-out infinite;
+}
+
+/* ── АКТ 7 «ВЫХОД»: утро героя ── */
+
+/* Мягкий утренний свет дышит — день начинается. */
+@keyframes story-morning-breathe {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.44; }
+}
+
+.story-scene__morning {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Свет поставлен на реальный источник арта (распахнутая дверь, ~60% 45%). */
+.story-scene__morningglow {
+  position: absolute;
+  left: 38%;
+  top: 20%;
+  width: 44%;
+  height: 50%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(255, 232, 178, 0.42),
+    rgba(255, 208, 130, 0.14) 48%,
+    transparent 74%
+  );
+  filter: blur(18px);
+  animation: story-morning-breathe 6.8s ease-in-out infinite;
+}
+
+/* ── АКТ 4 «ПОРОГ»: свет из двери дышит теплом очага ── */
+
+/* Дыхание огня — чуть неровное, как живой очаг. */
+@keyframes story-hearth-breathe {
+  0% { opacity: 0.38; }
+  34% { opacity: 0.6; }
+  58% { opacity: 0.46; }
+  82% { opacity: 0.62; }
+  100% { opacity: 0.38; }
+}
+
+.story-scene__threshold {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.story-scene__hearthglow {
+  position: absolute;
+  left: 30%;
+  bottom: -6%;
+  width: 40%;
+  height: 66%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 92%,
+    rgba(255, 186, 92, 0.5),
+    rgba(255, 140, 48, 0.2) 42%,
+    transparent 72%
+  );
+  filter: blur(20px);
+  animation: story-hearth-breathe 4.7s ease-in-out infinite;
+}
+
+/* Переход-толчок: камера входит в дверной проём, свет заливает кадр. */
+@keyframes story-final-push {
+  from { transform: scale(1.08) translate3d(0, 0, 0); }
+  to { transform: scale(1.24) translate3d(0, -1.4%, 0); }
+}
+
+@keyframes story-final-flash {
+  0% { opacity: 0; }
+  55% { opacity: 0.96; }
+  100% { opacity: 0.9; }
+}
+
+.story-scene--finale.story-scene--leaving {
+  animation: story-scene-out 720ms ease-in both;
+}
+
+.story-scene--finale.story-scene--leaving .story-scene__art {
+  animation: story-final-push 720ms cubic-bezier(0.5, 0, 0.8, 0.4) both;
+}
+
+.story-scene--finale.story-scene--leaving::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 60%,
+    rgba(255, 208, 120, 0.95),
+    rgba(255, 160, 60, 0.5) 48%,
+    rgba(140, 70, 24, 0.22) 74%,
+    transparent 92%
+  );
+  animation: story-final-flash 720ms ease-in both;
+}
+
+.story-scene__mist {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 58%,
+    rgba(228, 216, 198, 0.5),
+    rgba(204, 190, 172, 0.26) 46%,
+    transparent 76%
+  );
+  animation: story-mist-in 1700ms cubic-bezier(0.3, 0.5, 0.3, 1) 120ms both;
+}
+
+.story-scene__veil {
   z-index: 1;
   background:
     linear-gradient(180deg, var(--cinematic-ink-soft) 0%, transparent 34%, var(--cinematic-ink-strong) 100%),
     radial-gradient(ellipse at 50% 58%, transparent 18%, var(--cinematic-ink) 100%);
 }
 
-.cinematic-scene__flare {
+.story-scene__flare {
   z-index: 2;
   pointer-events: none;
   background: radial-gradient(ellipse at 50% 62%, var(--cinematic-gold-soft), transparent 43%);
@@ -1244,13 +1692,13 @@
   mix-blend-mode: screen;
 }
 
-.cinematic-scene__motes {
+.story-scene__motes {
   z-index: 3;
   overflow: hidden;
   pointer-events: none;
 }
 
-.cinematic-scene__motes span {
+.story-scene__motes span {
   position: absolute;
   left: var(--mote-left);
   bottom: calc(-0.5rem - (var(--mote-index) * 0.7rem));
@@ -1260,21 +1708,20 @@
   background: var(--cinematic-mote);
   box-shadow: 0 0 0.7rem var(--cinematic-gold-soft);
   opacity: 0;
-  animation: cinematic-mote-rise calc(4.8s + (var(--mote-index) * 0.18s)) linear calc(var(--mote-index) * -0.34s) infinite;
+  animation: story-mote-rise calc(4.8s + (var(--mote-index) * 0.18s)) linear calc(var(--mote-index) * -0.34s) infinite;
 }
 
-.cinematic-scene__content {
+.story-scene__content {
   position: relative;
   z-index: 4;
   width: min(42rem, calc(100% - 3rem));
   padding: 0 1.25rem clamp(4.25rem, 11vh, 6.25rem);
   text-align: center;
   text-shadow: 0 0.18rem 1.15rem var(--cinematic-ink-strong);
-  animation: cinematic-copy-arrive 560ms cubic-bezier(0.22, 1, 0.36, 1) 100ms both;
 }
 
-.cinematic-scene__eyebrow,
-.onboarding-eyebrow {
+/* Тексты бита проявляются по очереди; «Далее» ждёт их всех. */
+.story-scene__eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -1285,17 +1732,18 @@
   letter-spacing: 0.14em;
   line-height: 1.2;
   text-transform: uppercase;
+  animation: story-copy-in 560ms cubic-bezier(0.22, 1, 0.36, 1) 60ms both;
 }
 
-.cinematic-scene__eyebrow::before,
-.cinematic-scene__eyebrow::after {
+.story-scene__eyebrow::before,
+.story-scene__eyebrow::after {
   content: '';
   width: clamp(1rem, 3vw, 2.5rem);
   height: 1px;
   background: var(--cinematic-line);
 }
 
-.cinematic-scene h1 {
+.story-scene h1 {
   max-width: 34rem;
   margin: 0.7rem auto 0.45rem;
   color: var(--cinematic-light);
@@ -1304,30 +1752,78 @@
   font-weight: 800;
   letter-spacing: -0.035em;
   line-height: 1.08;
+  animation: story-copy-in 620ms cubic-bezier(0.22, 1, 0.36, 1) 240ms both;
 }
 
-.cinematic-scene p {
+.story-scene p {
   max-width: 31rem;
   margin: 0 auto;
   color: var(--cinematic-copy);
   font-family: var(--app-font-sans);
   font-size: clamp(0.78rem, 1.2vw, 0.96rem);
   line-height: 1.55;
+  animation: story-copy-in 680ms cubic-bezier(0.22, 1, 0.36, 1) 460ms both;
 }
 
-.cinematic-scene__cue {
-  display: inline-block;
-  margin-top: 1.15rem;
-  color: var(--cinematic-gold);
+/* Точки прогресса: игрок видит, сколько истории впереди. */
+.story-scene__progress {
+  display: inline-flex;
+  gap: 0.42rem;
+  margin-top: 1.05rem;
+  animation: story-copy-in 520ms ease-out 640ms both;
+}
+
+.story-scene__progress span {
+  width: 0.32rem;
+  height: 0.32rem;
+  border-radius: 999px;
+  background: var(--cinematic-line);
+  transition: background 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.story-scene__progress span.is-done { background: var(--cinematic-gold-soft); }
+.story-scene__progress span.is-active {
+  background: var(--cinematic-gold);
+  box-shadow: 0 0 0.5rem var(--cinematic-gold-soft);
+  transform: scale(1.25);
+}
+
+/* «Далее»/действие: скрыто, пока текст не проявился полностью. */
+.story-scene__next {
+  min-height: 2.55rem;
+  margin-top: 0.95rem;
+  padding: 0.55rem 1.5rem;
+  border: 1px solid var(--cinematic-line);
+  border-radius: 999px;
+  background: var(--cinematic-ink-soft);
+  color: var(--cinematic-light);
   font-family: var(--app-font-mono);
-  font-size: 0.55rem;
+  font-size: 0.66rem;
   font-weight: 800;
-  line-height: 1;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  animation: cinematic-cue-breathe 1.6s ease-in-out infinite;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(0.4rem);
+  transition: opacity 320ms ease, transform 320ms ease, border-color 160ms ease, background 160ms ease;
 }
 
-.cinematic-scene__skip {
+.story-scene--ready .story-scene__next {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  animation: story-next-breathe 1.7s ease-in-out infinite;
+}
+
+.story-scene__next:hover,
+.story-scene__next:focus-visible {
+  border-color: var(--cinematic-gold);
+  background: var(--cinematic-ink);
+  outline: none;
+}
+
+.story-scene__skip {
   position: absolute;
   z-index: 5;
   top: max(1rem, env(safe-area-inset-top));
@@ -1345,8 +1841,8 @@
   transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
 }
 
-.cinematic-scene__skip:hover,
-.cinematic-scene__skip:focus-visible {
+.story-scene__skip:hover,
+.story-scene__skip:focus-visible {
   border-color: var(--cinematic-gold-soft);
   background: var(--cinematic-ink);
   color: var(--cinematic-light);
@@ -1354,6 +1850,13 @@
 }
 
 /* Общая сцена экранов после авторизации. */
+/* Комната не «включается рубильником»: слои мягко проявляются,
+   арт остаётся непрерывным между соседними экранами. */
+@keyframes onboarding-scene-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @keyframes onboarding-art-breathe {
   from { transform: scale(1.035) translate3d(-0.25%, -0.1%, 0); }
   to { transform: scale(1.08) translate3d(0.35%, 0.18%, 0); }
@@ -1416,6 +1919,7 @@
 .onboarding-scene__veil {
   z-index: 1;
   background: radial-gradient(ellipse at center, transparent 30%, var(--cinematic-ink) 100%);
+  animation: onboarding-scene-in 550ms ease-out both;
 }
 
 .onboarding-scene--creation .onboarding-scene__veil {
@@ -1457,6 +1961,7 @@
 
 .onboarding-scene__content {
   position: relative;
+  animation: onboarding-scene-in 620ms ease-out 70ms both;
   z-index: 3;
   min-height: 100svh;
 }
@@ -2032,16 +2537,15 @@
 }
 
 @media (max-width: 760px) {
-  .cinematic-scene__art { object-position: 50% center; }
-  .cinematic-scene--departure .cinematic-scene__art { object-position: 62% center; }
-  .cinematic-scene__content {
+  .story-scene__art { object-position: 50% center; }
+  .story-scene__content {
     width: min(100%, 28rem);
     padding: 0 1rem max(3.75rem, env(safe-area-inset-bottom));
   }
-  .cinematic-scene h1 { font-size: clamp(1.45rem, 8vw, 2rem); }
-  .cinematic-scene p { font-size: 0.75rem; }
-  .cinematic-scene__skip { top: max(0.72rem, env(safe-area-inset-top)); right: max(0.72rem, env(safe-area-inset-right)); }
-  .cinematic-scene__motes span:nth-child(n + 9),
+  .story-scene h1 { font-size: clamp(1.45rem, 8vw, 2rem); }
+  .story-scene p { font-size: 0.75rem; }
+  .story-scene__skip { top: max(0.72rem, env(safe-area-inset-top)); right: max(0.72rem, env(safe-area-inset-right)); }
+  .story-scene__motes span:nth-child(n + 9),
   .onboarding-scene__motes span:nth-child(n + 8) { display: none; }
 
   .onboarding-scene--creation .onboarding-scene__art { background-position: 27% center; }
@@ -2092,12 +2596,18 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cinematic-scene,
-  .cinematic-scene--leaving,
-  .cinematic-scene__art,
-  .cinematic-scene__content,
-  .cinematic-scene__cue,
-  .cinematic-scene__motes span,
+  .story-scene,
+  .story-scene--leaving,
+  .story-scene__art,
+  .story-scene__content,
+  .onboarding-scene__veil,
+  .onboarding-scene__content,
+  .story-scene__eyebrow,
+  .story-scene h1,
+  .story-scene p,
+  .story-scene__progress,
+  .story-scene__next,
+  .story-scene__motes span,
   .onboarding-scene__art,
   .onboarding-scene__motes span,
   .character-create-panel,
@@ -2108,5 +2618,324 @@
     transition: none !important;
     transform: none !important;
   }
-  .cinematic-scene__art { opacity: 1; }
+  /* Reduced-motion не лишает игрока истории: арт виден сразу,
+     «Далее» доступно сразу — темп и так в руках игрока. */
+  .story-scene__art { opacity: 1; }
+  .story-scene__next {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+  /* Атмосферные слои — часть движения: в покое их не видно. */
+  .story-scene__dawn,
+  .story-scene__city,
+  .story-scene__threshold,
+  .story-scene__lodge,
+  .story-scene__morning,
+  .onboarding-scene--creation::before,
+  .story-scene__mist,
+  .story-scene__glow-in,
+  .story-scene__art--out,
+  .story-scene--finale.story-scene--leaving::after {
+    display: none;
+  }
+  .story-scene--dawn .story-scene__flare {
+    animation: none !important;
+    opacity: 0.22;
+  }
+}
+
+/* Мобильные экраны: атмосферные слои легче, чтобы не душить GPU. */
+@media (max-width: 640px) {
+  .story-scene__cloud--near,
+  .story-scene__smoke,
+  .story-scene__light {
+    display: none;
+  }
+  .story-scene__hearthglow {
+    filter: blur(14px);
+  }
+  .story-scene__lightshaft,
+  .onboarding-scene--creation::before {
+    filter: blur(8px);
+  }
+  .story-scene__lampglow {
+    filter: blur(12px);
+  }
+  .story-scene__cloud--far {
+    filter: blur(14px);
+    height: 30%;
+  }
+  .story-scene__fog {
+    filter: blur(10px);
+    height: 20%;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   RUNE INTRO — первый кадр игры: руна, чёрный фон, «ЭТЕЛИЯ»
+   (мини-загрузка перед прологом; стиль sigil-режима artEngine)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── АКТ 0 «ЗНАК»: первый кадр игры — «Топор и Перо» во весь экран ── */
+
+@keyframes sign-intro-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Медленный киношный наезд, который «усаживает» кадр. */
+@keyframes sign-intro-settle {
+  from { transform: scale(1.085); }
+  to { transform: scale(1.012); }
+}
+
+/* Свет разгорается как угли: темнота поднимается с картины. */
+@keyframes sign-intro-kindle {
+  from { opacity: 0.88; }
+  to { opacity: 0; }
+}
+
+@keyframes sign-intro-eyebrow {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* «ЭТЕЛИЯ» собирается из разреженного трекинга, как титры. */
+@keyframes sign-intro-wordmark {
+  from { opacity: 0; letter-spacing: 0.52em; text-indent: 0.52em; }
+  to { opacity: 1; letter-spacing: 0.24em; text-indent: 0.24em; }
+}
+
+@keyframes sign-intro-bar {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Золотая пыль: редкая и медленная, как искры над углями. */
+@keyframes sign-intro-mote {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  12% { opacity: var(--mote-alpha, 0.55); }
+  50% { transform: translate3d(14px, -34vh, 0); }
+  88% { opacity: var(--mote-alpha, 0.55); }
+  100% { transform: translate3d(-6px, -68vh, 0); opacity: 0; }
+}
+
+/* Уход: знак отдаёт свет — золото заливает кадр и растворяется в пролог. */
+@keyframes sign-intro-leave {
+  to { opacity: 0; }
+}
+
+@keyframes sign-intro-bloom {
+  0% { opacity: 0; }
+  42% { opacity: 0.95; }
+  100% { opacity: 0.4; }
+}
+
+.sign-intro {
+  position: fixed;
+  z-index: 1250;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: clamp(1.1rem, 3.4vh, 1.8rem);
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--bg-header);
+  color: var(--text-primary);
+  animation: sign-intro-in 900ms ease-out both;
+  cursor: default;
+  user-select: none;
+}
+
+/* Кадр: полный арт целиком + размытая подложка до краёв экрана. */
+.sign-intro__scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  transform-origin: 50% 46%;
+  animation: sign-intro-settle 9.5s cubic-bezier(0.16, 0.6, 0.24, 1) both;
+}
+
+.sign-intro__fill {
+  position: absolute;
+  inset: -6%;
+  background: url('/assets/art/intro_sign.webp') 50% 46% / cover no-repeat;
+  filter: blur(26px) brightness(0.68) saturate(1.06);
+  transform: scale(1.07);
+}
+
+.sign-intro__art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: 50% 44%;
+}
+
+.sign-intro__kindle {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: var(--bg-header);
+  animation: sign-intro-kindle 3.8s cubic-bezier(0.3, 0.6, 0.3, 1) 150ms both;
+  pointer-events: none;
+}
+
+.sign-intro__vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    linear-gradient(180deg, var(--cinematic-ink-soft) 0%, transparent 30%),
+    linear-gradient(0deg, var(--cinematic-ink-strong) 0%, transparent 38%),
+    radial-gradient(ellipse at 50% 46%, transparent 52%, var(--cinematic-ink) 100%);
+  pointer-events: none;
+}
+
+.sign-intro__motes {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sign-intro__motes span {
+  position: absolute;
+  left: var(--mote-left);
+  bottom: -0.5rem;
+  width: var(--mote-size);
+  height: var(--mote-size);
+  border-radius: 50%;
+  background: var(--text-gold);
+  box-shadow: 0 0 calc(var(--mote-size) * 2.2) var(--cinematic-gold-soft);
+  opacity: 0;
+  animation: sign-intro-mote var(--mote-duration) ease-in-out var(--mote-delay) infinite;
+}
+
+.sign-intro__bloom {
+  position: absolute;
+  inset: -12%;
+  z-index: 4;
+  background: radial-gradient(
+    circle at 50% 46%,
+    var(--cinematic-gold-soft) 0%,
+    rgba(240, 168, 32, 0.32) 34%,
+    transparent 68%
+  );
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sign-intro__title {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: center;
+  padding: 0 1.25rem;
+}
+
+.sign-intro__eyebrow {
+  color: var(--text-muted);
+  font-family: var(--app-font-mono);
+  font-size: clamp(0.5rem, 1.6vw, 0.62rem);
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  animation: sign-intro-eyebrow 1.6s ease-out 2.6s both;
+}
+
+.sign-intro__title h1 {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--app-font-display);
+  font-size: clamp(2.2rem, 7vw, 3.4rem);
+  font-weight: 900;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  line-height: 1;
+  text-shadow: 0 0 1.6rem var(--cinematic-gold-soft);
+  animation: sign-intro-wordmark 2.8s cubic-bezier(0.2, 0.6, 0.2, 1) 1.5s both;
+}
+
+.sign-intro__load {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.66rem;
+  padding: 0 1.25rem max(1rem, env(safe-area-inset-bottom));
+}
+
+.sign-intro__bar {
+  width: min(240px, 64vw);
+  height: 4px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--bar-track);
+  border: 1px solid var(--border-light);
+  padding: 1px;
+}
+
+.sign-intro__bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--bar-xp-from), var(--bar-xp-to), var(--bar-xp-from));
+  background-size: 200% 100%;
+  animation: sign-intro-bar 2.4s linear infinite;
+  box-shadow: var(--shadow-gold);
+  transition: width 0.2s ease;
+}
+
+.sign-intro__hint {
+  color: var(--text-muted);
+  font-family: var(--app-font-mono);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Световой переход знак → пролог. */
+.sign-intro--leaving {
+  animation: sign-intro-leave 1150ms ease-in 60ms forwards;
+  pointer-events: none;
+}
+
+.sign-intro--leaving .sign-intro__bloom {
+  animation: sign-intro-bloom 1150ms ease-in 60ms forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sign-intro,
+  .sign-intro__scene,
+  .sign-intro__kindle,
+  .sign-intro__eyebrow,
+  .sign-intro__title h1,
+  .sign-intro__bar span,
+  .sign-intro__motes span,
+  .sign-intro--leaving,
+  .sign-intro--leaving .sign-intro__bloom {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .sign-intro__kindle,
+  .sign-intro__motes {
+    display: none;
+  }
+
+  .sign-intro__title h1 {
+    opacity: 1;
+  }
 }

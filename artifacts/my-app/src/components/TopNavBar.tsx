@@ -3,8 +3,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { manualSave } from '@/lib/saveManager';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Link } from 'wouter';
-import { Save, Check, Globe, Menu, Sword } from 'lucide-react';
+import { Save, Check, Globe, Menu } from 'lucide-react';
 
 export function TopNavBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) {
   const { t }         = useTranslation();
@@ -44,34 +43,12 @@ export function TopNavBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void 
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-between',
       }}>
-        {/* ── Левая: бургер + лого ── */}
+        {/* ── Левая: бургер (мобилка) ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button onClick={onOpenMobileMenu} className="md:hidden"
             style={{ ...btn, padding: '5px 7px' }} aria-label="Меню">
             <Menu size={16} />
           </button>
-
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-            <div style={{
-              width: 28, height: 28, borderRadius: 7, flexShrink: 0,
-              background: 'linear-gradient(180deg,#c8880a,#9a6008)',
-              boxShadow: '0 2px 0 #3d2005,0 0 10px rgba(200,136,10,0.4)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Sword size={14} color="#fff8ee" />
-            </div>
-            <span style={{
-              fontFamily: 'var(--app-font-display)', fontWeight: 900,
-              fontSize: 15, color: '#f5d880', letterSpacing: '0.06em',
-            }}>
-              Aethelia<span style={{ color: '#c8880a', fontSize: 11, fontFamily: 'var(--app-font-sans)', fontWeight: 800 }}>RPG</span>
-            </span>
-          </Link>
-
-          <div className="hidden md:flex" style={{ alignItems: 'center', gap: 6, fontSize: 11, fontFamily: 'var(--app-font-mono)', color: '#c8a050', marginLeft: 8 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#1a9e5a', boxShadow: '0 0 5px #1a9e5a', display: 'inline-block' }} />
-            Мир: <b style={{ color: '#f0d070' }}>Этелия</b>
-          </div>
         </div>
 
         {/* ── Правая: язык + сохранить ── */}

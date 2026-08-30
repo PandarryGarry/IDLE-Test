@@ -1,85 +1,80 @@
-import { useEffect, useState } from "react";
-import { useAuthStore } from "@/store/authStore";
+import { useEffect, useState } from 'react';
+import { useCharacterStore } from '@/store/characterStore';
 import {
   CINEMATIC_QUEUE_EVENT,
   clearQueuedCinematic,
   getQueuedCinematic,
-  hasSeenEntranceCinematic,
-  markEntranceCinematicSeen,
   type QueuedCinematic,
-} from "@/lib/cinematicState";
-import { CinematicScene, type CinematicSceneId } from "./CinematicScene";
+} from '@/lib/cinematicState';
+import {
+  DEPARTURE_NEW_HERO,
+  DEPARTURE_RETURNING,
+  ENTRANCE_RETURNING,
+  LODGE_CONNECT,
+  interpolateBeats,
+  type StoryBeat,
+} from '@/data/onboardingStory';
+import { StoryScene } from './StoryScene';
 
 interface CinematicDirectorProps {
-  /** SplashScreen уже завершился; до этого поверх него ничего не рисуем. */
-  splashComplete: boolean;
   onBusyChange?: (busy: boolean) => void;
 }
 
 /**
- * Режиссёр коротких перебивок между крупными шагами пути.
+ * Режиссёр оверлейных историй «дороги»:
  *
- * - entrance: только раз за вкладку, после splash и перед auth у незалогиненного;
- * - departure: приходит в очередь после создания/выбора героя.
+ * - entrance-returning: короткий «вход в таверну» после вывески
+ *   для возвращающегося игрока (решение владельца 30.08);
+ * - lodge: связка «трактирщик приводит в ложу» после принятия правил;
+ * - departure-new-hero: 3 бита с именем героя после создания персонажа;
+ * - departure-returning: короткий выход после выбора персонажа.
+ *
+ * Пролог первого запуска живёт ДО заставки (FirstLaunchIntro) и здесь
+ * не участвует.
  */
-export function CinematicDirector({
-  splashComplete,
-  onBusyChange,
-}: CinematicDirectorProps) {
-  const authLoading = useAuthStore((s) => s.loading);
-  const hasUser = useAuthStore((s) => Boolean(s.user));
-  const isGuest = useAuthStore((s) => s.isGuest);
+export function CinematicDirector({ onBusyChange }: CinematicDirectorProps) {
+  const nickname = useCharacterStore((s) => s.activeCharacter?.nickname ?? '');
 
-  const [entranceSeen, setEntranceSeen] = useState(hasSeenEntranceCinematic);
-  const [queued, setQueued] = useState<QueuedCinematic | null>(
-    getQueuedCinematic,
-  );
+  const [queued, setQueued] = useState<QueuedCinematic | null>(getQueuedCinematic);
 
   useEffect(() => {
-    const handleQueued = (event: Event) => {
-      const scene = (event as CustomEvent<QueuedCinematic>).detail;
-      setQueued(scene === "departure" ? scene : getQueuedCinematic());
+    const handleQueued = () => {
+      setQueued(getQueuedCinematic());
     };
 
     window.addEventListener(CINEMATIC_QUEUE_EVENT, handleQueued);
-    setQueued(getQueuedCinematic());
-    return () =>
-      window.removeEventListener(CINEMATIC_QUEUE_EVENT, handleQueued);
+    return () => window.removeEventListener(CINEMATIC_QUEUE_EVENT, handleQueued);
   }, []);
 
-  const shouldShowEntrance =
-    splashComplete && !authLoading && !hasUser && !isGuest && !entranceSeen;
-
-  const activeScene: CinematicSceneId | null = shouldShowEntrance
-    ? "entrance"
-    : splashComplete && queued === "departure"
-      ? "departure"
-      : null;
+  const activeBeats: StoryBeat[] | null =
+    queued === 'entrance-returning'
+      ? ENTRANCE_RETURNING
+      : queued === 'lodge'
+      ? LODGE_CONNECT
+      : queued === 'departure-new-hero'
+        ? interpolateBeats(DEPARTURE_NEW_HERO, nickname)
+        : queued === 'departure-returning'
+          ? interpolateBeats(DEPARTURE_RETURNING, nickname)
+          : null;
 
   useEffect(() => {
-    onBusyChange?.(Boolean(activeScene));
-  }, [activeScene, onBusyChange]);
+    onBusyChange?.(Boolean(activeBeats));
+  }, [activeBeats, onBusyChange]);
 
-  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
+  useEffect(() => () => onBusyChange?.(false), []);
 
-  if (!activeScene) return null;
+  if (!activeBeats) return null;
 
-  const finishScene = () => {
-    if (activeScene === "entrance") {
-      markEntranceCinematicSeen();
-      setEntranceSeen(true);
-      return;
-    }
-
+  const finishStory = () => {
     clearQueuedCinematic();
     setQueued(null);
   };
 
   return (
-    <CinematicScene
-      key={activeScene}
-      scene={activeScene}
-      onComplete={finishScene}
+    <StoryScene
+      key={queued}
+      beats={activeBeats}
+      onComplete={finishStory}
     />
   );
 }

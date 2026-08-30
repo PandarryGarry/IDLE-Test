@@ -163,12 +163,14 @@ export function getAvatarPath(avatarId: string): string {
   return `/assets/icons/characters/avatars/${folder}/${avatarId}.png`;
 }
 
-/** Префикс файла аватара → raceId ('beast_male_01' → 'beastfolk'). */
+/** Префикс файла аватара → raceId ('beastfolk_male_01' → 'beastfolk'). */
 const AVATAR_PREFIX_TO_RACE: Record<string, RaceId> = {
   human: 'human',
   elf: 'elf',
   dwarf: 'dwarf',
   orc: 'orc',
+  beastfolk: 'beastfolk',
+  // Старые сейвы/данные могли использовать короткий префикс файлов 'beast_*'.
   beast: 'beastfolk',
 };
 

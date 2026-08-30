@@ -13,9 +13,11 @@ import { GlobalActiveBar } from '@/components/GlobalActiveBar';
 import { NotificationToast } from '@/components/NotificationToast';
 import { SplashScreen } from '@/components/SplashScreen';
 import { CinematicDirector } from '@/components/CinematicDirector';
+import { FirstLaunchIntro } from '@/components/FirstLaunchIntro';
 import { WhatsNewModal } from '@/components/WhatsNewModal';
 import { getUnseenChangelog, markChangelogSeen, type VersionEntry } from '@/data/changelog';
-import { getQueuedCinematic } from '@/lib/cinematicState';
+import { getQueuedCinematic, hasSeenFullPrologue, queueCinematic } from '@/lib/cinematicState';
+import { FULL_PROLOGUE_READY } from '@/data/onboardingStory';
 
 import { DashboardPage } from '@/pages/DashboardPage';
 import { WoodcuttingPage } from '@/pages/WoodcuttingPage';
@@ -217,6 +219,10 @@ function Router() {
 }
 
 function App() {
+  // Первый запуск устройства: руна-карточка → пролог → заставка.
+  // Повторный вход: сразу заставка. Пролог «расходуется» раз за устройство.
+  const [introPending] = useState(() => FULL_PROLOGUE_READY && !hasSeenFullPrologue());
+  const [introDone, setIntroDone] = useState(!introPending);
   const [splashComplete, setSplashComplete] = useState(false);
   const [cinematicBusy, setCinematicBusy] = useState(false);
 
@@ -230,6 +236,12 @@ function App() {
 
   const handleSplashLoaded = () => {
     setSplashComplete(true);
+    /*
+     * Повторный вход: вывеска → короткий «вход в таверну» (дверь узнаёт
+     * тебя) → auth. Первый запуск сюда не попадает — после пролога
+     * игрок уже внутри (толчок-вспышка Акта 4).
+     */
+    if (!introPending && !getQueuedCinematic()) queueCinematic('entrance-returning');
   };
 
   useEffect(() => {
@@ -291,15 +303,33 @@ function App() {
   return (
     <ErrorBoundary>
       <TooltipProvider delayDuration={200}>
-        <SplashScreen onLoaded={handleSplashLoaded} />
-        <CinematicDirector splashComplete={splashComplete} onBusyChange={setCinematicBusy} />
+        {!introDone ? (
+          <FirstLaunchIntro
+            onFinished={() => {
+              /*
+               * Вывеска уже была в прологе (бит 5) — после «Толкни дверь»
+               * игрок попадает сразу ВНУТРЬ таверны, к экрану входа у камина.
+               * Заставка с вывеской остаётся только повторным заходам.
+               */
+              setIntroDone(true);
+              setSplashComplete(true);
+            }}
+          />
+        ) : !splashComplete ? (
+          <SplashScreen onLoaded={handleSplashLoaded} minDisplayTimeMs={4000} />
+        ) : null}
+        <CinematicDirector onBusyChange={setCinematicBusy} />
         <WhatsNewModal open={whatsNewOpen} entries={unseenChangelog} onClose={handleWhatsNewClose} />
-        {basePath ? (
-          <WouterRouter base={basePath}>
+        {splashComplete ? (
+          basePath ? (
+            <WouterRouter base={basePath}>
+              <Router />
+            </WouterRouter>
+          ) : (
             <Router />
-          </WouterRouter>
+          )
         ) : (
-          <Router />
+          <AuthLoadingScreen />
         )}
       </TooltipProvider>
     </ErrorBoundary>

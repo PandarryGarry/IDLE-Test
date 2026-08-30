@@ -50,6 +50,7 @@ export function SettingsPage() {
   const [nicknameModal, setNicknameModal] = useState(false);
   const [avatarModal, setAvatarModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
+  const [resetModal, setResetModal] = useState(false);
   const [newNickname, setNewNickname] = useState('');
   const [newAvatarId, setNewAvatarId] = useState('');
   const [charBusy, setCharBusy] = useState(false);
@@ -437,16 +438,11 @@ export function SettingsPage() {
 
         <div className="pt-3 border-t border-red-500/20">
           <button
-            onClick={() => {
-              if (window.confirm('Are you sure you want to completely reset your game? This cannot be undone.')) {
-                localStorage.clear();
-                window.location.reload();
-              }
-            }}
+            onClick={() => setResetModal(true)}
             className="w-full sm:w-auto px-4 py-2 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-[var(--text-primary)] border border-red-500/30 font-bold rounded-xl text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            Hard Reset Game
+            Полный сброс устройства
           </button>
         </div>
       </div>
@@ -541,6 +537,41 @@ export function SettingsPage() {
             <GButton variant="secondary" fullWidth onClick={() => setDeleteModal(false)}>Отмена</GButton>
             <GButton variant="danger" fullWidth disabled={charBusy} onClick={handleDeleteCharacter}>
               {charBusy ? '...' : 'Удалить навсегда'}
+            </GButton>
+          </div>
+        </div>
+      </GModal>
+
+      {/* ── Полный сброс устройства (QA дороги / новый первый запуск) ── */}
+      <GModal open={resetModal} onClose={() => setResetModal(false)} title="⚠ Сбросить данные устройства?" width={420}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <p style={{ fontFamily: 'var(--app-font-sans)', fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5, margin: 0 }}>
+            Устройство «забудет» всё локальное: сохранения и кэш персонажа, флаги дороги
+            (пролог, вывеска, «Что нового»), очередь катсцен, гостевой режим — и выйдет
+            из аккаунта. Приложение перезапустится, как при самом первом запуске.
+          </p>
+          <div style={{
+            padding: '10px 12px', borderRadius: 'var(--radius-md)', background: 'var(--bg-overlay)',
+            border: '1px solid var(--border-default)',
+          }}>
+            <div style={{ fontFamily: 'var(--app-font-mono)', fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+              Аккаунт и герой на сервере НЕ удаляются: после входа в прежний аккаунт
+              персонаж вернётся из облака. Чтобы пройти дорогу первого запуска целиком —
+              зарегистрируйте новый аккаунт.
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <GButton variant="secondary" fullWidth onClick={() => setResetModal(false)}>Отмена</GButton>
+            <GButton
+              variant="danger"
+              fullWidth
+              onClick={() => {
+                try { localStorage.clear(); } catch { /* хранилище недоступно — всё равно продолжаем */ }
+                try { sessionStorage.clear(); } catch { /* noop */ }
+                window.location.assign('/');
+              }}
+            >
+              Стереть и перезапустить
             </GButton>
           </div>
         </div>
