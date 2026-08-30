@@ -76,14 +76,22 @@ export function FirstLaunchIntro({ onFinished, authReady = false }: FirstLaunchI
     ),
   );
 
-  /* Мини-загрузка: греем только арты пролога (они лёгкие, WebP). */
+  /* Мини-загрузка: греем ВСЕ арты пролога, не первый попавшийся. */
   useEffect(() => {
     let disposed = false;
-    const images = collectBeatImages(PROLOGUE_FULL).map((src) => {
+    const sources = collectBeatImages(PROLOGUE_FULL);
+    if (sources.length === 0) {
+      setArtsReady(true);
+      return;
+    }
+    let remaining = sources.length;
+    const finishOne = () => {
+      remaining -= 1;
+      if (remaining <= 0 && !disposed) setArtsReady(true);
+    };
+    const images = sources.map((src) => {
       const img = new Image();
-      img.onload = img.onerror = () => {
-        if (!disposed) setArtsReady(true);
-      };
+      img.onload = img.onerror = finishOne;
       img.src = src;
       return img;
     });
@@ -107,7 +115,8 @@ export function FirstLaunchIntro({ onFinished, authReady = false }: FirstLaunchI
 
   /* Плавная шкала к реальной цели. */
   useEffect(() => {
-    const target = 20 + (minElapsed ? 45 : 0) + (artsReady ? 35 : 0);
+    const target =
+      10 + (minElapsed ? 30 : 0) + (artsReady ? 30 : 0) + (authReady ? 30 : 0);
     const interval = window.setInterval(() => {
       setProgress((prev) => {
         if (prev >= target) return prev;
@@ -115,14 +124,14 @@ export function FirstLaunchIntro({ onFinished, authReady = false }: FirstLaunchI
       });
     }, 40);
     return () => window.clearInterval(interval);
-  }, [artsReady, minElapsed]);
+  }, [artsReady, authReady, minElapsed]);
 
-  /* Знак дышит минимум SIGN_MIN_MS и доигрывает до готовности артов. */
+  /* Знак дышит минимум SIGN_MIN_MS и ждёт арты + сессию/персонажей. */
   useEffect(() => {
-    if (phase !== 'sign' || !minElapsed || !artsReady) return;
+    if (phase !== 'sign' || !minElapsed || !artsReady || !authReady) return;
     const timer = window.setTimeout(() => setPhase('bloom'), HOLD_MS);
     return () => window.clearTimeout(timer);
-  }, [artsReady, minElapsed, phase]);
+  }, [artsReady, authReady, minElapsed, phase]);
 
   /* Световой переход: пролог уже монтируется под карточкой. */
   useEffect(() => {

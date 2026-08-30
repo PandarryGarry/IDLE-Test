@@ -43,6 +43,12 @@ interface CharacterStore {
   activeCharacter: Character | null;
   loading: boolean;
   error: string | null;
+  /**
+   * Для какого userId уже завершён loadCharacters (успех или ошибка).
+   * Нужен, чтобы вывеска/акт 0 и auth не считали «готово» по первому
+   * кадру, и чтобы повторный fetch не ронял loading в true после заставки.
+   */
+  loadedUserId: string | null;
   /** Последний персонаж, за которого играли (для оффлайна). */
   lastActiveCharacterId: string | null;
 
@@ -57,35 +63,55 @@ interface CharacterStore {
   clear: () => void;
 }
 
+/** Сливаем параллельные loadCharacters одного userId в один промис. */
+let inflightLoad: { userId: string; promise: Promise<void> } | null = null;
+
 export const useCharacterStore = create<CharacterStore>((set, get) => ({
   characters: [],
   activeCharacter: null,
   loading: Boolean(isSupabaseConfigured),
   error: null,
+  loadedUserId: null,
   lastActiveCharacterId: readLastCharacterId(),
 
   loadCharacters: async (userId) => {
-    if (!isSupabaseConfigured) {
-      set({ characters: [], activeCharacter: null, loading: false });
+    if (inflightLoad && inflightLoad.userId === userId) {
+      return inflightLoad.promise;
+    }
+    if (get().loadedUserId === userId && !get().loading) {
       return;
     }
 
-    set({ loading: true, error: null });
-    try {
-      const chars = await fetchCharacters(userId);
-      set({ characters: chars, loading: false });
-      // always_select: при логине экран выбора показывается всегда.
-      // Не авто-выбираем; сохраняем активного только если он ещё в списке.
-      const current = get().activeCharacter;
-      if (current && chars.some(c => c.id === current.id && !c.isDeleted)) {
-        // keep current selection
-      } else {
-        set({ activeCharacter: null });
+    const run = (async () => {
+      if (!isSupabaseConfigured) {
+        set({ characters: [], activeCharacter: null, loading: false, loadedUserId: userId });
+        return;
       }
-    } catch (e) {
-      const message = e instanceof Error ? e.message : 'Не удалось загрузить персонажей.';
-      console.error('loadCharacters failed:', e);
-      set({ loading: false, error: message });
+
+      set({ loading: true, error: null });
+      try {
+        const chars = await fetchCharacters(userId);
+        set({ characters: chars, loading: false, loadedUserId: userId });
+        // always_select: при логине экран выбора показывается всегда.
+        // Не авто-выбираем; сохраняем активного только если он ещё в списке.
+        const current = get().activeCharacter;
+        if (current && chars.some(c => c.id === current.id && !c.isDeleted)) {
+          // keep current selection
+        } else {
+          set({ activeCharacter: null });
+        }
+      } catch (e) {
+        const message = e instanceof Error ? e.message : 'Не удалось загрузить персонажей.';
+        console.error('loadCharacters failed:', e);
+        set({ loading: false, error: message, loadedUserId: userId });
+      }
+    })();
+
+    inflightLoad = { userId, promise: run };
+    try {
+      await run;
+    } finally {
+      if (inflightLoad?.promise === run) inflightLoad = null;
     }
   },
 
@@ -208,7 +234,15 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
   },
 
   clear: () => {
-    set({ characters: [], activeCharacter: null, loading: false, error: null, lastActiveCharacterId: null });
+    inflightLoad = null;
+    set({
+      characters: [],
+      activeCharacter: null,
+      loading: false,
+      error: null,
+      loadedUserId: null,
+      lastActiveCharacterId: null,
+    });
     writeLastCharacterId(null);
   },
 }));

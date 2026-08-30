@@ -74,7 +74,8 @@ function Router() {
 
   const characters = useCharacterStore(s => s.characters);
   const activeCharacter = useCharacterStore(s => s.activeCharacter);
-  const charactersLoading = useCharacterStore(s => s.loading);
+  const loadedUserId = useCharacterStore(s => s.loadedUserId);
+  const user = useAuthStore(s => s.user);
 
   const isAuthPath = pathname === '/auth' || pathname === '/login' || pathname === '/register';
   const isOnboardingPath =
@@ -101,7 +102,7 @@ function Router() {
   // чтобы после «Войти» не мелькал пустой экран.
   if (isAuthPath) {
     if (isGuest) return <Redirect to="/" />;
-    if (hasUser && !authLoading && !charactersLoading) return <Redirect to="/" />;
+    if (hasUser && !authLoading && loadedUserId === user?.id) return <Redirect to="/" />;
     return <AuthPage initialMode={pathname === '/register' ? 'register' : 'login'} />;
   }
 
@@ -110,6 +111,7 @@ function Router() {
   // вывеска/акт 0 уже дождались authReady.
   if (authLoading) return null;
   if (!hasUser && !isGuest) return <Redirect to="/login" />;
+  if (hasUser && loadedUserId !== user?.id) return null;
 
   // ─── Онбординг / выбор персонажа (только для аккаунтов) ───────────
   if (!isGuest) {
@@ -126,7 +128,6 @@ function Router() {
       }
       if (pathname === '/select-character') {
         if (!rulesAccepted) return <Redirect to="/rules" />;
-        if (charactersLoading) return null;
         if (!hasAny) return <Redirect to="/create-character" />;
         return <SelectCharacterPage />;
       }
@@ -138,7 +139,6 @@ function Router() {
 
     // Игровой шелл доступен только после правил + выбранного персонажа.
     if (!rulesAccepted) return <Redirect to="/rules" />;
-    if (charactersLoading) return null;
     if (!hasAny) return <Redirect to="/create-character" />;
     // always_select: при логине (без активного персонажа) показываем выбор.
     if (!activeCharacter) return <Redirect to="/select-character" />;
@@ -226,13 +226,14 @@ function App() {
   const authLoading = useAuthStore(s => s.loading);
   const user = useAuthStore(s => s.user);
   const activeCharacter = useCharacterStore(s => s.activeCharacter);
-  const charactersLoading = useCharacterStore(s => s.loading);
+  const loadedUserId = useCharacterStore(s => s.loadedUserId);
   const loadCharacters = useCharacterStore(s => s.loadCharacters);
 
   // Вывеска / акт 0 держат кадр, пока сессия не восстановится и
   // (если есть аккаунт) пока не загрузятся персонажи. Гость и
-  // незалогиненный не ждут characters.
-  const authReady = !authLoading && (isGuest || !user || !charactersLoading);
+  // незалогиненный не ждут characters. loadedUserId, а не !loading:
+  // повторный fetch не должен снова «закрыть» готовность.
+  const authReady = !authLoading && (isGuest || !user || loadedUserId === user.id);
 
   // Грузим персонажей ещё на вывеске/акте 0, не дожидаясь Router.
   useEffect(() => {
@@ -245,13 +246,14 @@ function App() {
   }, [authLoading, isGuest, loadCharacters, user]);
 
   const handleSplashLoaded = () => {
-    setSplashComplete(true);
     /*
-     * Повторный вход: вывеска → короткий «вход в таверну» (дверь узнаёт
-     * тебя) → auth. Первый запуск сюда не попадает — после пролога
-     * игрок уже внутри (толчок-вспышка Акта 4).
+     * Повторный вход: вывеска → короткий «вход в таверну» → auth.
+     * Сцену ставим в очередь ДО монтирования Router, чтобы под
+     * растворением вывески уже был порог, а не вспышка auth.
+     * Первый запуск сюда не попадает — после пролога игрок уже внутри.
      */
     if (!introPending && !getQueuedCinematic()) queueCinematic('entrance-returning');
+    setSplashComplete(true);
   };
 
   useEffect(() => {
