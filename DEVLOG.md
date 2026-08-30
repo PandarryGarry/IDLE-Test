@@ -47,13 +47,11 @@
 
 ## 📍 ТЕКУЩИЙ СТАТУС
 
-**Этапы 1–4 + дорога 0–7 + слой 1 адаптива в `main` (PR #6–#8). Сессия 14: hotfix «вывеска = единственный загрузочный экран» в PR #9 (`arena/01a0526e-idle-test`, НЕ смёржен) + прогон дороги агентом + постоянные QA-скрипты `scripts/qa/`. Владелец ещё не подтвердил live QA в Replit. 5A не начинать, пока владелец не скажет ок по дороге/auth. Браузер в Arena: `@sparticuz/chromium` (`scripts/qa/setup-browser.mjs`), не Playwright/apt.**
+**Этапы 1–4 + дорога 0–7 + слой 1 в `main` (PR #6–#8). PR #9 открыт (`arena/01a0526e-idle-test`, НЕ смёржен): hotfix вывески + QA-мок без Supabase + полный `tour.mjs`. Агентский тур холодный 0→игра и возвращение Каеля — exit 0. Live QA владельца в Replit по PR #9 ещё нет. Превью Arena не работает — не чинить. Следующий чат: прогон ACCEPTANCE, ждать Replit, мержить только по команде. 5A — чат ПОСЛЕ мержа.**
 
 Где продолжать следующему агенту:
-- сначала прочитать `DEVLOG.md` (Сессия 13), `NEXT_CHAT_HANDOFF.md`, `ROADMAP.md`,
-  `RESPONSIVE_SYSTEM_PLAN.md` и `STAGE5_FOUR_PILLARS_HANDOFF.md`;
-- **первым делом спросить владельца: прошла ли проверку вся предыдущая работа**
-  (см. стартовую фразу в `NEXT_CHAT_HANDOFF.md`);
+- сначала `DEVLOG.md` (Сессия 15), `NEXT_CHAT_HANDOFF.md`, `scripts/qa/ACCEPTANCE.md`;
+- **первым делом прогнать `node scripts/qa/tour.mjs` + typecheck, затем ждать Replit**;
 - в Replit у владельца должны быть Secrets: `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (инструкция `SUPABASE_SETUP.md`);
 - полный маршрут (после PR #8): cold start → акт 0 (полноэкранный арт знака) → пролог 6 битов → толчок в auth → rules → ложа/create → УТРО и первый шаг → игра; returning user: вывеска 4с → «Знакомый скрип вывески.» → auth → выбор героя → возвращение в рассвет → игра;
 - QA-фиксы PR #8: дубликаты React-ключей в StoryScene, точки прогресса над кнопкой (у одно-битных сцен не рендерятся), фраза возвращения, таймауты restoreSession/fetchCharacters + кнопка «Повторить», надпись «ТОПОР И ПЕРО» на вывеске в городе, акт 0 без размытой подложки;
@@ -67,7 +65,7 @@
 - Supabase: `@supabase/supabase-js`, `src/lib/supabase.ts`, `src/store/authStore.ts`, `src/lib/characterApi.ts`, `src/lib/characterSave.ts`;
 - AuthGate: незалогиненный → `/login`, гость → limited shell, registered → rules/hero gate → full shell;
 - guest mode: sessionStorage, лесорубство+рыбалка+24 слота, без боя/крафта/mining/расширения инвентаря, баннер «Зарегистрируйся, чтобы сохранить прогресс.»;
-- QA-инструмент: `scripts/qa/` (Chromium `@sparticuz`, `road.mjs`, `auth.mjs`); учётка из env;
+- QA-инструмент: `scripts/qa/` (Chromium `@sparticuz`, `tour.mjs` без облака, `road.mjs`, `auth.mjs`); мок `qaMock.ts`;
 - helper-документы: `SUPABASE_SETUP.md`, `STAGE4_CHARACTER_HANDOFF.md`,
   `STAGE5_FOUR_PILLARS_HANDOFF.md`, `NEXT_CHAT_HANDOFF.md`.
 
@@ -78,6 +76,34 @@
 ---
 
 ## 📜 ЖУРНАЛ СЕССИЙ (новые записи — СВЕРХУ)
+
+### Сессия 15 — 2026-08-30 — Мок без облака, полный тур, подготовка мержа PR #9
+**Ветка / PR:** `arena/01a0526e-idle-test` → PR #9 (открыт, НЕ смёржен)
+
+**Контракт:** показать всю дорогу кадрами (холодный 0→игра и возвращение того же
+Каеля). Тест агента **без Supabase**. Не мержить. 5A не начинать. Секреты в чат нет.
+
+**Сделано:**
+- `src/lib/qaMock.ts` — auth+CRUD в localStorage; гейт: localhost+флаг, либо DEV
+  без `VITE_SUPABASE_URL`, либо `VITE_QA_MOCK=1`. Replit с ключами не трогает.
+- Auth: после signIn/signUp — `loadCharacters` затем `navigate('/rules')`.
+- Router: mismatch `loadedUserId` → форма auth, не пустой `#root`.
+- `scripts/qa/tour.mjs` — холодный 01–17 + returning 18–19, 21–23. Exit 0.
+- Документы приёмки: `scripts/qa/ACCEPTANCE.md`, обновлён `NEXT_CHAT_HANDOFF.md`.
+
+**Превью Arena:** владелец видел белый экран / connection reset. Пробовали:
+выключить HMR/WebSocket, статическую сборку, убрать Google Fonts (блокировали CSS).
+Не помогло. **Не ретраить.** Тест владельца — только Replit. Побочный эффект:
+Cinzel/Inter больше не грузятся с fonts.googleapis.com (системный fallback).
+
+**Не ретраить в коде:** returning+`dropSession`+логин → 20с пустой `#root` на `/rules`;
+`enableQaMock({reset})` на каждый document (стирает БД на Vite reload).
+
+**Не сделано:** мерж PR #9; live QA владельца в Replit; 5A; починка Arena-превью;
+возврат webfonts (спросить после QA).
+
+**Следующий чат:** строго чат проверки. Тур → ждать Replit → мерж только по команде.
+5A в новом чате после мержа.
 
 ### Сессия 14 — 2026-08-30 — Hotfix вывески (PR #9) + прогон дороги + QA-скрипты
 **Ветка / PR:** `arena/01a0526e-idle-test` → PR #9 (открыт, НЕ смёржен)

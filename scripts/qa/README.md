@@ -8,7 +8,8 @@
 | `setup-browser.mjs` | Один раз на песочницу: Chromium из npm |
 | `road.mjs` | Холодный старт 0–6 + возвращение, без «Aethelia / Загрузка...» |
 | `auth.mjs login\|register` | Вход/регистрация живым UI |
-| `tour.mjs` | Снимки каждого кадра дороги (холодный + возвращение до auth) |
+| `tour.mjs` | Полный путь: холодный 0→игра + возвращение Каеля (без облака) |
+| `ACCEPTANCE.md` | Приёмка PR #9: агентский тур + чеклист Replit |
 
 Скриншоты эмблемы по-прежнему в `scripts/in-game-screenshots/` — тот же браузер.
 
@@ -53,14 +54,30 @@ cd artifacts/my-app && corepack pnpm dev --host 0.0.0.0 --port 3000
 
 ## Тестовая среда без Supabase
 
-`tour.mjs` и живой UI-проход **не требуют облака**. Скрипт ставит
-`localStorage.aethelia_qa_mock_v1=1` до загрузки игры. Мок включается
-только на `localhost` / `127.0.0.1` (`src/lib/qaMock.ts`): регистрация,
-вход, правила, персонаж — в localStorage вкладки. В Replit не срабатывает.
+`tour.mjs` **не требует облака**. Скрипт ставит
+`localStorage.aethelia_qa_mock_v1=1` до загрузки игры.
+
+Мок (`src/lib/qaMock.ts`) включается если:
+
+1. hostname localhost/127.0.0.1 **и** флаг в localStorage, или
+2. Vite DEV **без** `VITE_SUPABASE_URL`, или
+3. сборка с `VITE_QA_MOCK=1`.
+
+В Replit с ключами — реальный Supabase. Регистрация/герой мока живут
+в `localStorage.aethelia_qa_db_v1` вкладки.
+
+Нужен **dev** на :3000 (`pnpm dev`), не `vite preview`.
 
 ```bash
-node scripts/qa/tour.mjs
+node scripts/qa/tour.mjs          # холодный + возвращение
+node scripts/qa/tour.mjs cold
+node scripts/qa/tour.mjs returning
 ```
+
+Приёмка и запреты: `scripts/qa/ACCEPTANCE.md`.
+
+**Превью Arena** (iframe) у владельца белое / connection reset — не чинить.
+Владелец тестирует в Replit.
 
 ## Учётка для auth (реальный Supabase)
 
