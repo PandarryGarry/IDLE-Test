@@ -25,6 +25,9 @@ node_modules/
 Thumbs.db
 *.log
 
+# Local QA screenshot dumps (not source)
+artifacts/qa-review/
+
 # Replit local runtime state
 .cache/
 .local/
