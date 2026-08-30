@@ -86,6 +86,11 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
     if (imageRef.current?.complete) setImageReady(true);
   }, [beat?.image]);
 
+  /* Важно: зависимость и от арта. Без неё переход к закэшированной
+     картинке мог «застрять»: imageReady за один батч проходил
+     true→false→true (React не видел изменения), settled оставался false —
+     и арт навсегда оставался прозрачным. Теперь эффект перезапускается
+     на каждый новый арт: либо сразу проявляет его, либо честно ждёт cap. */
   useEffect(() => {
     if (imageReady) {
       setImageSettled(true);
@@ -93,7 +98,7 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
     }
     const timer = window.setTimeout(() => setImageSettled(true), IMAGE_SETTLE_CAP_MS);
     return () => window.clearTimeout(timer);
-  }, [imageReady]);
+  }, [imageReady, beat?.image]);
 
   /* Текст проявился — можно показывать «Далее». */
   useEffect(() => {
@@ -144,7 +149,7 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
 
   return (
     <section
-      className={`story-scene${leaving ? ' story-scene--leaving' : ''}${copyShown ? ' story-scene--ready' : ''}${beat.atmosphere === 'dawn' ? ' story-scene--dawn' : ''}`}
+      className={`story-scene${leaving ? ' story-scene--leaving' : ''}${copyShown ? ' story-scene--ready' : ''}${beat.atmosphere === 'dawn' ? ' story-scene--dawn' : ''}${beat.atmosphere === 'road' ? ' story-scene--road' : ''}${beat.motion === 'ground' ? ' story-scene--ground' : ''}`}
       aria-label={ariaLabel ?? beat.title}
       aria-live="polite"
       onClick={(event) => {

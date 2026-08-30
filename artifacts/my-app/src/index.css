@@ -1339,6 +1339,30 @@
   animation: story-flare-breathe 6.5s ease-in-out infinite;
 }
 
+/* ── АКТ 2 «ТРАКТ»: ровнее, ближе к земле, дыхание шага ── */
+
+/* Не парение над картиной, а спокойный шаг: едва заметное покачивание
+   и мягкий вдох-выдох горизонта. */
+@keyframes story-scene-walk {
+  0%   { transform: scale(1.07)  translate3d(-0.2%,  0.28%, 0); }
+  25%  { transform: scale(1.076) translate3d(-0.05%, -0.16%, 0); }
+  50%  { transform: scale(1.08)  translate3d(0.1%,   0.28%, 0); }
+  75%  { transform: scale(1.086) translate3d(0.2%,  -0.16%, 0); }
+  100% { transform: scale(1.09)  translate3d(0.3%,   0.28%, 0); }
+}
+
+.story-scene--ground .story-scene__art {
+  animation: story-scene-walk 13s ease-in-out alternate infinite;
+}
+
+/* Пыль дороги: крупнее, ближе и медленнее — это земля под ногами,
+   а не утренний воздух. */
+.story-scene--road .story-scene__motes span {
+  width: calc(var(--mote-size) * 1.8);
+  height: calc(var(--mote-size) * 1.8);
+  animation-duration: calc(8.5s + (var(--mote-index) * 0.32s));
+}
+
 .story-scene__mist {
   position: absolute;
   inset: 0;
