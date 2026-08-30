@@ -47,7 +47,7 @@
 
 ## 📍 ТЕКУЩИЙ СТАТУС
 
-**Этапы 1–4 смёржены (PR #6). PR #7 (кинематографическая дорога 0–7 + фиксы iOS + сброс устройства + план адаптива) и PR #8 (QA-фиксы дороги по live-вердикту владельца + слой 1 адаптива с proof-of-concept на auth) СМЁРЖЕНЫ в `main` merge-коммитами по командам владельца. Владелец тестирует ВСЁ в Replit ПОСЛЕ мержа. Следующая сессия ПЕРВЫМ ДЕЛОМ уточняет у владельца, прошла ли проверку вся предыдущая работа (дорога 0–7, акт 0, auth после слоя 1, надпись на вывеске); правки по замечаниям — маленькими изолированными коммитами в новой arena-ветке. После подтверждения: изолированный фундамент 5A «Четырёх Столпов» по `STAGE5_FOUR_PILLARS_HANDOFF.md` (данные/типы, расовая матрица, versioned save + мигратор, калькулятор + тесты; боевой баланс и offline не трогать).**
+**Этапы 1–4 + дорога 0–7 + слой 1 адаптива в `main` (PR #6–#8). Сессия 14: hotfix «вывеска = единственный загрузочный экран» в PR #9 (`arena/01a0526e-idle-test`, НЕ смёржен) + прогон дороги агентом + постоянные QA-скрипты `scripts/qa/`. Владелец ещё не подтвердил live QA в Replit. 5A не начинать, пока владелец не скажет ок по дороге/auth. Браузер в Arena: `@sparticuz/chromium` (`scripts/qa/setup-browser.mjs`), не Playwright/apt.**
 
 Где продолжать следующему агенту:
 - сначала прочитать `DEVLOG.md` (Сессия 13), `NEXT_CHAT_HANDOFF.md`, `ROADMAP.md`,
@@ -67,7 +67,7 @@
 - Supabase: `@supabase/supabase-js`, `src/lib/supabase.ts`, `src/store/authStore.ts`, `src/lib/characterApi.ts`, `src/lib/characterSave.ts`;
 - AuthGate: незалогиненный → `/login`, гость → limited shell, registered → rules/hero gate → full shell;
 - guest mode: sessionStorage, лесорубство+рыбалка+24 слота, без боя/крафта/mining/расширения инвентаря, баннер «Зарегистрируйся, чтобы сохранить прогресс.»;
-- QA-инструмент: скрипты прогона дороги и матрицы вьюпортов (puppeteer) — песочница Arena, не в репо;
+- QA-инструмент: `scripts/qa/` (Chromium `@sparticuz`, `road.mjs`, `auth.mjs`); учётка из env;
 - helper-документы: `SUPABASE_SETUP.md`, `STAGE4_CHARACTER_HANDOFF.md`,
   `STAGE5_FOUR_PILLARS_HANDOFF.md`, `NEXT_CHAT_HANDOFF.md`.
 
@@ -78,6 +78,38 @@
 ---
 
 ## 📜 ЖУРНАЛ СЕССИЙ (новые записи — СВЕРХУ)
+
+### Сессия 14 — 2026-08-30 — Hotfix вывески (PR #9) + прогон дороги + QA-скрипты
+**Ветка / PR:** `arena/01a0526e-idle-test` → PR #9 (открыт, НЕ смёржен)
+
+**Контракт владельца:** экран «Aethelia / Загрузка...» убрать насовсем;
+единственные загрузки — вывеска и акт 0 «ЗНАК»; они держатся, пока
+сессия и персонажи не готовы. `minDisplayTimeMs=4000` не менять без согласования.
+
+**Патча `QA_HOTFIX_auth_loading.patch` в дереве не было** (сессия PR #8 запечатана).
+Hotfix собран по контракту.
+
+**Баги, из‑за которых auth «не закрывался» (найдены прогоном дороги):**
+- повторный `loadCharacters` после заставки снова ставил `loading=true` → пустой кадр;
+- CSS `story-scene--finale` висел на любом последнем бите (`isLast`), ложа вспыхивала как дверь;
+- акт 0 считал арты готовыми по первой картинке;
+- Router монтировался раньше очереди «Знакомый скрип вывески.» → вспышка auth.
+
+**Сделано:** проп `authReady` у SplashScreen и акта 0; `loadedUserId` + inflight
+в characterStore; finale только по флагу `finale`; прогрев всех артов пролога;
+очередь возвращения до монтирования Router.
+
+**Прогон агентом:** JSDOM-бандл (холодный 0–6, возвращение, гость) и живой Chromium
+`node scripts/qa/road.mjs` (~25с) — 0 «Aethelia / Загрузка...». Канон браузера:
+`@sparticuz/chromium@131.0.1` + `puppeteer-core@23.11.1` (`setup-browser.mjs`),
+не Playwright/apt. Latest `@sparticuz` 149 ломает CJS require.
+
+**Постоянные скрипты (чтобы не править «тест» каждый чат):**
+- `scripts/qa/setup-browser.mjs` — установка Chromium в `/home/user/ui_shot`;
+- `scripts/qa/road.mjs` — дорога;
+- `scripts/qa/auth.mjs login|register` — учётка из `QA_EMAIL`/`QA_PASSWORD` / `.env.local`.
+
+**Не сделано:** мерж PR #9; live QA владельца в Replit; 5A; смена 4000ms.
 
 ### Сессия 13 — 2026-08-30 — Live-QA фиксы дороги + слой 1 адаптива + мерж PR #8
 **Ветка / PR:** `arena/01a051db-idle-test` → PR #8 (смёржен merge-коммитом по команде владельца)
@@ -456,4 +488,4 @@ typecheck + production build чисто. Художественную оценк
   GBadge, GAvatar, GProgressBar, GDivider, GTooltip, GCard, GTag, GEmptyState и др.).
 - `src/data/changelog.ts` — типы, цвета, версия 0.1.0 «Рождение мира», утилиты
   getUnseenChangelog/markChangelogSeen.
-- PR #1: canvas-движок artEngine (режимы sign/sigil/scene/cutout) + splash.png.
+- PR #1: canvas-движок artEngine (режимы sign/sigil/scene/cutout) + splash.png.�жок artEngine (режимы sign/sigil/scene/cutout) + splash.png.

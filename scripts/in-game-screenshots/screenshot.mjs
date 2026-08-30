@@ -2,6 +2,7 @@ import puppeteer from 'puppeteer-core';
 import fs from 'fs';
 
 const OUT = process.env.OUT || '/home/user/ui_shot';
+const URL = process.env.URL || 'http://127.0.0.1:3000';
 const emblemB64 = fs.readFileSync(process.env.EMBLEM || '/home/user/scratch_axe/intro_emblem.webp').toString('base64');
 const DATA_URL = `data:image/webp;base64,${emblemB64}`;
 

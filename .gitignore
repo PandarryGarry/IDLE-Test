@@ -10,6 +10,8 @@ out-tsc/
 .env
 .env.local
 .env.*.local
+scripts/qa/.env
+scripts/qa/.env.local
 
 # Dependencies
 node_modules/
