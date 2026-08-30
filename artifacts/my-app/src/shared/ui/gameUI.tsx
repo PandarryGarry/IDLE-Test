@@ -430,7 +430,7 @@ export function GAvatar({
       ...style,
     }}>
       {src ? (
-        <img src={src} alt="" style={{ width: '85%', height: '85%', objectFit: 'contain' }} />
+        <img src={src} alt="" decoding="async" style={{ width: '85%', height: '85%', objectFit: 'contain' }} />
       ) : (
         <span style={{ fontSize: Math.round(size * 0.5), lineHeight: 1 }}>{emoji ?? '🛡️'}</span>
       )}
