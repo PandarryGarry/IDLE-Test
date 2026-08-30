@@ -36,9 +36,17 @@ const DB_KEY = 'aethelia_qa_db_v1';
 export function isQaMockEnabled(): boolean {
   if (typeof window === 'undefined') return false;
   try {
+    const flagged = window.localStorage.getItem(QA_MOCK_FLAG) === '1';
     const host = window.location.hostname;
-    if (host !== '127.0.0.1' && host !== 'localhost' && host !== '0.0.0.0') return false;
-    return window.localStorage.getItem(QA_MOCK_FLAG) === '1';
+    const local = host === '127.0.0.1' || host === 'localhost' || host === '0.0.0.0';
+    if (local && flagged) return true;
+    // Dev-превью Arena без облачных ключей — тот же мок, что у tour.
+    // Replit с VITE_SUPABASE_URL сюда не попадает.
+    if (import.meta.env.DEV && !import.meta.env.VITE_SUPABASE_URL) {
+      if (!flagged) window.localStorage.setItem(QA_MOCK_FLAG, '1');
+      return true;
+    }
+    return false;
   } catch {
     return false;
   }
