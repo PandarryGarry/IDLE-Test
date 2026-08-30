@@ -8,6 +8,7 @@
  * ║  система характеристик. Сейчас бонусы — только структура.    ║
  * ╚══════════════════════════════════════════════════════════════╝
  */
+import { iconUrl, prefetchImage } from '@/lib/assetUrl';
 
 export type RaceId = 'human' | 'elf' | 'dwarf' | 'orc' | 'beastfolk';
 
@@ -157,23 +158,14 @@ export const RACE_FOLDER: Record<RaceId, string> = {
 
 /** Путь к файлу аватара из avatarId ('human_male_01'). */
 export function getAvatarPath(avatarId: string): string {
-  // avatarId = <racePrefix>_<gender>_<nn>
-  // Runtime — WebP 384px (~10 КБ). Исходный PNG 1024 остаётся рядом как мастер.
   const raceId = raceIdFromAvatar(avatarId);
   const folder = RACE_FOLDER[raceId] ?? raceId;
-  return `/assets/icons/characters/avatars/${folder}/${avatarId}.webp`;
+  return iconUrl(`characters/avatars/${folder}/${avatarId}`);
 }
 
 /** Прогрев в кэш браузера — выбор облика не ждёт сети. */
 export function prefetchAvatar(avatarId: string): void {
-  if (typeof document === 'undefined') return;
-  const href = getAvatarPath(avatarId);
-  if (document.querySelector(`link[rel="preload"][href="${href}"]`)) return;
-  const link = document.createElement('link');
-  link.rel = 'preload';
-  link.as = 'image';
-  link.href = href;
-  document.head.appendChild(link);
+  prefetchImage(getAvatarPath(avatarId));
 }
 
 /** Префикс файла аватара → raceId ('beastfolk_male_01' → 'beastfolk'). */
