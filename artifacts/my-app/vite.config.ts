@@ -11,6 +11,15 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    {
+      name: 'arena-preview-no-hmr-client',
+      transformIndexHtml(html) {
+        // Убираем /@vite/client — в iframe превью его WebSocket роняет страницу.
+        return html
+          .replace(/<script type="module">import \{ injectIntoGlobalHook \}[\s\S]*?<\/script>/, '')
+          .replace(/<script type="module" src="\/@vite\/client"><\/script>/, '');
+      },
+    },
   ],
   resolve: {
     alias: {
@@ -48,9 +57,9 @@ export default defineConfig({
     host: '0.0.0.0',
     allowedHosts: true,
     cors: true,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-    },
+    // Превью Arena идёт через HTTPS-прокси. Клиент Vite иначе стучится
+    // на ws://localhost:3000 из браузера пользователя — белый экран и reset.
+    hmr: false,
   },
   preview: {
     port,
