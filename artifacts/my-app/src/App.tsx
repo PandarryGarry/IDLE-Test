@@ -241,7 +241,7 @@ function App() {
      * тебя) → auth. Первый запуск сюда не попадает — после пролога
      * игрок уже внутри (толчок-вспышка Акта 4).
      */
-    if (!introPending) queueCinematic('entrance-returning');
+    if (!introPending && !getQueuedCinematic()) queueCinematic('entrance-returning');
   };
 
   useEffect(() => {

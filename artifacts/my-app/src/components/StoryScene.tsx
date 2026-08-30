@@ -150,7 +150,7 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
 
   return (
     <section
-      className={`story-scene${leaving ? ' story-scene--leaving' : ''}${copyShown ? ' story-scene--ready' : ''}${beat.atmosphere === 'dawn' ? ' story-scene--dawn' : ''}${beat.atmosphere === 'road' ? ' story-scene--road' : ''}${beat.atmosphere === 'city' ? ' story-scene--city' : ''}${beat.atmosphere === 'threshold' ? ' story-scene--threshold' : ''}${isLast ? ' story-scene--finale' : ''}${beat.motion === 'ground' ? ' story-scene--ground' : ''}${beat.motion === 'push' ? ' story-scene--push' : ''}`}
+      className={`story-scene${leaving ? ' story-scene--leaving' : ''}${copyShown ? ' story-scene--ready' : ''}${beat.atmosphere === 'dawn' ? ' story-scene--dawn' : ''}${beat.atmosphere === 'road' ? ' story-scene--road' : ''}${beat.atmosphere === 'city' ? ' story-scene--city' : ''}${beat.atmosphere === 'threshold' ? ' story-scene--threshold' : ''}${beat.atmosphere === 'lodge' ? ' story-scene--lodge' : ''}${isLast ? ' story-scene--finale' : ''}${beat.motion === 'ground' ? ' story-scene--ground' : ''}${beat.motion === 'push' ? ' story-scene--push' : ''}`}
       aria-label={ariaLabel ?? beat.title}
       aria-live="polite"
       onClick={(event) => {
@@ -186,6 +186,12 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
           <span className="story-scene__smoke story-scene__smoke--right" />
           <span className="story-scene__light story-scene__light--far" />
           <span className="story-scene__light story-scene__light--near" />
+        </div>
+      )}
+      {beat.atmosphere === 'lodge' && (
+        <div className="story-scene__lodge" aria-hidden="true">
+          <span className="story-scene__lampglow" />
+          <span className="story-scene__lightshaft" />
         </div>
       )}
       {beat.atmosphere === 'threshold' && (
