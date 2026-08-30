@@ -2192,125 +2192,197 @@
    (мини-загрузка перед прологом; стиль sigil-режима artEngine)
    ═══════════════════════════════════════════════════════════ */
 
-@keyframes rune-intro-in {
+/* ── АКТ 0 «ЗНАК»: первый кадр игры — «Топор и Перо» во весь экран ── */
+
+@keyframes sign-intro-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes rune-intro-ring-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+/* Медленный киношный наезд, который «усаживает» кадр. */
+@keyframes sign-intro-settle {
+  from { transform: scale(1.085); }
+  to { transform: scale(1.012); }
 }
 
-@keyframes rune-intro-glow {
-  0%, 100% { opacity: 0.5; filter: blur(38px); }
-  50% { opacity: 0.9; filter: blur(46px); }
+/* Свет разгорается как угли: темнота поднимается с картины. */
+@keyframes sign-intro-kindle {
+  from { opacity: 0.88; }
+  to { opacity: 0; }
 }
 
-@keyframes rune-intro-bar {
+@keyframes sign-intro-eyebrow {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* «ЭТЕЛИЯ» собирается из разреженного трекинга, как титры. */
+@keyframes sign-intro-wordmark {
+  from { opacity: 0; letter-spacing: 0.52em; text-indent: 0.52em; }
+  to { opacity: 1; letter-spacing: 0.24em; text-indent: 0.24em; }
+}
+
+@keyframes sign-intro-bar {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
 
-.rune-intro {
+/* Золотая пыль: редкая и медленная, как искры над углями. */
+@keyframes sign-intro-mote {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  12% { opacity: var(--mote-alpha, 0.55); }
+  50% { transform: translate3d(14px, -34vh, 0); }
+  88% { opacity: var(--mote-alpha, 0.55); }
+  100% { transform: translate3d(-6px, -68vh, 0); opacity: 0; }
+}
+
+/* Уход: знак отдаёт свет — золото заливает кадр и растворяется в пролог. */
+@keyframes sign-intro-leave {
+  to { opacity: 0; }
+}
+
+@keyframes sign-intro-bloom {
+  0% { opacity: 0; }
+  42% { opacity: 0.95; }
+  100% { opacity: 0.4; }
+}
+
+.sign-intro {
   position: fixed;
-  z-index: 1100;
+  z-index: 1250;
   inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: clamp(1.6rem, 5vh, 2.6rem);
+  justify-content: flex-end;
+  gap: clamp(1.1rem, 3.4vh, 1.8rem);
   overflow: hidden;
   isolation: isolate;
   background: var(--bg-header);
   color: var(--text-primary);
-  animation: rune-intro-in 700ms ease-out both;
+  animation: sign-intro-in 900ms ease-out both;
+  cursor: default;
+  user-select: none;
 }
 
-.rune-intro__glow {
+/* Кадр: полный арт целиком + размытая подложка до краёв экрана. */
+.sign-intro__scene {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 30rem;
-  height: 30rem;
-  max-width: 90vw;
-  max-height: 90vw;
-  transform: translate(-50%, -62%);
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--accent-gold) 0%, transparent 70%);
-  opacity: 0.5;
-  filter: blur(38px);
-  animation: rune-intro-glow 4.6s ease-in-out infinite;
-  pointer-events: none;
+  inset: 0;
+  z-index: 0;
+  transform-origin: 50% 46%;
+  animation: sign-intro-settle 9.5s cubic-bezier(0.16, 0.6, 0.24, 1) both;
 }
 
-.rune-intro__sigil {
-  position: relative;
-  width: clamp(9rem, 30vh, 12rem);
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
+.sign-intro__fill {
+  position: absolute;
+  inset: -6%;
+  background: url('/assets/art/intro_sign.webp') 50% 46% / cover no-repeat;
+  filter: blur(26px) brightness(0.68) saturate(1.06);
+  transform: scale(1.07);
 }
 
-.rune-intro__ring {
+.sign-intro__art {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  color: var(--accent-gold);
-  opacity: 0.4;
-  animation: rune-intro-ring-spin 52s linear infinite;
+  object-fit: contain;
+  object-position: 50% 44%;
 }
 
-.rune-intro__ring circle {
-  stroke: currentColor;
-  stroke-width: 1.4;
+.sign-intro__kindle {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: var(--bg-header);
+  animation: sign-intro-kindle 3.8s cubic-bezier(0.3, 0.6, 0.3, 1) 150ms both;
+  pointer-events: none;
 }
 
-.rune-intro__rune {
-  width: 34%;
-  color: var(--text-gold);
-  filter: drop-shadow(0 0 14px var(--accent-gold)) drop-shadow(0 0 34px rgba(239, 181, 47, 0.35));
+.sign-intro__vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    linear-gradient(180deg, var(--cinematic-ink-soft) 0%, transparent 30%),
+    linear-gradient(0deg, var(--cinematic-ink-strong) 0%, transparent 38%),
+    radial-gradient(ellipse at 50% 46%, transparent 52%, var(--cinematic-ink) 100%);
+  pointer-events: none;
 }
 
-.rune-intro__rune line {
-  stroke: currentColor;
-  stroke-width: 5;
-  stroke-linecap: round;
+.sign-intro__motes {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
 }
 
-.rune-intro__title {
+.sign-intro__motes span {
+  position: absolute;
+  left: var(--mote-left);
+  bottom: -0.5rem;
+  width: var(--mote-size);
+  height: var(--mote-size);
+  border-radius: 50%;
+  background: var(--text-gold);
+  box-shadow: 0 0 calc(var(--mote-size) * 2.2) var(--cinematic-gold-soft);
+  opacity: 0;
+  animation: sign-intro-mote var(--mote-duration) ease-in-out var(--mote-delay) infinite;
+}
+
+.sign-intro__bloom {
+  position: absolute;
+  inset: -12%;
+  z-index: 4;
+  background: radial-gradient(
+    circle at 50% 46%,
+    var(--cinematic-gold-soft) 0%,
+    rgba(240, 168, 32, 0.32) 34%,
+    transparent 68%
+  );
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sign-intro__title {
+  position: relative;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.6rem;
   text-align: center;
   padding: 0 1.25rem;
 }
 
-.rune-intro__eyebrow {
+.sign-intro__eyebrow {
   color: var(--text-muted);
   font-family: var(--app-font-mono);
   font-size: clamp(0.5rem, 1.6vw, 0.62rem);
   font-weight: 800;
   letter-spacing: 0.32em;
   text-transform: uppercase;
+  animation: sign-intro-eyebrow 1.6s ease-out 2.6s both;
 }
 
-.rune-intro__title h1 {
+.sign-intro__title h1 {
   margin: 0;
   color: var(--text-primary);
   font-family: var(--app-font-display);
   font-size: clamp(2.2rem, 7vw, 3.4rem);
   font-weight: 900;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
   line-height: 1;
-  text-indent: 0.22em;
   text-shadow: 0 0 1.6rem var(--cinematic-gold-soft);
+  animation: sign-intro-wordmark 2.8s cubic-bezier(0.2, 0.6, 0.2, 1) 1.5s both;
 }
 
-.rune-intro__load {
+.sign-intro__load {
+  position: relative;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2318,7 +2390,7 @@
   padding: 0 1.25rem max(1rem, env(safe-area-inset-bottom));
 }
 
-.rune-intro__bar {
+.sign-intro__bar {
   width: min(240px, 64vw);
   height: 4px;
   border-radius: 999px;
@@ -2328,18 +2400,18 @@
   padding: 1px;
 }
 
-.rune-intro__bar span {
+.sign-intro__bar span {
   display: block;
   height: 100%;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--bar-xp-from), var(--bar-xp-to), var(--bar-xp-from));
   background-size: 200% 100%;
-  animation: rune-intro-bar 2.4s linear infinite;
+  animation: sign-intro-bar 2.4s linear infinite;
   box-shadow: var(--shadow-gold);
   transition: width 0.2s ease;
 }
 
-.rune-intro__hint {
+.sign-intro__hint {
   color: var(--text-muted);
   font-family: var(--app-font-mono);
   font-size: 0.56rem;
@@ -2348,12 +2420,36 @@
   text-transform: uppercase;
 }
 
+/* Световой переход знак → пролог. */
+.sign-intro--leaving {
+  animation: sign-intro-leave 1150ms ease-in 60ms forwards;
+  pointer-events: none;
+}
+
+.sign-intro--leaving .sign-intro__bloom {
+  animation: sign-intro-bloom 1150ms ease-in 60ms forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .rune-intro,
-  .rune-intro__glow,
-  .rune-intro__ring,
-  .rune-intro__bar span {
+  .sign-intro,
+  .sign-intro__scene,
+  .sign-intro__kindle,
+  .sign-intro__eyebrow,
+  .sign-intro__title h1,
+  .sign-intro__bar span,
+  .sign-intro__motes span,
+  .sign-intro--leaving,
+  .sign-intro--leaving .sign-intro__bloom {
     animation: none !important;
     transition: none !important;
+  }
+
+  .sign-intro__kindle,
+  .sign-intro__motes {
+    display: none;
+  }
+
+  .sign-intro__title h1 {
+    opacity: 1;
   }
 }
