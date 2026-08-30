@@ -233,14 +233,16 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
         <h1>{beat.title}</h1>
         <p>{beat.body}</p>
 
-        <div className="story-scene__progress" aria-hidden="true">
-          {beats.map((item, dotIndex) => (
-            <span
-              key={item.id}
-              className={dotIndex === index ? 'is-active' : dotIndex < index ? 'is-done' : ''}
-            />
-          ))}
-        </div>
+        {beats.length > 1 && (
+          <div className="story-scene__progress" aria-hidden="true">
+            {beats.map((item, dotIndex) => (
+              <span
+                key={item.id}
+                className={dotIndex === index ? 'is-active' : dotIndex < index ? 'is-done' : ''}
+              />
+            ))}
+          </div>
+        )}
 
         <button
           type="button"

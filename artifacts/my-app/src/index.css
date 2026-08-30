@@ -1765,9 +1765,12 @@
   animation: story-copy-in 680ms cubic-bezier(0.22, 1, 0.36, 1) 460ms both;
 }
 
-/* Точки прогресса: игрок видит, сколько истории впереди. */
+/* Точки прогресса: игрок видит, сколько истории впереди.
+   Блочный ряд НАД кнопкой — inline-flex сажал точки в одну строку
+   с «Далее»/действием, и светящаяся точка вставала слева от кнопки. */
 .story-scene__progress {
-  display: inline-flex;
+  display: flex;
+  justify-content: center;
   gap: 0.42rem;
   margin-top: 1.05rem;
   animation: story-copy-in 520ms ease-out 640ms both;
