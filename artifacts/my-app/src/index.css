@@ -1239,12 +1239,119 @@
   object-fit: cover;
   object-position: center;
   opacity: 0;
-  transition: opacity 420ms ease-out;
+  transition:
+    opacity 420ms ease-out,
+    /* Панорама между битами одной картины — непрерывное движение камеры. */
+    object-position 2600ms cubic-bezier(0.37, 0.02, 0.2, 1);
   animation: story-scene-drift 16s ease-in-out alternate infinite;
   will-change: transform;
 }
 
 .story-scene__art--ready { opacity: 1; }
+
+/* Прежний арт тает под новым — смена картины без среза. */
+.story-scene__art--out {
+  animation: story-art-out 950ms ease-in both;
+}
+
+/* ── АКТ 1 «КОНТИНЕНТ»: рассветное дыхание над живописью ── */
+
+@keyframes story-art-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Пульс восхода: тёплый свет чуть дышит. */
+@keyframes story-flare-breathe {
+  0%, 100% { opacity: 0.16; }
+  50% { opacity: 0.27; }
+}
+
+/* Облачные полосы дрейфуют над долиной — очень медленно. */
+@keyframes story-cloud-far {
+  from { transform: translate3d(-5%, 0, 0); }
+  to { transform: translate3d(5%, 0, 0); }
+}
+
+@keyframes story-cloud-near {
+  from { transform: translate3d(4%, 0.8%, 0); }
+  to { transform: translate3d(-4%, -0.8%, 0); }
+}
+
+/* Туман ползёт в нижней кромке кадра. */
+@keyframes story-fog-drift {
+  from { transform: translate3d(-4%, 0, 0); }
+  to { transform: translate3d(4%, 0, 0); }
+}
+
+/* Новый кадр проступает сквозь тающую дымку. */
+@keyframes story-mist-in {
+  from { opacity: 0.58; }
+  to { opacity: 0; }
+}
+
+.story-scene__dawn {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.story-scene__cloud,
+.story-scene__fog {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.story-scene__cloud--far {
+  top: 6%;
+  left: -18%;
+  width: 136%;
+  height: 36%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(240, 200, 120, 0.12), transparent 70%);
+  filter: blur(18px);
+  animation: story-cloud-far 34s ease-in-out alternate infinite;
+}
+
+.story-scene__cloud--near {
+  top: 26%;
+  left: -22%;
+  width: 144%;
+  height: 30%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(255, 224, 168, 0.09), transparent 70%);
+  filter: blur(26px);
+  animation: story-cloud-near 48s ease-in-out alternate infinite;
+}
+
+.story-scene__fog {
+  bottom: -8%;
+  left: -16%;
+  width: 132%;
+  height: 24%;
+  background: radial-gradient(ellipse 62% 100% at 50% 100%, rgba(232, 212, 182, 0.15), transparent 72%);
+  filter: blur(14px);
+  animation: story-fog-drift 40s ease-in-out alternate infinite;
+}
+
+.story-scene--dawn .story-scene__flare {
+  animation: story-flare-breathe 6.5s ease-in-out infinite;
+}
+
+.story-scene__mist {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 58%,
+    rgba(228, 216, 198, 0.5),
+    rgba(204, 190, 172, 0.26) 46%,
+    transparent 76%
+  );
+  animation: story-mist-in 1700ms cubic-bezier(0.3, 0.5, 0.3, 1) 120ms both;
+}
 
 .story-scene__veil {
   z-index: 1;
@@ -2183,6 +2290,31 @@
     opacity: 1;
     pointer-events: auto;
     transform: none;
+  }
+  /* Атмосферные слои — часть движения: в покое их не видно. */
+  .story-scene__dawn,
+  .story-scene__mist,
+  .story-scene__art--out {
+    display: none;
+  }
+  .story-scene--dawn .story-scene__flare {
+    animation: none !important;
+    opacity: 0.22;
+  }
+}
+
+/* Мобильные экраны: рассветные слои легче, чтобы не душить GPU. */
+@media (max-width: 640px) {
+  .story-scene__cloud--near {
+    display: none;
+  }
+  .story-scene__cloud--far {
+    filter: blur(14px);
+    height: 30%;
+  }
+  .story-scene__fog {
+    filter: blur(10px);
+    height: 20%;
   }
 }
 

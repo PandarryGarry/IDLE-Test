@@ -45,11 +45,14 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
   const [imageReady, setImageReady] = useState(false);
   const [imageSettled, setImageSettled] = useState(false);
   const [copyShown, setCopyShown] = useState(false);
+  /** Кросс-растворение: предыдущий арт тает под новым при смене картины. */
+  const [fadingImage, setFadingImage] = useState<string | null>(null);
   const [reducedMotion] = useState(prefersReducedMotion);
 
   const completedRef = useRef(false);
   const onCompleteRef = useRef(onComplete);
   const imageRef = useRef<HTMLImageElement>(null);
+  const prevImageRef = useRef<string | undefined>(beats[0]?.image);
 
   useEffect(() => {
     onCompleteRef.current = onComplete;
@@ -64,6 +67,17 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
     completedRef.current = true;
     onCompleteRef.current();
   }, [beats.length]);
+
+  /* Смена картины — не срез, а растворение: прежний арт тает под новым. */
+  useEffect(() => {
+    const image = beat?.image;
+    const previous = prevImageRef.current;
+    prevImageRef.current = image;
+    if (!image || !previous || image === previous) return;
+    setFadingImage(previous);
+    const timer = window.setTimeout(() => setFadingImage(null), 1000);
+    return () => window.clearTimeout(timer);
+  }, [beat?.image]);
 
   /* Арт бита: onLoad/onError/complete — картинка «решена». */
   useEffect(() => {
@@ -130,7 +144,7 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
 
   return (
     <section
-      className={`story-scene${leaving ? ' story-scene--leaving' : ''}${copyShown ? ' story-scene--ready' : ''}`}
+      className={`story-scene${leaving ? ' story-scene--leaving' : ''}${copyShown ? ' story-scene--ready' : ''}${beat.atmosphere === 'dawn' ? ' story-scene--dawn' : ''}`}
       aria-label={ariaLabel ?? beat.title}
       aria-live="polite"
       onClick={(event) => {
@@ -139,6 +153,9 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
         next();
       }}
     >
+      {fadingImage && (
+        <img className="story-scene__art story-scene__art--out" src={fadingImage} alt="" aria-hidden="true" />
+      )}
       <img
         key={beat.image}
         ref={imageRef}
@@ -149,6 +166,16 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
         onLoad={() => setImageReady(true)}
         onError={() => setImageReady(true)}
       />
+      {beat.atmosphere === 'dawn' && (
+        <div className="story-scene__dawn" aria-hidden="true">
+          <span className="story-scene__cloud story-scene__cloud--far" />
+          <span className="story-scene__cloud story-scene__cloud--near" />
+          <span className="story-scene__fog" />
+        </div>
+      )}
+      {beat.enter === 'mist' && (
+        <div className="story-scene__mist" aria-hidden="true" key={beat.id} />
+      )}
       <div className="story-scene__veil" aria-hidden="true" />
       <div className="story-scene__flare" aria-hidden="true" />
       <div className="story-scene__motes" aria-hidden="true">
