@@ -1,6 +1,10 @@
 import { supabase, getSupabaseClient, isSupabaseConfigured } from './supabase';
 import type { SaveData } from '../data/types';
 import type { RaceId } from '../data/characters';
+import { withTimeout } from './utils';
+
+/** Потолок сетевых вызовов Supabase: зависший запрос не должен блокировать UI. */
+const API_TIMEOUT_MS = 12000;
 
 /** Персонаж (строка таблицы public.characters). */
 export interface Character {
@@ -72,12 +76,22 @@ function requireClient() {
 /** Получить живых персонажей пользователя (без is_deleted). */
 export async function fetchCharacters(userId: string): Promise<Character[]> {
   const client = requireClient();
-  const { data, error } = await client
+  // Postgrest-builder — thenable; явно приводим к Promise для withTimeout.
+  const query = client
     .from('characters')
     .select('*')
     .eq('user_id', userId)
     .eq('is_deleted', false)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: true }) as unknown as Promise<{
+    data: CharacterRow[] | null;
+    error: { message: string } | null;
+  }>;
+
+  const { data, error } = await withTimeout(
+    query,
+    API_TIMEOUT_MS,
+    'Загрузка персонажей заняла слишком много времени.',
+  );
 
   if (error) {
     console.error('fetchCharacters error:', error);

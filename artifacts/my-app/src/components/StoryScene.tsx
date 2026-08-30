@@ -206,10 +206,10 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
         </div>
       )}
       {beat.enter === 'glow' && (
-        <div className="story-scene__glow-in" aria-hidden="true" key={beat.id} />
+        <div className="story-scene__glow-in" aria-hidden="true" key={`enter-glow-${beat.id}`} />
       )}
       {beat.enter === 'mist' && (
-        <div className="story-scene__mist" aria-hidden="true" key={beat.id} />
+        <div className="story-scene__mist" aria-hidden="true" key={`enter-mist-${beat.id}`} />
       )}
       <div className="story-scene__veil" aria-hidden="true" />
       <div className="story-scene__flare" aria-hidden="true" />
@@ -228,19 +228,21 @@ export function StoryScene({ beats, onComplete, ariaLabel }: StorySceneProps) {
         ))}
       </div>
 
-      <div className="story-scene__content" key={beat.id}>
+      <div className="story-scene__content" key={`copy-${beat.id}`}>
         <span className="story-scene__eyebrow">{beat.eyebrow}</span>
         <h1>{beat.title}</h1>
         <p>{beat.body}</p>
 
-        <div className="story-scene__progress" aria-hidden="true">
-          {beats.map((item, dotIndex) => (
-            <span
-              key={item.id}
-              className={dotIndex === index ? 'is-active' : dotIndex < index ? 'is-done' : ''}
-            />
-          ))}
-        </div>
+        {beats.length > 1 && (
+          <div className="story-scene__progress" aria-hidden="true">
+            {beats.map((item, dotIndex) => (
+              <span
+                key={item.id}
+                className={dotIndex === index ? 'is-active' : dotIndex < index ? 'is-done' : ''}
+              />
+            ))}
+          </div>
+        )}
 
         <button
           type="button"
