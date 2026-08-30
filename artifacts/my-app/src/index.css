@@ -138,6 +138,45 @@
   --onboarding-panel:         linear-gradient(160deg, rgba(49, 31, 19, 0.64), rgba(16, 10, 6, 0.76));
   --onboarding-panel-edge:    rgba(224, 168, 70, 0.36);
   --onboarding-panel-shadow:  0 1.25rem 3.5rem rgba(0, 0, 0, 0.46), inset 0 1px 0 rgba(255, 235, 190, 0.10);
+
+  /* ═══════════════════════════════════════════════════════════
+     СЛОЙ 1 АДАПТИВА — единая шкала токенов (RESPONSIVE_SYSTEM_PLAN.md)
+     Каждый токен: clamp(мин, текучее, макс). Мин — узкие телефоны (~320),
+     макс — десктоп (~1440). Сырой px допустим только для хайрлайнов.
+     Закон доступности: текст никогда не уходит ниже читаемого минимума
+     (~13px); пользовательский зум браузера не блокируется.
+     ═══════════════════════════════════════════════════════════ */
+  --hairline: 1px;
+
+  /* Типографика */
+  --text-2xs: clamp(0.8125rem, 0.8rem + 0.06vw, 0.875rem);  /* 13–14px */
+  --text-xs:  clamp(0.875rem, 0.85rem + 0.1vw, 1rem);       /* 14–16px */
+  --text-sm:  clamp(0.9375rem, 0.9rem + 0.2vw, 1.1875rem);  /* 15–19px */
+  --text-md:  clamp(1rem, 0.95rem + 0.25vw, 1.375rem);      /* 16–22px */
+  --text-lg:  clamp(1.125rem, 1.05rem + 0.28vw, 1.5rem);    /* 18–24px */
+  --text-xl:  clamp(1.375rem, 1.3rem + 0.3vw, 1.75rem);     /* 22–28px */
+  --text-2xl: clamp(1.625rem, 1.5rem + 0.6vw, 2.5rem);      /* 26–40px */
+  --text-3xl: clamp(1.875rem, 1.7rem + 0.9vw, 3.25rem);     /* 30–52px */
+
+  /* Пространство */
+  --space-2xs: clamp(0.25rem, 0.23rem + 0.1vw, 0.375rem);   /* 4–6px */
+  --space-xs:  clamp(0.375rem, 0.34rem + 0.18vw, 0.625rem); /* 6–10px */
+  --space-sm:  clamp(0.5rem, 0.45rem + 0.26vw, 0.875rem);   /* 8–14px */
+  --space-md:  clamp(0.75rem, 0.68rem + 0.38vw, 1.25rem);   /* 12–20px */
+  --space-lg:  clamp(1rem, 0.9rem + 0.5vw, 1.75rem);        /* 16–28px */
+  --space-xl:  clamp(1.5rem, 1.35rem + 0.75vw, 2.5rem);     /* 24–40px */
+  --space-2xl: clamp(2rem, 1.8rem + 1vw, 3.5rem);           /* 32–56px */
+  --space-3xl: clamp(3rem, 2.7rem + 1.5vw, 5.25rem);        /* 48–84px */
+
+  /* Радиусы (не пересекаются с игровыми --radius-sm/md/lg/xl) */
+  --radius-2xs: clamp(0.375rem, 0.35rem + 0.12vw, 0.5rem);  /* 6–8px */
+  --radius-xs:  clamp(0.5rem, 0.46rem + 0.2vw, 0.75rem);    /* 8–12px */
+  --radius-2xl: clamp(1.25rem, 1.15rem + 0.4vw, 1.75rem);   /* 20–28px */
+  --radius-full: 999px;
+
+  /* Контролы: высоты полей/кнопок — тоже из шкалы, а не вручную */
+  --control-sm: clamp(2.375rem, 2.25rem + 0.62vw, 3rem);    /* 38–48px */
+  --control-md: clamp(2.75rem, 2.6rem + 0.75vw, 3.5rem);    /* 44–56px */
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -504,7 +543,11 @@
 
 .animate-pulse-gold { animation: pulse-gold 2s ease-in-out infinite; }
 
-/* Auth — Stage 3 visual foundation: frameless glass over approved tavern background */
+/* Auth — Stage 3 visual foundation: frameless glass over approved tavern background.
+   Слой 1 адаптива (RESPONSIVE_SYSTEM_PLAN.md): ВСЕ размеры — только из шкалы
+   токенов :root (--text-*, --space-*, --radius-*, --control-*). Медиа-запросы
+   остались только для СТРУКТУРЫ: <1024 — композиция «в столбик» по центру,
+   ≥1024 — абсолютная композиция (история слева внизу, карточка справа). */
 .auth-screen {
   position: relative;
   min-height: 100svh;
@@ -540,12 +583,13 @@
   background: radial-gradient(ellipse at center, transparent 48%, rgba(0, 0, 0, 0.26) 100%);
 }
 
+/* Свет очага: жидкие позиция и размер — без единого медиа-запроса. */
 .auth-screen__firelight {
   position: fixed;
-  left: 23%;
-  top: 38%;
-  width: 24rem;
-  height: 18rem;
+  left: clamp(19%, 10vw + 9%, 23%);
+  top: clamp(33%, 9vh + 24%, 38%);
+  width: clamp(14rem, 10rem + 10vw, 24rem);
+  height: clamp(11rem, 8rem + 8vw, 18rem);
   z-index: 0;
   pointer-events: none;
   background: radial-gradient(circle, rgba(255, 162, 48, 0.19), transparent 64%);
@@ -571,7 +615,7 @@
   bottom: calc(-8px - ((var(--i) % 5) * 18px));
   width: var(--auth-ember-size);
   height: var(--auth-ember-size);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: rgba(255, 210, 138, 0.56);
   box-shadow: 0 0 10px rgba(238, 181, 47, 0.32);
   opacity: 0;
@@ -593,10 +637,12 @@
   margin: 0 auto;
 }
 
+/* Композиция №1 (≥1024): история слева внизу, карточка справа.
+   Позиции и ширины — жидкие clamp, медиа-запросов нет. */
 .auth-story {
   position: absolute;
-  left: clamp(3rem, 5.4vw, 4.875rem);
-  bottom: clamp(5.8rem, 12.7vh, 7.25rem);
+  left: clamp(var(--space-xl), 5vw, 4.875rem);
+  bottom: clamp(5.75rem, 12.5vh, 7.25rem);
   max-width: 31rem;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.72);
   animation: auth-soft-rise 620ms ease-out both;
@@ -605,93 +651,84 @@
 .auth-pill {
   display: inline-flex;
   align-items: center;
-  min-height: 1.125rem;
-  padding: 0.25rem 0.56rem 0.22rem;
-  border-radius: 999px;
+  min-height: var(--space-lg);
+  padding: var(--space-2xs) var(--space-xs) calc(var(--space-2xs) - var(--hairline));
+  border-radius: var(--radius-full);
   background: rgba(198, 116, 22, 0.32);
   color: rgba(239, 181, 47, 0.88);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
-  font-size: 0.44rem;
+  font-family: var(--app-font-mono);
+  font-size: var(--text-2xs);
   font-weight: 800;
-  letter-spacing: 0.035em;
+  letter-spacing: 0.05em;
   line-height: 1;
   text-transform: uppercase;
 }
 
 .auth-story h1 {
-  margin: 0.7rem 0 0.28rem;
+  margin: var(--space-sm) 0 var(--space-2xs);
   color: rgb(255, 242, 207);
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(1.45rem, 2vw, 1.62rem);
+  font-family: var(--app-font-display);
+  font-size: var(--text-xl);
   font-weight: 800;
   letter-spacing: -0.03em;
-  line-height: 0.98;
+  line-height: 1.05;
 }
 
 .auth-story p {
   max-width: 28rem;
   margin: 0;
   color: rgba(230, 207, 160, 0.84);
-  font-size: 0.75rem;
-  line-height: 1.35;
+  font-size: var(--text-xs);
+  line-height: 1.45;
 }
 
 .auth-card {
   position: absolute;
-  top: clamp(10.5rem, 23.2vh, 12rem);
-  right: clamp(5.5rem, 9.6vw, 8.625rem);
-  width: 16.125rem;
-  padding: 1.13rem 0 0.9rem;
+  top: clamp(8.75rem, 20vh, 11.5rem);
+  right: clamp(var(--space-lg), 8vw, 8.625rem);
+  width: clamp(17rem, 14.5rem + 5vw, 21.5rem);
+  padding: var(--space-lg) var(--space-lg) var(--space-md);
   border: 0;
-  border-radius: 1.5rem;
+  border-radius: var(--radius-2xl);
   background:
     linear-gradient(180deg, rgba(58, 39, 28, 0.20), rgba(15, 10, 8, 0.30)),
     rgba(26, 17, 12, 0.22);
-  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.12);
+  box-shadow: 0 var(--space-lg) calc(var(--space-lg) * 2) rgba(0, 0, 0, 0.12);
   backdrop-filter: blur(7px) saturate(1.04) brightness(0.88);
   -webkit-backdrop-filter: blur(7px) saturate(1.04) brightness(0.88);
   animation: auth-panel-enter 620ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
 }
 
 .auth-screen--register .auth-card {
-  top: clamp(7.25rem, 15.8vh, 8rem);
-  right: clamp(5.25rem, 9.6vw, 8.625rem);
-  width: 18.375rem;
+  top: clamp(6.5rem, 14.5vh, 8.75rem);
+  width: clamp(19rem, 16rem + 5.5vw, 23.5rem);
 }
 
 .auth-card__content {
-  width: 12.75rem;
+  width: 100%;
   margin-inline: auto;
 }
 
-.auth-screen--register .auth-card__content {
-  width: 14.875rem;
-}
-
 .auth-pill--form {
-  margin-bottom: 0.72rem;
+  margin-bottom: var(--space-xs);
 }
 
 .auth-card h2 {
-  margin: 0 0 0.28rem;
+  margin: 0 0 var(--space-2xs);
   color: rgba(255, 242, 207, 0.95);
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 1.44rem;
+  font-family: var(--app-font-display);
+  font-size: var(--text-lg);
   font-weight: 800;
   letter-spacing: -0.025em;
-  line-height: 1;
+  line-height: 1.1;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
 }
 
-.auth-screen--register .auth-card h2 {
-  font-size: 1.38rem;
-}
-
 .auth-card p {
-  margin: 0 0 1.15rem;
+  margin: 0 0 var(--space-md);
   color: rgba(230, 207, 160, 0.76);
-  font-size: 0.63rem;
-  line-height: 1.35;
+  font-size: var(--text-xs);
+  line-height: 1.45;
 }
 
 .auth-form,
@@ -701,40 +738,40 @@
 }
 
 .auth-form {
-  gap: 0.85rem;
+  gap: var(--space-sm);
 }
 
 .auth-form__fields {
-  gap: 1.05rem;
+  gap: var(--space-sm);
 }
 
 .auth-screen--register .auth-form__fields {
-  gap: 0.95rem;
+  gap: var(--space-xs);
 }
 
 .auth-field {
   display: grid;
-  gap: 0.22rem;
+  gap: var(--space-2xs);
   width: 100%;
 }
 
 .auth-field__label {
-  color: rgba(176, 133, 87, 0.76);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
-  font-size: 0.43rem;
+  color: rgba(176, 133, 87, 0.86);
+  font-family: var(--app-font-mono);
+  font-size: var(--text-2xs);
   font-weight: 800;
   letter-spacing: 0.05em;
-  line-height: 1;
+  line-height: 1.2;
   text-transform: uppercase;
 }
 
 .auth-field__control {
   display: grid;
-  grid-template-columns: 1.35rem 1fr;
+  grid-template-columns: var(--space-lg) 1fr;
   align-items: center;
-  height: 2rem;
-  border: 1px solid rgba(145, 96, 53, 0.40);
-  border-radius: 0.62rem;
+  height: var(--control-sm);
+  border: var(--hairline) solid rgba(145, 96, 53, 0.40);
+  border-radius: var(--radius-xs);
   background: rgba(42, 27, 20, 0.38);
   color: rgba(230, 207, 160, 0.78);
   transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
@@ -750,7 +787,7 @@
   display: inline-flex;
   justify-content: center;
   color: rgba(239, 181, 47, 0.70);
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
 }
 
 .auth-field input {
@@ -760,7 +797,8 @@
   background: transparent;
   color: rgba(255, 242, 207, 0.9);
   font: inherit;
-  font-size: 0.63rem;
+  /* ≥16px на touch-устройствах: Safari не приближает страницу (автозум). */
+  font-size: var(--text-sm);
 }
 
 .auth-field input::placeholder {
@@ -770,30 +808,30 @@
 .auth-remember {
   display: inline-flex;
   align-items: center;
-  gap: 0.48rem;
+  gap: var(--space-2xs);
   color: rgba(230, 207, 160, 0.78);
-  font-size: 0.58rem;
+  font-size: var(--text-xs);
   font-weight: 800;
 }
 
 .auth-remember input {
-  width: 0.94rem;
-  height: 0.94rem;
+  width: var(--space-md);
+  height: var(--space-md);
   margin: 0;
   accent-color: rgb(239, 181, 47);
 }
 
 .auth-actions {
-  gap: 0.45rem;
+  gap: var(--space-2xs);
 }
 
 .auth-button {
-  height: 2rem;
+  height: var(--control-sm);
   width: 100%;
-  border: 1px solid rgba(145, 96, 53, 0.36);
-  border-radius: 0.62rem;
+  border: var(--hairline) solid rgba(145, 96, 53, 0.36);
+  border-radius: var(--radius-xs);
   color: rgba(255, 242, 207, 0.92);
-  font-size: 0.69rem;
+  font-size: var(--text-sm);
   font-weight: 800;
   letter-spacing: 0.01em;
   line-height: 1;
@@ -832,10 +870,10 @@
 .auth-or {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  margin: 0.05rem 0;
+  gap: var(--space-xs);
+  margin: var(--space-2xs) 0;
   color: rgba(230, 207, 160, 0.48);
-  font-size: 0.56rem;
+  font-size: var(--text-2xs);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -844,7 +882,7 @@
 .auth-or::before,
 .auth-or::after {
   content: '';
-  height: 1px;
+  height: var(--hairline);
   flex: 1;
   background: linear-gradient(90deg, transparent, rgba(230, 207, 160, 0.22));
 }
@@ -863,12 +901,12 @@
 .auth-config-warning,
 .auth-error,
 .auth-message {
-  margin: -0.05rem 0 0;
-  padding: 0.5rem 0.65rem;
-  border-radius: 0.62rem;
-  font-size: 0.58rem;
+  margin: calc(var(--space-2xs) * -1) 0 0;
+  padding: var(--space-2xs) var(--space-xs);
+  border-radius: var(--radius-xs);
+  font-size: var(--text-2xs);
   font-weight: 700;
-  line-height: 1.3;
+  line-height: 1.35;
   text-align: center;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
 }
@@ -876,19 +914,19 @@
 .auth-config-warning {
   color: rgba(239, 181, 47, 0.82);
   background: rgba(198, 116, 22, 0.16);
-  border: 1px solid rgba(239, 181, 47, 0.28);
+  border: var(--hairline) solid rgba(239, 181, 47, 0.28);
 }
 
 .auth-error {
   color: rgba(255, 180, 160, 0.92);
   background: rgba(122, 32, 24, 0.24);
-  border: 1px solid rgba(224, 64, 64, 0.34);
+  border: var(--hairline) solid rgba(224, 64, 64, 0.34);
 }
 
 .auth-message {
   color: rgba(195, 230, 170, 0.92);
   background: rgba(34, 92, 43, 0.24);
-  border: 1px solid rgba(106, 190, 120, 0.30);
+  border: var(--hairline) solid rgba(106, 190, 120, 0.30);
 }
 
 .auth-link {
@@ -896,9 +934,9 @@
   border: 0;
   background: transparent;
   color: rgba(230, 207, 160, 0.74);
-  font-size: 0.57rem;
+  font-size: var(--text-xs);
   font-weight: 800;
-  line-height: 1.2;
+  line-height: 1.3;
   cursor: pointer;
   text-align: center;
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.65);
@@ -909,7 +947,7 @@
 }
 
 .auth-link--guest {
-  margin-top: -0.45rem;
+  margin-top: calc(var(--space-2xs) * -1);
   color: rgba(239, 181, 47, 0.70);
 }
 
@@ -941,106 +979,42 @@
   to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
-@media (min-width: 641px) and (max-width: 1023px) {
+/* ── СТРУКТУРА — единственный структурный медиа-запрос.
+      <1024: абсолютная композиция → вертикальный стек по центру.
+      Размеры внутри НЕ трогаем — они живут в токенах шкалы. ── */
+@media (max-width: 1023px) {
   .auth-screen {
-    background-position: 34% center;
-  }
-
-  .auth-stage {
-    min-height: max(100svh, 58rem);
-  }
-
-  .auth-story {
-    left: 3rem;
-    bottom: 9rem;
-    max-width: 24rem;
-  }
-
-  .auth-card,
-  .auth-screen--register .auth-card {
-    top: 42%;
-    right: 3rem;
-    width: 17.5rem;
-  }
-
-  .auth-screen--register .auth-card__content,
-  .auth-card__content {
-    width: 13.25rem;
-  }
-}
-
-@media (max-width: 640px) {
-  .auth-screen {
-    min-height: 100svh;
     background:
       linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.46) 100%),
-      url('/assets/art/auth_tavern_background.webp') 26.5% center / cover no-repeat;
+      url('/assets/art/auth_tavern_background.webp') 30% center / cover no-repeat;
   }
 
-  .auth-screen::before {
-    background:
-      radial-gradient(circle at 35% 46%, rgba(231, 128, 26, 0.16), transparent 26%),
-      linear-gradient(180deg, transparent 0%, rgba(8, 4, 2, 0.22) 100%);
-  }
-
-  .auth-screen__firelight {
-    left: 5.5rem;
-    top: 19.5rem;
-    width: 13.5rem;
-    height: 12rem;
-    opacity: 0.8;
-  }
-
-  .auth-screen__embers span:nth-child(n + 25) {
-    display: none;
-  }
-
-  /* Централизуем контент по вертикали и горизонтали; при переполнении
-     контент уходит сверху (safe), чтобы не обрезать форму сверху. */
   .auth-stage,
   .auth-stage__body {
-    width: 100%;
-    min-height: 100svh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: safe center;
-    gap: 0.65rem;
-    padding: 1rem 1.25rem 1.75rem;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-lg) calc(var(--space-xl) + env(safe-area-inset-bottom));
   }
 
   .auth-story {
     position: static;
-    max-width: 20.5rem;
+    max-width: 22rem;
     margin: 0 auto;
     text-align: center;
-  }
-
-  .auth-story h1 {
-    margin: 0.5rem 0 0.22rem;
-    font-size: 1.28rem;
-  }
-
-  .auth-story p {
-    font-size: 0.62rem;
-  }
-
-  .auth-pill {
-    min-height: 0.94rem;
-    padding: 0.21rem 0.44rem 0.18rem;
-    font-size: 0.38rem;
   }
 
   .auth-card,
   .auth-screen--register .auth-card {
     position: static;
-    width: min(20.5rem, 100%);
-    padding: 1.05rem 1.1rem 1rem;
-    border-radius: 1.15rem;
+    width: min(22rem, 100%);
+    padding: var(--space-lg);
     background:
       linear-gradient(180deg, rgba(58, 39, 28, 0.30), rgba(15, 10, 8, 0.34)),
       rgba(26, 17, 12, 0.28);
-    box-shadow: 0 1rem 2.2rem rgba(0, 0, 0, 0.30);
+    box-shadow: 0 var(--space-md) var(--space-xl) rgba(0, 0, 0, 0.30);
     backdrop-filter: blur(6px) saturate(1.02) brightness(0.92);
     -webkit-backdrop-filter: blur(6px) saturate(1.02) brightness(0.92);
   }
@@ -1050,107 +1024,12 @@
     width: 100%;
     margin-inline: auto;
   }
-
-  .auth-pill--form {
-    margin-bottom: 0.5rem;
-  }
-
-  .auth-card h2,
-  .auth-screen--register .auth-card h2 {
-    font-size: 1.14rem;
-  }
-
-  .auth-card p {
-    margin-bottom: 0.75rem;
-    font-size: 0.56rem;
-  }
-
-  .auth-form {
-    gap: 0.62rem;
-  }
-
-  .auth-form__fields,
-  .auth-screen--register .auth-form__fields {
-    gap: 0.6rem;
-  }
-
-  .auth-field__label {
-    font-size: 0.4rem;
-    color: rgba(208, 172, 112, 0.86);
-  }
-
-  .auth-field__control {
-    grid-template-columns: 1.4rem 1fr;
-    height: 2rem;
-    border: 1px solid rgba(206, 158, 96, 0.52);
-    border-radius: 0.6rem;
-    background: rgba(42, 27, 20, 0.62);
-  }
-
-  .auth-field__icon {
-    font-size: 0.56rem;
-    color: rgba(239, 181, 47, 0.82);
-  }
-
-  .auth-field input {
-    font-size: 0.62rem;
-    color: rgba(255, 242, 207, 0.96);
-  }
-
-  .auth-field input::placeholder {
-    color: rgba(200, 160, 110, 0.72);
-  }
-
-  .auth-remember {
-    gap: 0.42rem;
-    font-size: 0.52rem;
-  }
-
-  .auth-remember input {
-    width: 0.84rem;
-    height: 0.84rem;
-  }
-
-  .auth-actions {
-    gap: 0.42rem;
-  }
-
-  .auth-or {
-    gap: 0.5rem;
-    margin: 0.1rem 0;
-    font-size: 0.5rem;
-  }
-
-  .auth-button {
-    height: 2rem;
-    border-radius: 0.6rem;
-    font-size: 0.7rem;
-  }
-
-  .auth-link {
-    font-size: 0.52rem;
-  }
-
-  .auth-link--guest {
-    margin-top: -0.1rem;
-  }
 }
 
-@media (max-width: 360px) {
-  .auth-stage,
-  .auth-stage__body {
-    padding: 0.75rem 0.75rem 1.25rem;
-  }
-
-  .auth-card,
-  .auth-screen--register .auth-card {
-    width: 100%;
-    padding: 1rem 0.85rem 0.95rem;
-  }
-
-  .auth-card__content,
-  .auth-screen--register .auth-card__content {
-    width: 100%;
+/* Декоративная разгрузка телефонов: меньше искр — это не размер. */
+@media (max-width: 640px) {
+  .auth-screen__embers span:nth-child(n + 25) {
+    display: none;
   }
 }
 
