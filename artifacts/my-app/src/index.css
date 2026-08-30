@@ -2642,21 +2642,16 @@
   animation: sign-intro-settle 9.5s cubic-bezier(0.16, 0.6, 0.24, 1) both;
 }
 
-.sign-intro__fill {
-  position: absolute;
-  inset: -6%;
-  background: url('/assets/art/intro_sign.webp') 50% 46% / cover no-repeat;
-  filter: blur(26px) brightness(0.68) saturate(1.06);
-  transform: scale(1.07);
-}
-
 .sign-intro__art {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: 50% 44%;
+  /* Арт и есть загрузочный экран: полный кадр без полей и без размытой
+     подложки (QA-фидбек владельца: «прямоугольник + расплывчатый фон —
+     глупо»). Вариант wide/tall/square подобран под пропорции экрана. */
+  object-fit: cover;
+  object-position: center;
 }
 
 .sign-intro__kindle {
