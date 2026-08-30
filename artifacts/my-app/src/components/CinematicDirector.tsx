@@ -9,6 +9,7 @@ import {
 import {
   DEPARTURE_NEW_HERO,
   DEPARTURE_RETURNING,
+  ENTRANCE_RETURNING,
   LODGE_CONNECT,
   interpolateBeats,
   type StoryBeat,
@@ -22,6 +23,8 @@ interface CinematicDirectorProps {
 /**
  * Режиссёр оверлейных историй «дороги»:
  *
+ * - entrance-returning: короткий «вход в таверну» после вывески
+ *   для возвращающегося игрока (решение владельца 30.08);
  * - lodge: связка «трактирщик приводит в ложу» после принятия правил;
  * - departure-new-hero: 3 бита с именем героя после создания персонажа;
  * - departure-returning: короткий выход после выбора персонажа.
@@ -44,7 +47,9 @@ export function CinematicDirector({ onBusyChange }: CinematicDirectorProps) {
   }, []);
 
   const activeBeats: StoryBeat[] | null =
-    queued === 'lodge'
+    queued === 'entrance-returning'
+      ? ENTRANCE_RETURNING
+      : queued === 'lodge'
       ? LODGE_CONNECT
       : queued === 'departure-new-hero'
         ? interpolateBeats(DEPARTURE_NEW_HERO, nickname)

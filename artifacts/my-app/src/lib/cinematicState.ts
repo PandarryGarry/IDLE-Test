@@ -11,6 +11,7 @@
  */
 
 export type QueuedCinematic =
+  | 'entrance-returning'
   | 'lodge'
   | 'departure-new-hero'
   | 'departure-returning';
@@ -21,6 +22,7 @@ const QUEUED_SCENE_KEY = 'aethelia_cinematic_queued_scene_v1';
 export const CINEMATIC_QUEUE_EVENT = 'aethelia:cinematic-queued';
 
 const QUEUED_VALUES: readonly QueuedCinematic[] = [
+  'entrance-returning',
   'lodge',
   'departure-new-hero',
   'departure-returning',

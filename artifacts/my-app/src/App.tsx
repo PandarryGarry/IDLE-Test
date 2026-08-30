@@ -16,7 +16,7 @@ import { CinematicDirector } from '@/components/CinematicDirector';
 import { FirstLaunchIntro } from '@/components/FirstLaunchIntro';
 import { WhatsNewModal } from '@/components/WhatsNewModal';
 import { getUnseenChangelog, markChangelogSeen, type VersionEntry } from '@/data/changelog';
-import { getQueuedCinematic, hasSeenFullPrologue } from '@/lib/cinematicState';
+import { getQueuedCinematic, hasSeenFullPrologue, queueCinematic } from '@/lib/cinematicState';
 import { FULL_PROLOGUE_READY } from '@/data/onboardingStory';
 
 import { DashboardPage } from '@/pages/DashboardPage';
@@ -236,6 +236,12 @@ function App() {
 
   const handleSplashLoaded = () => {
     setSplashComplete(true);
+    /*
+     * Повторный вход: вывеска → короткий «вход в таверну» (дверь узнаёт
+     * тебя) → auth. Первый запуск сюда не попадает — после пролога
+     * игрок уже внутри (толчок-вспышка Акта 4).
+     */
+    if (!introPending) queueCinematic('entrance-returning');
   };
 
   useEffect(() => {

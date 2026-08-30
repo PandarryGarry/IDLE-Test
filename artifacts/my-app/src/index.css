@@ -1745,6 +1745,13 @@
 }
 
 /* Общая сцена экранов после авторизации. */
+/* Комната не «включается рубильником»: слои мягко проявляются,
+   арт остаётся непрерывным между соседними экранами. */
+@keyframes onboarding-scene-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @keyframes onboarding-art-breathe {
   from { transform: scale(1.035) translate3d(-0.25%, -0.1%, 0); }
   to { transform: scale(1.08) translate3d(0.35%, 0.18%, 0); }
@@ -1807,6 +1814,7 @@
 .onboarding-scene__veil {
   z-index: 1;
   background: radial-gradient(ellipse at center, transparent 30%, var(--cinematic-ink) 100%);
+  animation: onboarding-scene-in 550ms ease-out both;
 }
 
 .onboarding-scene--creation .onboarding-scene__veil {
@@ -1848,6 +1856,7 @@
 
 .onboarding-scene__content {
   position: relative;
+  animation: onboarding-scene-in 620ms ease-out 70ms both;
   z-index: 3;
   min-height: 100svh;
 }
@@ -2486,6 +2495,8 @@
   .story-scene--leaving,
   .story-scene__art,
   .story-scene__content,
+  .onboarding-scene__veil,
+  .onboarding-scene__content,
   .story-scene__eyebrow,
   .story-scene h1,
   .story-scene p,

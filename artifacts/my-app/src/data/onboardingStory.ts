@@ -168,6 +168,20 @@ export const DEPARTURE_NEW_HERO: StoryBeat[] = [
   },
 ];
 
+/* ── ВХОД ВОЗВРАЩАЮЩЕГОСЯ — после вывески, до auth ───────────────── */
+
+export const ENTRANCE_RETURNING: StoryBeat[] = [
+  {
+    id: 'entrance-returning',
+    image: '/assets/art/cutscene_tavern_entrance.webp',
+    eyebrow: 'ВОЗВРАЩЕНИЕ · ПОРОГ',
+    title: 'Дверь узнаёт тебя.',
+    body: 'Вывеска скрипнула над головой — будто приветствовала. За дверью всё те же огонь и тепло.',
+    action: 'Войти в таверну',
+    atmosphere: 'threshold',
+  },
+];
+
 /* ── ВЫХОД ВОЗВРАЩАЮЩЕГОСЯ ГЕРОЯ — после выбора персонажа ────────── */
 
 export const DEPARTURE_RETURNING: StoryBeat[] = [
