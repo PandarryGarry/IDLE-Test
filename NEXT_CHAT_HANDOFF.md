@@ -8,7 +8,8 @@
 
 Это **чат проверки PR #9**. Этап 5A здесь не начинать.
 
-1. Прочитать этот файл, `DEVLOG.md` (Сессия 15), `scripts/qa/ACCEPTANCE.md`.
+1. Прочитать этот файл, `DEVLOG.md` (Сессия 16), `scripts/qa/ACCEPTANCE.md`,
+   `scripts/assets/README.md`.
 2. Поднять dev и прогнать:
 
 ```bash
@@ -32,19 +33,18 @@ node scripts/qa/tour.mjs
 ## Где проект остановился
 
 - **PR #6–#8 в `main`:** Stage 4, дорога 0–7, QA-фиксы дороги, слой 1 адаптива.
-- **PR #9 ОТКРЫТ**, ветка `arena/01a0526e-idle-test`, HEAD на момент handoff:
-  `d5908db` (+ docs-коммит сессии 15). **Не смёржен.**
+- **PR #9 ОТКРЫТ**, ветка `arena/01a0526e-idle-test`. **Не смёржен.**
 - Состав PR #9:
   - hotfix: нет экрана «Aethelia / Загрузка...»; вывеска/акт 0 = единственные
     загрузки; `authReady`; `loadedUserId`; finale только по флагу; прогрев артов;
   - локальный QA-мок `src/lib/qaMock.ts` + полный `scripts/qa/tour.mjs`
     (холодный 0→игра и возвращение Каеля **без Supabase**);
   - после signIn/signUp: `loadCharacters` затем `navigate('/rules')`;
-  - попытка Arena-превью: HMR выключен, Google Fonts убраны из CSS/HTML
-    (иначе iframe белый). **Превью всё равно не заработало у владельца.**
-    В Replit шрифт — системный serif/sans вместо Cinzel/Inter.
-- Агентский тур 2026-08-30: exit 0, кадры 01–19, 21–23. typecheck чистый.
-- Live QA владельца в Replit по PR #9 — **ещё нет**.
+  - конвейер картинок: 994 WebP, `iconUrl()`, `scripts/assets/optimize.mjs`;
+  - попытка Arena-превью: HMR выключен, Google Fonts убраны из CSS/HTML.
+    **Превью не заработало. Не чинить.** В Replit шрифт — системный serif.
+- Агентский тур: exit 0. typecheck чистый.
+- Владелец (ноутбук, ветка PR): дорога ок; медленные аватарки — починены WebP.
 
 ## Мок — когда включается
 
@@ -64,6 +64,7 @@ Replit с ключами — реальный Supabase. Прод без флаг
 - `enableQaMock({reset})` на каждый document (стирает БД на Vite reload).
 - Монтировать маршруты под заставкой (iOS autofill).
 - Хардкод цветов; новые экраны не на `gameUI.tsx`.
+- Класть `.png` в `<img>` / `iconPath`. Только `iconUrl()` / `getAvatarPath()`.
 - Секреты в чат. Просить ключи («положи Supabase») — запрещено: у тура свой мок.
 - Мержить без команды владельца. 5A до «ок» по дороге/auth.
 
@@ -75,14 +76,15 @@ Replit с ключами — реальный Supabase. Прод без флаг
 
 ## Обязательно прочитать
 
-1. `DEVLOG.md` — Сессия 15.
+1. `DEVLOG.md` — Сессия 16.
 2. `NEXT_CHAT_HANDOFF.md` — этот файл.
 3. `scripts/qa/ACCEPTANCE.md` — **тест-файл**.
-4. `scripts/qa/README.md`.
-5. `ROADMAP.md`.
-6. `STAGE5_FOUR_PILLARS_HANDOFF.md` — только после мержа и «ок».
-7. `STAGE4_CHARACTER_HANDOFF.md`.
-8. `RESPONSIVE_SYSTEM_PLAN.md` — слои 2–3 на потом.
+4. `scripts/assets/README.md` — **закон картинок**.
+5. `scripts/qa/README.md`.
+6. `ROADMAP.md`.
+7. `STAGE5_FOUR_PILLARS_HANDOFF.md` — только после мержа и «ок».
+8. `STAGE4_CHARACTER_HANDOFF.md`.
+9. `RESPONSIVE_SYSTEM_PLAN.md` — слои 2–3 на потом.
 
 ## Дорога (не переписывать)
 
@@ -110,7 +112,8 @@ rules → ложа → create → утро и первый шаг → игра
 ```text
 Продолжаем Aethelia. Это чат ПРОВЕРКИ PR #9, не разработки 5A.
 
-Прочитай DEVLOG.md (Сессия 15), NEXT_CHAT_HANDOFF.md, scripts/qa/ACCEPTANCE.md.
+Прочитай DEVLOG.md (Сессия 16), NEXT_CHAT_HANDOFF.md, scripts/qa/ACCEPTANCE.md,
+scripts/assets/README.md.
 
 ПЕРВЫМ ДЕЛОМ:
 1) typecheck;

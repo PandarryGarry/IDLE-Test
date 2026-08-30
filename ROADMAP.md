@@ -17,7 +17,7 @@
 - [x] SkillCard с круговым прогресс-кольцом 270° и badge в разрыве
 - [x] TopNavBar компактный (лого + язык + сохранить)
 - [x] Dashboard: Герой (3 ячейки) + оффлайн-сводка
-- [x] 814 иконок в репозитории (структурированы)
+- [x] 994 иконки в репозитории + конвейер WebP (`scripts/assets/`, `iconUrl()`)
 - [x] THEME_GUIDE.md — документация по токенам
 - [x] SplashScreen: адаптивный WebP-арт, реальный прогресс, fade-out, «Что нового», живая вывеска и свечной свет
 - [x] Этап 3 auth foundation: Supabase клиент, authStore, AuthPage на реальных формах, Google OAuth, AuthGate, guest mode
@@ -229,7 +229,7 @@ interface Item {
   category: ItemCategory
   rarity: Rarity
   weight: number            // "Вес" в инвентаре
-  iconPath: string          // путь к нашей иконке
+  iconPath: string          // iconUrl('weapons/bow/t07') — WebP, не PNG
   stackable: boolean
   maxStack: number
   sellValue: number
@@ -239,18 +239,20 @@ interface Item {
 ```
 
 **Попап предмета:**
-- Большая иконка слева (из наших PNG)
+- Большая иконка слева (WebP через `iconUrl`, мастер PNG не грузить)
 - Название + редкость (цветная рамка)
 - Описание + лор-текст курсивом
 - Характеристики (если есть)
 - Кнопки: Экипировать / Использовать / Продать / Выбросить
 
-**Привязка иконок:**
-- Дерево → materials/wood/log_t01.png ... log_t12.png
-- Руда → materials/metals/ore_t01.png ... ore_t12.png
-- Рыба → materials/food/fish/fish_01_raw.png ...
-- Оружие → weapons/sword_1h/t01.png ... t12.png
-- Броня → armor/plate/t01/chest.png ...
+**Привязка иконок (закон конвейера — `scripts/assets/README.md`):**
+- В данных: `iconPath: iconUrl('weapons/bow/t07')` — всегда WebP, не сырой PNG.
+- Новый файл: положить мастер-PNG → `node scripts/assets/optimize.mjs`.
+- Дерево → `iconUrl('materials/wood/log_t01')` …
+- Руда → `iconUrl('materials/metals/ore_t01')` …
+- Рыба → `iconUrl('materials/food/fish/fish_01_raw')` …
+- Оружие → `iconUrl('weapons/sword_1h/t01')` …
+- Броня → `iconUrl('armor/plate/t01/chest')` …
 
 ---
 
@@ -274,6 +276,8 @@ interface Item {
 - [ ] Переименовать все "Bank" → "Inventory" в коде
 - [ ] Типизировать `items.ts` полностью (сейчас частично `any`)
 - [ ] Добавить `ErrorBoundary` на каждый route
+- [x] Конвейер картинок: мастер PNG → рантайм WebP, `iconUrl()`, `scripts/assets/optimize.mjs`
+- [ ] Вынести PNG-мастера из `public/` в `art_masters/` (рантайм не меняется)
 - [ ] PWA-манифест (иконка, название, offline-работа)
 
 ---
@@ -292,10 +296,9 @@ interface Item {
 ## 📅 Текущий статус
 
 **Завершены: Этапы 1–4 (PR #6), дорога 0–7 (PR #7), QA-фиксы + слой 1 (PR #8) — в `main`.
-PR #9 открыт (hotfix вывески + QA-мок + полный тур без облака) — НЕ смёржен.
-Следующий чат: `scripts/qa/ACCEPTANCE.md` (тур + ждать Replit). Мерж — по команде
-владельца, последним действием. 5A — чат после мержа. Слои 2–3 адаптива — после
-вердикта по слою 1. Превью Arena не использовать.**
+PR #9 открыт (hotfix вывески + QA-мок + тур + конвейер WebP-иконок) — НЕ смёржен.
+Владелец на ноутбуке: дорога ок; медленные аватарки починены. Мерж — по слову «мержи».
+5A — чат после мержа. Картинки: `scripts/assets/README.md`. Превью Arena не использовать.**
 
 **Что уже сделано в Этапе 4:** Melvor→Aethelia (везде), схема Supabase (`SUPABASE_STAGE4.sql`),
 онбординг (правила → раса → 6 аватаров → ник → игра), экран выбора персонажа
