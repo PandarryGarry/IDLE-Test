@@ -55,42 +55,12 @@ function NotFound() {
   );
 }
 
-function AuthLoadingScreen() {
-  // Последний рубеж: если восстановление/загрузка зависли (сеть WebView),
-  // через 12с показываем «Повторить» вместо вечного экрана загрузки.
-  const [showRetry, setShowRetry] = useState(false);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setShowRetry(true), 12000);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  const retry = () => {
-    setShowRetry(false);
-    void useAuthStore.getState().restoreSession().then(() => {
-      const user = useAuthStore.getState().user;
-      if (user) void useCharacterStore.getState().loadCharacters(user.id);
-    });
-  };
-
-  return (
-    <main className="min-h-screen flex items-center justify-center bg-[var(--bg-page)] text-[var(--text-primary)]">
-      <div className="text-center">
-        <div className="text-4xl font-display font-black text-amber-400 mb-2">Aethelia</div>
-        <div className="text-xs font-mono text-[var(--text-muted)] tracking-widest uppercase">Загрузка...</div>
-        {showRetry && (
-          <button
-            type="button"
-            onClick={retry}
-            className="mt-4 px-5 py-2 rounded-xl border border-[var(--border-accent)] bg-[var(--bg-slot)] text-sm font-bold text-[var(--text-primary)] cursor-pointer hover:brightness-110 active:brightness-95"
-          >
-            Повторить
-          </button>
-        )}
-      </div>
-    </main>
-  );
-}
+/**
+ * Экран «Aethelia / Загрузка...» удалён из потока насовсем.
+ * Единственные загрузочные экраны: вывеска (SplashScreen) и акт 0 «ЗНАК».
+ * Они сами держатся, пока сессия не восстановится и персонажи не загрузятся
+ * (таймауты restoreSession / fetchCharacters остаются страховкой).
+ */
 
 function Router() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -100,27 +70,18 @@ function Router() {
   const authLoading = useAuthStore(s => s.loading);
   const isGuest = useAuthStore(s => s.isGuest);
   const hasUser = useAuthStore(s => Boolean(s.user));
-  const user = useAuthStore(s => s.user);
   const profile = useAuthStore(s => s.profile);
 
   const characters = useCharacterStore(s => s.characters);
   const activeCharacter = useCharacterStore(s => s.activeCharacter);
   const charactersLoading = useCharacterStore(s => s.loading);
-  const loadCharacters = useCharacterStore(s => s.loadCharacters);
 
   const isAuthPath = pathname === '/auth' || pathname === '/login' || pathname === '/register';
   const isOnboardingPath =
     pathname === '/rules' || pathname === '/create-character' || pathname === '/select-character';
 
-  // Загружаем персонажей, как только появился пользователь.
-  useEffect(() => {
-    if (hasUser && user) {
-      void loadCharacters(user.id);
-    } else if (!hasUser) {
-      useCharacterStore.getState().clear();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasUser, user]);
+  // Персонажей грузит App ещё на вывеске/акте 0 (и при логине) —
+  // здесь повторный fetch дал бы мигание loading после заставки.
 
   // Трёхуровневое сохранение: reconcile + облачный цикл для активного персонажа.
   useEffect(() => {
@@ -135,15 +96,19 @@ function Router() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isGuest, activeCharacter?.id]);
 
-  // Auth routes: wait for session restore, then send signed-in/guest users home.
+  // Auth routes: не показываем промежуточный «Aethelia / Загрузка...».
+  // Если сессия уже есть, но персонажи ещё грузятся — остаёмся на таверне,
+  // чтобы после «Войти» не мелькал пустой экран.
   if (isAuthPath) {
-    if (authLoading) return <AuthLoadingScreen />;
-    if (hasUser || isGuest) return <Redirect to="/" />;
+    if (isGuest) return <Redirect to="/" />;
+    if (hasUser && !authLoading && !charactersLoading) return <Redirect to="/" />;
     return <AuthPage initialMode={pathname === '/register' ? 'register' : 'login'} />;
   }
 
   // Protected game shell: guests are allowed in, signed-out users go to login.
-  if (authLoading) return <AuthLoadingScreen />;
+  // Маршруты не монтируются под заставкой (iOS autofill) — к этому моменту
+  // вывеска/акт 0 уже дождались authReady.
+  if (authLoading) return null;
   if (!hasUser && !isGuest) return <Redirect to="/login" />;
 
   // ─── Онбординг / выбор персонажа (только для аккаунтов) ───────────
@@ -161,7 +126,7 @@ function Router() {
       }
       if (pathname === '/select-character') {
         if (!rulesAccepted) return <Redirect to="/rules" />;
-        if (charactersLoading) return <AuthLoadingScreen />;
+        if (charactersLoading) return null;
         if (!hasAny) return <Redirect to="/create-character" />;
         return <SelectCharacterPage />;
       }
@@ -173,7 +138,7 @@ function Router() {
 
     // Игровой шелл доступен только после правил + выбранного персонажа.
     if (!rulesAccepted) return <Redirect to="/rules" />;
-    if (charactersLoading) return <AuthLoadingScreen />;
+    if (charactersLoading) return null;
     if (!hasAny) return <Redirect to="/create-character" />;
     // always_select: при логине (без активного персонажа) показываем выбор.
     if (!activeCharacter) return <Redirect to="/select-character" />;
@@ -258,7 +223,26 @@ function App() {
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const [changelogChecked, setChangelogChecked] = useState(false);
   const isGuest = useAuthStore(s => s.isGuest);
+  const authLoading = useAuthStore(s => s.loading);
+  const user = useAuthStore(s => s.user);
   const activeCharacter = useCharacterStore(s => s.activeCharacter);
+  const charactersLoading = useCharacterStore(s => s.loading);
+  const loadCharacters = useCharacterStore(s => s.loadCharacters);
+
+  // Вывеска / акт 0 держат кадр, пока сессия не восстановится и
+  // (если есть аккаунт) пока не загрузятся персонажи. Гость и
+  // незалогиненный не ждут characters.
+  const authReady = !authLoading && (isGuest || !user || !charactersLoading);
+
+  // Грузим персонажей ещё на вывеске/акте 0, не дожидаясь Router.
+  useEffect(() => {
+    if (authLoading) return;
+    if (user) {
+      void loadCharacters(user.id);
+    } else if (!isGuest) {
+      useCharacterStore.getState().clear();
+    }
+  }, [authLoading, isGuest, loadCharacters, user]);
 
   const handleSplashLoaded = () => {
     setSplashComplete(true);
@@ -294,6 +278,13 @@ function App() {
     (async () => {
       try {
         await useAuthStore.getState().restoreSession();
+        if (cancelled) return;
+        const restoredUser = useAuthStore.getState().user;
+        if (restoredUser) {
+          await useCharacterStore.getState().loadCharacters(restoredUser.id);
+        } else if (!useAuthStore.getState().isGuest) {
+          useCharacterStore.getState().clear();
+        }
         if (cancelled) return;
         initGame();
         setupOfflineTracking();
@@ -331,21 +322,30 @@ function App() {
       <TooltipProvider delayDuration={200}>
         {!introDone ? (
           <FirstLaunchIntro
+            authReady={authReady}
             onFinished={() => {
               /*
                * Вывеска уже была в прологе (бит 5) — после «Толкни дверь»
                * игрок попадает сразу ВНУТРЬ таверны, к экрану входа у камина.
                * Заставка с вывеской остаётся только повторным заходам.
+               * Акт 0 уже дождался authReady — auth появляется без
+               * промежуточного «Aethelia / Загрузка...».
                */
               setIntroDone(true);
               setSplashComplete(true);
             }}
           />
         ) : !splashComplete ? (
-          <SplashScreen onLoaded={handleSplashLoaded} minDisplayTimeMs={4000} />
+          <SplashScreen
+            authReady={authReady}
+            onLoaded={handleSplashLoaded}
+            minDisplayTimeMs={4000}
+          />
         ) : null}
         <CinematicDirector onBusyChange={setCinematicBusy} />
         <WhatsNewModal open={whatsNewOpen} entries={unseenChangelog} onClose={handleWhatsNewClose} />
+        {/* Под заставкой — тёмный кадр, не «Aethelia / Загрузка...».
+            Маршруты монтируются только после вывески/акта 0 (iOS autofill). */}
         {splashComplete ? (
           basePath ? (
             <WouterRouter base={basePath}>
@@ -355,7 +355,14 @@ function App() {
             <Router />
           )
         ) : (
-          <AuthLoadingScreen />
+          <div
+            aria-hidden
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'var(--bg-header)',
+            }}
+          />
         )}
       </TooltipProvider>
     </ErrorBoundary>

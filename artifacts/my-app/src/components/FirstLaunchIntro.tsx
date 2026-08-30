@@ -26,6 +26,13 @@ import { pickSplashArt } from '@/shared/artRegistry';
 
 interface FirstLaunchIntroProps {
   onFinished: () => void;
+  /**
+   * Сессия восстановлена и персонажи загружены (или игрока нет).
+   * Акт 0 «ЗНАК» — загрузочный экран первого запуска: карточка
+   * держится, пока authReady не станет true. minDisplayTime
+   * заставки не трогаем — это другой экран.
+   */
+  authReady?: boolean;
 }
 
 /** Минимальное время акта 0: дыхание первого кадра. */
@@ -53,7 +60,7 @@ const MOTES = [
   { left: '94%', size: 2, delay: 2.2, duration: 13.0 },
 ] as const;
 
-export function FirstLaunchIntro({ onFinished }: FirstLaunchIntroProps) {
+export function FirstLaunchIntro({ onFinished, authReady = false }: FirstLaunchIntroProps) {
   const [phase, setPhase] = useState<'sign' | 'bloom' | 'story'>('sign');
   const [artsReady, setArtsReady] = useState(false);
   const [minElapsed, setMinElapsed] = useState(false);
