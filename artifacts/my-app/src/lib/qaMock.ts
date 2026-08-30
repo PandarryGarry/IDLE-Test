@@ -1,12 +1,11 @@
 /**
  * Локальная тестовая среда без Supabase.
  *
- * Включается ТОЛЬКО если:
- *   1) страница открыта с localhost / 127.0.0.1 / 0.0.0.0
- *   2) localStorage aethelia_qa_mock_v1 === '1'
- *
- * QA-скрипт ставит флаг через evaluateOnNewDocument до загрузки игры.
- * В Replit и на проде не срабатывает (другой hostname).
+ * Включается если:
+ *   • localhost + localStorage aethelia_qa_mock_v1 (QA-скрипт), или
+ *   • Vite DEV без VITE_SUPABASE_URL, или
+ *   • сборка с VITE_QA_MOCK=1 (Arena-превью без облака).
+ * Replit с ключами и прод без флага — не трогает.
  */
 import type { Session, User } from '@supabase/supabase-js';
 import type { RaceId } from '@/data/characters';
@@ -40,9 +39,9 @@ export function isQaMockEnabled(): boolean {
     const host = window.location.hostname;
     const local = host === '127.0.0.1' || host === 'localhost' || host === '0.0.0.0';
     if (local && flagged) return true;
-    // Dev-превью Arena без облачных ключей — тот же мок, что у tour.
-    // Replit с VITE_SUPABASE_URL сюда не попадает.
-    if (import.meta.env.DEV && !import.meta.env.VITE_SUPABASE_URL) {
+    const qaBuild = import.meta.env.VITE_QA_MOCK === '1';
+    const qaDev = Boolean(import.meta.env.DEV && !import.meta.env.VITE_SUPABASE_URL);
+    if (qaBuild || qaDev) {
       if (!flagged) window.localStorage.setItem(QA_MOCK_FLAG, '1');
       return true;
     }
