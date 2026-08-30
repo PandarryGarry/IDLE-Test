@@ -5,6 +5,7 @@ import {
   isSupabaseConfigured,
   SUPABASE_CONFIG_MESSAGE,
 } from '@/lib/supabase';
+import { withTimeout, OperationTimeoutError } from '@/lib/utils';
 
 export interface AuthProfile {
   id: string;
@@ -51,6 +52,14 @@ interface AuthState {
 }
 
 const GUEST_KEY = 'aethelia_guest';
+
+/**
+ * Жёсткий потолок восстановления сессии. QA-баг: при зависшей сети
+ * getSession() никогда не завершался, `loading` оставался true и игрок
+ * навечно видел «Aethelia / Загрузка...» после заставки. По таймауту
+ * считаем игрока разлогиненным и отпускаем экран входа.
+ */
+export const RESTORE_SESSION_TIMEOUT_MS = 10000;
 
 type AuthListener = {
   data: {
@@ -247,7 +256,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
 
     try {
-      const { data, error } = await supabase.auth.getSession();
+      const { data, error } = await withTimeout(
+        supabase.auth.getSession(),
+        RESTORE_SESSION_TIMEOUT_MS,
+        'Восстановление сессии заняло слишком много времени.',
+      );
       if (error) {
         set({
           authError: error.message,
@@ -260,14 +273,27 @@ export const useAuthStore = create<AuthState>((set) => ({
         await applyAuthSession(set, data.session);
       }
     } catch (error) {
-      console.warn('Failed to restore auth session:', error);
-      set({
-        session: null,
-        user: null,
-        profile: null,
-        isGuest: readGuest(),
-        authError: 'Не удалось восстановить сессию.',
-      });
+      if (error instanceof OperationTimeoutError) {
+        // Сеть зависла, а не отказала: не пугаем игрока ошибкой на экране
+        // входа — просто считаем его разлогиненным (листенер остаётся,
+        // и если сессия всё же восстановится, auth подхватит её сама).
+        console.warn('restoreSession timed out — treating as signed out:', error.message);
+        set({
+          session: null,
+          user: null,
+          profile: null,
+          isGuest: readGuest(),
+        });
+      } else {
+        console.warn('Failed to restore auth session:', error);
+        set({
+          session: null,
+          user: null,
+          profile: null,
+          isGuest: readGuest(),
+          authError: 'Не удалось восстановить сессию.',
+        });
+      }
     } finally {
       attachAuthListener(set);
       set({ loading: false });

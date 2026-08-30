@@ -56,11 +56,37 @@ function NotFound() {
 }
 
 function AuthLoadingScreen() {
+  // Последний рубеж: если восстановление/загрузка зависли (сеть WebView),
+  // через 12с показываем «Повторить» вместо вечного экрана загрузки.
+  const [showRetry, setShowRetry] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShowRetry(true), 12000);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  const retry = () => {
+    setShowRetry(false);
+    void useAuthStore.getState().restoreSession().then(() => {
+      const user = useAuthStore.getState().user;
+      if (user) void useCharacterStore.getState().loadCharacters(user.id);
+    });
+  };
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-[var(--bg-page)] text-[var(--text-primary)]">
       <div className="text-center">
         <div className="text-4xl font-display font-black text-amber-400 mb-2">Aethelia</div>
         <div className="text-xs font-mono text-[var(--text-muted)] tracking-widest uppercase">Загрузка...</div>
+        {showRetry && (
+          <button
+            type="button"
+            onClick={retry}
+            className="mt-4 px-5 py-2 rounded-xl border border-[var(--border-accent)] bg-[var(--bg-slot)] text-sm font-bold text-[var(--text-primary)] cursor-pointer hover:brightness-110 active:brightness-95"
+          >
+            Повторить
+          </button>
+        )}
       </div>
     </main>
   );

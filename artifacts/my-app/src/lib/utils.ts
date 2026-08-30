@@ -98,3 +98,32 @@ export async function decompressJson<T>(str: string): Promise<T> {
 export function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
+
+/** Ошибка таймаута withTimeout — позволяет отличать зависание от отказа. */
+export class OperationTimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'OperationTimeoutError';
+  }
+}
+
+/**
+ * Потолок для сетевых промисов, которые могут НИКОГДА не завершиться
+ * (зависший fetch в WebView, оборванное соединение). По истечении ms
+ * отклоняет OperationTimeoutError; таймер всегда чистится.
+ */
+export function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new OperationTimeoutError(message)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
