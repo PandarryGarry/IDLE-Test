@@ -42,9 +42,11 @@ export interface StoryBeat {
    * 'threshold' — свет из дверей таверны пульсирует теплом,
    *   как дыхание очага за ними (акт 4 «Порог»);
    * 'lodge' — уют дальней ложи: лампа дышит теплом, в её луче
-   *   медленно плывут пылинки (акт 6 «Ложа»).
+   *   медленно плывут пылинки (акт 6 «Ложа»);
+   * 'morning' — утро героя: мягкий свет дышит, у земли стелется
+   *   лёгкий туман (акт 7 «Выход»).
    */
-  atmosphere?: 'dawn' | 'road' | 'city' | 'threshold' | 'lodge';
+  atmosphere?: 'dawn' | 'road' | 'city' | 'threshold' | 'lodge' | 'morning';
   /**
    * Появление бита:
    * 'mist' — новый кадр проступает сквозь тающую дымку
@@ -53,6 +55,13 @@ export interface StoryBeat {
    *   (переход «город → порог таверны», окна разгораются).
    */
   enter?: 'mist' | 'glow';
+  /**
+   * Финальный бит истории: уход — это вход (толчок камеры и тёплая
+   * волна света), а не просто растворение. Ставится только на биты,
+   * где игрок реально куда-то ВХОДИТ (дверь таверны, первый шаг
+   * в город, возвращение в Этелию).
+   */
+  finale?: boolean;
   /**
    * Ритм камеры:
    * 'air' — парящий дрейф над картиной (по умолчанию, акт 1);
@@ -122,6 +131,7 @@ export const PROLOGUE_FULL: StoryBeat[] = [
     image: '/assets/art/cutscene_tavern_entrance.webp',
     enter: 'glow',
     atmosphere: 'threshold',
+    finale: true,
     eyebrow: 'ПРОЛОГ · ПОРОГ',
     title: 'Толкни дверь.',
     body: 'Усталость и голод сильнее осторожности: за этой дверью — огонь очага, горячий ужин и кров. Монет осталось ровно столько, сколько нужно.',
@@ -149,6 +159,7 @@ export const DEPARTURE_NEW_HERO: StoryBeat[] = [
   {
     id: 'departure-threshold',
     image: '/assets/art/cutscene_character_departure.webp',
+    atmosphere: 'morning',
     eyebrow: 'ПЕРВЫЙ ШАГ · ПОРОГ',
     title: 'Утро. Двери «Топора и Пера» открыты в город.',
     body: 'Вчерашние монеты остались трактирщику — ужин и кров стоят недёшево. Зато путь назад стал путём вперёд: у тебя есть имя, лицо и дело.',
@@ -157,6 +168,7 @@ export const DEPARTURE_NEW_HERO: StoryBeat[] = [
     id: 'departure-name',
     image: '/assets/art/cutscene_character_departure.webp',
     imagePosition: '42% 40%',
+    atmosphere: 'morning',
     eyebrow: 'ПЕРВЫЙ ШАГ · ИМЯ',
     title: 'Отныне тебя зовут {name}.',
     body: 'Вороний Брод запомнит это имя — если ты дашь ему причину.',
@@ -164,6 +176,9 @@ export const DEPARTURE_NEW_HERO: StoryBeat[] = [
   {
     id: 'departure-first-step',
     image: '/assets/art/prologue_city_gates.webp',
+    atmosphere: 'morning',
+    motion: 'push',
+    finale: true,
     eyebrow: 'ПЕРВЫЙ ШАГ · ЭТЕЛИЯ',
     title: 'Первый шаг — за порог.',
     body: 'Ремёсла, опасности и истории, которые станут твоими. Этелия ждёт.',
@@ -182,6 +197,7 @@ export const ENTRANCE_RETURNING: StoryBeat[] = [
     body: 'Вывеска скрипнула над головой — будто приветствовала. За дверью всё те же огонь и тепло.',
     action: 'Войти в таверну',
     atmosphere: 'threshold',
+    finale: true,
   },
 ];
 
@@ -191,6 +207,8 @@ export const DEPARTURE_RETURNING: StoryBeat[] = [
   {
     id: 'departure-returning',
     image: '/assets/art/cutscene_character_departure.webp',
+    atmosphere: 'morning',
+    finale: true,
     eyebrow: 'ВОЗВРАЩЕНИЕ',
     title: 'Снова в путь, {name}.',
     body: '«Топор и Перо» помнит тебя. Вороний Брод ждёт продолжения истории.',
