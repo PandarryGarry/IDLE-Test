@@ -81,6 +81,21 @@
 
 ## 📜 ЖУРНАЛ СЕССИЙ (новые записи — СВЕРХУ)
 
+### Сессия 17 — 2026-08-31 — Контракт Этапа 5 дописан (PR #9, не мержить)
+**Ветка / PR:** `arena/01a0526e-idle-test` → PR #9 (открыт, НЕ смёржен)
+
+Владелец дорабатывал идею «Четыре Столпа» до мержа. 5A не начинали.
+
+**Закон смысла (не код):** нет ярлыка класса; профессии = ремёсла с бонусами;
+энергия вместо маны (бой да, домашний крафт нет); репутация ≠ rebirth;
+offline: еда → 1 отдых → город без сознания, −15–25% лута этой ночи;
+очки +1/уровень, 4 стартовых; 1 бесплатный respec; выход без еды — предупреждение,
+не блок. Цифры — `src/data/balance/`.
+
+Канон: `STAGE5_FOUR_PILLARS_HANDOFF.md`.
+
+**Не сделано:** мерж PR #9; 5A; live QA Replit в этом чате.
+
 ### Сессия 16 — 2026-08-30 — Конвейер картинок (PR #9)
 **Ветка / PR:** `arena/01a0526e-idle-test` → PR #9 (открыт, НЕ смёржен)
 
@@ -527,7 +542,7 @@ typecheck + production build чисто. Художественную оценк
   GBadge, GAvatar, GProgressBar, GDivider, GTooltip, GCard, GTag, GEmptyState и др.).
 - `src/data/changelog.ts` — типы, цвета, версия 0.1.0 «Рождение мира», утилиты
   getUnseenChangelog/markChangelogSeen.
-- PR #1: canvas-движок artEngine (режимы sign/sigil/scene/cutout) + splash.png.�жок artEngine (режимы sign/sigil/scene/cutout) + splash.png.�ло №6.)
+- PR #1: canvas-движок artEngine (режимы sign/sigil/scene/cutout) + splash.png.�жок artEngine (режимы sign/sigil/scene/cutout) + splash.png.�ло №6.)
 - В `index.css` добавлены keyframes `fadeIn`/`slideUp` (их ожидал GModal).
 
 **Уроки/грабли:**
