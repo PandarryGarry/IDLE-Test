@@ -8,22 +8,28 @@
 
 ## Где проект остановился
 
-- Этапы 1–4 уже находятся в `main` после PR #6.
-- PR #6 включил **все** девять патчей прежнего PR #5 (Stage 4), а также cinematic
-  onboarding. PR #5 закрыт как `superseded`; не пытаться переносить или мержить его
-  повторно.
-- Этап 5 — **«Четыре Столпа»** — только спроектирован и задокументирован. Его
-  игровой код, миграции и баланс пока **не начинались**.
-- После merge владельцу всё ещё нужен live QA в Replit/iPhone для нового/возвращающегося
-  игрока и Supabase. Отсутствие теста нельзя маскировать словами «готово».
+- Этапы 1–4 в `main` после PR #6. PR #5 закрыт как `superseded` — не трогать.
+- **Открыт PR #7** (`arena/01a04eba-idle-test`): фиксы iOS по live QA Stage 4 +
+  полная кинематографическая дорога первого запуска в 8 актах (ЗНАК → КОНТИНЕНТ →
+  ТРАКТ → ГОРОД → ПОРОГ → ТАВЕРНА → ЛОЖА → ВЫХОД; каждый акт одобрен владельцем
+  по видео) + `RESPONSIVE_SYSTEM_PLAN.md` (решения по централизации адаптива,
+  внедрение ещё не начато).
+- **PR #7 НЕ смёржен и не мержится без owner live QA всей дороги в Replit**
+  (первый запуск + повторный визит). Мерж — строго последнее действие чата
+  (после мержа сессия запечатывается).
+- Этап 5 — **«Четыре Столпа»** — только спроектирован; перед ним по решению
+  владельца закладывается слой 1 адаптива с proof-of-concept на auth
+  (`RESPONSIVE_SYSTEM_PLAN.md`).
 
 ## Обязательно прочитать в начале следующего чата
 
-1. `DEVLOG.md` — краткая история, текущий статус и правила процесса.
-2. `ROADMAP.md` — Stage 5 теперь отведён под «Четыре Столпа».
-3. `STAGE4_CHARACTER_HANDOFF.md` — что уже реально есть в персонаже, save и onboarding.
-4. `STAGE5_FOUR_PILLARS_HANDOFF.md` — **авторитетный контракт** характеристик.
-5. `SUPABASE_SETUP.md` и `artifacts/my-app/SUPABASE_STAGE4.sql` — только при
+1. `DEVLOG.md` — краткая история, текущий статус, правила процесса, Сессия 12 (дорога).
+2. `ROADMAP.md` — Stage 5 отведён под «Четыре Столпа»; статус PR #7.
+3. `RESPONSIVE_SYSTEM_PLAN.md` — решения владельца по адаптиву (4 слоя, эталоны
+   1440×900 + 360×800, ретрофит худших экранов по одному, тайминг).
+4. `STAGE4_CHARACTER_HANDOFF.md` — что уже реально есть в персонаже, save и onboarding.
+5. `STAGE5_FOUR_PILLARS_HANDOFF.md` — **авторитетный контракт** характеристик.
+6. `SUPABASE_SETUP.md` и `artifacts/my-app/SUPABASE_STAGE4.sql` — только при
    проверке/диагностике Supabase; секреты никогда не просить и не вставлять в чат.
 
 ## Что уже реализовано и не нужно переписывать
@@ -39,16 +45,33 @@
 - Сохранение трёх уровней: память → локальное → облако; reconciliation «кто новее».
 - Гость не создаёт персонажа и остаётся в ограниченном режиме.
 
-### Визуальный поток
+### Визуальный поток (после переработки в PR #7)
 
 ```text
-splash → короткий вход в таверну → auth → rules → ложа/create
-      → выход в город → игра
+ПЕРВЫЙ ЗАПУСК:
+знак-вывеска (intro_sign.webp, ~6с) → пролог 6 битов (континент → тракт → город
+→ порог: dawn/mist/walk/city/push/glow/hearth) → толчок+вспышка → auth (без вывески!)
+→ rules → ложа (лампа дышит) → create (та же ложа) → утро и первый шаг
+(наезд + финал) → игра
+
+ПОВТОРНЫЙ ВИЗИТ:
+вывеска-заставка (~4с) → «Дверь узнаёт тебя» (ENTRANCE_RETURNING, финал) → auth
+→ выбор героя → возвращение в рассвет (утро, финал) → игра
 ```
 
-- `CinematicDirector.tsx`, `CinematicScene.tsx`, `OnboardingScene.tsx` уже готовы.
-- Вход/выход короткие, пропускаемые, безопасны при `prefers-reduced-motion`.
-- Production-арты: `character_creation_lodge.webp`, `cutscene_tavern_entrance.webp`,
+- Движок дороги: `StoryScene.tsx` (crossfade, панорама object-position 2.6с,
+  атмосферы dawn/road/city/threshold/lodge/morning, motion air/ground/push,
+  enter mist/glow, флаг `finale` ТОЛЬКО на реальных входах — ложа кончается тихо),
+  `FirstLaunchIntro.tsx` (акт 0), данные `onboardingStory.ts`,
+  очередь `cinematicState.ts` + `CinematicDirector.tsx`.
+- Закон арта: полный кадр БЕЗ обрезки (contain + размытая заливка краёв) — эмблема
+  никогда не режется; источники света слоёв ставятся на реальный свет арта
+  (ложа 35% 62%, выход 60% 45%).
+- Пропуск: тап/клик/Enter/Space — дальше, Escape — пропустить; «Далее» мигает после
+  полной проявки текста; reduced-motion оставляет тексты.
+- Пролог показывается один раз на устройство (`aethelia_prologue_seen_v1`).
+- Production-арты: `intro_sign.webp`, `prologue_continent_dawn/wanderer_road/city_gates.webp`,
+  `cutscene_tavern_entrance.webp`, `character_creation_lodge.webp`,
   `cutscene_character_departure.webp`.
 - Не возвращать review PNG, `reserved.png`, legacy `splash.png` или удалённый clean seal.
 
@@ -115,9 +138,11 @@ splash → короткий вход в таверну → auth → rules → л
 ## Стартовая фраза для нового чата
 
 ```text
-Продолжаем Aethelia после merge PR #6. Сначала прочитай DEVLOG.md, ROADMAP.md,
-STAGE4_CHARACTER_HANDOFF.md, STAGE5_FOUR_PILLARS_HANDOFF.md и NEXT_CHAT_HANDOFF.md.
-Мы не торопимся: если есть неопределённость по Stage 5, сначала коротко покажи варианты
-и спроси меня, не реализуй всё сразу. Начни с проверки live QA Stage 4 и только затем
-готовь изолированный фундамент 5A для «Четырёх Столпов».
+Продолжаем Aethelia. Сначала прочитай DEVLOG.md (особенно Сессию 12), ROADMAP.md,
+RESPONSIVE_SYSTEM_PLAN.md, STAGE4_CHARACTER_HANDOFF.md, STAGE5_FOUR_PILLARS_HANDOFF.md
+и NEXT_CHAT_HANDOFF.md. Статус PR #7: кинематографическая дорога готова и одобрена
+по видео, ждёт моего live QA в Replit. Мы не торопимся: если есть неопределённость —
+сначала коротко покажи варианты и спроси меня. После моего вердикта по дороге:
+мерж PR #7 (последнее действие чата), затем слой 1 адаптива с proof-of-concept на auth,
+затем изолированный фундамент 5A «Четырёх Столпов».
 ```
