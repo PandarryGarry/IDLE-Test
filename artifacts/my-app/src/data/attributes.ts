@@ -187,7 +187,8 @@ export interface CharacterAttributeState {
   energy: { current: number; max: number };
   /** −100…+100, старт 0. Не rebirth. */
   reputation: number;
-  freeRespecUsed: boolean;
+  /** Сколько бесплатных сбросов уже потрачено. Лимит — balance/heroLevel. */
+  freeRespecsUsed: number;
 }
 
 export function emptyPillarRanks(): PillarRanks {

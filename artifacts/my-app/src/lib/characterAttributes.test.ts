@@ -26,7 +26,7 @@ test('старт: 0 очков, уровень 1, без specializationId', () =
   assert.equal(state.unspentPillarPoints, 0);
   assert.equal(state.unspentBranchPoints, 0);
   assert.equal(state.reputation, 0);
-  assert.equal(state.freeRespecUsed, false);
+  assert.equal(state.freeRespecsUsed, 0);
   for (const id of PILLAR_IDS) assert.equal(state.pillarRanks[id], 0);
   assert.equal('specializationId' in state, false);
 });
@@ -147,6 +147,11 @@ test('трата очка и бесплатный respec', () => {
   assert.equal(reset.branchRanks.tempo, 0);
   assert.equal(reset.unspentPillarPoints, 1);
   assert.equal(reset.unspentBranchPoints, 1);
-  assert.equal(reset.freeRespecUsed, true);
-  assert.equal(respecAttributes(reset), null);
+  assert.equal(reset.freeRespecsUsed, 1);
+  const again = spendPillarPoint(reset, 'might');
+  assert.ok(again);
+  const second = respecAttributes(again);
+  assert.ok(second);
+  assert.equal(second.freeRespecsUsed, 2);
+  assert.equal(respecAttributes(second), null);
 });

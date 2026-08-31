@@ -27,6 +27,7 @@ import {
 } from '../data/balance/pillars.ts';
 import { ENERGY_MAX_STUB } from '../data/balance/energy.ts';
 import {
+  FREE_RESPEC_LIMIT,
   HERO_START_LEVEL,
   earnedBranchPoints,
   earnedPillarPoints,
@@ -62,7 +63,7 @@ export function createDefaultAttributes(): CharacterAttributeState {
     heroXp: 0,
     energy: { current: ENERGY_MAX_STUB, max: ENERGY_MAX_STUB },
     reputation: REPUTATION_START,
-    freeRespecUsed: false,
+    freeRespecsUsed: 0,
   };
 }
 
@@ -118,7 +119,7 @@ export function migrateSaveAttributes(raw: unknown): CharacterAttributeState {
       current: clampInt(asFiniteNumber(energyRaw?.current, ENERGY_MAX_STUB), 0, 99999),
     },
     reputation: clampInt(asFiniteNumber(rec.reputation, REPUTATION_START), REPUTATION_MIN, REPUTATION_MAX),
-    freeRespecUsed: rec.freeRespecUsed === true,
+    freeRespecsUsed: migrateFreeRespecsUsed(rec),
   };
 
   if (migrated.energy.current > migrated.energy.max) {
@@ -267,20 +268,31 @@ export function spentBranchRanks(state: CharacterAttributeState): number {
   return BRANCH_IDS.reduce((sum, id) => sum + state.branchRanks[id], 0);
 }
 
-/** Бесплатный сброс один раз. Цена золотом не закрыта — повторно не отдаём. */
+function migrateFreeRespecsUsed(rec: Record<string, unknown>): number {
+  if (typeof rec.freeRespecsUsed === 'number' && Number.isFinite(rec.freeRespecsUsed)) {
+    return clampInt(rec.freeRespecsUsed, 0, FREE_RESPEC_LIMIT);
+  }
+  return rec.freeRespecUsed === true ? 1 : 0;
+}
+
+export function remainingFreeRespecs(state: CharacterAttributeState): number {
+  return Math.max(0, FREE_RESPEC_LIMIT - state.freeRespecsUsed);
+}
+
+/** Бесплатный сброс — FREE_RESPEC_LIMIT раз за жизнь. Дальше золото не отдаём (цена не закрыта). */
 export function respecAttributes(state: CharacterAttributeState): CharacterAttributeState | null {
   const spentP = spentPillarRanks(state);
   const spentB = spentBranchRanks(state);
   if (spentP + spentB === 0) return null;
-  if (state.freeRespecUsed) return null;
+  if (remainingFreeRespecs(state) < 1) return null;
   return {
     ...state,
     pillarRanks: emptyPillarRanks(),
     branchRanks: emptyBranchRanks(),
     unspentPillarPoints: state.unspentPillarPoints + spentP,
     unspentBranchPoints: state.unspentBranchPoints + spentB,
-    freeRespecUsed: true,
+    freeRespecsUsed: state.freeRespecsUsed + 1,
   };
 }
 
-export { earnedBranchPoints, earnedPillarPoints, pillarContribution };
+export { earnedBranchPoints, earnedPillarPoints, pillarContribution, FREE_RESPEC_LIMIT };
