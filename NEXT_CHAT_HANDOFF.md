@@ -4,87 +4,84 @@
 > корректно и правильно. Если что-то не понятно — сначала спрашиваем, а не
 > пытаемся сделать всё и сразу, потому что потом придётся всё переделывать.
 
-## ⚠️ ПЕРВЫЙ ШАГ (обязательно) — тесты, не код
+## ⚠️ ПЕРВЫЙ ШАГ — спросить владельца про дорогу. Не код.
 
-Это **чат проверки PR #9**. Этап 5A здесь не начинать.
+PR #9 **смёржен в `main`** (2026-08-31). Эта сессия запечатана.
 
-1. Прочитать этот файл, `DEVLOG.md` (Сессия 16), `scripts/qa/ACCEPTANCE.md`,
-   `scripts/assets/README.md`.
-2. Поднять dev и прогнать:
+Владелец после мержа проверяет дорогу в **Replit** (`git pull` на `main`).
+Превью Arena не использовать.
+
+1. Прочитать этот файл, `DEVLOG.md` (Сессия 17), `STAGE5_FOUR_PILLARS_HANDOFF.md`,
+   `scripts/qa/ACCEPTANCE.md`, `scripts/qa/README.md`, `scripts/assets/README.md`.
+2. **Сразу спросить владельца:** дорога в Replit после мержа ок?
+   Холодный 0→игра и возвращение того же героя. Если нет — чинить, 5A нет.
+3. Если «всё отлично» — тогда изолированный **5A** строго по контракту.
+   Не начинать 5A в том же дыхании, что вопрос, пока нет «ок».
+
+## Что лежит в `main` после PR #9
+
+- Hotfix дороги: нет экрана «Aethelia / Загрузка...»; вывеска и акт 0 —
+  единственные загрузки; `authReady`; `loadedUserId`; finale только по флагу;
+  прогрев артов пролога.
+- После signIn/signUp: `loadCharacters`, затем `navigate('/rules')`.
+- QA без облака: `src/lib/qaMock.ts` + `scripts/qa/tour.mjs`.
+- Конвейер картинок: 994 WebP, `iconUrl()`, `scripts/assets/optimize.mjs`.
+- Контракт Этапа 5 (смысл, не код): `STAGE5_FOUR_PILLARS_HANDOFF.md`.
+
+Google Fonts сняты (Arena iframe всё равно белый). **Не чинить Arena.**
+В Replit шрифт — системный serif. Cinzel/Inter не возвращать без вопроса.
+
+## Тесты агента (документация + код)
+
+Канон: `scripts/qa/README.md` и `scripts/qa/ACCEPTANCE.md`.
+
+| Файл | Зачем |
+| --- | --- |
+| `scripts/qa/setup-browser.mjs` | Chromium в песочнице Arena (один раз) |
+| `scripts/qa/tour.mjs` | холодный 0→игра + возвращение Каеля, **без Supabase** |
+| `scripts/qa/road.mjs` | короче: акты 0–6 + возвращение |
+| `scripts/qa/auth.mjs` | живой login/register (нужен реальный аккаунт в env) |
+| `artifacts/my-app/src/lib/qaMock.ts` | мок auth/CRUD в localStorage вкладки |
+
+**Браузер не Playwright и не apt.** Канон:
+
+- `@sparticuz/chromium@131.0.1` + `puppeteer-core@23.11.1`
+- **не** `@sparticuz/chromium@149` (ломает CJS)
+- каталог браузера: `/home/user/ui_shot` (не в git)
+- `LD_LIBRARY_PATH=/tmp/al2023/lib`, `FONTCONFIG_PATH=/tmp/fonts`
+
+Прогон в Arena (если чинить дорогу):
 
 ```bash
 corepack pnpm --dir artifacts/my-app typecheck
-corepack pnpm --dir artifacts/my-app dev --host 127.0.0.1 --port 3000   # фоном
+# dev фоном, не одноразовый bash:
+corepack pnpm --dir artifacts/my-app dev --host 127.0.0.1 --port 3000
 node scripts/qa/setup-browser.mjs   # если нет /tmp/chromium
-node scripts/qa/tour.mjs
+node scripts/qa/tour.mjs            # ожидание: exit 0, ~45–60 с
 ```
 
-3. Показать владельцу результат (exit code + что снял тур).
-4. **Ждать live QA в Replit.** Превью Arena не использовать (iPhone: Preview
-   Unavailable; десктоп iframe этой сессии: белый экран / connection reset —
-   не чинить).
-5. Красный тест или замечания владельца → чинить в `arena/01a0526e-idle-test`,
-   не мержить, 5A нет.
-6. Зелёный тур + «ок» в Replit + команда «мержи» → обновить DEVLOG/ROADMAP,
-   typecheck, **мерж PR #9 последним действием**. После мержа push сессии мёртв.
-7. **5A — только следующий чат после мержа**, строго по
-   `STAGE5_FOUR_PILLARS_HANDOFF.md`. Не совмещать с чатом, который мержит.
+Кадры: `/tmp/aethelia-qa-out/tour/` (или `QA_OUT`). Запрещён кадр
+«Aethelia / Загрузка...».
 
-## Где проект остановился
+Мок включается если:
 
-- **PR #6–#8 в `main`:** Stage 4, дорога 0–7, QA-фиксы дороги, слой 1 адаптива.
-- **PR #9 ОТКРЫТ**, ветка `arena/01a0526e-idle-test`. **Не смёржен.**
-- Состав PR #9:
-  - hotfix: нет экрана «Aethelia / Загрузка...»; вывеска/акт 0 = единственные
-    загрузки; `authReady`; `loadedUserId`; finale только по флагу; прогрев артов;
-  - локальный QA-мок `src/lib/qaMock.ts` + полный `scripts/qa/tour.mjs`
-    (холодный 0→игра и возвращение Каеля **без Supabase**);
-  - после signIn/signUp: `loadCharacters` затем `navigate('/rules')`;
-  - конвейер картинок: 994 WebP, `iconUrl()`, `scripts/assets/optimize.mjs`;
-  - попытка Arena-превью: HMR выключен, Google Fonts убраны из CSS/HTML.
-    **Превью не заработало. Не чинить.** В Replit шрифт — системный serif.
-- Агентский тур: exit 0. typecheck чистый.
-- Владелец (ноутбук, ветка PR): дорога ок; медленные аватарки — починены WebP.
+- localhost + `localStorage.aethelia_qa_mock_v1=1` (ставит `tour.mjs`), или
+- Vite DEV **без** `VITE_SUPABASE_URL`, или
+- сборка `VITE_QA_MOCK=1`.
 
-## Мок — когда включается
+Replit с ключами — **реальный Supabase**, мок выключен.
+Учётка тура (только мок): `qa.tour@aethelia.local`, герой `Каель`.
 
-`isQaMockEnabled()`:
+### Не ретраить
 
-- localhost + `localStorage.aethelia_qa_mock_v1=1` (тур), или
-- `import.meta.env.DEV` и нет `VITE_SUPABASE_URL`, или
-- сборка с `VITE_QA_MOCK=1`.
-
-Replit с ключами — реальный Supabase. Прод без флага — мок выключен.
-
-## Что нельзя
-
-- Менять `minDisplayTimeMs` (4000) / `SIGN_MIN_MS` без владельца.
-- Playwright, apt, chromium 149.
-- `dropSession` на returning-туре.
+- Playwright / apt / chromium 149.
 - `enableQaMock({reset})` на каждый document (стирает БД на Vite reload).
-- Монтировать маршруты под заставкой (iOS autofill).
-- Хардкод цветов; новые экраны не на `gameUI.tsx`.
-- Класть `.png` в `<img>` / `iconPath`. Только `iconUrl()` / `getAvatarPath()`.
-- Секреты в чат. Просить ключи («положи Supabase») — запрещено: у тура свой мок.
-- Мержить без команды владельца. 5A до «ок» по дороге/auth.
+- Returning + `dropSession` + логин + `navigate('/rules')` → пустой `#root`.
+- Менять `minDisplayTimeMs` (4000) и `SIGN_MIN_MS` без владельца.
+- Чинить белый экран Arena iframe.
 
-## Замечено на кадрах (не блокер мержа, спросить владельца)
-
-- У части пунктов правил нет иконки.
-- На дашборде много пустого поля под карточкой героя.
-- Cinzel/Inter с Google Fonts сняты — слово «ЭТЕЛИЯ» системным serif.
-
-## Обязательно прочитать
-
-1. `DEVLOG.md` — Сессия 16.
-2. `NEXT_CHAT_HANDOFF.md` — этот файл.
-3. `scripts/qa/ACCEPTANCE.md` — **тест-файл**.
-4. `scripts/assets/README.md` — **закон картинок**.
-5. `scripts/qa/README.md`.
-6. `ROADMAP.md`.
-7. `STAGE5_FOUR_PILLARS_HANDOFF.md` — только после мержа и «ок».
-8. `STAGE4_CHARACTER_HANDOFF.md`.
-9. `RESPONSIVE_SYSTEM_PLAN.md` — слои 2–3 на потом.
+Владелец тестирует только Replit. В Replit: `git pull` на `main`
+(ветка PR после мержа не нужна).
 
 ## Дорога (не переписывать)
 
@@ -101,36 +98,72 @@ rules → ложа → create → утро и первый шаг → игра
 Пролог один раз на устройство (`aethelia_prologue_seen_v1`).
 Закон арта: полный кадр без обрезки.
 
-## Контракт Этапа 5 (смысл закрыт 2026-08-31)
+## Контракт Этапа 5 — смысл закрыт, кода нет
 
-Читать `STAGE5_FOUR_PILLARS_HANDOFF.md`. Специализаций-ярлыков нет. 5A — после
-мержа, в **новом** чате. Открыты только цифры (§11): XP, % профессий, 1+/1−
-репутации, золотой тик, mapping старых статов.
+Канон: `STAGE5_FOUR_PILLARS_HANDOFF.md`.
 
-## После успешного мержа — 5A (новый чат)
+- Нет ярлыка класса. Профессии = ремёсла, дают бонусы к столпам.
+- Энергия, не мана. Бой/опасная зона — да; спокойный крафт — нет.
+- Репутация добро/зло, старт 0. Не rebirth.
+- Offline: еда → работа; без еды: 1 отдых, 2 — город без сознания,
+  −15–25% лута **этой ночи**.
+- Очки: старт **0**. +1 столп / уровень. +1 ветвь / 5 уровней (первое на 5-м).
+- % расы от скрытой базы тела (иначе 0 очков = одинаковые расы).
+- 1 бесплатный respec; не во время похода. Выход без еды — предупреждение, не блок.
+- Паутина ветвей + паутина пассивов + полный экран героя — **не 5A**.
+- Цифры только `src/data/balance/`. Открыто: XP-кривая, % профессий,
+  1+/1− репутации, золотой тик, mapping Attack/Strength.
 
-Изолированный фундамент «Четырёх Столпов»: типы, процентная матрица рас
-вместо временных StatKey, versioned attributes + мигратор, calculator + тесты.
-Цифры из §11 — заглушки в `src/data/balance/`, не выдумывать «на глаз» в UI.
+### 5A (только после «дорога ок»)
+
+Типы 4 столпов / 12 ветвей, матрица рас вместо `StatKey`, versioned
+`attributes` + мигратор, calculator + тесты, каркас `src/data/balance/`
+с заглушками. Без паутины, без боя, без выдуманных процентов в UI.
+
+## Что нельзя
+
+- Хардкод цветов; новые экраны не на `gameUI.tsx`.
+- `.png` в `<img>` — только `iconUrl()` / `getAvatarPath()`.
+- Секреты в чат. Просить ключи — запрещено.
+- Монтировать маршруты под заставкой (iOS autofill).
+- 5A до «ок» владельца по дороге в Replit.
+
+## Замечено на кадрах (не блокер, спросить)
+
+- У части пунктов правил нет иконки.
+- На дашборде много пустого поля под карточкой героя.
+- «ЭТЕЛИЯ» системным serif (Google Fonts сняты).
+
+## Обязательно прочитать
+
+1. `DEVLOG.md` — Сессия 17.
+2. Этот файл.
+3. `scripts/qa/ACCEPTANCE.md` + `scripts/qa/README.md`.
+4. `scripts/assets/README.md`.
+5. `STAGE5_FOUR_PILLARS_HANDOFF.md`.
+6. `ROADMAP.md`.
+7. `STAGE4_CHARACTER_HANDOFF.md`.
 
 ## Стартовая фраза — вставить в новый чат
 
 ```text
-Продолжаем Aethelia. Это чат ПРОВЕРКИ PR #9, не разработки 5A.
+Продолжаем Aethelia. PR #9 смёржен в main.
 
-Прочитай DEVLOG.md (Сессия 16), NEXT_CHAT_HANDOFF.md, scripts/qa/ACCEPTANCE.md,
-scripts/assets/README.md.
+Прочитай DEVLOG.md (Сессия 17), NEXT_CHAT_HANDOFF.md,
+STAGE5_FOUR_PILLARS_HANDOFF.md, scripts/qa/ACCEPTANCE.md,
+scripts/qa/README.md, scripts/assets/README.md.
 
-ПЕРВЫМ ДЕЛОМ:
-1) typecheck;
-2) dev на :3000;
-3) node scripts/qa/tour.mjs (без Supabase, мок).
-Покажи результат. Не мержить. 5A не начинать.
+ПЕРВЫМ ДЕЛОМ спроси меня: дорога в Replit после мержа ок?
+(холодный 0→игра и возвращение того же героя). 5A не начинать,
+пока я не скажу, что дорога отличная.
 
-Дальше ждать мой тест в Replit (не Arena-превью).
-Если тур или Replit красные — чини в arena/01a0526e-idle-test.
-Если оба зелёные и я скажу «мержи» — мерж PR #9 последним действием чата.
-Этап 5A — только в следующем чате после мержа.
+Если дорога красная — чини в новой arena-ветке, тесты:
+typecheck + node scripts/qa/tour.mjs (мок, без Supabase;
+браузер @sparticuz/chromium@131.0.1, не Playwright).
+Превью Arena не чинить. Секреты в чат не просить.
 
-Мы не торопимся. Секреты в чат не просить.
+Если дорога ок — тогда только 5A по контракту (типы, мигратор,
+калькулятор, balance-заглушки). Паутину и полный UI героя не делать.
+
+Мы не торопимся.
 ```
