@@ -13,6 +13,7 @@
  *   GModal      — модальное окно
  *   GBadge      — значок (уровень, редкость, статус)
  *   GAvatar     — аватар персонажа
+ *   GSlot       — квадратный слот фиксированного размера (иконка, не текст)
  *   GProgressBar— полоса прогресса
  *   GDivider    — разделитель секций с заголовком
  *   GTooltip    — всплывающая подсказка (обёртка)
@@ -21,7 +22,8 @@
  *   GEmptyState — заглушка пустого состояния
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { iconUrl } from '@/lib/assetUrl';
 
 /* ════════════════════════════════════════════════════════════════
    ЦВЕТА — берём из CSS-переменных (tokens.ts → index.css)
@@ -436,6 +438,161 @@ export function GAvatar({
         <span style={{ fontSize: Math.round(size * 0.5), lineHeight: 1 }}>{emoji ?? '🛡️'}</span>
       )}
     </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════
+   GSlot — квадрат фиксированного px: рамка-WebP, иконка внутри,
+   подпись снаружи. Без hover-translate (иначе сетка дёргается).
+════════════════════════════════════════════════════════════════ */
+const SLOT_FRAME = {
+  empty: iconUrl('ui/slots/slot_empty'),
+  common: iconUrl('ui/slots/slot_common'),
+  active: iconUrl('ui/slots/slot_active'),
+} as const;
+
+interface GSlotProps {
+  src?: string;
+  emoji?: string;
+  size?: number;
+  selected?: boolean;
+  disabled?: boolean;
+  badge?: React.ReactNode;
+  label?: string;
+  title?: string;
+  frame?: keyof typeof SLOT_FRAME;
+  onClick?: () => void;
+  className?: string;
+}
+
+export function GSlot({
+  src, emoji, size = 48, selected = false, disabled = false,
+  badge, label, title, frame: frameKey, onClick, className,
+}: GSlotProps) {
+  const frame = SLOT_FRAME[frameKey ?? (selected ? 'active' : (src || emoji) ? 'common' : 'empty')];
+  const iconPad = Math.round(size * 0.18);
+  const faceStyle: React.CSSProperties = {
+    position: 'relative',
+    width: size,
+    height: size,
+    padding: 0,
+    border: 0,
+    background: 'transparent',
+    backgroundImage: `url(${frame})`,
+    backgroundSize: '100% 100%',
+    backgroundRepeat: 'no-repeat',
+    cursor: disabled ? 'not-allowed' : onClick ? 'pointer' : 'default',
+    opacity: disabled ? 0.5 : 1,
+    flexShrink: 0,
+  };
+
+  return (
+    <div
+      className={className}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 4,
+        width: size,
+        flexShrink: 0,
+      }}
+    >
+      {onClick ? (
+        <button
+          type="button"
+          title={title}
+          aria-label={title || label}
+          aria-pressed={selected}
+          disabled={disabled}
+          onClick={disabled ? undefined : onClick}
+          style={faceStyle}
+        >
+          <GSlotFace src={src} emoji={emoji} size={size} iconPad={iconPad} badge={badge} />
+        </button>
+      ) : (
+        <div title={title} aria-label={title || label} style={faceStyle}>
+          <GSlotFace src={src} emoji={emoji} size={size} iconPad={iconPad} badge={badge} />
+        </div>
+      )}
+      {label && (
+        <span
+          style={{
+            width: size,
+            overflow: 'hidden',
+            color: selected ? 'var(--text-gold)' : 'var(--text-muted)',
+            fontFamily: C.fontMono,
+            fontSize: 14,
+            fontWeight: 800,
+            lineHeight: 1.1,
+            textAlign: 'center',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {label}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function GSlotFace({
+  src, emoji, size, iconPad, badge,
+}: {
+  src?: string;
+  emoji?: string;
+  size: number;
+  iconPad: number;
+  badge?: React.ReactNode;
+}) {
+  return (
+    <>
+      <span
+        style={{
+          position: 'absolute',
+          inset: iconPad,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerEvents: 'none',
+        }}
+      >
+        {src ? (
+          <img
+            src={src}
+            alt=""
+            decoding="async"
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          />
+        ) : emoji ? (
+          <span style={{ fontSize: Math.round(size * 0.42), lineHeight: 1 }}>{emoji}</span>
+        ) : null}
+      </span>
+      {badge != null && (
+        <span
+          style={{
+            position: 'absolute',
+            right: 1,
+            bottom: 1,
+            minWidth: 14,
+            height: 14,
+            padding: '0 3px',
+            borderRadius: 4,
+            background: 'rgba(20,10,0,0.85)',
+            color: 'var(--text-gold)',
+            fontFamily: C.fontMono,
+            fontSize: 9,
+            fontWeight: 800,
+            lineHeight: '14px',
+            textAlign: 'center',
+            pointerEvents: 'none',
+          }}
+        >
+          {badge}
+        </span>
+      )}
+    </>
   );
 }
 
