@@ -224,4 +224,6 @@ export interface SaveData {
     activeMonsterId: string | null;
   };
   settings: Record<string, unknown>;
+  /** Четыре Столпа. Старые сейвы без поля мигрируют в коде, не новой таблицей. */
+  attributes?: import('./attributes').CharacterAttributeState;
 }

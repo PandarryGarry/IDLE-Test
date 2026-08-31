@@ -5,8 +5,9 @@ import {
 } from '@/shared/ui/gameUI';
 import {
   RACES, RACE_MAP, getAvatarsForRace, getAvatarPath, prefetchAvatar, getRaceLabel, getRaceBlurb,
-  STAT_LABELS_RU, type RaceId,
+  type RaceId,
 } from '@/data/characters';
+import { PILLARS, RACE_BODY_CHILD_RU, RACE_PASSIVES } from '@/data/attributes';
 import { useCharacterStore } from '@/store/characterStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { OnboardingScene } from '@/components/OnboardingScene';
@@ -139,16 +140,26 @@ export function CreateCharacterPage() {
 
               <div className="character-create-bonus-card">
                 <span className="character-create-bonus-card__label">
-                  Наследие: {getRaceLabel(selectedRace, 'ru')}
+                  Тело: {getRaceLabel(selectedRace, 'ru')}
                 </span>
                 <div className="character-create-bonus-list">
-                  {race.bonuses.map((bonus, index) => (
-                    <GBadge key={`${bonus.stat}-${index}`} variant={bonus.positive ? 'green' : 'red'} size="sm">
-                      {bonus.positive ? '+' : '−'}{bonus.value} {STAT_LABELS_RU[bonus.stat]}
-                    </GBadge>
-                  ))}
+                  {race.pillarMods.map(mod => {
+                    const pillar = PILLARS[mod.pillar];
+                    const positive = mod.percent > 0;
+                    const shown = positive ? `+${mod.percent}%` : `−${Math.abs(mod.percent)}%`;
+                    return (
+                      <GBadge key={mod.pillar} variant={positive ? 'green' : 'red'} size="sm">
+                        {pillar.icon} {pillar.nameRu} {shown}
+                      </GBadge>
+                    );
+                  })}
                 </div>
-                <p>Бонусы станут активны вместе с будущей системой характеристик.</p>
+                <p>{RACE_BODY_CHILD_RU[selectedRace]}</p>
+                <p>
+                  Пассив «{RACE_PASSIVES[selectedRace].nameRu}»: {RACE_PASSIVES[selectedRace].childRu}
+                  {' '}
+                  {RACE_PASSIVES[selectedRace].whenRu}
+                </p>
               </div>
 
               <GButton variant="primary" size="md" fullWidth onClick={continueToIdentity}>
@@ -200,7 +211,7 @@ export function CreateCharacterPage() {
                 <div>
                   <span>Будущий герой</span>
                   <strong>{nickname.trim() || 'Безымянный путник'}</strong>
-                  <p>{getRaceLabel(selectedRace, 'ru')} · Уровень 1 · Здоровье 10</p>
+                  <p>{getRaceLabel(selectedRace, 'ru')} · Уровень 1 · очков столпов пока нет</p>
                 </div>
               </div>
 

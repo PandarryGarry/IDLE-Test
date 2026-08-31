@@ -12,6 +12,11 @@ import { isAuthConfigured } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
 import { resetGameToFresh } from '@/lib/saveManager';
 import { describeCharacterError } from '@/lib/characterErrors';
+import {
+  attributesFromSave,
+  createDefaultAttributes,
+  setLiveAttributes,
+} from '@/lib/characterAttributes';
 import type { RaceId } from '@/data/characters';
 
 const LAST_CHAR_KEY = 'aethelia_last_active_character';
@@ -93,11 +98,13 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
       try {
         const chars = await fetchCharacters(userId);
         set({ characters: chars, loading: false, loadedUserId: userId });
+        const current = get().activeCharacter;
         // always_select: при логине экран выбора показывается всегда.
         // Не авто-выбираем; сохраняем активного только если он ещё в списке.
-        const current = get().activeCharacter;
         if (current && chars.some(c => c.id === current.id && !c.isDeleted)) {
-          // keep current selection
+          const kept = chars.find(c => c.id === current.id) ?? current;
+          setLiveAttributes(attributesFromSave(kept.saveData));
+          set({ activeCharacter: kept });
         } else {
           set({ activeCharacter: null });
         }
@@ -126,6 +133,7 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
         lastActiveCharacterId: character.id,
       }));
       writeLastCharacterId(character.id);
+      setLiveAttributes(attributesFromSave(character.saveData));
     } catch (e) {
       const message = describeCharacterError(e, 'Не удалось выбрать персонажа.');
       set({ error: message });
@@ -189,8 +197,9 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
     }));
     writeLastCharacterId(created.id);
 
-    // Новый герой — стартовые характеристики идентичны у всех.
+    // Новый герой — стартовые характеристики идентичны у всех. Столпы: 0 очков.
     resetGameToFresh();
+    setLiveAttributes(createDefaultAttributes());
     return created;
   },
 
@@ -248,6 +257,7 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
 
   clear: () => {
     inflightLoad = null;
+    setLiveAttributes(null);
     set({
       characters: [],
       activeCharacter: null,
