@@ -6,7 +6,7 @@ import {
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { usePlayerStore } from '@/store/playerStore';
-import { getAvatarPath, getRaceLabel, type RaceId } from '@/data/characters';
+import { getAvatarPath, getRaceBlurb, getRaceLabel, type RaceId } from '@/data/characters';
 import {
   BRANCHES,
   BRANCHES_BY_PILLAR,
@@ -14,13 +14,13 @@ import {
   PILLARS,
   RACE_BODY_CHILD_RU,
   RACE_PASSIVES,
+  racePercentFor,
   type BranchId,
   type PillarId,
 } from '@/data/attributes';
 import {
   BRANCH_ICON,
   EQUIP_SLOT_ICON,
-  HUB_NAV_ICON,
   PILLAR_ICON,
   SYNERGY_ICON,
 } from '@/data/attributeIcons';
@@ -42,6 +42,7 @@ import {
 import { commitHeroAttributes } from '@/lib/heroPersist';
 
 type HubModule = 'body' | 'branches' | 'gear' | 'synergies' | 'path';
+type GearSet = 'armor' | 'jewels' | 'hands';
 type Detail =
   | { kind: 'pillar'; id: PillarId }
   | { kind: 'branch'; id: BranchId }
@@ -49,7 +50,8 @@ type Detail =
   | { kind: 'gear'; slot: EquipSlot };
 
 const TILE = 48;
-const PORTRAIT = 96;
+const NODE = 40;
+const PORTRAIT = 72;
 
 const MODULES: { id: HubModule; label: string }[] = [
   { id: 'body', label: 'Тело' },
@@ -59,24 +61,38 @@ const MODULES: { id: HubModule; label: string }[] = [
   { id: 'path', label: 'Путь' },
 ];
 
-const HUB_DOLL: { slot: EquipSlot; area: string; label: string }[] = [
-  { slot: 'helm', area: 'helm', label: 'Шлем' },
-  { slot: 'bracelet', area: 'br1', label: 'Браслет' },
-  { slot: 'amulet', area: 'neck', label: 'Ожерелье' },
-  { slot: 'bracelet2', area: 'br2', label: 'Браслет' },
-  { slot: 'ring', area: 'r1', label: 'Кольцо' },
-  { slot: 'platebody', area: 'body', label: 'Торс' },
-  { slot: 'ring2', area: 'r2', label: 'Кольцо' },
-  { slot: 'gloves', area: 'glove', label: 'Перчатки' },
-  { slot: 'belt', area: 'belt', label: 'Пояс' },
-  { slot: 'platelegs', area: 'legs', label: 'Ноги' },
-  { slot: 'boots', area: 'boots', label: 'Обувь' },
+const GEAR_SETS: { id: GearSet; label: string }[] = [
+  { id: 'armor', label: 'Броня' },
+  { id: 'jewels', label: 'Украшения' },
+  { id: 'hands', label: 'Руки' },
 ];
+
+const GEAR_BY_SET: Record<GearSet, { slot: EquipSlot; label: string }[]> = {
+  armor: [
+    { slot: 'helm', label: 'Шлем' },
+    { slot: 'platebody', label: 'Торс' },
+    { slot: 'belt', label: 'Пояс' },
+    { slot: 'gloves', label: 'Перчатки' },
+    { slot: 'platelegs', label: 'Штаны' },
+    { slot: 'boots', label: 'Обувь' },
+  ],
+  jewels: [
+    { slot: 'amulet', label: 'Ожерелье' },
+    { slot: 'ring', label: 'Кольцо' },
+    { slot: 'ring2', label: 'Кольцо' },
+    { slot: 'bracelet', label: 'Браслет' },
+    { slot: 'bracelet2', label: 'Браслет' },
+  ],
+  hands: [
+    { slot: 'weapon', label: 'Правая' },
+    { slot: 'shield', label: 'Левая' },
+  ],
+};
 
 const GEAR_LABEL: Record<EquipSlot, string> = {
   helm: 'Шлем',
   platebody: 'Торс',
-  platelegs: 'Ноги',
+  platelegs: 'Штаны',
   boots: 'Обувь',
   gloves: 'Перчатки',
   amulet: 'Ожерелье',
@@ -87,8 +103,8 @@ const GEAR_LABEL: Record<EquipSlot, string> = {
   belt: 'Пояс',
   cape: 'Плащ',
   quiver: 'Колчан',
-  weapon: 'Оружие',
-  shield: 'Щит',
+  weapon: 'Правая рука',
+  shield: 'Левая рука',
   passive: 'Талисман',
 };
 
@@ -97,6 +113,28 @@ function signed(value: number): string {
   if (rounded > 0) return `+${rounded}`;
   if (rounded < 0) return `−${Math.abs(rounded)}`;
   return '0';
+}
+
+function signedPercent(value: number): string {
+  if (value > 0) return `+${value}%`;
+  if (value < 0) return `−${Math.abs(value)}%`;
+  return '—';
+}
+
+function nextBranchLevel(heroLevel: number): number {
+  return (Math.floor(heroLevel / 5) + 1) * 5;
+}
+
+function isTwoHanded(itemId: string | null): boolean {
+  return Boolean(itemId && getItem(itemId)?.twoHanded);
+}
+
+function slotVisual(itemId: string | null, slot: EquipSlot) {
+  const visual = itemId ? getItemVisual(itemId) : null;
+  return {
+    src: visual?.type === 'image' ? visual.value : itemId ? undefined : EQUIP_SLOT_ICON[slot],
+    emoji: visual?.type === 'emoji' ? visual.value : undefined,
+  };
 }
 
 export function HeroHubPage() {
@@ -121,8 +159,6 @@ export function HeroHubPage() {
     setTick(n => n + 1);
   };
 
-  const pane = MODULES.find(mod => mod.id === moduleId);
-
   if (isGuest || !active) {
     return (
       <div className="hero-hub hero-hub--empty">
@@ -139,7 +175,7 @@ export function HeroHubPage() {
   return (
     <section className="hero-hub" aria-label="Герой">
       <header className="hero-hub__header">
-        <GAvatar src={getAvatarPath(active.avatarId)} size={36} />
+        <GAvatar src={getAvatarPath(active.avatarId)} size={PORTRAIT} glow />
         <div className="hero-hub__identity">
           <strong>{active.nickname}</strong>
           <p>{getRaceLabel(raceId, 'ru')} · ур. {state.heroLevel}</p>
@@ -150,57 +186,53 @@ export function HeroHubPage() {
         </div>
       </header>
 
-      <div className="hero-hub__body">
-        <div className="hero-hub__data">
-          <h2 className="hero-hub__pane-title">{pane?.label}</h2>
-          {moduleId === 'body' && (
-            <BodyModule
-              avatarSrc={getAvatarPath(active.avatarId)}
-              snapshot={snapshot}
-              onOpen={id => setDetail({ kind: 'pillar', id })}
-            />
-          )}
-          {moduleId === 'branches' && (
-            <BranchesModule
-              snapshot={snapshot}
-              canSpend={state.unspentBranchPoints > 0}
-              onOpenPillar={id => setDetail({ kind: 'pillar', id })}
-              onOpenBranch={id => setDetail({ kind: 'branch', id })}
-            />
-          )}
-          {moduleId === 'gear' && (
-            <GearModule
-              equipment={equipment}
-              onOpen={slot => setDetail({ kind: 'gear', slot })}
-            />
-          )}
-          {moduleId === 'synergies' && (
-            <SynergiesModule
-              snapshot={snapshot}
-              onOpen={id => setDetail({ kind: 'synergy', id })}
-            />
-          )}
-          {moduleId === 'path' && (
-            <PathModule
-              state={state}
-              onRespec={() => applyState(respecAttributes(state))}
-            />
-          )}
-        </div>
+      <nav className="hero-hub__tabs" aria-label="Разделы героя">
+        {MODULES.map(mod => (
+          <button
+            key={mod.id}
+            type="button"
+            className={moduleId === mod.id ? 'hero-hub__tab is-on' : 'hero-hub__tab'}
+            aria-pressed={moduleId === mod.id}
+            onClick={() => setModuleId(mod.id)}
+          >
+            {mod.label}
+          </button>
+        ))}
+      </nav>
 
-        <nav className="hero-hub__rail" aria-label="Разделы героя">
-          {MODULES.map(mod => (
-            <GSlot
-              key={mod.id}
-              src={HUB_NAV_ICON[mod.id]}
-              size={TILE}
-              selected={moduleId === mod.id}
-              label={mod.label}
-              title={mod.label}
-              onClick={() => setModuleId(mod.id)}
-            />
-          ))}
-        </nav>
+      <div className="hero-hub__panel">
+        {moduleId === 'body' && (
+          <BodyModule
+            raceId={raceId}
+            snapshot={snapshot}
+            onOpen={id => setDetail({ kind: 'pillar', id })}
+          />
+        )}
+        {moduleId === 'branches' && (
+          <BranchesModule
+            snapshot={snapshot}
+            canSpend={state.unspentBranchPoints > 0}
+            onOpenBranch={id => setDetail({ kind: 'branch', id })}
+          />
+        )}
+        {moduleId === 'gear' && (
+          <GearModule
+            equipment={equipment}
+            onOpen={slot => setDetail({ kind: 'gear', slot })}
+          />
+        )}
+        {moduleId === 'synergies' && (
+          <SynergiesModule
+            snapshot={snapshot}
+            onOpen={id => setDetail({ kind: 'synergy', id })}
+          />
+        )}
+        {moduleId === 'path' && (
+          <PathModule
+            snapshot={snapshot}
+            onRespec={() => applyState(respecAttributes(state))}
+          />
+        )}
       </div>
 
       <HeroDetailModal
@@ -219,104 +251,93 @@ export function HeroHubPage() {
 }
 
 function BodyModule({
-  avatarSrc, snapshot, onOpen,
+  raceId, snapshot, onOpen,
 }: {
-  avatarSrc: string;
+  raceId: RaceId;
   snapshot: ReturnType<typeof computeAttributeSnapshot>;
   onOpen: (id: PillarId) => void;
 }) {
+  const passive = RACE_PASSIVES[raceId];
   return (
-    <div className="hero-hub-module">
-      <div className="hero-hub-dial" aria-label="Столпы вокруг тела">
-        <div className="hero-hub-dial__n">
-          <GSlot
-            src={PILLAR_ICON.fortitude}
-            size={TILE}
-            badge={signed(snapshot.finalPillars.fortitude)}
-            title={PILLARS.fortitude.nameRu}
-            onClick={() => onOpen('fortitude')}
-          />
-        </div>
-        <div className="hero-hub-dial__w">
-          <GSlot
-            src={PILLAR_ICON.instinct}
-            size={TILE}
-            badge={signed(snapshot.finalPillars.instinct)}
-            title={PILLARS.instinct.nameRu}
-            onClick={() => onOpen('instinct')}
-          />
-        </div>
-        <div className="hero-hub-dial__c">
-          <GAvatar src={avatarSrc} size={PORTRAIT} glow />
-        </div>
-        <div className="hero-hub-dial__e">
-          <GSlot
-            src={PILLAR_ICON.might}
-            size={TILE}
-            badge={signed(snapshot.finalPillars.might)}
-            title={PILLARS.might.nameRu}
-            onClick={() => onOpen('might')}
-          />
-        </div>
-        <div className="hero-hub-dial__s">
-          <GSlot
-            src={PILLAR_ICON.finesse}
-            size={TILE}
-            badge={signed(snapshot.finalPillars.finesse)}
-            title={PILLARS.finesse.nameRu}
-            onClick={() => onOpen('finesse')}
-          />
-        </div>
+    <div className="hero-sheet">
+      <p className="hero-hub-hint">{RACE_BODY_CHILD_RU[raceId]}</p>
+      <div className="hero-passive">
+        <GTag color="gold">{passive.nameRu}</GTag>
+        <p>{passive.childRu}</p>
       </div>
+      <div className="hero-pillars">
+        {PILLAR_IDS.map(id => {
+          const racePct = racePercentFor(raceId, id);
+          const branchRanks = BRANCHES_BY_PILLAR[id].reduce(
+            (sum, branchId) => sum + (snapshot.state.branchRanks[branchId] || 0),
+            0,
+          );
+          return (
+            <button
+              key={id}
+              type="button"
+              className="hero-pillar"
+              onClick={() => onOpen(id)}
+            >
+              <span className="hero-pillar__top">
+                <img src={PILLAR_ICON[id]} alt="" decoding="async" />
+                <span>{PILLARS[id].nameRu}</span>
+                <b>{signed(snapshot.finalPillars[id])}</b>
+              </span>
+              <span className="hero-pillar__meta">
+                <span>Вложил {snapshot.state.pillarRanks[id]}</span>
+                <span>Раса {signedPercent(racePct)}</span>
+                <span>Ветви {branchRanks}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="hero-hub-hint">{getRaceBlurb(raceId, 'ru')}</p>
     </div>
   );
 }
 
 function BranchesModule({
-  snapshot, canSpend, onOpenPillar, onOpenBranch,
+  snapshot, canSpend, onOpenBranch,
 }: {
   snapshot: ReturnType<typeof computeAttributeSnapshot>;
   canSpend: boolean;
-  onOpenPillar: (id: PillarId) => void;
   onOpenBranch: (id: BranchId) => void;
 }) {
   return (
-    <div className="hero-hub-module">
-      <p className="hero-hub-hint">Золото — вложил. «+» — есть очко. Тусклая — закрыта.</p>
-      <div className="hero-hub-web">
-        {PILLAR_IDS.map(pillar => {
-          const invested = BRANCHES_BY_PILLAR[pillar].some(id => (snapshot.state.branchRanks[id] || 0) > 0);
-          return (
-          <div key={pillar} className={invested ? 'hero-hub-cluster is-open' : 'hero-hub-cluster'}>
-            <span className="hero-hub-cluster__name">{PILLARS[pillar].nameRu}</span>
-            <GSlot
-              src={PILLAR_ICON[pillar]}
-              size={TILE}
-              selected={(snapshot.state.pillarRanks[pillar] || 0) > 0}
-              badge={signed(snapshot.finalPillars[pillar])}
-              title={PILLARS[pillar].nameRu}
-              onClick={() => onOpenPillar(pillar)}
-            />
-            {BRANCHES_BY_PILLAR[pillar].map(branchId => {
-              const rank = snapshot.state.branchRanks[branchId] || 0;
-              const open = rank > 0;
-              const status = open ? `ранг ${rank}` : canSpend ? 'можно открыть' : 'закрыта';
-              return (
-                <GSlot
-                  key={branchId}
-                  src={BRANCH_ICON[branchId]}
-                  size={TILE}
-                  selected={open}
-                  dimmed={!open && !canSpend}
-                  badge={open ? rank : canSpend ? '+' : undefined}
-                  title={`${BRANCHES[branchId].nameRu} · ${status}`}
-                  onClick={() => onOpenBranch(branchId)}
-                />
-              );
-            })}
-          </div>
-          );
-        })}
+    <div className="hero-sheet">
+      <p className="hero-hub-hint">Золото — вложил. «+» — можно открыть. Тусклая — закрыта.</p>
+      <div className="hero-talents">
+        {PILLAR_IDS.map(pillar => (
+          <article key={pillar} className="hero-talent">
+            <header className="hero-talent__head">
+              <img src={PILLAR_ICON[pillar]} alt="" decoding="async" />
+              <strong>{PILLARS[pillar].nameRu}</strong>
+              <b>{signed(snapshot.finalPillars[pillar])}</b>
+            </header>
+            <div className="hero-talent__nodes">
+              {BRANCHES_BY_PILLAR[pillar].map(branchId => {
+                const rank = snapshot.state.branchRanks[branchId] || 0;
+                const open = rank > 0;
+                const status = open ? `ранг ${rank}` : canSpend ? 'можно открыть' : 'закрыта';
+                return (
+                  <GSlot
+                    key={branchId}
+                    src={BRANCH_ICON[branchId]}
+                    size={NODE}
+                    selected={open}
+                    dimmed={!open && !canSpend}
+                    badge={open ? rank : canSpend ? '+' : undefined}
+                    label={BRANCHES[branchId].nameRu}
+                    title={`${BRANCHES[branchId].nameRu} · ${status}`}
+                    onClick={() => onOpenBranch(branchId)}
+                  />
+                );
+              })}
+            </div>
+          </article>
+        ))}
       </div>
     </div>
   );
@@ -328,26 +349,51 @@ function GearModule({
   equipment: Equipment;
   onOpen: (slot: EquipSlot) => void;
 }) {
+  const [setId, setSetId] = useState<GearSet>('armor');
+  const twoHand = isTwoHanded(equipment.weapon);
+
   return (
-    <div className="hero-hub-module">
-      <div className="hero-hub-doll" aria-label="Скелет экипировки">
-        {HUB_DOLL.map(({ slot, area, label }) => {
-          const itemId = equipment[slot];
-          const visual = itemId ? getItemVisual(itemId) : null;
+    <div className="hero-sheet">
+      <div className="hero-gear-tabs" role="tablist" aria-label="Наборы экипа">
+        {GEAR_SETS.map(set => (
+          <button
+            key={set.id}
+            type="button"
+            role="tab"
+            aria-selected={setId === set.id}
+            className={setId === set.id ? 'hero-hub__tab is-on' : 'hero-hub__tab'}
+            onClick={() => setSetId(set.id)}
+          >
+            {set.label}
+          </button>
+        ))}
+      </div>
+      <div className={setId === 'hands' ? 'hero-gear-grid hero-gear-grid--hands' : 'hero-gear-grid'}>
+        {GEAR_BY_SET[setId].map(({ slot, label }) => {
+          const ghostLeft = slot === 'shield' && twoHand;
+          const itemId = ghostLeft ? equipment.weapon : equipment[slot];
+          const visual = slotVisual(itemId, slot);
+          const openSlot: EquipSlot = ghostLeft ? 'weapon' : slot;
           return (
-            <div key={slot} className="hero-hub-doll__cell" style={{ gridArea: area }}>
-              <GSlot
-                src={visual?.type === 'image' ? visual.value : itemId ? undefined : EQUIP_SLOT_ICON[slot]}
-                emoji={visual?.type === 'emoji' ? visual.value : undefined}
-                size={TILE}
-                selected={Boolean(itemId)}
-                title={label}
-                onClick={() => onOpen(slot)}
-              />
-            </div>
+            <GSlot
+              key={slot}
+              src={visual.src}
+              emoji={visual.emoji}
+              size={TILE}
+              selected={Boolean(itemId) && !ghostLeft}
+              dimmed={ghostLeft}
+              label={label}
+              title={ghostLeft ? `${label} · двуручное` : label}
+              onClick={() => onOpen(openSlot)}
+            />
           );
         })}
       </div>
+      {setId === 'hands' && (
+        <p className="hero-hub-hint">
+          Правая — оружие. Левая — оружие или щит. Двуручное занимает обе: слева то же, но тусклое.
+        </p>
+      )}
     </div>
   );
 }
@@ -359,21 +405,40 @@ function SynergiesModule({
   onOpen: (id: SynergyId) => void;
 }) {
   return (
-    <div className="hero-hub-module">
-      <div className="hero-hub-syn">
+    <div className="hero-sheet">
+      <p className="hero-hub-hint">Горит — порог набран. Спит — не хватает столпов.</p>
+      <div className="hero-threads">
         {SYNERGIES.map(synergy => {
           const on = snapshot.activeSynergies.includes(synergy.id);
+          const reqs = Object.entries(synergy.requires) as [PillarId, number][];
           return (
-            <GSlot
+            <button
               key={synergy.id}
-              src={SYNERGY_ICON[synergy.id]}
-              size={TILE}
-              selected={on}
-              dimmed={!on}
-              badge={on ? '•' : undefined}
-              title={on ? `${synergy.nameRu} · горит` : `${synergy.nameRu} · спит`}
+              type="button"
+              className="hero-thread"
+              data-on={on ? 'true' : 'false'}
               onClick={() => onOpen(synergy.id)}
-            />
+            >
+              <span className="hero-thread__head">
+                <img src={SYNERGY_ICON[synergy.id]} alt="" decoding="async" />
+                <strong>{synergy.nameRu}</strong>
+                <GBadge variant={on ? 'gold' : 'gray'} size="sm">{on ? 'горит' : 'спит'}</GBadge>
+              </span>
+              <span className="hero-thread__reqs">
+                {reqs.map(([id, need]) => {
+                  const have = snapshot.finalPillars[id];
+                  const ratio = need > 0 ? Math.min(1, Math.max(0, have / need)) : 1;
+                  return (
+                    <span key={id} className="hero-req">
+                      <span>{PILLARS[id].nameRu} {Math.round(have)}/{need}</span>
+                      <span className="hero-meter" aria-hidden>
+                        <i style={{ width: `${Math.round(ratio * 100)}%` }} />
+                      </span>
+                    </span>
+                  );
+                })}
+              </span>
+            </button>
           );
         })}
       </div>
@@ -382,21 +447,34 @@ function SynergiesModule({
 }
 
 function PathModule({
-  state,
+  snapshot,
   onRespec,
 }: {
-  state: ReturnType<typeof getLiveAttributes>;
+  snapshot: ReturnType<typeof computeAttributeSnapshot>;
   onRespec: () => void;
 }) {
-  const spent = spentPillarRanks(state) + spentBranchRanks(state);
+  const state = snapshot.state;
+  const spentP = spentPillarRanks(state);
+  const spentB = spentBranchRanks(state);
   const left = remainingFreeRespecs(state);
-  const canFree = spent > 0 && left > 0;
+  const canFree = spentP + spentB > 0 && left > 0;
+  const nextBranch = nextBranchLevel(state.heroLevel);
+
   return (
-    <div className="hero-hub-module">
-      <div className="hero-hub-path-grid">
+    <div className="hero-sheet">
+      <div className="hero-path-facts">
         <div><span>Уровень</span><b>{state.heroLevel}</b></div>
+        <div><span>Столпы</span><b>{spentP} / {snapshot.earnedPillarPoints}</b></div>
+        <div><span>Ветви</span><b>{spentB} / {snapshot.earnedBranchPoints}</b></div>
         <div><span>Сброс</span><b>{left} / {FREE_RESPEC_LIMIT}</b></div>
       </div>
+      <p className="hero-hub-hint">
+        Каждый новый уровень даёт одно очко столпа. Очко ветви — на 5-м уровне и дальше каждые пять
+        (следующее на {nextBranch}-м). Сбросить вложенное можно два раза за жизнь героя.
+      </p>
+      <p className="hero-hub-hint">
+        Нитей горит: {snapshot.activeSynergies.length} из {SYNERGIES.length}. Свободно: столп {state.unspentPillarPoints}, ветвь {state.unspentBranchPoints}.
+      </p>
       <GButton
         variant="secondary"
         size="sm"
@@ -405,7 +483,7 @@ function PathModule({
       >
         {left < 1
           ? 'Следующий сброс — за золото (цена не назначена)'
-          : spent === 0
+          : spentP + spentB === 0
             ? 'Сбрасывать нечего'
             : `Бесплатный сброс (${left} из ${FREE_RESPEC_LIMIT})`}
       </GButton>
@@ -438,6 +516,7 @@ function HeroDetailModal({
 
   const gearItemId = detail?.kind === 'gear' ? equipment[detail.slot] : null;
   const gearItem = gearItemId ? getItem(gearItemId) : undefined;
+  const twoHand = detail?.kind === 'gear' && detail.slot === 'weapon' && isTwoHanded(gearItemId);
 
   const handleUnequip = () => {
     if (!detail || detail.kind !== 'gear' || !gearItemId) return;
@@ -451,8 +530,8 @@ function HeroDetailModal({
         <div className="hero-hub-modal">
           <p>{PILLARS[detail.id].childRu}</p>
           <GInfoRow label="Итог" value={signed(snapshot.finalPillars[detail.id])} />
-          <GInfoRow label="Тело" value={signed(snapshot.racialImprint[detail.id])} />
           <GInfoRow label="Вложил" value={String(snapshot.state.pillarRanks[detail.id])} />
+          <GInfoRow label="Раса" value={signedPercent(racePercentFor(raceId, detail.id))} />
           <p>{RACE_BODY_CHILD_RU[raceId]}</p>
           <p>Пассив «{RACE_PASSIVES[raceId].nameRu}»: {RACE_PASSIVES[raceId].childRu}</p>
           <GButton
@@ -507,6 +586,7 @@ function HeroDetailModal({
           {gearItem ? (
             <>
               <GTag>{gearItem.name}</GTag>
+              {twoHand && <p>Двуручное: правая рука занята, левая показывает то же оружие тускло.</p>}
               {gearItem.combatStats?.attackBonus != null && (
                 <GInfoRow label="Атака" value={`+${gearItem.combatStats.attackBonus}`} />
               )}

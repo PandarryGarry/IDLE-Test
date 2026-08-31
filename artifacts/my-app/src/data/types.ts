@@ -51,6 +51,8 @@ export interface Item {
   equipSlot?: EquipSlot;
   combatStats?: CombatStats;
   icon?: string; // emoji fallback
+  /** Двуручное: правая рука нормально, левая — то же оружие тусклое. */
+  twoHanded?: boolean;
 }
 
 export interface SkillState {
