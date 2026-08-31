@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
 import {
   GButton, GInput, GModal, GBadge, GAvatar, GCard,
 } from '@/shared/ui/gameUI';
 import {
-  RACES, RACE_MAP, getAvatarsForRace, getAvatarPath, getRaceLabel, getRaceBlurb,
+  RACES, RACE_MAP, getAvatarsForRace, getAvatarPath, prefetchAvatar, getRaceLabel, getRaceBlurb,
   STAT_LABELS_RU, type RaceId,
 } from '@/data/characters';
 import { useCharacterStore } from '@/store/characterStore';
@@ -32,6 +32,14 @@ export function CreateCharacterPage() {
 
   const avatars = useMemo(() => getAvatarsForRace(selectedRace), [selectedRace]);
   const race = RACE_MAP[selectedRace];
+
+  useEffect(() => {
+    RACES.forEach(candidate => prefetchAvatar(getAvatarsForRace(candidate.id)[0]));
+  }, []);
+
+  useEffect(() => {
+    avatars.forEach(prefetchAvatar);
+  }, [avatars]);
 
   const handleRaceClick = (raceId: RaceId) => {
     setSelectedRace(raceId);

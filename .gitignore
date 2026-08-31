@@ -10,6 +10,8 @@ out-tsc/
 .env
 .env.local
 .env.*.local
+scripts/qa/.env
+scripts/qa/.env.local
 
 # Dependencies
 node_modules/
@@ -22,6 +24,9 @@ node_modules/
 .DS_Store
 Thumbs.db
 *.log
+
+# Local QA screenshot dumps (not source)
+artifacts/qa-review/
 
 # Replit local runtime state
 .cache/

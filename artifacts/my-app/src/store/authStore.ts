@@ -5,6 +5,15 @@ import {
   isSupabaseConfigured,
   SUPABASE_CONFIG_MESSAGE,
 } from '@/lib/supabase';
+import {
+  isQaMockEnabled,
+  qaMockAcceptRules,
+  qaMockProfileFields,
+  qaMockReadSession,
+  qaMockSignIn,
+  qaMockSignOut,
+  qaMockSignUp,
+} from '@/lib/qaMock';
 import { withTimeout, OperationTimeoutError } from '@/lib/utils';
 
 export interface AuthProfile {
@@ -183,6 +192,18 @@ async function applyAuthSession(set: AuthSet, session: Session | null) {
     authMessage: null,
   });
 
+  if (isQaMockEnabled()) {
+    const mock = qaMockProfileFields(user);
+    set({
+      profile: {
+        ...fallbackProfile(user),
+        rulesVersion: mock.rulesVersion,
+        rulesAcceptedAt: mock.rulesAcceptedAt,
+      },
+    });
+    return;
+  }
+
   if (!supabase) return;
 
   try {
@@ -243,6 +264,12 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   restoreSession: async () => {
     set({ loading: true, authError: null });
+
+    if (isQaMockEnabled()) {
+      await applyAuthSession(set, qaMockReadSession());
+      set({ loading: false, isGuest: false });
+      return;
+    }
 
     if (!supabase) {
       set({
@@ -310,6 +337,18 @@ export const useAuthStore = create<AuthState>((set) => ({
       isGuest: false,
     });
 
+    if (isQaMockEnabled()) {
+      try {
+        const { session } = qaMockSignIn(email, password);
+        await applyAuthSession(set, session);
+        return { ok: true };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Не удалось войти.';
+        set({ authError: message });
+        return { ok: false, message };
+      }
+    }
+
     if (!supabase) return setConfigError(set);
 
     try {
@@ -337,6 +376,18 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signUp: async (email, password, metadata) => {
     set({ authError: null, authMessage: null });
+
+    if (isQaMockEnabled()) {
+      try {
+        const { session } = qaMockSignUp(email, password);
+        await applyAuthSession(set, session);
+        return { ok: true };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Не удалось создать аккаунт.';
+        set({ authError: message });
+        return { ok: false, message };
+      }
+    }
 
     if (!supabase) return setConfigError(set);
 
@@ -374,6 +425,12 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signInWithGoogle: async () => {
     set({ authError: null, authMessage: null });
+
+    if (isQaMockEnabled()) {
+      const message = 'QA-мок: Google-вход не используется.';
+      set({ authError: message });
+      return { ok: false, message };
+    }
 
     if (!supabase) return setConfigError(set);
 
@@ -450,6 +507,11 @@ export const useAuthStore = create<AuthState>((set) => ({
         ? { ...state.profile, rulesAcceptedAt: now, rulesVersion: version }
         : state.profile,
     }));
+
+    if (isQaMockEnabled()) {
+      const userId = useAuthStore.getState().user?.id;
+      if (userId) qaMockAcceptRules(userId, version);
+    }
 
     if (supabase) {
       try {

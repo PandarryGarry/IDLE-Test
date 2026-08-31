@@ -8,6 +8,7 @@
  * ║  система характеристик. Сейчас бонусы — только структура.    ║
  * ╚══════════════════════════════════════════════════════════════╝
  */
+import { iconUrl, prefetchImage } from '@/lib/assetUrl';
 
 export type RaceId = 'human' | 'elf' | 'dwarf' | 'orc' | 'beastfolk';
 
@@ -157,10 +158,14 @@ export const RACE_FOLDER: Record<RaceId, string> = {
 
 /** Путь к файлу аватара из avatarId ('human_male_01'). */
 export function getAvatarPath(avatarId: string): string {
-  // avatarId = <racePrefix>_<gender>_<nn>
   const raceId = raceIdFromAvatar(avatarId);
   const folder = RACE_FOLDER[raceId] ?? raceId;
-  return `/assets/icons/characters/avatars/${folder}/${avatarId}.png`;
+  return iconUrl(`characters/avatars/${folder}/${avatarId}`);
+}
+
+/** Прогрев в кэш браузера — выбор облика не ждёт сети. */
+export function prefetchAvatar(avatarId: string): void {
+  prefetchImage(getAvatarPath(avatarId));
 }
 
 /** Префикс файла аватара → raceId ('beastfolk_male_01' → 'beastfolk'). */

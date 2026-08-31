@@ -4,7 +4,7 @@
  * ║                                                             ║
  * ║  • Живой арт-вывеска (canvas artEngine) или векторный герб  ║
  * ║  • РЕАЛЬНЫЙ прогресс: шрифты + арт + прогрев артов дороги   ║
- * ║    + мин. время показа (заставка сама регулирует скорость)  ║
+ * ║    + мин. время показа + authReady (сессия и персонажи)     ║
  * ║  • Случайный совет внизу                                    ║
  * ║  • Плавный fade-out по готовности                           ║
  * ║  • Версия — из data/changelog.ts (единый источник правды)   ║
@@ -31,6 +31,12 @@ const LORE_TIPS = [
 interface SplashScreenProps {
   onLoaded?: () => void;
   minDisplayTimeMs?: number;
+  /**
+   * Сессия восстановлена и персонажи загружены (или игрока нет).
+   * Заставка — единственный основной загрузочный экран: не уходим
+   * с вывески, пока authReady не станет true.
+   */
+  authReady?: boolean;
 }
 
 /** Сколько максимум ждём загрузку арта, чтобы не задерживать вход в игру. */
@@ -45,9 +51,20 @@ const ONBOARDING_ARTS_WAIT_CAP_MS = 4000;
  * Вес каждого этапа загрузки в итоговом проценте.
  * base — мгновенно (бандл уже исполнился), остальное — реальные задачи.
  */
-const WEIGHTS = { base: 10, fonts: 20, art: 25, onboardingArts: 30, minTime: 15 } as const;
+const WEIGHTS = {
+  base: 8,
+  fonts: 16,
+  art: 20,
+  onboardingArts: 24,
+  minTime: 12,
+  auth: 20,
+} as const;
 
-export function SplashScreen({ onLoaded, minDisplayTimeMs = 4000 }: SplashScreenProps) {
+export function SplashScreen({
+  onLoaded,
+  minDisplayTimeMs = 4000,
+  authReady = false,
+}: SplashScreenProps) {
   // Вариант арта выбираем один раз по пропорциям экрана (wide / tall / square).
   const [art] = useState(() =>
     pickSplashArt(
@@ -143,7 +160,8 @@ export function SplashScreen({ onLoaded, minDisplayTimeMs = 4000 }: SplashScreen
     (fontsReady ? WEIGHTS.fonts : 0) +
     (artSettled ? WEIGHTS.art : 0) +
     (onboardingArtsReady ? WEIGHTS.onboardingArts : 0) +
-    (minTimeElapsed ? WEIGHTS.minTime : 0);
+    (minTimeElapsed ? WEIGHTS.minTime : 0) +
+    (authReady ? WEIGHTS.auth : 0);
 
   useEffect(() => {
     const interval = setInterval(() => {

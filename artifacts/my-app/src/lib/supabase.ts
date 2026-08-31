@@ -9,6 +9,7 @@
 // a graceful "auth not configured" state instead of crashing.
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { isQaMockEnabled } from '@/lib/qaMock';
 
 function readEnv(key: string): string | undefined {
   const value = import.meta.env[key];
@@ -33,6 +34,11 @@ export const isSupabaseConfigured = Boolean(
   SUPABASE_ANON_KEY &&
   SUPABASE_ANON_KEY.length > 12,
 );
+
+/** Реальный Supabase ИЛИ локальный QA-мок (только localhost + флаг). */
+export function isAuthConfigured(): boolean {
+  return isSupabaseConfigured || isQaMockEnabled();
+}
 
 export const SUPABASE_CONFIG_MESSAGE =
   'Supabase не настроен. Добавьте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY через Replit Secrets или .env.local.';

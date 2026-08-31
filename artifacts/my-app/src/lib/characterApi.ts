@@ -1,4 +1,16 @@
 import { supabase, getSupabaseClient, isSupabaseConfigured } from './supabase';
+import {
+  isQaMockEnabled,
+  qaCreateCharacter,
+  qaFetchCharacter,
+  qaFetchCharacters,
+  qaIsNicknameTaken,
+  qaLoadCharacterSave,
+  qaSaveCharacter,
+  qaSetSelectedCharacter,
+  qaSoftDeleteCharacter,
+  qaUpdateCharacter,
+} from './qaMock';
 import type { SaveData } from '../data/types';
 import type { RaceId } from '../data/characters';
 import { withTimeout } from './utils';
@@ -75,6 +87,7 @@ function requireClient() {
 
 /** Получить живых персонажей пользователя (без is_deleted). */
 export async function fetchCharacters(userId: string): Promise<Character[]> {
+  if (isQaMockEnabled()) return qaFetchCharacters(userId) as Character[];
   const client = requireClient();
   // Postgrest-builder — thenable; явно приводим к Promise для withTimeout.
   const query = client
@@ -102,6 +115,7 @@ export async function fetchCharacters(userId: string): Promise<Character[]> {
 
 /** Проверка уникальности ника через RPC (security definer). */
 export async function isNicknameTaken(nickname: string): Promise<boolean> {
+  if (isQaMockEnabled()) return qaIsNicknameTaken(nickname);
   const client = requireClient();
   const { data, error } = await client.rpc('is_nickname_taken', {
     candidate: nickname.trim(),
@@ -116,6 +130,7 @@ export async function isNicknameTaken(nickname: string): Promise<boolean> {
 
 /** Получить один персонаж по id. */
 export async function fetchCharacter(characterId: string): Promise<Character | null> {
+  if (isQaMockEnabled()) return qaFetchCharacter(characterId) as Character | null;
   const client = requireClient();
   const { data, error } = await client
     .from('characters')
@@ -139,6 +154,14 @@ export async function createCharacter(params: {
   raceId: RaceId;
   saveData?: SaveData;
 }): Promise<Character> {
+  if (isQaMockEnabled()) {
+    return qaCreateCharacter({
+      userId: params.userId,
+      nickname: params.nickname,
+      avatarId: params.avatarId,
+      raceId: params.raceId,
+    }) as Character;
+  }
   const client = requireClient();
   const { data, error } = await client
     .from('characters')
@@ -165,6 +188,17 @@ export async function updateCharacter(
   characterId: string,
   patch: Partial<{ nickname: string; avatarId: string; raceId: string; hasChangedNickname: boolean; hasChangedAvatar: boolean; selected: boolean; saveData: SaveData }>,
 ): Promise<Character> {
+  if (isQaMockEnabled()) {
+    return qaUpdateCharacter(characterId, {
+      nickname: patch.nickname,
+      avatarId: patch.avatarId,
+      raceId: patch.raceId as RaceId | undefined,
+      hasChangedNickname: patch.hasChangedNickname,
+      hasChangedAvatar: patch.hasChangedAvatar,
+      selected: patch.selected,
+      saveData: patch.saveData,
+    }) as Character;
+  }
   const client = requireClient();
 
   const dbPatch: Record<string, unknown> = {};
@@ -198,6 +232,10 @@ export async function updateCharacter(
 
 /** Пометить персонажа активным (снять флаг с остальных). */
 export async function setSelectedCharacter(userId: string, characterId: string): Promise<void> {
+  if (isQaMockEnabled()) {
+    qaSetSelectedCharacter(userId, characterId);
+    return;
+  }
   const client = requireClient();
   const { error: resetError } = await client
     .from('characters')
@@ -223,6 +261,10 @@ export async function setSelectedCharacter(userId: string, characterId: string):
 
 /** Мягко удалить персонажа (is_deleted=true, selected=false). */
 export async function softDeleteCharacter(characterId: string): Promise<void> {
+  if (isQaMockEnabled()) {
+    qaSoftDeleteCharacter(characterId);
+    return;
+  }
   const client = requireClient();
   const { error } = await client
     .from('characters')
@@ -240,6 +282,10 @@ export async function saveCharacterToCloud(
   characterId: string,
   saveData: SaveData,
 ): Promise<void> {
+  if (isQaMockEnabled()) {
+    qaSaveCharacter(characterId, saveData);
+    return;
+  }
   const client = requireClient();
   const { error } = await client
     .from('characters')
