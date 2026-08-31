@@ -19,6 +19,7 @@ import {
 import {
   BRANCH_ICON,
   EQUIP_SLOT_ICON,
+  HUB_NAV_ICON,
   PILLAR_ICON,
   SYNERGY_ICON,
 } from '@/data/attributeIcons';
@@ -166,13 +167,31 @@ export function HeroHubPage() {
       <header className="hero-hub__header">
         <GAvatar src={getAvatarPath(active.avatarId)} size={PORTRAIT} glow />
         <div className="hero-hub__identity">
-          <strong>{active.nickname}</strong>
-          <div className="hero-hub__chips">
-            <span className="hero-chip">{getRaceLabel(raceId, 'ru')}</span>
-            <span className="hero-chip">Ур. {state.heroLevel}</span>
-            <span className="hero-chip">Столп {state.unspentPillarPoints}</span>
-            <span className="hero-chip">Ветвь {state.unspentBranchPoints}</span>
+          <div className="hero-hub__name-row">
+            <strong>{active.nickname}</strong>
+            <span className="hero-level" title={`Уровень ${state.heroLevel}`}>
+              {state.heroLevel}
+            </span>
           </div>
+          <span className="hero-chip">{getRaceLabel(raceId, 'ru')}</span>
+        </div>
+        <div className="hero-hub__points" aria-label="Свободные очки">
+          <span
+            className="hero-point"
+            data-ready={state.unspentPillarPoints > 0 ? 'true' : 'false'}
+            title={`Очки столпов: ${state.unspentPillarPoints}`}
+          >
+            <img src={HUB_NAV_ICON.body} alt="" decoding="async" />
+            <b>{state.unspentPillarPoints}</b>
+          </span>
+          <span
+            className="hero-point"
+            data-ready={state.unspentBranchPoints > 0 ? 'true' : 'false'}
+            title={`Очки ветвей: ${state.unspentBranchPoints}`}
+          >
+            <img src={HUB_NAV_ICON.branches} alt="" decoding="async" />
+            <b>{state.unspentBranchPoints}</b>
+          </span>
         </div>
         <button
           type="button"
