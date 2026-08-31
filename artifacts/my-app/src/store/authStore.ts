@@ -465,6 +465,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   signOut: async () => {
     writeGuest(false);
 
+    if (isQaMockEnabled()) {
+      qaMockSignOut();
+    }
+
     if (supabase) {
       try {
         await supabase.auth.signOut();

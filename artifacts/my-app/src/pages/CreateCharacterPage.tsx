@@ -10,7 +10,9 @@ import {
 import { useCharacterStore } from '@/store/characterStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { OnboardingScene } from '@/components/OnboardingScene';
+import { OnboardingAccountBar } from '@/components/OnboardingAccountBar';
 import { queueCinematic } from '@/lib/cinematicState';
+import { describeCharacterError } from '@/lib/characterErrors';
 
 type CreationStep = 'race' | 'identity';
 
@@ -31,7 +33,8 @@ export function CreateCharacterPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const avatars = useMemo(() => getAvatarsForRace(selectedRace), [selectedRace]);
-  const race = RACE_MAP[selectedRace];
+  const race = RACE_MAP[selectedRace] ?? RACES[0];
+  const storeError = useCharacterStore(s => s.error);
 
   useEffect(() => {
     RACES.forEach(candidate => prefetchAvatar(getAvatarsForRace(candidate.id)[0]));
@@ -57,7 +60,7 @@ export function CreateCharacterPage() {
       queueCinematic('departure-new-hero');
       navigate('/');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Не удалось создать персонажа.';
+      const message = describeCharacterError(error, 'Не удалось создать персонажа.');
       setLocalError(message);
       notifyError(message);
     } finally {
@@ -97,6 +100,7 @@ export function CreateCharacterPage() {
                 ? 'Кто ты по крови? Ответь — и наследие станет частью будущего пути.'
                 : 'Какое лицо запомнит Этелия — и какое имя она произнесёт?'}
             </p>
+            <OnboardingAccountBar />
             <div className="character-create-steps" aria-label={`Шаг ${step === 'race' ? '1' : '2'} из 2`}>
               <span className={step === 'race' ? 'is-active' : 'is-done'}><b>1</b> Наследие</span>
               <i aria-hidden="true" />
@@ -200,7 +204,9 @@ export function CreateCharacterPage() {
                 </div>
               </div>
 
-              {localError && <p className="character-create-error">⚠ {localError}</p>}
+              {(localError || storeError) && (
+                <p className="character-create-error">⚠ {localError || storeError}</p>
+              )}
 
               {hasExisting && (
                 <div className="character-create-replace-warning">

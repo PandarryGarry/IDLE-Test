@@ -1897,6 +1897,27 @@
   line-height: 1.5;
 }
 
+.onboarding-account-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
+.onboarding-account-bar__email {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-family: var(--app-font-mono);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .character-create-steps {
   display: grid;
   grid-template-columns: auto minmax(1.5rem, 1fr) auto;

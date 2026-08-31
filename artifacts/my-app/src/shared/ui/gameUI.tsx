@@ -218,6 +218,7 @@ export function GInput({
   icon, type = 'text', maxLength, disabled = false, autoFocus = false,
 }: GInputProps) {
   const [focused, setFocused] = useState(false);
+  const text = typeof value === 'string' ? value : '';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -243,7 +244,7 @@ export function GInput({
         )}
         <input
           type={type}
-          value={value}
+          value={text}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
           maxLength={maxLength}
@@ -262,7 +263,7 @@ export function GInput({
           <span style={{
             fontFamily: C.fontMono, fontSize: 10, color: C.textDim, flexShrink: 0,
           }}>
-            {value.length}/{maxLength}
+            {text.length}/{maxLength}
           </span>
         )}
       </div>

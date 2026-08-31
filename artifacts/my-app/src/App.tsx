@@ -42,6 +42,7 @@ import {
 } from '@/lib/characterSave';
 import { readLocalRulesAccepted, RULES_VERSION } from '@/data/rules';
 import { isGuestBlockedPath } from '@/lib/guestMode';
+import { resolveLoggedInPath } from '@/lib/accountGate';
 
 function NotFound() {
   return (
@@ -108,7 +109,9 @@ function Router() {
   // чтобы после «Войти» не мелькал пустой экран.
   if (isAuthPath) {
     if (isGuest) return <Redirect to="/" />;
-    if (hasUser && !authLoading && loadedUserId === user?.id) return <Redirect to="/" />;
+    if (hasUser && !authLoading && loadedUserId === user?.id) {
+      return <Redirect to={resolveLoggedInPath()} />;
+    }
     return <AuthPage initialMode={pathname === '/register' ? 'register' : 'login'} />;
   }
 
@@ -123,7 +126,7 @@ function Router() {
 
   // ─── Онбординг / выбор персонажа (только для аккаунтов) ───────────
   if (!isGuest) {
-    const { acceptedVersion: localRules } = readLocalRulesAccepted();
+    const { acceptedVersion: localRules } = readLocalRulesAccepted(user?.id);
     const acceptedVersion = profile?.rulesVersion || localRules;
     const rulesAccepted = acceptedVersion === RULES_VERSION;
     const hasAny = characters.some(c => !c.isDeleted);

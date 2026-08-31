@@ -11,6 +11,7 @@ import {
 import { isAuthConfigured } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
 import { resetGameToFresh } from '@/lib/saveManager';
+import { describeCharacterError } from '@/lib/characterErrors';
 import type { RaceId } from '@/data/characters';
 
 const LAST_CHAR_KEY = 'aethelia_last_active_character';
@@ -101,7 +102,7 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
           set({ activeCharacter: null });
         }
       } catch (e) {
-        const message = e instanceof Error ? e.message : 'Не удалось загрузить персонажей.';
+        const message = describeCharacterError(e, 'Не удалось загрузить персонажей.');
         console.error('loadCharacters failed:', e);
         set({ loading: false, error: message, loadedUserId: userId });
       }
@@ -126,9 +127,9 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
       }));
       writeLastCharacterId(character.id);
     } catch (e) {
-      const message = e instanceof Error ? e.message : 'Не удалось выбрать персонажа.';
+      const message = describeCharacterError(e, 'Не удалось выбрать персонажа.');
       set({ error: message });
-      throw e;
+      throw new Error(message);
     }
   },
 
@@ -145,9 +146,16 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
     const userId = useAuthStore.getState().user?.id ?? characters[0]?.userId;
     if (!userId) throw new Error('Нет активного аккаунта. Войдите снова и повторите попытку.');
 
-    // Уникальность ника — до создания.
-    if (await isNicknameTaken(input.nickname)) {
-      throw new Error('Этот ник уже занят. Выберите другой.');
+    // Уникальность ника — до создания. Сломанный RPC не должен блокировать первого героя.
+    try {
+      if (await isNicknameTaken(input.nickname)) {
+        throw new Error('Этот ник уже занят. Выберите другой.');
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Этот ник уже занят. Выберите другой.') {
+        throw error;
+      }
+      console.warn('isNicknameTaken failed, continuing with insert:', error);
     }
 
     // Если создаём нового — удаляем старого (мягко), чтобы был ровно один.
@@ -156,12 +164,17 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
       await Promise.all(existing.map(c => softDeleteCharacter(c.id)));
     }
 
-    const created = await createCharacter({
-      userId,
-      nickname: input.nickname,
-      avatarId: input.avatarId,
-      raceId: input.raceId,
-    });
+    let created;
+    try {
+      created = await createCharacter({
+        userId,
+        nickname: input.nickname,
+        avatarId: input.avatarId,
+        raceId: input.raceId,
+      });
+    } catch (error) {
+      throw new Error(describeCharacterError(error, 'Не удалось создать персонажа.'));
+    }
 
     // Держим в сторе только созданного + мягко удалённые старые (для честного списка).
     set(state => ({

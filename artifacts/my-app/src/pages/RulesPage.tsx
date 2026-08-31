@@ -5,6 +5,7 @@ import { RULES, RULES_VERSION, writeLocalRulesAccepted } from '@/data/rules';
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { OnboardingScene } from '@/components/OnboardingScene';
+import { OnboardingAccountBar } from '@/components/OnboardingAccountBar';
 import { queueCinematic } from '@/lib/cinematicState';
 
 export function RulesPage() {
@@ -13,13 +14,14 @@ export function RulesPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const acceptRules = useAuthStore(s => s.acceptRules);
+  const userId = useAuthStore(s => s.user?.id);
   const characters = useCharacterStore(s => s.characters);
 
   const handleContinue = async () => {
     if (!accepted || submitting) return;
     setSubmitting(true);
     try {
-      writeLocalRulesAccepted(RULES_VERSION);
+      writeLocalRulesAccepted(RULES_VERSION, userId);
       await acceptRules(RULES_VERSION);
       const hasAny = characters.some(character => !character.isDeleted);
       // Связка «трактирщик приводит в ложу» — только на пути к созданию героя.
@@ -43,6 +45,7 @@ export function RulesPage() {
             <span className="rules-panel__sigil" aria-hidden="true">✦</span>
             <h1>Правила Aethelia</h1>
             <p>Прочитайте их один раз — и таверна откроет вам дорогу дальше.</p>
+            <OnboardingAccountBar />
           </header>
 
           <div className="rules-list">
