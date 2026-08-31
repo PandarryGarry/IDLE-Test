@@ -15,10 +15,10 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Sword, Sparkles, ShieldCheck } from 'lucide-react';
-import { ONBOARDING_ART_PRELOAD } from '@/shared/artRegistry';
+import { AnimatedArt } from '@/components/art/AnimatedArt';
+import { useArtMode } from '@/hooks/useArtMode';
+import { pickSplashArt, ONBOARDING_ART_PRELOAD, ART_TINT } from '@/shared/artRegistry';
 import { CURRENT_VERSION } from '@/data/changelog';
-
-const SIGN_ART = '/assets/art/intro_sign.webp';
 
 const LORE_TIPS = [
   'Совет: Не забывайте брать жареную рыбу перед походом в опасные подземелья.',
@@ -65,6 +65,13 @@ export function SplashScreen({
   minDisplayTimeMs = 4000,
   authReady = false,
 }: SplashScreenProps) {
+  // Вариант арта выбираем один раз по пропорциям экрана (wide / tall / square).
+  const [art] = useState(() =>
+    pickSplashArt(
+      typeof window !== 'undefined' ? window.innerWidth : 1,
+      typeof window !== 'undefined' ? window.innerHeight : 1,
+    ),
+  );
   const [progress, setProgress] = useState(0);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [isDone, setIsDone] = useState(false);
@@ -75,12 +82,16 @@ export function SplashScreen({
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
   const [artWaitTimedOut, setArtWaitTimedOut] = useState(false);
   const [onboardingArtsReady, setOnboardingArtsReady] = useState(false);
-  const [signLoaded, setSignLoaded] = useState(false);
-  const [signError, setSignError] = useState(false);
 
-  const hasArt = signLoaded && !signError;
-  const artFailed = signError || (artWaitTimedOut && !hasArt);
-  const artSettled = signLoaded || signError || artWaitTimedOut;
+  // Режим заставки задан реестром ('sign'); ждём только факт загрузки файла.
+  const probe = useArtMode(art.src, art.mode);
+  const hasArt = probe.loaded && probe.mode !== null;
+  // Фолбэк-герб показываем ТОЛЬКО если арт реально не загрузился (ошибка/таймаут).
+  // Пока арт в пути — держим нейтральный тёмный фон, чтобы не мелькал «старый» экран.
+  const artFailed = probe.error || (artWaitTimedOut && !hasArt);
+  // Арт «решён»: файл реально декодирован, упал с ошибкой или вышли по таймауту.
+  // fixed-mode знает режим сразу, но картинка ещё может быть в пути.
+  const artSettled = probe.loaded || probe.error || artWaitTimedOut;
 
   const finishedRef = useRef(false);
 
@@ -102,15 +113,6 @@ export function SplashScreen({
     const t = setTimeout(() => setMinTimeElapsed(true), minDisplayTimeMs);
     return () => clearTimeout(t);
   }, [minDisplayTimeMs]);
-
-  useEffect(() => {
-    let disposed = false;
-    const img = new Image();
-    img.onload = () => { if (!disposed) setSignLoaded(true); };
-    img.onerror = () => { if (!disposed) setSignError(true); };
-    img.src = SIGN_ART;
-    return () => { disposed = true; };
-  }, []);
 
   // Страховка: не держим игрока на заставке, если арт грузится слишком долго.
   useEffect(() => {
@@ -206,12 +208,18 @@ export function SplashScreen({
       {/* Оживлённый арт на весь экран — мягко проявляется из тёмного фона */}
       {hasArt && (
         <div className="splash-art-layer" style={{ position: 'absolute', inset: 0 }}>
-          <img
-            src={SIGN_ART}
-            alt=""
-            draggable={false}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+          <AnimatedArt
+            src={art.src}
+            mode={art.mode}
+            fit={art.fit}
+            sigil={art.sigil}
+            signMotion={art.signMotion}
+            lightBlooms={art.lightBlooms}
+            tint={ART_TINT}
+            intensity={1}
+            className="absolute inset-0 w-full h-full"
           />
+          {/* Мягкий градиент снизу для читаемости шкалы и подсказки */}
           <div
             style={{
               position: 'absolute',
@@ -376,7 +384,7 @@ export function SplashScreen({
                   marginTop: 6,
                 }}
               >
-                {progress}%{signError ? ' · арт не найден' : ''}
+                {progress}%{probe.error ? ' · арт не найден' : ''}
               </span>
             </div>
 
