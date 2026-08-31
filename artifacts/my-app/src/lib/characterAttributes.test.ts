@@ -14,6 +14,9 @@ import {
   computeAttributeSnapshot,
   createDefaultAttributes,
   migrateSaveAttributes,
+  respecAttributes,
+  spendBranchPoint,
+  spendPillarPoint,
 } from './characterAttributes.ts';
 
 test('старт: 0 очков, уровень 1, без specializationId', () => {
@@ -127,4 +130,23 @@ test('профессии в 5A не добавляют выдуманный %', 
   });
   assert.equal(snap.professionBonus.fortitude, 0);
   assert.equal(snap.professionBonus.might, 0);
+});
+
+test('трата очка и бесплатный respec', () => {
+  let state = createDefaultAttributes();
+  state = { ...state, unspentPillarPoints: 1, unspentBranchPoints: 1 };
+  const afterPillar = spendPillarPoint(state, 'finesse');
+  assert.ok(afterPillar);
+  assert.equal(afterPillar.unspentPillarPoints, 0);
+  assert.equal(afterPillar.pillarRanks.finesse, 1);
+  const afterBranch = spendBranchPoint(afterPillar, 'tempo');
+  assert.ok(afterBranch);
+  const reset = respecAttributes(afterBranch);
+  assert.ok(reset);
+  assert.equal(reset.pillarRanks.finesse, 0);
+  assert.equal(reset.branchRanks.tempo, 0);
+  assert.equal(reset.unspentPillarPoints, 1);
+  assert.equal(reset.unspentBranchPoints, 1);
+  assert.equal(reset.freeRespecUsed, true);
+  assert.equal(respecAttributes(reset), null);
 });

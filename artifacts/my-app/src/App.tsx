@@ -29,6 +29,7 @@ import { FiremakingPage } from '@/pages/FiremakingPage';
 import { CombatPage } from '@/pages/CombatPage';
 import { InventoryPage } from '@/pages/InventoryPage';
 import { SettingsPage } from '@/pages/SettingsPage';
+import { HeroHubPage } from '@/pages/HeroHubPage';
 import { AuthPage } from '@/pages/AuthPage';
 import { RulesPage } from '@/pages/RulesPage';
 import { CreateCharacterPage } from '@/pages/CreateCharacterPage';
@@ -201,6 +202,7 @@ function Router() {
             <Route path="/smithing" component={SmithingPage} />
             <Route path="/firemaking" component={FiremakingPage} />
             <Route path="/combat" component={CombatPage} />
+            <Route path="/hero" component={HeroHubPage} />
             <Route path="/inventory" component={InventoryPage} />
             <Route path="/bank">
               <Redirect to="/inventory" />

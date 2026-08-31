@@ -122,7 +122,7 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
 
       {/* ── Активный персонаж ── */}
       {!isGuest && activeCharacter && (
-        <Link href="/settings" onClick={onCloseMobile}>
+        <Link href="/hero" onClick={onCloseMobile}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
             margin: '10px 12px', padding: '9px 10px', borderRadius: 12,
@@ -162,6 +162,7 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
 
         <div>
           <NavItem href="/" icon={<Home size={16} />} label={t('nav.home')} />
+          {!isGuest && <NavItem href="/hero" icon={<span>🪞</span>} label="Герой" />}
         </div>
 
         {!isGuest && (

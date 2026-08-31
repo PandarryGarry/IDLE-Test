@@ -9,7 +9,8 @@ import {
   Backpack, 
   Layers, 
   X,
-  Settings
+  Settings,
+  UserRound
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuthStore } from '@/store/authStore';
@@ -101,6 +102,15 @@ export function MobileNav({ className = '' }: MobileNavProps) {
             <Home className="w-5 h-5 mb-0.5" />
             <span className="text-[10px] font-bold">{t('nav.home')}</span>
           </Link>
+
+          {!isGuest && (
+            <Link href="/hero" className={`flex flex-col items-center py-1 px-3 rounded-xl min-w-[56px] transition-all ${
+              location === '/hero' ? 'text-amber-400 font-bold' : 'text-stone-300 hover:text-[var(--text-primary)]'
+            }`}>
+              <UserRound className="w-5 h-5 mb-0.5" />
+              <span className="text-[10px] font-bold">Герой</span>
+            </Link>
+          )}
 
           {/* Combat */}
           {!isGuest && (

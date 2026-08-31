@@ -239,4 +239,48 @@ export function computeAttributeSnapshot(input: ComputeInput): AttributeSnapshot
   };
 }
 
+export function spendPillarPoint(state: CharacterAttributeState, pillar: PillarId): CharacterAttributeState | null {
+  if (state.unspentPillarPoints < 1) return null;
+  if (state.pillarRanks[pillar] >= PILLAR_RANK_CAP_STUB) return null;
+  return {
+    ...state,
+    unspentPillarPoints: state.unspentPillarPoints - 1,
+    pillarRanks: { ...state.pillarRanks, [pillar]: state.pillarRanks[pillar] + 1 },
+  };
+}
+
+export function spendBranchPoint(state: CharacterAttributeState, branch: BranchId): CharacterAttributeState | null {
+  if (state.unspentBranchPoints < 1) return null;
+  if (state.branchRanks[branch] >= BRANCH_RANK_CAP_STUB) return null;
+  return {
+    ...state,
+    unspentBranchPoints: state.unspentBranchPoints - 1,
+    branchRanks: { ...state.branchRanks, [branch]: state.branchRanks[branch] + 1 },
+  };
+}
+
+export function spentPillarRanks(state: CharacterAttributeState): number {
+  return PILLAR_IDS.reduce((sum, id) => sum + state.pillarRanks[id], 0);
+}
+
+export function spentBranchRanks(state: CharacterAttributeState): number {
+  return BRANCH_IDS.reduce((sum, id) => sum + state.branchRanks[id], 0);
+}
+
+/** Бесплатный сброс один раз. Цена золотом не закрыта — повторно не отдаём. */
+export function respecAttributes(state: CharacterAttributeState): CharacterAttributeState | null {
+  const spentP = spentPillarRanks(state);
+  const spentB = spentBranchRanks(state);
+  if (spentP + spentB === 0) return null;
+  if (state.freeRespecUsed) return null;
+  return {
+    ...state,
+    pillarRanks: emptyPillarRanks(),
+    branchRanks: emptyBranchRanks(),
+    unspentPillarPoints: state.unspentPillarPoints + spentP,
+    unspentBranchPoints: state.unspentBranchPoints + spentB,
+    freeRespecUsed: true,
+  };
+}
+
 export { earnedBranchPoints, earnedPillarPoints, pillarContribution };
