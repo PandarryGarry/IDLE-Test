@@ -420,14 +420,14 @@ interface GAvatarProps {
 }
 
 export function GAvatar({
-  src, emoji, size = 48, borderColor = '#c8880a', glow = false, style,
+  src, emoji, size = 48, borderColor = 'var(--border-accent)', glow = false, style,
 }: GAvatarProps) {
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%', flexShrink: 0,
-      background: 'linear-gradient(160deg,#2e1608,#1e0e04)',
+      background: 'var(--bg-slot)',
       border: `2px solid ${borderColor}`,
-      boxShadow: glow ? `0 0 16px ${borderColor}88, inset 0 2px 6px rgba(0,0,0,0.5)` : 'inset 0 2px 6px rgba(0,0,0,0.5)',
+      boxShadow: glow ? 'var(--shadow-gold), var(--shadow-slot)' : 'var(--shadow-slot)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       overflow: 'hidden',
       ...style,
@@ -579,7 +579,7 @@ function GSlotFace({
             height: 14,
             padding: '0 3px',
             borderRadius: 4,
-            background: 'rgba(20,10,0,0.85)',
+            background: 'var(--bg-header)',
             color: 'var(--text-gold)',
             fontFamily: C.fontMono,
             fontSize: 9,

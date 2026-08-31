@@ -2847,33 +2847,40 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   HERO HUB — слоты фиксированного px (GSlot), иконка не текст.
-   Медиа — только структура (колонки → столбик). Без clamp на тайл.
+   HERO HUB — окно героя в палитре игрового шелла (не cinematic).
+   Слоты 48px фиксированы. Медиа — только структура.
    ═══════════════════════════════════════════════════════════ */
 
 .hero-hub {
   display: grid;
-  grid-template-rows: auto 1fr;
-  min-height: 0;
-  border: var(--hairline) solid var(--onboarding-panel-edge);
-  border-radius: var(--radius-2xl);
-  background: var(--onboarding-panel);
-  box-shadow: var(--onboarding-panel-shadow);
+  grid-template-rows: 52px 1fr;
+  width: 100%;
+  height: 420px;
+  min-height: 420px;
+  max-height: 420px;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
+  color: var(--text-primary);
 }
 
 .hero-hub--empty {
   place-items: center;
-  min-height: min(16rem, 48svh);
+  height: 280px;
+  min-height: 280px;
+  max-height: 280px;
 }
 
 .hero-hub__header {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-sm);
-  border-bottom: var(--hairline) solid var(--cinematic-line);
-  background: var(--cinematic-ink-soft);
+  gap: 8px;
+  height: 52px;
+  padding: 0 12px;
+  border-bottom: 2px solid var(--border-default);
+  background: var(--bg-header);
 }
 
 .hero-hub__identity {
@@ -2885,56 +2892,85 @@
 
 .hero-hub__identity strong {
   overflow: hidden;
-  color: var(--cinematic-light);
+  color: var(--text-primary);
   font-family: var(--app-font-display);
-  font-size: var(--text-sm);
+  font-size: 16px;
   font-weight: 900;
+  line-height: 1.1;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .hero-hub__identity p {
   margin: 0;
-  color: var(--cinematic-copy);
-  font-size: var(--text-2xs);
+  color: var(--text-muted);
+  font-family: var(--app-font-mono);
+  font-size: 11px;
+  line-height: 1.2;
 }
 
 .hero-hub__wallets {
   display: flex;
   flex-shrink: 0;
-  gap: var(--space-2xs);
+  gap: 6px;
 }
 
 .hero-hub__body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) 72px;
   min-height: 0;
+  height: 368px;
 }
 
 .hero-hub__data {
+  min-width: 0;
   min-height: 0;
+  height: 368px;
   overflow: auto;
-  padding: var(--space-sm);
+  padding: 10px 12px;
+  background: var(--bg-card);
+}
+
+.hero-hub__pane-title {
+  margin: 0 0 8px;
+  color: var(--text-gold);
+  font-family: var(--app-font-display);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
 }
 
 .hero-hub-module {
   display: grid;
   justify-items: center;
+  align-content: center;
+  min-height: 300px;
   gap: 12px;
 }
 
-.hero-hub-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+.hero-hub-dial {
+  display: grid;
+  grid-template-columns: 48px 96px 48px;
+  grid-template-rows: 48px 96px 48px;
   gap: 8px;
+  width: 208px;
+  height: 208px;
+  place-items: center;
 }
+
+.hero-hub-dial__n { grid-column: 2; grid-row: 1; }
+.hero-hub-dial__w { grid-column: 1; grid-row: 2; }
+.hero-hub-dial__c { grid-column: 2; grid-row: 2; }
+.hero-hub-dial__e { grid-column: 3; grid-row: 2; }
+.hero-hub-dial__s { grid-column: 2; grid-row: 3; }
 
 .hero-hub-web {
   display: grid;
-  grid-template-columns: repeat(4, var(--hub-tile));
+  grid-template-columns: repeat(4, 56px);
   justify-content: center;
-  gap: 8px 12px;
+  gap: 8px;
 }
 
 .hero-hub-cluster {
@@ -2942,43 +2978,55 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  width: 56px;
+  padding: 4px 0;
+  border: 1px solid var(--border-slot);
+  border-radius: var(--radius-md);
+  background: var(--bg-slot);
+  box-shadow: var(--shadow-slot);
 }
 
 .hero-hub-doll {
   display: grid;
-  grid-template-columns: repeat(3, var(--hub-tile));
+  grid-template-columns: repeat(3, 48px);
+  grid-template-rows: repeat(6, 48px);
   justify-content: center;
   gap: 8px;
+  width: 160px;
 }
 
 .hero-hub-doll__pad {
-  width: var(--hub-tile);
-  height: var(--hub-tile);
+  width: 48px;
+  height: 48px;
 }
 
 .hero-hub-syn {
   display: grid;
-  grid-template-columns: repeat(3, var(--hub-tile));
+  grid-template-columns: repeat(3, 48px);
+  grid-template-rows: repeat(2, 48px);
   justify-content: center;
-  gap: 8px;
+  gap: 12px 8px;
+  width: 160px;
 }
 
 .hero-hub-path-grid {
   display: grid;
-  grid-template-columns: repeat(2, 128px);
+  grid-template-columns: 128px 128px;
   justify-content: center;
   gap: 8px;
-  width: 100%;
 }
 
 .hero-hub-path-grid > div {
   display: grid;
   justify-items: center;
   gap: 4px;
+  width: 128px;
+  height: 56px;
   padding: 8px;
-  border: var(--hairline) solid var(--cinematic-line);
-  border-radius: var(--radius-xs);
-  background: var(--cinematic-ink-soft);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-slot);
+  box-shadow: var(--shadow-slot);
 }
 
 .hero-hub-path-grid span {
@@ -2990,8 +3038,9 @@
 }
 
 .hero-hub-path-grid b {
-  color: var(--cinematic-light);
+  color: var(--text-gold);
   font-size: 16px;
+  line-height: 1;
 }
 
 .hero-hub-modal {
@@ -3001,7 +3050,7 @@
 
 .hero-hub-modal p {
   margin: 0;
-  color: var(--cinematic-copy);
+  color: var(--text-secondary);
   font-size: 13px;
   line-height: 1.4;
 }
@@ -3010,29 +3059,48 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
-  border-left: var(--hairline) solid var(--cinematic-line);
-  background: var(--cinematic-ink-soft);
+  justify-content: flex-start;
+  gap: 6px;
+  width: 72px;
+  height: 368px;
+  padding: 8px 4px;
+  border-left: 2px solid var(--border-default);
+  background: var(--bg-header);
+  overflow: hidden;
 }
 
 @media (max-width: 900px) {
+  .hero-hub {
+    height: 470px;
+    min-height: 470px;
+    max-height: 470px;
+    grid-template-rows: 52px 1fr;
+  }
   .hero-hub__body {
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto;
+    grid-template-rows: 1fr 86px;
+    height: 418px;
+  }
+  .hero-hub__data {
+    height: 332px;
+  }
+  .hero-hub-module {
+    min-height: 268px;
   }
   .hero-hub__rail {
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: center;
     width: 100%;
+    height: 86px;
     border-left: 0;
-    border-top: var(--hairline) solid var(--cinematic-line);
+    border-top: 2px solid var(--border-default);
+    overflow-x: auto;
   }
 }
 
 @media (max-width: 420px) {
   .hero-hub-web {
-    grid-template-columns: repeat(2, var(--hub-tile));
+    grid-template-columns: repeat(2, 56px);
   }
 }

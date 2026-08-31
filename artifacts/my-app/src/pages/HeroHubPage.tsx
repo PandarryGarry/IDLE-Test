@@ -50,6 +50,7 @@ type Detail =
   | { kind: 'gear'; slot: EquipSlot };
 
 const TILE = 48;
+const PORTRAIT = 96;
 
 const MODULES: { id: HubModule; label: string }[] = [
   { id: 'body', label: 'Тело' },
@@ -112,6 +113,8 @@ export function HeroHubPage() {
     setTick(n => n + 1);
   };
 
+  const pane = MODULES.find(mod => mod.id === moduleId);
+
   if (isGuest || !active) {
     return (
       <div className="hero-hub hero-hub--empty">
@@ -141,6 +144,7 @@ export function HeroHubPage() {
 
       <div className="hero-hub__body">
         <div className="hero-hub__data">
+          <h2 className="hero-hub__pane-title">{pane?.label}</h2>
           {moduleId === 'body' && (
             <BodyModule
               avatarSrc={getAvatarPath(active.avatarId)}
@@ -214,18 +218,46 @@ function BodyModule({
 }) {
   return (
     <div className="hero-hub-module">
-      <GAvatar src={avatarSrc} size={96} glow />
-      <div className="hero-hub-row">
-        {PILLAR_IDS.map(id => (
+      <div className="hero-hub-dial" aria-label="Столпы вокруг тела">
+        <div className="hero-hub-dial__n">
           <GSlot
-            key={id}
-            src={PILLAR_ICON[id]}
+            src={PILLAR_ICON.fortitude}
             size={TILE}
-            badge={signed(snapshot.finalPillars[id])}
-            title={PILLARS[id].nameRu}
-            onClick={() => onOpen(id)}
+            badge={signed(snapshot.finalPillars.fortitude)}
+            title={PILLARS.fortitude.nameRu}
+            onClick={() => onOpen('fortitude')}
           />
-        ))}
+        </div>
+        <div className="hero-hub-dial__w">
+          <GSlot
+            src={PILLAR_ICON.instinct}
+            size={TILE}
+            badge={signed(snapshot.finalPillars.instinct)}
+            title={PILLARS.instinct.nameRu}
+            onClick={() => onOpen('instinct')}
+          />
+        </div>
+        <div className="hero-hub-dial__c">
+          <GAvatar src={avatarSrc} size={PORTRAIT} glow />
+        </div>
+        <div className="hero-hub-dial__e">
+          <GSlot
+            src={PILLAR_ICON.might}
+            size={TILE}
+            badge={signed(snapshot.finalPillars.might)}
+            title={PILLARS.might.nameRu}
+            onClick={() => onOpen('might')}
+          />
+        </div>
+        <div className="hero-hub-dial__s">
+          <GSlot
+            src={PILLAR_ICON.finesse}
+            size={TILE}
+            badge={signed(snapshot.finalPillars.finesse)}
+            title={PILLARS.finesse.nameRu}
+            onClick={() => onOpen('finesse')}
+          />
+        </div>
       </div>
     </div>
   );
