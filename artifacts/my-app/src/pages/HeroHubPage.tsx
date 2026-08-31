@@ -6,7 +6,6 @@ import {
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { usePlayerStore } from '@/store/playerStore';
-import { useInventoryStore } from '@/store/inventoryStore';
 import { getAvatarPath, getRaceLabel, type RaceId } from '@/data/characters';
 import {
   BRANCHES,
@@ -283,7 +282,7 @@ function BranchesModule({
 }) {
   return (
     <div className="hero-hub-module">
-      <p className="hero-hub-hint">Золотая рамка — ветвь открыта. Тусклая — ещё не вкладывал.</p>
+      <p className="hero-hub-hint">Золото — вложил. «+» — есть очко. Тусклая — закрыта.</p>
       <div className="hero-hub-web">
         {PILLAR_IDS.map(pillar => {
           const invested = BRANCHES_BY_PILLAR[pillar].some(id => (snapshot.state.branchRanks[id] || 0) > 0);
@@ -293,7 +292,7 @@ function BranchesModule({
             <GSlot
               src={PILLAR_ICON[pillar]}
               size={TILE}
-              selected
+              selected={(snapshot.state.pillarRanks[pillar] || 0) > 0}
               badge={signed(snapshot.finalPillars[pillar])}
               title={PILLARS[pillar].nameRu}
               onClick={() => onOpenPillar(pillar)}
@@ -430,7 +429,6 @@ function HeroDetailModal({
   onSpendBranch: (id: BranchId) => void;
 }) {
   const unequip = usePlayerStore(s => s.unequipItem);
-  const addItem = useInventoryStore(s => s.addItem);
   const title = !detail
     ? ''
     : detail.kind === 'pillar' ? PILLARS[detail.id].nameRu
@@ -444,8 +442,7 @@ function HeroDetailModal({
   const handleUnequip = () => {
     if (!detail || detail.kind !== 'gear' || !gearItemId) return;
     const removed = unequip(detail.slot);
-    if (removed) addItem(removed, 1);
-    onClose();
+    if (removed) onClose();
   };
 
   return (

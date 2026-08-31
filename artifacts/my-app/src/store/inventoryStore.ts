@@ -98,8 +98,8 @@ export const useInventoryStore = create<InventoryStore>((set, get) => ({
         
         switch (activeCategory) {
           case 'equipment':
-            return ['weapon', 'helm', 'platebody', 'platelegs', 'boots', 'gloves', 
-                    'amulet', 'ring', 'shield', 'cape', 'quiver', 'passive'].includes(category);
+            return ['weapon', 'helm', 'platebody', 'platelegs', 'boots', 'gloves',
+                    'amulet', 'ring', 'bracelet', 'belt', 'shield', 'cape', 'quiver', 'passive'].includes(category);
           case 'resources':
             return ['ore', 'log', 'raw_fish', 'bar', 'gem', 'herb', 'seed'].includes(category);
           case 'food':

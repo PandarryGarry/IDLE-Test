@@ -2990,10 +2990,9 @@
   gap: 6px;
   width: 56px;
   padding: 4px 0;
-  border: 1px solid var(--border-slot);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
-  background: var(--bg-slot);
-  box-shadow: var(--shadow-slot);
+  background: transparent;
 }
 
 .hero-hub-cluster.is-open {
@@ -3006,7 +3005,7 @@
   overflow: hidden;
   color: var(--text-gold);
   font-family: var(--app-font-mono);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.04em;
   line-height: 1.1;
@@ -3104,10 +3103,11 @@
   gap: 6px;
   width: 72px;
   height: 368px;
-  padding: 8px 4px;
+  padding: 8px;
   border-left: 2px solid var(--border-default);
   background: var(--bg-header);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 @media (max-width: 900px) {

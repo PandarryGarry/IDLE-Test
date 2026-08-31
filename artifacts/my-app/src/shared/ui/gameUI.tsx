@@ -448,7 +448,8 @@ export function GAvatar({
 const SLOT_FRAME = {
   empty: iconUrl('ui/slots/slot_parchment_empty'),
   common: iconUrl('ui/slots/slot_parchment_common'),
-  active: iconUrl('ui/slots/slot_parchment_active'),
+  /** Золотая рамка. slot_parchment_active — зелёный кант, не берём. */
+  active: iconUrl('ui/slots/slot_parchment_legendary'),
 } as const;
 
 interface GSlotProps {
@@ -484,7 +485,7 @@ export function GSlot({
     backgroundImage: `url(${frame})`,
     backgroundSize: '100% 100%',
     backgroundRepeat: 'no-repeat',
-    boxShadow: lit ? '0 0 0 2px var(--border-accent), var(--shadow-gold)' : 'none',
+    boxShadow: lit ? '0 0 0 1px var(--border-accent), var(--shadow-gold)' : 'none',
     cursor: disabled ? 'not-allowed' : onClick ? 'pointer' : 'default',
     opacity: disabled || dimmed ? 0.42 : 1,
     filter: dimmed ? 'grayscale(0.35) saturate(0.7)' : undefined,
@@ -527,7 +528,7 @@ export function GSlot({
             overflow: 'hidden',
             color: selected ? 'var(--text-gold)' : 'var(--text-muted)',
             fontFamily: C.fontMono,
-            fontSize: 9,
+            fontSize: 11,
             fontWeight: 800,
             lineHeight: 1.1,
             textAlign: 'center',
