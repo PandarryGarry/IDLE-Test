@@ -27,6 +27,18 @@ create table if not exists public.profiles (
 
 -- Ник/аватар больше НЕ на аккаунте (они на персонаже). Оставляем legacy-поля
 -- в profiles, если они уже есть — не мешают, но не используются.
+--
+-- Если таблица уже существовала со старым куском из SUPABASE_SETUP.md §6,
+-- CREATE TABLE IF NOT EXISTS её не трогает. Колонки этапа 4 добираем так:
+
+alter table public.profiles add column if not exists email text;
+alter table public.profiles add column if not exists role text default 'user';
+alter table public.profiles add column if not exists donate_currency bigint default 0;
+alter table public.profiles add column if not exists rules_accepted_at timestamptz;
+alter table public.profiles add column if not exists rules_version text;
+alter table public.profiles add column if not exists selected_character_id uuid;
+alter table public.profiles add column if not exists created_at timestamptz default now();
+alter table public.profiles add column if not exists updated_at timestamptz default now();
 
 alter table public.profiles enable row level security;
 
