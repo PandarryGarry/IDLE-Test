@@ -279,19 +279,50 @@ export function remainingFreeRespecs(state: CharacterAttributeState): number {
   return Math.max(0, FREE_RESPEC_LIMIT - state.freeRespecsUsed);
 }
 
-/** Бесплатный сброс — FREE_RESPEC_LIMIT раз за жизнь. Дальше золото не отдаём (цена не закрыта). */
+function consumeFreeRespec(state: CharacterAttributeState): CharacterAttributeState | null {
+  if (remainingFreeRespecs(state) < 1) return null;
+  return { ...state, freeRespecsUsed: state.freeRespecsUsed + 1 };
+}
+
+/** Сброс столпов. Расходует один бесплатный сброс. */
+export function respecPillarRanks(state: CharacterAttributeState): CharacterAttributeState | null {
+  const spentP = spentPillarRanks(state);
+  if (spentP === 0) return null;
+  const next = consumeFreeRespec(state);
+  if (!next) return null;
+  return {
+    ...next,
+    pillarRanks: emptyPillarRanks(),
+    unspentPillarPoints: state.unspentPillarPoints + spentP,
+  };
+}
+
+/** Сброс ветвей. Расходует один бесплатный сброс. */
+export function respecBranchRanks(state: CharacterAttributeState): CharacterAttributeState | null {
+  const spentB = spentBranchRanks(state);
+  if (spentB === 0) return null;
+  const next = consumeFreeRespec(state);
+  if (!next) return null;
+  return {
+    ...next,
+    branchRanks: emptyBranchRanks(),
+    unspentBranchPoints: state.unspentBranchPoints + spentB,
+  };
+}
+
+/** Бесплатный сброс обоих пулов — FREE_RESPEC_LIMIT раз за жизнь. Дальше золото не отдаём (цена не закрыта). */
 export function respecAttributes(state: CharacterAttributeState): CharacterAttributeState | null {
   const spentP = spentPillarRanks(state);
   const spentB = spentBranchRanks(state);
   if (spentP + spentB === 0) return null;
-  if (remainingFreeRespecs(state) < 1) return null;
+  const next = consumeFreeRespec(state);
+  if (!next) return null;
   return {
-    ...state,
+    ...next,
     pillarRanks: emptyPillarRanks(),
     branchRanks: emptyBranchRanks(),
     unspentPillarPoints: state.unspentPillarPoints + spentP,
     unspentBranchPoints: state.unspentBranchPoints + spentB,
-    freeRespecsUsed: state.freeRespecsUsed + 1,
   };
 }
 

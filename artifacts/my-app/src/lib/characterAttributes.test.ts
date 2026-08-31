@@ -17,6 +17,8 @@ import {
   respecAttributes,
   spendBranchPoint,
   spendPillarPoint,
+  respecBranchRanks,
+  respecPillarRanks,
 } from './characterAttributes.ts';
 
 test('старт: 0 очков, уровень 1, без specializationId', () => {
@@ -154,4 +156,29 @@ test('трата очка и бесплатный respec', () => {
   assert.ok(second);
   assert.equal(second.freeRespecsUsed, 2);
   assert.equal(respecAttributes(second), null);
+});
+
+test('сброс столпов и ветвей раздельно, каждый тратит один бесплатный', () => {
+  let state = createDefaultAttributes();
+  state = {
+    ...state,
+    unspentPillarPoints: 1,
+    unspentBranchPoints: 1,
+  };
+  const afterPillar = spendPillarPoint(state, 'might');
+  assert.ok(afterPillar);
+  const afterBranch = spendBranchPoint(afterPillar, 'tempo');
+  assert.ok(afterBranch);
+  const resetPillars = respecPillarRanks(afterBranch);
+  assert.ok(resetPillars);
+  assert.equal(resetPillars.pillarRanks.might, 0);
+  assert.equal(resetPillars.branchRanks.tempo, 1);
+  assert.equal(resetPillars.unspentPillarPoints, 1);
+  assert.equal(resetPillars.freeRespecsUsed, 1);
+  const resetBranches = respecBranchRanks(resetPillars);
+  assert.ok(resetBranches);
+  assert.equal(resetBranches.branchRanks.tempo, 0);
+  assert.equal(resetBranches.unspentBranchPoints, 1);
+  assert.equal(resetBranches.freeRespecsUsed, 2);
+  assert.equal(respecPillarRanks(resetBranches), null);
 });

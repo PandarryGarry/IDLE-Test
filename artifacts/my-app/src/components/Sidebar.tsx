@@ -162,7 +162,6 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
 
         <div>
           <NavItem href="/" icon={<Home size={16} />} label={t('nav.home')} />
-          {!isGuest && <NavItem href="/hero" icon={<span>🪞</span>} label="Герой" />}
         </div>
 
         {!isGuest && (

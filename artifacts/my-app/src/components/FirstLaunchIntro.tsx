@@ -5,7 +5,8 @@ import {
   collectBeatImages,
 } from '@/data/onboardingStory';
 import { markFullPrologueSeen } from '@/lib/cinematicState';
-import { pickSplashArt } from '@/shared/artRegistry';
+
+const SIGN_ART = '/assets/art/intro_sign.webp';
 
 /**
  * FirstLaunchIntro — акт 0 «ЗНАК» дороги: самый первый кадр игры для
@@ -67,14 +68,7 @@ export function FirstLaunchIntro({ onFinished, authReady = false }: FirstLaunchI
   const [progress, setProgress] = useState(0);
   const finishedRef = useRef(false);
 
-  /* Полноэкранный арт знака под пропорции экрана (тот же выбор, что и у
-     заставки; index.html уже предзагрузил этот вариант). */
-  const [signArt] = useState(() =>
-    pickSplashArt(
-      typeof window !== 'undefined' ? window.innerWidth : 1440,
-      typeof window !== 'undefined' ? window.innerHeight : 900,
-    ),
-  );
+
 
   /* Мини-загрузка: греем ВСЕ арты пролога, не первый попавшийся. */
   useEffect(() => {
@@ -160,14 +154,10 @@ export function FirstLaunchIntro({ onFinished, authReady = false }: FirstLaunchI
         className={`sign-intro${phase === 'bloom' ? ' sign-intro--leaving' : ''}`}
         aria-label="Aethelia"
       >
-        {/* Кадр: утверждённый арт знака НА ВЕСЬ экран (cover), вариант
-            wide/tall/square выбирается под пропорции экрана — тот же, что
-            предзагружает index.html. Никакого «прямоугольника» с размытой
-            подложкой: арт и есть загрузочный экран. */}
         <div className="sign-intro__scene" aria-hidden="true">
           <img
             className="sign-intro__art"
-            src={signArt.src}
+            src={SIGN_ART}
             alt=""
             draggable={false}
           />
