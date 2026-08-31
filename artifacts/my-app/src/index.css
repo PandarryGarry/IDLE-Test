@@ -177,10 +177,12 @@
   --control-sm: clamp(2.375rem, 2.25rem + 0.62vw, 3rem);    /* 38–48px */
   --control-md: clamp(2.75rem, 2.6rem + 0.75vw, 3.5rem);    /* 44–56px */
 
-  /* Плотные игровые ячейки. Не путать с --control-*: чипы и слоты на телефоне
-     должны быть меньше форм входа, иначе экран уезжает в длинный скролл. */
-  --slot: clamp(2.25rem, 2.05rem + 0.85vw, 3.25rem);        /* 36–52px */
-  --chip: clamp(2.125rem, 2rem + 0.45vw, 2.5rem);            /* 34–40px */
+  /* Квадратная ячейка игрового поля (инвентарь / ветви / столпы).
+     Потолок держит сетку компактной; в узком кадре колонки сжимаются сами,
+     aspect-ratio:1 не даёт карточке стать «лапшой». */
+  --sq: clamp(3.75rem, 3.35rem + 1.2vw, 4.75rem);            /* 60–76px */
+  --slot: var(--sq);
+  --chip: var(--sq);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -2843,8 +2845,9 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   HERO HUB — модульный экран персонажа (5B)
-   Размеры только из шкалы :root. Медиа — только структура.
+   HERO HUB — квадратное поле (5B)
+   Карточка = aspect-ratio 1. Сетка центрируется, не растягивается.
+   Медиа — только структура (колонки → столбик).
    ═══════════════════════════════════════════════════════════ */
 
 .hero-hub {
@@ -2861,7 +2864,7 @@
 
 .hero-hub--empty {
   place-items: center;
-  min-height: min(18rem, 50svh);
+  min-height: min(16rem, 48svh);
 }
 
 .hero-hub__header {
@@ -2877,7 +2880,7 @@
   min-width: 0;
   flex: 1;
   display: grid;
-  gap: 0.05rem;
+  gap: 0;
 }
 
 .hero-hub__identity strong {
@@ -2898,9 +2901,8 @@
 
 .hero-hub__wallets {
   display: flex;
-  flex-wrap: wrap;
+  flex-shrink: 0;
   gap: var(--space-2xs);
-  justify-content: flex-end;
 }
 
 .hero-hub__body {
@@ -2910,104 +2912,106 @@
 }
 
 .hero-hub.is-body .hero-hub__body {
-  grid-template-columns: minmax(0, 1.05fr) minmax(11rem, 0.8fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
 }
 
 .hero-hub__data {
   min-height: 0;
-  overflow-y: auto;
+  overflow: auto;
   padding: var(--space-sm);
-  animation: auth-soft-rise 280ms ease-out both;
 }
 
 .hero-hub-module {
   display: grid;
+  justify-items: center;
+  gap: var(--space-sm);
+}
+
+.hero-hub-sq-grid,
+.hero-hub-web {
+  display: grid;
+  justify-content: center;
+  width: 100%;
+}
+
+.hero-hub-sq-grid--2 {
+  grid-template-columns: repeat(2, minmax(0, var(--sq)));
   gap: var(--space-xs);
 }
 
-.hero-hub-module h2 {
-  margin: 0;
-  color: var(--cinematic-light);
-  font-family: var(--app-font-display);
-  font-size: var(--text-md);
-  font-weight: 900;
+.hero-hub-sq-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, var(--sq)));
+  gap: var(--space-xs);
 }
 
-.hero-hub-module > p,
-.hero-hub-modal p {
-  margin: 0;
-  color: var(--cinematic-copy);
-  font-size: var(--text-2xs);
-  line-height: 1.4;
+.hero-hub-web {
+  grid-template-columns: repeat(4, minmax(0, var(--sq)));
+  gap: var(--space-xs);
 }
 
-.hero-hub-chip-grid {
+.hero-hub-cluster {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-items: stretch;
   gap: var(--space-2xs);
 }
 
-.hero-hub-chip-grid--2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.hero-hub-cluster__stem {
+  display: block;
+  width: var(--hairline);
+  height: var(--space-xs);
+  margin-inline: auto;
+  background: var(--cinematic-line);
 }
 
-.hero-hub-chip {
-  display: flex !important;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2xs);
-  min-height: var(--chip);
-  padding: var(--space-2xs) var(--space-xs) !important;
-}
-
-.hero-hub-chip span {
+.hero-hub-sq {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  display: grid !important;
+  grid-template-rows: auto 1fr auto;
+  place-items: center;
+  padding: var(--space-2xs) !important;
+  text-align: center;
   overflow: hidden;
+}
+
+.hero-hub-sq__icon {
+  font-size: var(--text-md);
+  line-height: 1;
+}
+
+.hero-hub-sq__name {
+  display: -webkit-box;
+  overflow: hidden;
+  max-width: 100%;
   color: var(--cinematic-light);
   font-family: var(--app-font-display);
   font-size: var(--text-2xs);
   font-weight: 800;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.15;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
-.hero-hub-chip b {
+.hero-hub-sq__val {
   color: var(--cinematic-gold);
   font-family: var(--app-font-mono);
-  font-size: var(--text-xs);
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  line-height: 1;
 }
 
-.hero-hub-legacy__mods,
-.hero-hub-pillar-tabs {
+.hero-hub-legacy__mods {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: var(--space-2xs);
-}
-
-.hero-hub-pillar-tabs button {
-  width: var(--chip);
-  height: var(--chip);
-  border: var(--hairline) solid var(--cinematic-line);
-  border-radius: var(--radius-xs);
-  background: var(--cinematic-ink-soft);
-  color: var(--cinematic-copy);
-  cursor: pointer;
-}
-
-.hero-hub-pillar-tabs button.is-active {
-  border-color: var(--cinematic-gold);
-  color: var(--cinematic-light);
-  box-shadow: 0 0 0.8rem var(--cinematic-gold-soft);
 }
 
 .hero-hub-doll {
   display: grid;
-  grid-template-columns: repeat(3, var(--slot));
+  grid-template-columns: repeat(3, var(--sq));
   justify-content: center;
-  gap: var(--space-xs) var(--space-sm);
-  padding: var(--space-xs);
-  border: var(--hairline) solid var(--cinematic-line);
-  border-radius: var(--radius-xs);
-  background: var(--cinematic-ink-soft);
+  gap: var(--space-xs);
 }
 
 .hero-hub-doll__cell {
@@ -3022,8 +3026,8 @@
 }
 
 .hero-hub-doll__slot {
-  width: var(--slot);
-  height: var(--slot);
+  width: var(--sq);
+  height: var(--sq);
   display: grid;
   place-items: center;
   border: var(--hairline) dashed var(--cinematic-line);
@@ -3037,8 +3041,8 @@
 }
 
 .hero-hub-doll__slot img {
-  width: 78%;
-  height: 78%;
+  width: 72%;
+  height: 72%;
   object-fit: contain;
 }
 
@@ -3049,24 +3053,27 @@
 }
 
 .hero-hub-doll__cell small {
-  max-width: var(--slot);
+  max-width: var(--sq);
   overflow: hidden;
   color: var(--text-muted);
   font-family: var(--app-font-mono);
   font-size: var(--text-2xs);
-  line-height: 1.1;
+  line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .hero-hub-path-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-2xs);
+  grid-template-columns: repeat(2, minmax(0, 8rem));
+  justify-content: center;
+  gap: var(--space-xs);
+  width: 100%;
 }
 
 .hero-hub-path-grid > div {
   display: grid;
+  justify-items: center;
   gap: 0.12rem;
   padding: var(--space-xs);
   border: var(--hairline) solid var(--cinematic-line);
@@ -3092,6 +3099,13 @@
   gap: var(--space-xs);
 }
 
+.hero-hub-modal p {
+  margin: 0;
+  color: var(--cinematic-copy);
+  font-size: var(--text-2xs);
+  line-height: 1.4;
+}
+
 .hero-hub__stage {
   display: grid;
   place-items: center;
@@ -3103,13 +3117,13 @@
 
 .hero-hub__figure {
   position: relative;
-  width: min(14rem, 100%);
+  width: calc(var(--sq) * 3.15);
   aspect-ratio: 1;
 }
 
 .hero-hub__portrait {
   position: absolute;
-  inset: 24%;
+  inset: 26%;
   display: grid;
   place-items: center;
 }
@@ -3118,18 +3132,18 @@
   position: absolute;
   display: grid;
   place-items: center;
-  gap: 0.05rem;
-  width: var(--slot);
-  padding: var(--space-2xs) 0;
+  width: var(--sq);
+  height: var(--sq);
+  padding: 0;
   border: var(--hairline) solid var(--cinematic-line);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-xs);
   background: var(--cinematic-ink);
   color: var(--cinematic-copy);
   box-shadow: 0 0 calc(0.3rem + var(--stone-heat, 0) * 1rem) var(--cinematic-gold-soft);
   cursor: pointer;
 }
 
-.hero-hub__stone span { font-size: var(--text-sm); line-height: 1; }
+.hero-hub__stone span { font-size: var(--text-md); line-height: 1; }
 .hero-hub__stone b {
   font-family: var(--app-font-mono);
   font-size: var(--text-2xs);
@@ -3147,21 +3161,21 @@
 .hero-hub__stone--instinct { top: 50%; left: 0; transform: translateY(-50%); }
 
 .hero-hub__rail {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: repeat(5, var(--sq));
+  align-content: start;
   gap: var(--space-2xs);
-  padding: var(--space-2xs);
+  padding: var(--space-xs);
   border-left: var(--hairline) solid var(--cinematic-line);
   background: var(--cinematic-ink-soft);
 }
 
 .hero-hub__rail-btn {
   display: grid;
-  justify-items: center;
-  gap: 0.1rem;
-  width: var(--control-sm);
-  min-height: var(--chip);
-  padding: var(--space-2xs) 0;
+  place-items: center;
+  width: var(--sq);
+  height: var(--sq);
+  padding: var(--space-2xs);
   border: var(--hairline) solid transparent;
   border-radius: var(--radius-xs);
   background: transparent;
@@ -3169,13 +3183,17 @@
   cursor: pointer;
 }
 
-.hero-hub__rail-btn span { font-size: var(--text-sm); line-height: 1; }
+.hero-hub__rail-btn span { font-size: var(--text-md); line-height: 1; }
 .hero-hub__rail-btn small {
+  max-width: 100%;
+  overflow: hidden;
   font-family: var(--app-font-mono);
   font-size: var(--text-2xs);
   font-weight: 800;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .hero-hub__rail-btn.is-active {
@@ -3185,7 +3203,6 @@
   box-shadow: 0 0 0.7rem var(--cinematic-gold-soft);
 }
 
-/* Структура: телефон — столбик, rail вниз. Размеры не трогаем. */
 @media (max-width: 900px) {
   .hero-hub__body,
   .hero-hub.is-body .hero-hub__body {
@@ -3196,25 +3213,19 @@
   .hero-hub__data { order: 2; }
   .hero-hub__rail {
     order: 3;
-    flex-direction: row;
-    justify-content: space-around;
+    grid-template-columns: repeat(5, minmax(0, var(--sq)));
+    grid-template-rows: var(--sq);
+    justify-content: center;
+    width: 100%;
     border-left: 0;
     border-top: var(--hairline) solid var(--cinematic-line);
   }
-  .hero-hub__rail-btn {
-    flex: 1;
-    width: auto;
-    min-height: var(--chip);
-  }
-  .hero-hub__figure { width: min(11.5rem, 62vw); }
   .hero-hub__portrait > div {
-    width: 4.75rem !important;
-    height: 4.75rem !important;
+    width: 4.5rem !important;
+    height: 4.5rem !important;
   }
-  .hero-hub-chip-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-hub,
-  .hero-hub__data { animation: none !important; }
+  .hero-hub { animation: none !important; }
 }
