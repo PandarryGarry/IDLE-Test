@@ -60,27 +60,36 @@ const MODULES: { id: HubModule; label: string }[] = [
   { id: 'path', label: 'Путь' },
 ];
 
-const GEAR_LAYOUT: (EquipSlot | null)[] = [
-  null, 'helm', null,
-  'cape', 'amulet', 'quiver',
-  'weapon', 'platebody', 'shield',
-  null, 'platelegs', null,
-  'gloves', 'boots', 'ring',
-  null, 'passive', null,
+const HUB_DOLL: { slot: EquipSlot; area: string; label: string }[] = [
+  { slot: 'helm', area: 'helm', label: 'Шлем' },
+  { slot: 'bracelet', area: 'br1', label: 'Браслет' },
+  { slot: 'amulet', area: 'neck', label: 'Ожерелье' },
+  { slot: 'bracelet2', area: 'br2', label: 'Браслет' },
+  { slot: 'ring', area: 'r1', label: 'Кольцо' },
+  { slot: 'platebody', area: 'body', label: 'Торс' },
+  { slot: 'ring2', area: 'r2', label: 'Кольцо' },
+  { slot: 'gloves', area: 'glove', label: 'Перчатки' },
+  { slot: 'belt', area: 'belt', label: 'Пояс' },
+  { slot: 'platelegs', area: 'legs', label: 'Ноги' },
+  { slot: 'boots', area: 'boots', label: 'Обувь' },
 ];
 
 const GEAR_LABEL: Record<EquipSlot, string> = {
   helm: 'Шлем',
+  platebody: 'Торс',
+  platelegs: 'Ноги',
+  boots: 'Обувь',
+  gloves: 'Перчатки',
+  amulet: 'Ожерелье',
+  ring: 'Кольцо',
+  ring2: 'Кольцо',
+  bracelet: 'Браслет',
+  bracelet2: 'Браслет',
+  belt: 'Пояс',
   cape: 'Плащ',
-  amulet: 'Шея',
   quiver: 'Колчан',
   weapon: 'Оружие',
-  platebody: 'Доспех',
   shield: 'Щит',
-  platelegs: 'Поножи',
-  gloves: 'Перчатки',
-  boots: 'Сапоги',
-  ring: 'Кольцо',
   passive: 'Талисман',
 };
 
@@ -138,7 +147,7 @@ export function HeroHubPage() {
         </div>
         <div className="hero-hub__wallets">
           <GBadge variant="gold" size="sm">Столп {state.unspentPillarPoints}</GBadge>
-          <GBadge variant="purple" size="sm">Ветвь {state.unspentBranchPoints}</GBadge>
+          <GBadge variant="gold" size="sm">Ветвь {state.unspentBranchPoints}</GBadge>
         </div>
       </header>
 
@@ -155,6 +164,7 @@ export function HeroHubPage() {
           {moduleId === 'branches' && (
             <BranchesModule
               snapshot={snapshot}
+              canSpend={state.unspentBranchPoints > 0}
               onOpenPillar={id => setDetail({ kind: 'pillar', id })}
               onOpenBranch={id => setDetail({ kind: 'branch', id })}
             />
@@ -264,17 +274,22 @@ function BodyModule({
 }
 
 function BranchesModule({
-  snapshot, onOpenPillar, onOpenBranch,
+  snapshot, canSpend, onOpenPillar, onOpenBranch,
 }: {
   snapshot: ReturnType<typeof computeAttributeSnapshot>;
+  canSpend: boolean;
   onOpenPillar: (id: PillarId) => void;
   onOpenBranch: (id: BranchId) => void;
 }) {
   return (
     <div className="hero-hub-module">
+      <p className="hero-hub-hint">Золотая рамка — ветвь открыта. Тусклая — ещё не вкладывал.</p>
       <div className="hero-hub-web">
-        {PILLAR_IDS.map(pillar => (
-          <div key={pillar} className="hero-hub-cluster">
+        {PILLAR_IDS.map(pillar => {
+          const invested = BRANCHES_BY_PILLAR[pillar].some(id => (snapshot.state.branchRanks[id] || 0) > 0);
+          return (
+          <div key={pillar} className={invested ? 'hero-hub-cluster is-open' : 'hero-hub-cluster'}>
+            <span className="hero-hub-cluster__name">{PILLARS[pillar].nameRu}</span>
             <GSlot
               src={PILLAR_ICON[pillar]}
               size={TILE}
@@ -283,18 +298,26 @@ function BranchesModule({
               title={PILLARS[pillar].nameRu}
               onClick={() => onOpenPillar(pillar)}
             />
-            {BRANCHES_BY_PILLAR[pillar].map(branchId => (
-              <GSlot
-                key={branchId}
-                src={BRANCH_ICON[branchId]}
-                size={TILE}
-                badge={snapshot.state.branchRanks[branchId] || undefined}
-                title={BRANCHES[branchId].nameRu}
-                onClick={() => onOpenBranch(branchId)}
-              />
-            ))}
+            {BRANCHES_BY_PILLAR[pillar].map(branchId => {
+              const rank = snapshot.state.branchRanks[branchId] || 0;
+              const open = rank > 0;
+              const status = open ? `ранг ${rank}` : canSpend ? 'можно открыть' : 'закрыта';
+              return (
+                <GSlot
+                  key={branchId}
+                  src={BRANCH_ICON[branchId]}
+                  size={TILE}
+                  selected={open}
+                  dimmed={!open && !canSpend}
+                  badge={open ? rank : canSpend ? '+' : undefined}
+                  title={`${BRANCHES[branchId].nameRu} · ${status}`}
+                  onClick={() => onOpenBranch(branchId)}
+                />
+              );
+            })}
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -308,21 +331,21 @@ function GearModule({
 }) {
   return (
     <div className="hero-hub-module">
-      <div className="hero-hub-doll">
-        {GEAR_LAYOUT.map((slot, i) => {
-          if (!slot) return <div key={`e${i}`} className="hero-hub-doll__pad" />;
+      <div className="hero-hub-doll" aria-label="Скелет экипировки">
+        {HUB_DOLL.map(({ slot, area, label }) => {
           const itemId = equipment[slot];
           const visual = itemId ? getItemVisual(itemId) : null;
           return (
-            <GSlot
-              key={slot}
-              src={visual?.type === 'image' ? visual.value : itemId ? undefined : EQUIP_SLOT_ICON[slot]}
-              emoji={visual?.type === 'emoji' ? visual.value : undefined}
-              size={TILE}
-              frame={itemId ? 'active' : 'empty'}
-              title={GEAR_LABEL[slot]}
-              onClick={() => onOpen(slot)}
-            />
+            <div key={slot} className="hero-hub-doll__cell" style={{ gridArea: area }}>
+              <GSlot
+                src={visual?.type === 'image' ? visual.value : itemId ? undefined : EQUIP_SLOT_ICON[slot]}
+                emoji={visual?.type === 'emoji' ? visual.value : undefined}
+                size={TILE}
+                selected={Boolean(itemId)}
+                title={label}
+                onClick={() => onOpen(slot)}
+              />
+            </div>
           );
         })}
       </div>
@@ -347,8 +370,9 @@ function SynergiesModule({
               src={SYNERGY_ICON[synergy.id]}
               size={TILE}
               selected={on}
+              dimmed={!on}
               badge={on ? '•' : undefined}
-              title={synergy.nameRu}
+              title={on ? `${synergy.nameRu} · горит` : `${synergy.nameRu} · спит`}
               onClick={() => onOpen(synergy.id)}
             />
           );
@@ -466,7 +490,7 @@ function HeroDetailModal({
           .filter(([id, need]) => snapshot.finalPillars[id as PillarId] < (need ?? 0));
         return (
           <div className="hero-hub-modal">
-            <GBadge variant={on ? 'green' : 'gray'}>{on ? 'горит' : 'спит'}</GBadge>
+            <GBadge variant={on ? 'gold' : 'gray'}>{on ? 'горит' : 'спит'}</GBadge>
             <p>{synergy.childRu}</p>
             {on ? <p>{synergy.effectRu}</p> : (
               <p>

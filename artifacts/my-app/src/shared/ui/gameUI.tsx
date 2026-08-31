@@ -446,9 +446,9 @@ export function GAvatar({
    подпись снаружи. Без hover-translate (иначе сетка дёргается).
 ════════════════════════════════════════════════════════════════ */
 const SLOT_FRAME = {
-  empty: iconUrl('ui/slots/slot_empty'),
-  common: iconUrl('ui/slots/slot_common'),
-  active: iconUrl('ui/slots/slot_active'),
+  empty: iconUrl('ui/slots/slot_parchment_empty'),
+  common: iconUrl('ui/slots/slot_parchment_common'),
+  active: iconUrl('ui/slots/slot_parchment_active'),
 } as const;
 
 interface GSlotProps {
@@ -461,15 +461,17 @@ interface GSlotProps {
   label?: string;
   title?: string;
   frame?: keyof typeof SLOT_FRAME;
+  dimmed?: boolean;
   onClick?: () => void;
   className?: string;
 }
 
 export function GSlot({
   src, emoji, size = 48, selected = false, disabled = false,
-  badge, label, title, frame: frameKey, onClick, className,
+  badge, label, title, frame: frameKey, dimmed = false, onClick, className,
 }: GSlotProps) {
-  const frame = SLOT_FRAME[frameKey ?? (selected ? 'active' : (src || emoji) ? 'common' : 'empty')];
+  const lit = selected && !dimmed;
+  const frame = SLOT_FRAME[frameKey ?? (lit ? 'active' : (src || emoji) ? 'common' : 'empty')];
   const iconPad = Math.round(size * 0.18);
   const faceStyle: React.CSSProperties = {
     position: 'relative',
@@ -477,12 +479,15 @@ export function GSlot({
     height: size,
     padding: 0,
     border: 0,
+    outline: 'none',
     background: 'transparent',
     backgroundImage: `url(${frame})`,
     backgroundSize: '100% 100%',
     backgroundRepeat: 'no-repeat',
+    boxShadow: lit ? '0 0 0 2px var(--border-accent), var(--shadow-gold)' : 'none',
     cursor: disabled ? 'not-allowed' : onClick ? 'pointer' : 'default',
-    opacity: disabled ? 0.5 : 1,
+    opacity: disabled || dimmed ? 0.42 : 1,
+    filter: dimmed ? 'grayscale(0.35) saturate(0.7)' : undefined,
     flexShrink: 0,
   };
 
@@ -522,7 +527,7 @@ export function GSlot({
             overflow: 'hidden',
             color: selected ? 'var(--text-gold)' : 'var(--text-muted)',
             fontFamily: C.fontMono,
-            fontSize: 14,
+            fontSize: 9,
             fontWeight: 800,
             lineHeight: 1.1,
             textAlign: 'center',

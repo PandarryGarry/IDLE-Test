@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { SkillId, SkillState, Equipment, EquipSlot } from '../data/types';
+import { EMPTY_EQUIPMENT, normalizeEquipment } from '../data/types';
 import { getLevelForXp, getXpForLevel, XP_TABLE, MAX_LEVEL } from '../gameEngine/xpTable';
 import { calcCombatLevel } from '../gameEngine/formulas';
 import { useBankStore } from './bankStore';
@@ -27,11 +28,7 @@ function createInitialSkills(): Record<SkillId, SkillState> {
   return skills;
 }
 
-const INITIAL_EQUIPMENT: Equipment = {
-  helm: null, platebody: null, platelegs: null, boots: null,
-  gloves: null, amulet: null, ring: null, weapon: null,
-  shield: null, cape: null, quiver: null, passive: null,
-};
+const INITIAL_EQUIPMENT: Equipment = { ...EMPTY_EQUIPMENT };
 
 export interface PlayerStore {
   skills: Record<SkillId, SkillState>;
@@ -49,7 +46,7 @@ export interface PlayerStore {
   setSkillXp: (skillId: SkillId, xp: number) => void;
   getSkillLevel: (skillId: SkillId) => number;
   getMasteryLevel: (skillId: SkillId, actionId: string) => number;
-  loadFromSave: (skills: Record<SkillId, SkillState>, equipment: Equipment) => void;
+  loadFromSave: (skills: Record<SkillId, SkillState>, equipment?: Partial<Equipment> | null) => void;
   reset: () => void;
 }
 
@@ -114,7 +111,10 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   equipItem: (itemId, slot) => {
     const bankStore = useBankStore.getState();
     const { equipment } = get();
-    const previous = equipment[slot];
+    let target = slot;
+    if (slot === 'ring' && equipment.ring && !equipment.ring2) target = 'ring2';
+    if (slot === 'bracelet' && equipment.bracelet && !equipment.bracelet2) target = 'bracelet2';
+    const previous = equipment[target];
 
     // If there's already something equipped in this slot, we need to put it back in the bank
     // first — but only proceed if there's space (or the bank already has the item).
@@ -127,7 +127,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       }
     }
 
-    set({ equipment: { ...equipment, [slot]: itemId } });
+    set({ equipment: { ...equipment, [target]: itemId } });
     return previous;
   },
 
@@ -186,7 +186,13 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     }
     const combatLevel = computeCombatLevel(mergedSkills);
     const maxPrayerPoints = computeMaxPrayerPoints(mergedSkills.prayer?.level ?? 1);
-    set({ skills: mergedSkills, equipment: equipment || { ...INITIAL_EQUIPMENT }, combatLevel, maxPrayerPoints, prayerPoints: maxPrayerPoints });
+    set({
+      skills: mergedSkills,
+      equipment: normalizeEquipment(equipment),
+      combatLevel,
+      maxPrayerPoints,
+      prayerPoints: maxPrayerPoints,
+    });
   },
 
   reset: () => {

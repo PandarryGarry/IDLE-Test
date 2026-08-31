@@ -18,11 +18,14 @@ export const ALL_SKILL_IDS: SkillId[] = [...COMBAT_SKILLS, ...GATHERING_SKILLS, 
 
 export type ItemCategory =
   | 'weapon' | 'helm' | 'platebody' | 'platelegs' | 'boots' | 'gloves'
-  | 'amulet' | 'ring' | 'shield' | 'cape'
+  | 'amulet' | 'ring' | 'bracelet' | 'belt' | 'shield' | 'cape'
   | 'food' | 'herb' | 'seed' | 'bar' | 'ore' | 'log' | 'rune'
   | 'potion' | 'raw_fish' | 'cooked_fish' | 'gem' | 'misc' | 'bone' | 'ash' | 'arrow' | 'tablet';
 
-export type EquipSlot = 'helm' | 'platebody' | 'platelegs' | 'boots' | 'gloves' | 'amulet' | 'ring' | 'weapon' | 'shield' | 'cape' | 'quiver' | 'passive';
+export type EquipSlot =
+  | 'helm' | 'platebody' | 'platelegs' | 'boots' | 'gloves'
+  | 'amulet' | 'ring' | 'ring2' | 'bracelet' | 'bracelet2' | 'belt'
+  | 'weapon' | 'shield' | 'cape' | 'quiver' | 'passive';
 
 export interface CombatStats {
   attackBonus?: number;
@@ -175,11 +178,25 @@ export interface Equipment {
   gloves: string | null;
   amulet: string | null;
   ring: string | null;
+  ring2: string | null;
+  bracelet: string | null;
+  bracelet2: string | null;
+  belt: string | null;
   weapon: string | null;
   shield: string | null;
   cape: string | null;
   quiver: string | null;
   passive: string | null;
+}
+
+export const EMPTY_EQUIPMENT: Equipment = {
+  helm: null, platebody: null, platelegs: null, boots: null, gloves: null,
+  amulet: null, ring: null, ring2: null, bracelet: null, bracelet2: null, belt: null,
+  weapon: null, shield: null, cape: null, quiver: null, passive: null,
+};
+
+export function normalizeEquipment(raw?: Partial<Equipment> | null): Equipment {
+  return { ...EMPTY_EQUIPMENT, ...raw };
 }
 
 export interface BankSlot {
