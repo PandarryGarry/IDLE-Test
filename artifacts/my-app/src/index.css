@@ -3051,70 +3051,12 @@
   justify-items: stretch;
 }
 
-.hero-core-wrap {
-  display: grid;
-  justify-items: center;
-  width: 100%;
-  overflow-x: auto;
-  padding: var(--space-2xs) 0;
-}
-
-.hero-core {
-  --core-node: 26px;
-  --core-pillar: 36px;
-  --core-knot: 16px;
-  --core-gap: 2px;
-  display: grid;
-  grid-template-columns: auto auto auto auto auto;
-  grid-template-areas:
-    '. . north-wing . .'
-    '. . north . .'
-    'west-wing west knot east east-wing'
-    '. . south . .'
-    '. . south-wing . .';
-  justify-content: center;
-  justify-items: center;
-  align-items: center;
-  gap: var(--core-gap);
-  background:
-    linear-gradient(var(--border-light), var(--border-light)) center / 2px min(38%, 6.5rem) no-repeat,
-    linear-gradient(var(--border-light), var(--border-light)) center / min(38%, 6.5rem) 2px no-repeat;
-}
-
-.hero-wing {
-  display: grid;
-  grid-template-columns: repeat(3, var(--core-node));
-  grid-template-rows: repeat(3, var(--core-node));
-  gap: 2px;
-}
-
-.hero-wing--north { grid-area: north-wing; }
-.hero-wing--south { grid-area: south-wing; }
-.hero-wing--west { grid-area: west-wing; }
-.hero-wing--east { grid-area: east-wing; }
-
-.hero-node--pillar[data-arm='north'] { grid-area: north; }
-.hero-node--pillar[data-arm='south'] { grid-area: south; }
-.hero-node--pillar[data-arm='west'] { grid-area: west; }
-.hero-node--pillar[data-arm='east'] { grid-area: east; }
-
-.hero-knot {
-  grid-area: knot;
-  width: var(--core-knot);
-  height: var(--core-knot);
-  border: 2px solid var(--border-accent);
-  border-radius: 3px;
-  background: var(--bg-header);
-  box-shadow: var(--shadow-gold);
-  transform: rotate(45deg);
-}
-
 .hero-node {
   position: relative;
   display: grid;
   place-items: center;
-  width: var(--core-node);
-  height: var(--core-node);
+  width: 36px;
+  height: 36px;
   margin: 0;
   padding: 0;
   border: 1px solid var(--border-default);
@@ -3127,8 +3069,8 @@
 }
 
 .hero-node--pillar {
-  width: var(--core-pillar);
-  height: var(--core-pillar);
+  width: 48px;
+  height: 48px;
   border-width: 2px;
 }
 
@@ -3165,34 +3107,92 @@
 }
 
 .hero-node.is-void {
+  width: 28px;
+  height: 28px;
   cursor: default;
   pointer-events: none;
   opacity: 0.28;
 }
 
-@media (min-width: 480px) {
-  .hero-core {
-    --core-node: 32px;
-    --core-pillar: 46px;
-    --core-knot: 22px;
-    --core-gap: 4px;
-  }
+.hero-board {
+  position: relative;
+  width: 100%;
+  height: min(62svh, 28rem);
+  min-height: 16rem;
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: contain;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-slot);
+  box-shadow: var(--shadow-slot);
+  cursor: grab;
+}
+
+.hero-board:active {
+  cursor: grabbing;
+}
+
+.hero-board__world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 720px;
+  height: 720px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.hero-board__road {
+  position: absolute;
+  height: 2px;
+  background: var(--border-light);
+  transform-origin: 0 50%;
+  pointer-events: none;
+}
+
+.hero-board__road[data-on='true'] {
+  background: var(--border-accent);
+  box-shadow: var(--shadow-gold);
+}
+
+.hero-board__knot {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-accent);
+  border-radius: 3px;
+  background: var(--bg-header);
+  box-shadow: var(--shadow-gold);
+  transform: translate(-50%, -50%) rotate(45deg);
+  pointer-events: none;
+}
+
+.hero-board__node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+.hero-board__home {
+  position: absolute;
+  right: var(--space-xs);
+  bottom: var(--space-xs);
+  z-index: 2;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-sm);
+  background: var(--bg-header);
+  color: var(--text-gold);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
 }
 
 @media (min-width: 720px) {
-  .hero-core {
-    --core-node: 40px;
-    --core-pillar: 56px;
-    --core-knot: 28px;
-    --core-gap: 6px;
-  }
-}
-
-@media (min-width: 1100px) {
-  .hero-core {
-    --core-node: 44px;
-    --core-pillar: 64px;
-    --core-knot: 32px;
+  .hero-board {
+    height: min(64svh, 34rem);
   }
 }
 
