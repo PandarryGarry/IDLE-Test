@@ -2848,7 +2848,7 @@
 
 /* ═══════════════════════════════════════════════════════════
    HERO HUB — лист героя. Палитра — токены шелла, не cinematic.
-   Медиа — только структура. Слоты 48px / узлы ветвей 60px.
+   Медиа — только структура. Слоты 48px / узлы ветвей 52px.
    ═══════════════════════════════════════════════════════════ */
 
 .hero-hub {
@@ -3080,8 +3080,8 @@
   position: relative;
   display: grid;
   place-items: center;
-  width: 60px;
-  height: 60px;
+  width: 52px;
+  height: 52px;
   margin: 0;
   padding: 0;
   border: 1px solid var(--border-default);
@@ -3094,14 +3094,14 @@
 }
 
 .hero-node--pillar {
-  width: 72px;
-  height: 72px;
+  width: 64px;
+  height: 64px;
   border-width: 2px;
 }
 
 .hero-node img {
-  width: 82%;
-  height: 82%;
+  width: 72%;
+  height: 72%;
   object-fit: contain;
   pointer-events: none;
 }
