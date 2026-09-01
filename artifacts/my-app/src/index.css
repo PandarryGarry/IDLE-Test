@@ -3055,8 +3055,8 @@
   position: relative;
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   margin: 0;
   padding: 0;
   border: 1px solid var(--border-default);
@@ -3069,14 +3069,14 @@
 }
 
 .hero-node--pillar {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-width: 2px;
 }
 
 .hero-node img {
-  width: 70%;
-  height: 70%;
+  width: 76%;
+  height: 76%;
   object-fit: contain;
   pointer-events: none;
 }
@@ -3095,6 +3095,22 @@
   font-weight: 800;
   line-height: 1.2;
   pointer-events: none;
+}
+
+.hero-node--pillar b {
+  right: -0.2rem;
+  bottom: -0.2rem;
+  width: 1.375rem;
+  height: 1.375rem;
+  min-width: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-full);
+  background: var(--bg-header);
+  font-size: 0.6875rem;
+  line-height: 1;
 }
 
 .hero-node[data-on='true'] {
@@ -3145,7 +3161,7 @@
 
 .hero-board__road {
   position: absolute;
-  height: 2px;
+  height: 3px;
   background: var(--border-light);
   transform-origin: 0 50%;
   pointer-events: none;

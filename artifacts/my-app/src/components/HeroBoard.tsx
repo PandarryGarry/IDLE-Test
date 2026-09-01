@@ -15,9 +15,9 @@ type Snapshot = ReturnType<typeof computeAttributeSnapshot>;
 const WORLD = 720;
 const CX = 360;
 const CY = 360;
-const PILLAR_D = 118;
-const RING_GAP = [68, 64, 64] as const;
-const SPREAD = [34, 42, 50] as const;
+const PILLAR_D = 84;
+const RING_GAP = [80, 74, 74] as const;
+const SPREAD = [50, 68, 84] as const;
 const MIN_SCALE = 0.52;
 const MAX_SCALE = 1.65;
 const CLICK_PX = 8;
@@ -308,7 +308,7 @@ function BoardNode({
       onClick={onOpen}
     >
       <img src={src} alt="" decoding="async" />
-      {rank > 0 && <b>{rank}</b>}
+      {(kind === 'pillar' || rank > 0) && <b>{rank}</b>}
     </button>
   );
 }
