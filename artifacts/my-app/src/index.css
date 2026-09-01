@@ -3148,8 +3148,8 @@
 }
 
 .hero-node.is-void {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   cursor: default;
   pointer-events: none;
   opacity: 0.28;
