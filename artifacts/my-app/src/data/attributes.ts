@@ -51,25 +51,25 @@ export const PILLARS: Record<PillarId, NamedBlurb & { icon: string }> = {
     id: 'fortitude',
     nameRu: 'Стойкость',
     icon: '🛡',
-    childRu: 'Насколько тебя трудно сломать.',
+    childRu: 'Дольше держишься в бою.',
   },
   might: {
     id: 'might',
     nameRu: 'Мощь',
     icon: '⚔',
-    childRu: 'Насколько сильно ты бьёшь.',
+    childRu: 'Бьёшь сильнее.',
   },
   finesse: {
     id: 'finesse',
     nameRu: 'Сноровка',
     icon: '💨',
-    childRu: 'Насколько быстро и ловко ты действуешь.',
+    childRu: 'Действуешь чаще и точнее.',
   },
   instinct: {
     id: 'instinct',
     nameRu: 'Чутьё',
     icon: '👁',
-    childRu: 'Насколько мир сам идёт тебе в руки.',
+    childRu: 'Лучше добыча и удача.',
   },
 };
 
@@ -87,6 +87,22 @@ export const BRANCHES: Record<BranchId, NamedBlurb> = {
   resourcefulness: { id: 'resourcefulness', nameRu: 'Находчивость', childRu: 'В сумке чаще лежит что-то стоящее.' },
   intuition: { id: 'intuition', nameRu: 'Интуиция', childRu: 'Долгий путь учит сильнее.' },
 };
+
+/** Подхарактеристики тела. Растут от очка столпа. Это не пассивки на доске. */
+export type SubstatId = BranchId;
+export const SUBSTAT_IDS = BRANCH_IDS;
+export const SUBSTATS = BRANCHES;
+export const SUBSTATS_BY_PILLAR = BRANCHES_BY_PILLAR;
+export const PILLAR_OF_SUBSTAT = PILLAR_OF_BRANCH;
+
+export const HERO_HELP = {
+  sheet: 'Каждый уровень даёт 1 очко в один из четырёх столпов. Вместе со столпом растут три числа под ним. Раз в 5 уровней — очко на пассивку. Пассивки ещё не написаны.',
+  pillar: 'Очко уровня кладёшь сюда. Три числа ниже растут вместе со столпом.',
+  substat: 'Это число тела. Само очко не тратит — растёт, когда качаешь столп.',
+  branch: 'Пассивка. Очко на 5, 10, 15 уровне. Эффект каждой ячейки напишем отдельно, сейчас его нет.',
+  thread: 'Бонус, если два столпа достаточно большие. Сами столпы не увеличивает.',
+  path: 'Уровень героя, сколько очков уже вложено, сколько бесплатных сбросов осталось.',
+} as const;
 
 /** Процент к столпу. Сноровка намеренно без расового штрафа. */
 export interface RacePillarMod {

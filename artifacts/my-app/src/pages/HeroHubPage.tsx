@@ -8,9 +8,11 @@ import { useCharacterStore } from '@/store/characterStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { getAvatarPath, getRaceLabel, type RaceId } from '@/data/characters';
 import {
-  BRANCHES,
-  PILLAR_OF_BRANCH,
+  HERO_HELP,
+  PILLAR_IDS,
   PILLARS,
+  SUBSTATS,
+  SUBSTATS_BY_PILLAR,
   type BranchId,
   type PillarId,
 } from '@/data/attributes';
@@ -114,6 +116,25 @@ function signedStat(value: number): string {
   return '0';
 }
 
+function InfoMark({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        className="hero-info"
+        title="Как это работает"
+        aria-label="Как это работает"
+        aria-expanded={open}
+        onClick={() => setOpen(v => !v)}
+      >
+        i
+      </button>
+      {open && <p className="hero-hint hero-hint--flow">{text}</p>}
+    </>
+  );
+}
+
 function isTwoHanded(itemId: string | null): boolean {
   return Boolean(itemId && getItem(itemId)?.twoHanded);
 }
@@ -134,6 +155,7 @@ export function HeroHubPage() {
   const [moduleId, setModuleId] = useState<HubModule>('body');
   const [detail, setDetail] = useState<Detail | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
   const [tick, setTick] = useState(0);
 
   const raceId: RaceId = active?.raceId ?? 'human';
@@ -155,7 +177,7 @@ export function HeroHubPage() {
         <GEmptyState
           icon="🪞"
           title="Герой на аккаунте"
-          description="Войди — тело, ветви и путь будут здесь."
+          description="Войди — числа тела будут здесь."
           action={{ label: 'К огню таверны', onClick: () => navigate('/login') }}
         />
       </div>
@@ -179,7 +201,7 @@ export function HeroHubPage() {
           <span
             className="hero-point"
             data-ready={state.unspentPillarPoints > 0 ? 'true' : 'false'}
-            title={`Очки столпов: ${state.unspentPillarPoints}`}
+            title={`Очки столпов (каждый уровень): ${state.unspentPillarPoints}`}
           >
             <img src={HUB_NAV_ICON.body} alt="" decoding="async" />
             <b>{state.unspentPillarPoints}</b>
@@ -187,12 +209,21 @@ export function HeroHubPage() {
           <span
             className="hero-point"
             data-ready={state.unspentBranchPoints > 0 ? 'true' : 'false'}
-            title={`Очки ветвей: ${state.unspentBranchPoints}`}
+            title={`Очки пассивок (каждые 5 уровней): ${state.unspentBranchPoints}`}
           >
             <img src={HUB_NAV_ICON.branches} alt="" decoding="async" />
             <b>{state.unspentBranchPoints}</b>
           </span>
         </div>
+        <button
+          type="button"
+          className="hero-info"
+          title="Все числа"
+          aria-label="Все числа персонажа"
+          onClick={() => setStatsOpen(true)}
+        >
+          i
+        </button>
         <button
           type="button"
           className="hero-hub__gear"
@@ -242,6 +273,12 @@ export function HeroHubPage() {
         {moduleId === 'path' && <PathModule snapshot={snapshot} />}
       </div>
 
+      <HeroStatsModal
+        open={statsOpen}
+        snapshot={snapshot}
+        onClose={() => setStatsOpen(false)}
+      />
+
       <HeroSettingsModal
         open={settingsOpen}
         state={state}
@@ -252,7 +289,6 @@ export function HeroHubPage() {
 
       <HeroDetailModal
         detail={detail}
-        raceId={raceId}
         snapshot={snapshot}
         equipment={equipment}
         canSpendPillar={state.unspentPillarPoints > 0}
@@ -341,6 +377,10 @@ function SynergiesModule({
 }) {
   return (
     <div className="hero-sheet">
+      <div className="hero-stats__head">
+        <span>Нити</span>
+        <InfoMark text={HERO_HELP.thread} />
+      </div>
       <div className="hero-threads">
         {SYNERGIES.map(synergy => {
           const on = snapshot.activeSynergies.includes(synergy.id);
@@ -392,13 +432,61 @@ function PathModule({
 
   return (
     <div className="hero-sheet">
+      <div className="hero-stats__head">
+        <span>Путь</span>
+        <InfoMark text={HERO_HELP.path} />
+      </div>
       <div className="hero-path-facts">
         <div><span>Уровень</span><b>{state.heroLevel}</b></div>
         <div><span>Столпы</span><b>{spentP} / {snapshot.earnedPillarPoints}</b></div>
-        <div><span>Ветви</span><b>{spentB} / {snapshot.earnedBranchPoints}</b></div>
+        <div><span>Пассивки</span><b>{spentB} / {snapshot.earnedBranchPoints}</b></div>
         <div><span>Сброс</span><b>{left} / {FREE_RESPEC_LIMIT}</b></div>
       </div>
     </div>
+  );
+}
+
+function HeroStatsModal({
+  open, snapshot, onClose,
+}: {
+  open: boolean;
+  snapshot: ReturnType<typeof computeAttributeSnapshot>;
+  onClose: () => void;
+}) {
+  const state = snapshot.state;
+  return (
+    <GModal open={open} onClose={onClose} title="Числа" width={360}>
+      <div className="hero-hub-modal hero-stats">
+        <div className="hero-stats__head">
+          <span>Как устроено</span>
+          <InfoMark text={HERO_HELP.sheet} />
+        </div>
+        {PILLAR_IDS.map(pillar => (
+          <div key={pillar} className="hero-stats__block">
+            <GInfoRow
+              label={PILLARS[pillar].nameRu}
+              value={String(shownStat(snapshot.finalPillars[pillar]))}
+            />
+            {SUBSTATS_BY_PILLAR[pillar].map(id => (
+              <GInfoRow
+                key={id}
+                label={SUBSTATS[id].nameRu}
+                value={String(shownStat(snapshot.substats[id]))}
+              />
+            ))}
+          </div>
+        ))}
+        <div className="hero-stats__block">
+          <GInfoRow label="Уровень" value={String(state.heroLevel)} />
+          <GInfoRow label="Очки столпов" value={String(state.unspentPillarPoints)} />
+          <GInfoRow label="Очки пассивок" value={String(state.unspentBranchPoints)} />
+          <GInfoRow
+            label="Сброс"
+            value={`${remainingFreeRespecs(state)} / ${FREE_RESPEC_LIMIT}`}
+          />
+        </div>
+      </div>
+    </GModal>
   );
 }
 
@@ -441,10 +529,10 @@ function HeroSettingsModal({
           onClick={onRespecBranches}
         >
           {left < 1
-            ? 'Сброс ветвей — золото (цена не назначена)'
+            ? 'Сброс пассивок — золото (цена не назначена)'
             : spentB === 0
-              ? 'Ветви: сбрасывать нечего'
-              : 'Сбросить очки ветвей'}
+              ? 'Пассивки: сбрасывать нечего'
+              : 'Сбросить очки пассивок'}
         </GButton>
       </div>
     </GModal>
@@ -457,7 +545,6 @@ function HeroDetailModal({
   onClose, onSpendPillar, onSpendBranch,
 }: {
   detail: Detail | null;
-  raceId: RaceId;
   snapshot: ReturnType<typeof computeAttributeSnapshot>;
   equipment: Equipment;
   canSpendPillar: boolean;
@@ -470,7 +557,7 @@ function HeroDetailModal({
   const title = !detail
     ? ''
     : detail.kind === 'pillar' ? PILLARS[detail.id].nameRu
-      : detail.kind === 'branch' ? BRANCHES[detail.id].nameRu
+      : detail.kind === 'branch' ? 'Пассивка'
         : detail.kind === 'synergy' ? (SYNERGIES.find(s => s.id === detail.id)?.nameRu ?? '')
           : GEAR_LABEL[detail.slot];
 
@@ -488,44 +575,53 @@ function HeroDetailModal({
     <GModal open={Boolean(detail)} onClose={onClose} title={title} width={340}>
       {detail?.kind === 'pillar' && (() => {
         const into = snapshot.state.pillarRanks[detail.id];
-        const fromBranches = snapshot.invested[detail.id] - into;
         const raceN = shownStat(snapshot.racialImprint[detail.id]);
         const jobN = shownStat(snapshot.professionBonus[detail.id]);
         const total = shownStat(snapshot.finalPillars[detail.id]);
         return (
           <div className="hero-hub-modal">
-            <p>{PILLARS[detail.id].childRu}</p>
+            <div className="hero-stats__head">
+              <p>{PILLARS[detail.id].childRu}</p>
+              <InfoMark text={HERO_HELP.pillar} />
+            </div>
             <GInfoRow label={PILLARS[detail.id].nameRu} value={String(total)} />
             <GInfoRow label="Раса" value={signedStat(raceN)} />
             <GInfoRow label="Вложил" value={signedStat(into)} />
-            <GInfoRow label="Ветви" value={signedStat(fromBranches)} />
             {jobN !== 0 && <GInfoRow label="Ремесло" value={signedStat(jobN)} />}
+            {SUBSTATS_BY_PILLAR[detail.id].map(id => (
+              <GInfoRow
+                key={id}
+                label={SUBSTATS[id].nameRu}
+                value={String(shownStat(snapshot.substats[id]))}
+              />
+            ))}
             <GButton
               size="sm"
               fullWidth
               disabled={!canSpendPillar}
               onClick={() => onSpendPillar(detail.id)}
             >
-              {canSpendPillar ? 'Положить очко столпа' : 'Очков столпа пока нет'}
+              {canSpendPillar ? 'Положить очко' : 'Очков пока нет'}
             </GButton>
           </div>
         );
       })()}
       {detail?.kind === 'branch' && (() => {
         const rank = snapshot.state.branchRanks[detail.id] || 0;
-        const pillar = PILLAR_OF_BRANCH[detail.id];
         return (
           <div className="hero-hub-modal">
-            <p>{BRANCHES[detail.id].childRu}</p>
+            <div className="hero-stats__head">
+              <p>Пассивка. Эффект ещё не написан.</p>
+              <InfoMark text={HERO_HELP.branch} />
+            </div>
             <GInfoRow label="Ранг" value={String(rank)} />
-            <GInfoRow label={`К ${PILLARS[pillar].nameRu}`} value={signedStat(rank)} />
             <GButton
               size="sm"
               fullWidth
               disabled={!canSpendBranch}
               onClick={() => onSpendBranch(detail.id)}
             >
-              {canSpendBranch ? 'Положить очко ветви' : 'Первое очко ветви — на 5-м уровне'}
+              {canSpendBranch ? 'Положить очко пассивки' : 'Первое очко пассивки — на 5-м уровне'}
             </GButton>
           </div>
         );
@@ -538,7 +634,10 @@ function HeroDetailModal({
           .filter(([id, need]) => snapshot.finalPillars[id as PillarId] < (need ?? 0));
         return (
           <div className="hero-hub-modal">
-            <GBadge variant={on ? 'gold' : 'gray'}>{on ? 'горит' : 'спит'}</GBadge>
+            <div className="hero-stats__head">
+              <GBadge variant={on ? 'gold' : 'gray'}>{on ? 'горит' : 'спит'}</GBadge>
+              <InfoMark text={HERO_HELP.thread} />
+            </div>
             <p>{synergy.childRu}</p>
             {on ? <p>{synergy.effectRu}</p> : (
               <p>

@@ -10,8 +10,14 @@ export const PILLAR_CURVE_EXPONENT = 0.75;
  */
 export const BODY_BASE_STUB = 100;
 
-/** Сколько итоговый столп растёт от одного ранга ветви. Не закрыто. */
-export const BRANCH_TO_PILLAR_PER_RANK_STUB = 1;
+/** Ветка-пассивка столп больше не качает. Оставлен 0, чтобы старые сейвы не кормили итог. */
+export const BRANCH_TO_PILLAR_PER_RANK_STUB = 0;
+
+/**
+ * Пока отдельные веса не закрыты: 1 к итогу столпа = +1 каждой его подхарактеристике.
+ * Не показывать в UI как закон баланса.
+ */
+export const SUBSTAT_PER_PILLAR_POINT_STUB = 1;
 
 export const PILLAR_RANK_CAP_STUB = 999;
 export const BRANCH_RANK_CAP_STUB = 999;

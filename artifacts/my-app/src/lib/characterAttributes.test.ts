@@ -158,6 +158,22 @@ test('трата очка и бесплатный respec', () => {
   assert.equal(respecAttributes(second), null);
 });
 
+test('ветка не качает столп; подхарактеристики растут от очка столпа', () => {
+  let state = createDefaultAttributes();
+  state = { ...state, unspentPillarPoints: 1, unspentBranchPoints: 1 };
+  const start = computeAttributeSnapshot({ state, raceId: 'human' });
+  const afterBranch = spendBranchPoint(state, 'health');
+  assert.ok(afterBranch);
+  const branched = computeAttributeSnapshot({ state: afterBranch, raceId: 'human' });
+  assert.equal(branched.finalPillars.fortitude, start.finalPillars.fortitude);
+  const afterPillar = spendPillarPoint(state, 'fortitude');
+  assert.ok(afterPillar);
+  const grown = computeAttributeSnapshot({ state: afterPillar, raceId: 'human' });
+  assert.equal(grown.finalPillars.fortitude, start.finalPillars.fortitude + 1);
+  assert.equal(grown.substats.health, start.substats.health + 1);
+  assert.equal(grown.substats.armor, grown.substats.health);
+});
+
 test('сброс столпов и ветвей раздельно, каждый тратит один бесплатный', () => {
   let state = createDefaultAttributes();
   state = {

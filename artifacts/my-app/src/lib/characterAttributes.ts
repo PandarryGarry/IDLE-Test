@@ -21,8 +21,8 @@ import { SYNERGIES, type SynergyId } from '../data/synergies.ts';
 import {
   BODY_BASE_STUB,
   BRANCH_RANK_CAP_STUB,
-  BRANCH_TO_PILLAR_PER_RANK_STUB,
   PILLAR_RANK_CAP_STUB,
+  SUBSTAT_PER_PILLAR_POINT_STUB,
   pillarContribution,
 } from '../data/balance/pillars.ts';
 import { ENERGY_MAX_STUB } from '../data/balance/energy.ts';
@@ -164,6 +164,7 @@ export interface AttributeSnapshot {
   racialImprint: PillarRanks;
   professionBonus: PillarRanks;
   finalPillars: PillarRanks;
+  substats: BranchRanks;
   contributions: Record<PillarId, number>;
   activeSynergies: SynergyId[];
   nextSynergy: SynergyProgress | null;
@@ -174,13 +175,19 @@ export interface AttributeSnapshot {
 export function computeInvested(state: CharacterAttributeState): PillarRanks {
   const invested = emptyPillarRanks();
   for (const pillar of PILLAR_IDS) {
-    let total = state.pillarRanks[pillar];
-    for (const branch of BRANCHES_BY_PILLAR[pillar]) {
-      total += state.branchRanks[branch] * BRANCH_TO_PILLAR_PER_RANK_STUB;
-    }
-    invested[pillar] = total;
+    invested[pillar] = state.pillarRanks[pillar];
   }
   return invested;
+}
+
+/** Подхарактеристики копируют итог столпа, пока веса не закрыты. */
+export function computeSubstats(finalPillars: PillarRanks): BranchRanks {
+  const next = emptyBranchRanks();
+  for (const pillar of PILLAR_IDS) {
+    const n = Math.round(finalPillars[pillar]) * SUBSTAT_PER_PILLAR_POINT_STUB;
+    for (const id of BRANCHES_BY_PILLAR[pillar]) next[id] = n;
+  }
+  return next;
 }
 
 function professionBonusStub(_levels: ProfessionLevels | undefined): PillarRanks {
@@ -205,6 +212,7 @@ export function computeAttributeSnapshot(input: ComputeInput): AttributeSnapshot
     finalPillars[pillar] = invested[pillar] + racialImprint[pillar] + professionBonus[pillar];
     contributions[pillar] = pillarContribution(finalPillars[pillar]);
   }
+  const substats = computeSubstats(finalPillars);
 
   const activeSynergies: SynergyId[] = [];
   const inactive: SynergyProgress[] = [];
@@ -232,6 +240,7 @@ export function computeAttributeSnapshot(input: ComputeInput): AttributeSnapshot
     racialImprint,
     professionBonus,
     finalPillars,
+    substats,
     contributions,
     activeSynergies,
     nextSynergy: inactive[0] ?? null,
