@@ -143,10 +143,9 @@ export function HeroBoard({
     if (!dnd || dnd.id !== event.pointerId) return;
     const dx = event.clientX - dnd.x;
     const dy = event.clientY - dnd.y;
-    if (Math.hypot(dx, dy) > CLICK_PX) {
-      dnd.moved = true;
-      panned.current = true;
-    }
+    if (!dnd.moved && Math.hypot(dx, dy) <= CLICK_PX) return;
+    dnd.moved = true;
+    panned.current = true;
     tx.current = dnd.tx + dx;
     ty.current = dnd.ty + dy;
     apply();
