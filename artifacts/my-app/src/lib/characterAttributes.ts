@@ -22,7 +22,7 @@ import {
   BODY_BASE_STUB,
   BRANCH_RANK_CAP_STUB,
   PILLAR_RANK_CAP_STUB,
-  SUBSTAT_PER_PILLAR_POINT_STUB,
+  SUBSTAT_GROWTH,
   pillarContribution,
 } from '../data/balance/pillars.ts';
 import { ENERGY_MAX_STUB } from '../data/balance/energy.ts';
@@ -180,12 +180,15 @@ export function computeInvested(state: CharacterAttributeState): PillarRanks {
   return invested;
 }
 
-/** Подхарактеристики копируют итог столпа, пока веса не закрыты. */
+/** Подхарактеристики: база + столп × свой шаг. Не копия столпа. */
 export function computeSubstats(finalPillars: PillarRanks): BranchRanks {
   const next = emptyBranchRanks();
   for (const pillar of PILLAR_IDS) {
-    const n = Math.round(finalPillars[pillar]) * SUBSTAT_PER_PILLAR_POINT_STUB;
-    for (const id of BRANCHES_BY_PILLAR[pillar]) next[id] = n;
+    const p = finalPillars[pillar];
+    for (const id of BRANCHES_BY_PILLAR[pillar]) {
+      const growth = SUBSTAT_GROWTH[id];
+      next[id] = growth.base + p * growth.perPillar;
+    }
   }
   return next;
 }

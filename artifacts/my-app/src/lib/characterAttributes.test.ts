@@ -7,7 +7,7 @@ import {
   type AttributeRaceId,
 } from '../data/attributes.ts';
 import { SYNERGIES } from '../data/synergies.ts';
-import { BODY_BASE_STUB, pillarContribution } from '../data/balance/pillars.ts';
+import { BODY_BASE_STUB, SUBSTAT_GROWTH, pillarContribution } from '../data/balance/pillars.ts';
 import { earnedBranchPoints, earnedPillarPoints } from '../data/balance/heroLevel.ts';
 import {
   attachAttributesToSave,
@@ -170,8 +170,10 @@ test('ветка не качает столп; подхарактеристик�
   assert.ok(afterPillar);
   const grown = computeAttributeSnapshot({ state: afterPillar, raceId: 'human' });
   assert.equal(grown.finalPillars.fortitude, start.finalPillars.fortitude + 1);
-  assert.equal(grown.substats.health, start.substats.health + 1);
-  assert.equal(grown.substats.armor, grown.substats.health);
+  assert.equal(grown.substats.health - start.substats.health, SUBSTAT_GROWTH.health.perPillar);
+  assert.ok(Math.abs(grown.substats.armor - start.substats.armor - SUBSTAT_GROWTH.armor.perPillar) < 1e-9);
+  assert.notEqual(grown.substats.health, grown.finalPillars.fortitude);
+  assert.notEqual(grown.substats.health, grown.substats.armor);
 });
 
 test('сброс столпов и ветвей раздельно, каждый тратит один бесплатный', () => {
