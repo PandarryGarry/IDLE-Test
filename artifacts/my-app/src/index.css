@@ -3007,7 +3007,7 @@
 }
 
 .hero-hub__tabs {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .hero-gear-tabs {
@@ -3051,51 +3051,149 @@
   justify-items: stretch;
 }
 
-.hero-stats {
+.hero-core-wrap {
   display: grid;
-  gap: var(--space-2xs);
+  justify-items: center;
+  width: 100%;
+  overflow-x: auto;
+  padding: var(--space-2xs) 0;
 }
 
-.hero-stat {
+.hero-core {
+  --core-node: 26px;
+  --core-pillar: 36px;
+  --core-knot: 16px;
+  --core-gap: 2px;
   display: grid;
-  grid-template-columns: 1.5rem minmax(0, 1fr) auto auto;
+  grid-template-columns: auto auto auto auto auto;
+  grid-template-areas:
+    '. . north-wing . .'
+    '. . north . .'
+    'west-wing west knot east east-wing'
+    '. . south . .'
+    '. . south-wing . .';
+  justify-content: center;
+  justify-items: center;
   align-items: center;
-  gap: var(--space-xs);
-  width: 100%;
+  gap: var(--core-gap);
+  background:
+    linear-gradient(var(--border-light), var(--border-light)) center / 2px min(38%, 6.5rem) no-repeat,
+    linear-gradient(var(--border-light), var(--border-light)) center / min(38%, 6.5rem) 2px no-repeat;
+}
+
+.hero-wing {
+  display: grid;
+  grid-template-columns: repeat(3, var(--core-node));
+  grid-template-rows: repeat(3, var(--core-node));
+  gap: 2px;
+}
+
+.hero-wing--north { grid-area: north-wing; }
+.hero-wing--south { grid-area: south-wing; }
+.hero-wing--west { grid-area: west-wing; }
+.hero-wing--east { grid-area: east-wing; }
+
+.hero-node--pillar[data-arm='north'] { grid-area: north; }
+.hero-node--pillar[data-arm='south'] { grid-area: south; }
+.hero-node--pillar[data-arm='west'] { grid-area: west; }
+.hero-node--pillar[data-arm='east'] { grid-area: east; }
+
+.hero-knot {
+  grid-area: knot;
+  width: var(--core-knot);
+  height: var(--core-knot);
+  border: 2px solid var(--border-accent);
+  border-radius: 3px;
+  background: var(--bg-header);
+  box-shadow: var(--shadow-gold);
+  transform: rotate(45deg);
+}
+
+.hero-node {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--core-node);
+  height: var(--core-node);
   margin: 0;
-  padding: 6px 8px;
+  padding: 0;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-sm);
   background: var(--bg-slot);
   box-shadow: var(--shadow-slot);
   color: inherit;
-  font: inherit;
-  text-align: left;
   appearance: none;
   cursor: pointer;
 }
 
-.hero-stat img {
-  width: 1.5rem;
-  height: 1.5rem;
+.hero-node--pillar {
+  width: var(--core-pillar);
+  height: var(--core-pillar);
+  border-width: 2px;
+}
+
+.hero-node img {
+  width: 70%;
+  height: 70%;
   object-fit: contain;
+  pointer-events: none;
 }
 
-.hero-stat__name {
-  overflow: hidden;
-  color: var(--text-primary);
-  font-family: var(--app-font-display);
-  font-size: 13px;
-  font-weight: 800;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.hero-stat b {
+.hero-node b {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  min-width: 11px;
+  padding: 0 2px;
+  border-radius: 3px;
+  background: var(--bg-header);
   color: var(--text-gold);
   font-family: var(--app-font-mono);
-  font-size: 14px;
-  line-height: 1;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.2;
+  pointer-events: none;
+}
+
+.hero-node[data-on='true'] {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-gold);
+}
+
+.hero-node[data-dim='true'] {
+  opacity: 0.45;
+}
+
+.hero-node.is-void {
+  cursor: default;
+  pointer-events: none;
+  opacity: 0.28;
+}
+
+@media (min-width: 480px) {
+  .hero-core {
+    --core-node: 32px;
+    --core-pillar: 46px;
+    --core-knot: 22px;
+    --core-gap: 4px;
+  }
+}
+
+@media (min-width: 720px) {
+  .hero-core {
+    --core-node: 40px;
+    --core-pillar: 56px;
+    --core-knot: 28px;
+    --core-gap: 6px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .hero-core {
+    --core-node: 44px;
+    --core-pillar: 64px;
+    --core-knot: 32px;
+  }
 }
 
 .hero-talents,
@@ -3241,12 +3339,6 @@
 }
 
 @media (min-width: 900px) {
-  .hero-pillars {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  .hero-talents {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
   .hero-threads {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

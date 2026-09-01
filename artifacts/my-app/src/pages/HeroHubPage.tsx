@@ -10,7 +10,6 @@ import { getAvatarPath, getRaceLabel, type RaceId } from '@/data/characters';
 import {
   BRANCHES,
   BRANCHES_BY_PILLAR,
-  PILLAR_IDS,
   PILLARS,
   racePercentFor,
   type BranchId,
@@ -41,8 +40,9 @@ import {
 } from '@/lib/characterAttributes';
 import { commitHeroAttributes } from '@/lib/heroPersist';
 
-type HubModule = 'body' | 'branches' | 'gear' | 'synergies' | 'path';
+type HubModule = 'body' | 'gear' | 'synergies' | 'path';
 type GearSet = 'armor' | 'jewels' | 'hands';
+type CoreArm = 'north' | 'south' | 'west' | 'east';
 type Detail =
   | { kind: 'pillar'; id: PillarId }
   | { kind: 'branch'; id: BranchId }
@@ -50,16 +50,42 @@ type Detail =
   | { kind: 'gear'; slot: EquipSlot };
 
 const TILE = 48;
-const NODE = 40;
 const PORTRAIT = 64;
+const WING_SIZE = 9;
 
 const MODULES: { id: HubModule; label: string }[] = [
   { id: 'body', label: 'Тело' },
-  { id: 'branches', label: 'Ветви' },
   { id: 'gear', label: 'Экип' },
   { id: 'synergies', label: 'Нити' },
   { id: 'path', label: 'Путь' },
 ];
+
+/** Столпы компаса: стойкость вверх, мощь влево, сноровка вправо, чутьё вниз. */
+const CORE_ARMS: { arm: CoreArm; pillar: PillarId }[] = [
+  { arm: 'north', pillar: 'fortitude' },
+  { arm: 'west', pillar: 'might' },
+  { arm: 'east', pillar: 'finesse' },
+  { arm: 'south', pillar: 'instinct' },
+];
+
+/** Ближний к столпу ряд/столбец — живые ветки «исходят» наружу. Остальные 6 клеток — места под 9. */
+const WING_NEAR: Record<CoreArm, readonly number[]> = {
+  north: [6, 7, 8],
+  south: [0, 1, 2],
+  west: [2, 5, 8],
+  east: [0, 3, 6],
+};
+
+function wingCells(arm: CoreArm, ids: readonly BranchId[]): (BranchId | null)[] {
+  const cells: (BranchId | null)[] = Array.from({ length: WING_SIZE }, () => null);
+  const near = WING_NEAR[arm];
+  const rest = [0, 1, 2, 3, 4, 5, 6, 7, 8].filter(i => !near.includes(i));
+  const order = [...near, ...rest];
+  ids.forEach((id, i) => {
+    if (i < WING_SIZE) cells[order[i]] = id;
+  });
+  return cells;
+}
 
 const GEAR_SETS: { id: GearSet; label: string }[] = [
   { id: 'armor', label: 'Броня' },
@@ -221,15 +247,9 @@ export function HeroHubPage() {
       <div className="hero-hub__panel">
         {moduleId === 'body' && (
           <BodyModule
-            raceId={raceId}
             snapshot={snapshot}
-            onOpen={id => setDetail({ kind: 'pillar', id })}
-          />
-        )}
-        {moduleId === 'branches' && (
-          <BranchesModule
-            snapshot={snapshot}
-            canSpend={state.unspentBranchPoints > 0}
+            canSpendBranch={state.unspentBranchPoints > 0}
+            onOpenPillar={id => setDetail({ kind: 'pillar', id })}
             onOpenBranch={id => setDetail({ kind: 'branch', id })}
           />
         )}
@@ -272,77 +292,139 @@ export function HeroHubPage() {
 }
 
 function BodyModule({
-  raceId, snapshot, onOpen,
+  snapshot, canSpendBranch, onOpenPillar, onOpenBranch,
 }: {
-  raceId: RaceId;
   snapshot: ReturnType<typeof computeAttributeSnapshot>;
-  onOpen: (id: PillarId) => void;
+  canSpendBranch: boolean;
+  onOpenPillar: (id: PillarId) => void;
+  onOpenBranch: (id: BranchId) => void;
 }) {
+  const byArm = Object.fromEntries(CORE_ARMS.map(item => [item.arm, item])) as Record<
+    CoreArm,
+    (typeof CORE_ARMS)[number]
+  >;
+
   return (
     <div className="hero-sheet">
-      <div className="hero-stats">
-        {PILLAR_IDS.map(id => {
-          const racePct = racePercentFor(raceId, id);
-          const ranks = snapshot.state.pillarRanks[id];
-          return (
-            <button
-              key={id}
-              type="button"
-              className="hero-stat"
-              onClick={() => onOpen(id)}
-            >
-              <img src={PILLAR_ICON[id]} alt="" decoding="async" />
-              <span className="hero-stat__name">{PILLARS[id].nameRu}</span>
-              <b>{ranks}</b>
-              <span className="hero-chip">{signedPercent(racePct)}</span>
-            </button>
-          );
-        })}
+      <div className="hero-core-wrap">
+        <div className="hero-core" aria-label="Столпы и ветви">
+          <Wing
+            arm="north"
+            pillar={byArm.north.pillar}
+            snapshot={snapshot}
+            canSpend={canSpendBranch}
+            onOpen={onOpenBranch}
+          />
+          <CorePillar
+            arm="north"
+            pillar={byArm.north.pillar}
+            rank={snapshot.state.pillarRanks[byArm.north.pillar]}
+            onOpen={onOpenPillar}
+          />
+          <Wing
+            arm="west"
+            pillar={byArm.west.pillar}
+            snapshot={snapshot}
+            canSpend={canSpendBranch}
+            onOpen={onOpenBranch}
+          />
+          <CorePillar
+            arm="west"
+            pillar={byArm.west.pillar}
+            rank={snapshot.state.pillarRanks[byArm.west.pillar]}
+            onOpen={onOpenPillar}
+          />
+          <span className="hero-knot" aria-hidden="true" />
+          <CorePillar
+            arm="east"
+            pillar={byArm.east.pillar}
+            rank={snapshot.state.pillarRanks[byArm.east.pillar]}
+            onOpen={onOpenPillar}
+          />
+          <Wing
+            arm="east"
+            pillar={byArm.east.pillar}
+            snapshot={snapshot}
+            canSpend={canSpendBranch}
+            onOpen={onOpenBranch}
+          />
+          <CorePillar
+            arm="south"
+            pillar={byArm.south.pillar}
+            rank={snapshot.state.pillarRanks[byArm.south.pillar]}
+            onOpen={onOpenPillar}
+          />
+          <Wing
+            arm="south"
+            pillar={byArm.south.pillar}
+            snapshot={snapshot}
+            canSpend={canSpendBranch}
+            onOpen={onOpenBranch}
+          />
+        </div>
       </div>
     </div>
   );
 }
 
-function BranchesModule({
-  snapshot, canSpend, onOpenBranch,
+function CorePillar({
+  arm, pillar, rank, onOpen,
 }: {
-  snapshot: ReturnType<typeof computeAttributeSnapshot>;
-  canSpend: boolean;
-  onOpenBranch: (id: BranchId) => void;
+  arm: CoreArm;
+  pillar: PillarId;
+  rank: number;
+  onOpen: (id: PillarId) => void;
 }) {
   return (
-    <div className="hero-sheet">
-      <div className="hero-talents">
-        {PILLAR_IDS.map(pillar => (
-          <article key={pillar} className="hero-talent">
-            <header className="hero-talent__head">
-              <img src={PILLAR_ICON[pillar]} alt="" decoding="async" />
-              <strong>{PILLARS[pillar].nameRu}</strong>
-              <b>{snapshot.state.pillarRanks[pillar]}</b>
-            </header>
-            <div className="hero-talent__nodes">
-              {BRANCHES_BY_PILLAR[pillar].map(branchId => {
-                const rank = snapshot.state.branchRanks[branchId] || 0;
-                const open = rank > 0;
-                const status = open ? `ранг ${rank}` : canSpend ? 'можно открыть' : 'закрыта';
-                return (
-                  <GSlot
-                    key={branchId}
-                    src={BRANCH_ICON[branchId]}
-                    size={NODE}
-                    selected={open}
-                    dimmed={!open && !canSpend}
-                    badge={open ? rank : canSpend ? '+' : undefined}
-                    label={BRANCHES[branchId].nameRu}
-                    title={`${BRANCHES[branchId].nameRu} · ${status}`}
-                    onClick={() => onOpenBranch(branchId)}
-                  />
-                );
-              })}
-            </div>
-          </article>
-        ))}
-      </div>
+    <button
+      type="button"
+      className="hero-node hero-node--pillar"
+      data-arm={arm}
+      data-on={rank > 0 ? 'true' : 'false'}
+      title={PILLARS[pillar].nameRu}
+      aria-label={`${PILLARS[pillar].nameRu}, ранг ${rank}`}
+      onClick={() => onOpen(pillar)}
+    >
+      <img src={PILLAR_ICON[pillar]} alt="" decoding="async" />
+      {rank > 0 && <b>{rank}</b>}
+    </button>
+  );
+}
+
+function Wing({
+  arm, pillar, snapshot, canSpend, onOpen,
+}: {
+  arm: CoreArm;
+  pillar: PillarId;
+  snapshot: ReturnType<typeof computeAttributeSnapshot>;
+  canSpend: boolean;
+  onOpen: (id: BranchId) => void;
+}) {
+  const cells = wingCells(arm, BRANCHES_BY_PILLAR[pillar]);
+  return (
+    <div className={`hero-wing hero-wing--${arm}`} aria-label={PILLARS[pillar].nameRu}>
+      {cells.map((id, index) => {
+        if (!id) {
+          return <span key={`${arm}-void-${index}`} className="hero-node is-void" aria-hidden="true" />;
+        }
+        const rank = snapshot.state.branchRanks[id] || 0;
+        const open = rank > 0;
+        return (
+          <button
+            key={id}
+            type="button"
+            className="hero-node"
+            data-on={open ? 'true' : 'false'}
+            data-dim={!open && !canSpend ? 'true' : 'false'}
+            title={BRANCHES[id].nameRu}
+            aria-label={`${BRANCHES[id].nameRu}, ранг ${rank}`}
+            onClick={() => onOpen(id)}
+          >
+            <img src={BRANCH_ICON[id]} alt="" decoding="async" />
+            {open && <b>{rank}</b>}
+          </button>
+        );
+      })}
     </div>
   );
 }
