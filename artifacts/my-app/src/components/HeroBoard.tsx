@@ -15,9 +15,9 @@ type Snapshot = ReturnType<typeof computeAttributeSnapshot>;
 const WORLD = 720;
 const CX = 360;
 const CY = 360;
-const PILLAR_D = 84;
+const PILLAR_D = 66;
 const RING_GAP = [80, 74, 74] as const;
-const SPREAD = [50, 68, 84] as const;
+const SPREAD = [58, 76, 92] as const;
 const MIN_SCALE = 0.52;
 const MAX_SCALE = 1.65;
 const CLICK_PX = 8;
@@ -182,11 +182,11 @@ export function HeroBoard({
           {ARMS.map(arm => {
             const from: [number, number] = [CX, CY];
             const pillar = pillarPos(arm);
-            const ranks = snapshot.state.pillarRanks[arm.pillar];
+            const shown = Math.round(snapshot.finalPillars[arm.pillar]);
             const live = BRANCHES_BY_PILLAR[arm.pillar];
             return (
               <span key={arm.arm}>
-                <Road from={from} to={pillar} lit={ranks > 0} />
+                <Road from={from} to={pillar} lit={shown !== 0} />
                 {live.map((id, slot) => (
                   <Road
                     key={id}
@@ -200,9 +200,10 @@ export function HeroBoard({
                   x={pillar[0]}
                   y={pillar[1]}
                   src={PILLAR_ICON[arm.pillar]}
-                  rank={ranks}
+                  shown={shown}
+                  mark
                   title={PILLARS[arm.pillar].nameRu}
-                  lit={ranks > 0}
+                  lit={shown !== 0}
                   dimmed={false}
                   onOpen={() => openPillar(arm.pillar)}
                 />
@@ -220,7 +221,8 @@ export function HeroBoard({
                         x={x}
                         y={y}
                         src={BRANCH_ICON[id]}
-                        rank={rank}
+                        shown={rank}
+                        mark={open}
                         title={BRANCHES[id].nameRu}
                         lit={open}
                         dimmed={!open && !canSpendBranch}
@@ -283,13 +285,14 @@ function Road({
 }
 
 function BoardNode({
-  kind, x, y, src, rank, title, lit, dimmed, onOpen,
+  kind, x, y, src, shown, mark, title, lit, dimmed, onOpen,
 }: {
   kind: 'pillar' | 'branch';
   x: number;
   y: number;
   src: string;
-  rank: number;
+  shown: number;
+  mark: boolean;
   title: string;
   lit: boolean;
   dimmed: boolean;
@@ -301,13 +304,13 @@ function BoardNode({
       className={kind === 'pillar' ? 'hero-node hero-node--pillar hero-board__node' : 'hero-node hero-board__node'}
       data-on={lit ? 'true' : 'false'}
       data-dim={dimmed ? 'true' : 'false'}
-      title={title}
-      aria-label={`${title}, ранг ${rank}`}
+      title={`${title} ${shown}`}
+      aria-label={`${title} ${shown}`}
       style={{ left: x, top: y }}
       onClick={onOpen}
     >
       <img src={src} alt="" decoding="async" />
-      {(kind === 'pillar' || rank > 0) && <b>{rank}</b>}
+      {mark && <b>{shown}</b>}
     </button>
   );
 }

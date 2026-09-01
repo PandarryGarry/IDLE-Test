@@ -2848,7 +2848,7 @@
 
 /* ═══════════════════════════════════════════════════════════
    HERO HUB — лист героя. Палитра — токены шелла, не cinematic.
-   Медиа — только структура. Слоты 48px / узлы ветвей 44px.
+   Медиа — только структура. Слоты 48px / узлы ветвей 52px.
    ═══════════════════════════════════════════════════════════ */
 
 .hero-hub {
@@ -3055,8 +3055,8 @@
   position: relative;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
   margin: 0;
   padding: 0;
   border: 1px solid var(--border-default);
@@ -3069,14 +3069,14 @@
 }
 
 .hero-node--pillar {
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   border-width: 2px;
 }
 
 .hero-node img {
-  width: 76%;
-  height: 76%;
+  width: 80%;
+  height: 80%;
   object-fit: contain;
   pointer-events: none;
 }
@@ -3098,18 +3098,18 @@
 }
 
 .hero-node--pillar b {
-  right: -0.2rem;
-  bottom: -0.2rem;
-  width: 1.375rem;
-  height: 1.375rem;
-  min-width: 0;
-  padding: 0;
+  right: -0.25rem;
+  bottom: -0.25rem;
+  width: auto;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.28rem;
   display: grid;
   place-items: center;
   border: 1px solid var(--border-accent);
   border-radius: var(--radius-full);
   background: var(--bg-header);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   line-height: 1;
 }
 
@@ -3123,8 +3123,8 @@
 }
 
 .hero-node.is-void {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   cursor: default;
   pointer-events: none;
   opacity: 0.28;

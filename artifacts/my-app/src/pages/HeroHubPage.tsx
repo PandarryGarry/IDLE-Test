@@ -9,8 +9,8 @@ import { usePlayerStore } from '@/store/playerStore';
 import { getAvatarPath, getRaceLabel, type RaceId } from '@/data/characters';
 import {
   BRANCHES,
+  PILLAR_OF_BRANCH,
   PILLARS,
-  racePercentFor,
   type BranchId,
   type PillarId,
 } from '@/data/attributes';
@@ -103,10 +103,15 @@ const GEAR_LABEL: Record<EquipSlot, string> = {
   passive: 'Талисман',
 };
 
-function signedPercent(value: number): string {
-  if (value > 0) return `+${value}%`;
-  if (value < 0) return `−${Math.abs(value)}%`;
-  return '—';
+function shownStat(value: number): number {
+  return Math.round(value);
+}
+
+function signedStat(value: number): string {
+  const n = shownStat(value);
+  if (n > 0) return `+${n}`;
+  if (n < 0) return `−${Math.abs(n)}`;
+  return '0';
 }
 
 function isTwoHanded(itemId: string | null): boolean {
@@ -481,35 +486,50 @@ function HeroDetailModal({
 
   return (
     <GModal open={Boolean(detail)} onClose={onClose} title={title} width={340}>
-      {detail?.kind === 'pillar' && (
-        <div className="hero-hub-modal">
-          <p>{PILLARS[detail.id].childRu}</p>
-          <GInfoRow label="Вложил" value={String(snapshot.state.pillarRanks[detail.id])} />
-          <GInfoRow label="Раса" value={signedPercent(racePercentFor(raceId, detail.id))} />
-          <GButton
-            size="sm"
-            fullWidth
-            disabled={!canSpendPillar}
-            onClick={() => onSpendPillar(detail.id)}
-          >
-            {canSpendPillar ? 'Положить очко столпа' : 'Очков столпа пока нет'}
-          </GButton>
-        </div>
-      )}
-      {detail?.kind === 'branch' && (
-        <div className="hero-hub-modal">
-          <p>{BRANCHES[detail.id].childRu}</p>
-          <GInfoRow label="Ранг" value={String(snapshot.state.branchRanks[detail.id])} />
-          <GButton
-            size="sm"
-            fullWidth
-            disabled={!canSpendBranch}
-            onClick={() => onSpendBranch(detail.id)}
-          >
-            {canSpendBranch ? 'Положить очко ветви' : 'Первое очко ветви — на 5-м уровне'}
-          </GButton>
-        </div>
-      )}
+      {detail?.kind === 'pillar' && (() => {
+        const into = snapshot.state.pillarRanks[detail.id];
+        const fromBranches = snapshot.invested[detail.id] - into;
+        const raceN = shownStat(snapshot.racialImprint[detail.id]);
+        const jobN = shownStat(snapshot.professionBonus[detail.id]);
+        const total = shownStat(snapshot.finalPillars[detail.id]);
+        return (
+          <div className="hero-hub-modal">
+            <p>{PILLARS[detail.id].childRu}</p>
+            <GInfoRow label={PILLARS[detail.id].nameRu} value={String(total)} />
+            <GInfoRow label="Раса" value={signedStat(raceN)} />
+            <GInfoRow label="Вложил" value={signedStat(into)} />
+            <GInfoRow label="Ветви" value={signedStat(fromBranches)} />
+            {jobN !== 0 && <GInfoRow label="Ремесло" value={signedStat(jobN)} />}
+            <GButton
+              size="sm"
+              fullWidth
+              disabled={!canSpendPillar}
+              onClick={() => onSpendPillar(detail.id)}
+            >
+              {canSpendPillar ? 'Положить очко столпа' : 'Очков столпа пока нет'}
+            </GButton>
+          </div>
+        );
+      })()}
+      {detail?.kind === 'branch' && (() => {
+        const rank = snapshot.state.branchRanks[detail.id] || 0;
+        const pillar = PILLAR_OF_BRANCH[detail.id];
+        return (
+          <div className="hero-hub-modal">
+            <p>{BRANCHES[detail.id].childRu}</p>
+            <GInfoRow label="Ранг" value={String(rank)} />
+            <GInfoRow label={`К ${PILLARS[pillar].nameRu}`} value={signedStat(rank)} />
+            <GButton
+              size="sm"
+              fullWidth
+              disabled={!canSpendBranch}
+              onClick={() => onSpendBranch(detail.id)}
+            >
+              {canSpendBranch ? 'Положить очко ветви' : 'Первое очко ветви — на 5-м уровне'}
+            </GButton>
+          </div>
+        );
+      })()}
       {detail?.kind === 'synergy' && (() => {
         const synergy = SYNERGIES.find(s => s.id === detail.id);
         if (!synergy) return null;
@@ -524,7 +544,7 @@ function HeroDetailModal({
               <p>
                 Не хватает:{' '}
                 {missing.map(([id, need]) => {
-                  const have = snapshot.state.pillarRanks[id as PillarId];
+                  const have = snapshot.finalPillars[id as PillarId];
                   const gap = Math.ceil((need ?? 0) - have);
                   return `${PILLARS[id as PillarId].nameRu} ${gap}`;
                 }).join(', ')}
