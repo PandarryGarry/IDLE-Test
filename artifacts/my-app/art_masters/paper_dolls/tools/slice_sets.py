@@ -103,11 +103,41 @@ def landmarks(sil, verbose=False):
 
 
 # ------------------------------------------------------------------- маска
-def armor_mask(base, full, T):
+SKIN_A = np.array([249, 160, 107], np.float32) / 255.0   # кожа: свет
+SKIN_B = np.array([190, 129, 94], np.float32) / 255.0    # кожа: тень
+
+
+def skin_test(rgb, tol=0.06):
+    """Похож ли цвет на кожу манекена.
+
+    Тона кожи лежат на отрезке между светом и тенью, поэтому меряем
+    расстояние до отрезка, а не до отдельных образцов: иначе и средний
+    тон кожи, и бежевая ткань (#b58d6e) равно попадают в «кожу».
+    """
+    ab = SKIN_B - SKIN_A
+    ap = rgb - SKIN_A
+    t = (ap @ ab) / float(ab @ ab)
+    t = np.clip(t, 0.0, 1.0)
+    proj = SKIN_A + t[..., None] * ab
+    return np.linalg.norm(rgb - proj, axis=-1) < tol
+
+
+def armor_mask(base, full, T, head_T=0.05, neck_bottom=None):
+    """Маска доспеха: где полный кадр отличается от тела.
+
+    В зоне головы порог снижен и добавлена проверка «не кожа»: тёмный
+    шлем почти совпадает по цвету с волосами, на общем пороге верх
+    шлема терялся, а лицо при снижении порога попадало бы в маску.
+    """
     ba, fa = base[..., 3], full[..., 3]
     d = np.abs(base[..., :3] - full[..., :3]).max(axis=2)
     both = (ba > 0.9) & (fa > 0.9)
     m = (fa > 0.5) & (((d > T) & both) | (ba < 0.5))
+    if head_T is not None and neck_bottom is not None:
+        ys = np.arange(m.shape[0])[:, None]
+        head = ((fa > 0.5) & (ys < neck_bottom) & (d > head_T)
+                & ~skin_test(full[..., :3]))
+        m = m | head
     return m, d
 
 
@@ -120,15 +150,51 @@ def clean_mask(m, min_area=120, close_r=1):
 
 
 # -------------------------------------------------------------------- зоны
-def build_zones(m, L, corridor=0.30):
+def body_center_labels(bsil, cx, half):
+    """Для каждого пикселя: относится он к торсу/ногам или к рукам.
+
+    В каждой строке берём отрезок силуэта, содержащий вертикальную ось
+    (это торс). Ниже промежности такого отрезка нет — тогда центральными
+    считаем отрезки, чья середина в коридоре (обе ноги). Метку
+    растягиваем на всю строку по ближайшему пикселю тела, иначе
+    выступающий за силуэт край широкого рукава останется без метки.
+    """
+    H, W = bsil.shape
+    body = np.zeros((H, W), bool)
+    for y in range(H):
+        runs = row_runs(bsil[y])
+        if not runs:
+            continue
+        mid = [r for r in runs if r[0] <= cx <= r[1]]
+        if mid:
+            for a, b in mid:
+                body[y, a:b + 1] = True
+        else:
+            for a, b in runs:
+                if abs((a + b) / 2 - cx) <= half:
+                    body[y, a:b + 1] = True
+    full = np.zeros((H, W), bool)
+    allx = np.arange(W)
+    for y in range(H):
+        xs = np.where(bsil[y])[0]
+        if len(xs) == 0:
+            continue
+        full[y] = body[y, xs[np.abs(xs[None, :] - allx[:, None]).argmin(axis=1)]]
+    return full
+
+
+def build_zones(m, L, center=None, corridor=0.30, head_skin=None):
     H, top, cx, FW = L["H"], L["top"], L["cx"], L["FW"]
-    ys, xs = np.mgrid[0:m.shape[0], 0:m.shape[1]]
     half = corridor * FW
-    center = np.abs(xs - cx) <= half          # коридор: торс и ноги
+    ys, xs = np.mgrid[0:m.shape[0], 0:m.shape[1]]
+    if center is None:
+        center = np.abs(xs - cx) <= half
+    if head_skin is None:
+        head_skin = np.zeros_like(m, bool)
     left = xs < cx
     z = {}
 
-    z["helmet"] = m & (ys < L["neck_bottom"])
+    z["helmet"] = m & (ys < L["neck_bottom"]) & ~head_skin
     z["gloves"] = m & ~center & (((ys > L["wrist_l"]) & left) | ((ys > L["wrist_r"]) & ~left))
     below_ankle = ((ys > L["ankle_l"]) & left) | ((ys > L["ankle_r"]) & ~left)
     z["boots"] = m & center & below_ankle
@@ -237,6 +303,7 @@ def main():
     base = read_rgba(BODY)
     bsil = base[..., 3] > 0.5
     L = landmarks(bsil, verbose=True)
+    center = body_center_labels(bsil, L["cx"], 0.30 * L["FW"])
     print(f"тело: {int(bsil.sum())} px, коридор ±{0.30*L['FW']:.0f} px от оси x={L['cx']}")
 
     if args.scan:
@@ -246,7 +313,8 @@ def main():
             row = []
             for mat in FULL:
                 full = read_rgba(FULL[mat])
-                m, _ = armor_mask(base, full, T)
+                m, _ = armor_mask(base, full, T, head_T=0.05,
+                                  neck_bottom=L["neck_bottom"])
                 m = clean_mask(m, args.min_area)
                 row.append((m, m.sum(), (m & ~dilate(bsil, 3)).sum()))
             print(f"{T:6.2f} " + "  ".join(
@@ -257,9 +325,10 @@ def main():
     report = []
     for mat in ("cloth", "leather", "plate"):
         full = read_rgba(FULL[mat])
-        m, d = armor_mask(base, full, args.threshold)
+        m, d = armor_mask(base, full, args.threshold, head_T=0.05,
+                          neck_bottom=L["neck_bottom"])
         m = clean_mask(m, args.min_area)
-        z = build_zones(m, L)
+        z = build_zones(m, L, center=center, head_skin=skin_test(full[..., :3]))
 
         print(f"\n=== {RU[mat]}: доспех {int(m.sum())} px ===")
         layers, rows = {}, []
