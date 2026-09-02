@@ -3169,8 +3169,13 @@
   overscroll-behavior: contain;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
-  background: var(--bg-slot);
-  box-shadow: var(--shadow-slot);
+  background:
+    radial-gradient(
+      ellipse 68% 68% at 50% 50%,
+      color-mix(in srgb, var(--accent-gold) 26%, var(--bg-card-dark)) 0%,
+      var(--bg-card-dark) 70%
+    );
+  box-shadow: var(--shadow-card);
   cursor: grab;
 }
 
