@@ -495,7 +495,7 @@ function HeroSettingsModal({
 }
 
 function HeroDetailModal({
-  detail, raceId, snapshot, equipment,
+  detail, snapshot, equipment,
   canSpendPillar, canSpendBranch,
   onClose, onSpendPillar, onSpendBranch,
 }: {
