@@ -84,6 +84,16 @@ def to_canon(img):
     solid = a > 0.5
     if not solid.any():
         raise RuntimeError("после снятия фона ничего не осталось")
+    # выкинуть оторванный мусор ДО расчёта рамки, иначе он растягивает
+    # bbox и фигура приезжает ниже канона (orc_female_02: 329 вместо 341).
+    lab, n = ndimage.label(solid)
+    if n > 1:
+        sizes = ndimage.sum(np.ones_like(lab, np.float32), lab, range(1, n + 1))
+        thr = max(20, int(0.005 * sizes.max()))
+        keep = np.isin(lab, [i + 1 for i, sz in enumerate(sizes) if sz >= thr])
+        solid &= keep
+        img = img.copy()
+        img[..., 3] *= keep
     ys, xs = np.where(solid)
     y0, y1, x0, x1 = ys.min(), ys.max(), xs.min(), xs.max()
     fh, fw = y1 - y0 + 1, x1 - x0 + 1
@@ -100,11 +110,17 @@ def to_canon(img):
     new_rgb = ndimage.zoom(prem, zoom, order=1)
     new_a = ndimage.zoom(crop[..., 3], zoom[:2], order=1)
     small = np.dstack([new_rgb / np.maximum(new_a[..., None], 1e-6), new_a])
-    # после масштаба могут появиться одиночные пиксели — убираем и здесь
+    # после масштаба могут появиться одиночные пиксели — убираем и здесь.
+    # Порог относительный: отсекаем оторванные от фигуры компоненты
+    # меньше 0.5% главного куска (у orc_female_02 так приехала
+    # 13-пиксельная «веснушка» над головой при главном куске 25057).
+    # Канон требует одну связную часть; конечности и хвост контактируют
+    # с телом и в главный кусок входят, поэтому порог их не трогает.
     lab, n = ndimage.label(small[..., 3] > 0.5)
     if n:
         sizes = ndimage.sum(np.ones_like(lab, np.float32), lab, range(1, n + 1))
-        keep = [i + 1 for i, sz in enumerate(sizes) if sz >= 8]
+        thr = max(8, int(0.005 * sizes.max()))
+        keep = [i + 1 for i, sz in enumerate(sizes) if sz >= thr]
         small[..., 3] *= np.isin(lab, keep)
     ny0, ny1, nx0, nx1 = 0, small.shape[0] - 1, 0, small.shape[1] - 1
     cx = (nx0 + nx1) / 2
