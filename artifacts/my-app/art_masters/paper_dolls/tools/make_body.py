@@ -237,6 +237,108 @@ def pose_delta(a, b):
     return ds, sum(ds[:5]) / 5
 
 
+# ---------------------------------------------------- поза рук и посадка кисти
+# Ворота взяты не с потолка, а с утверждённых кадров (замер 2026-09-03):
+#   люди     угол руки 18.2–24.2°, кисть 35–36×38 px, заполненность 0.54–0.58
+#   эльфы    угол руки 18.4–23.4°, кисть 35–36×38 px, заполненность 0.53–0.60
+#   зверолюди угол руки 18.2–25.2°, кисть 33–36×38 px, заполненность 0.53–0.60
+# Семь забракованных кадров (dwarf_male_01/02/03, orc_male_01/02/03,
+# dwarf_female_03) дают 0.0–4.8° и заполненность 0.68–0.78 — обе метрики
+# ловят их с запасом. Высота кисти всегда 38 px (0.11 высоты фигуры),
+# поэтому смотрим только ширину и заполненность.
+ARM_DEG = (16.0, 26.0)      # угол руки от вертикали
+PALM_W = (32, 40)           # ширина кисти, px канона
+PALM_FILL = (0.50, 0.63)    # доля занятых пикселей в прямоугольнике кисти
+
+
+def arm_angle(img, side):
+    """Угол руки от вертикали: от края плеча до центра руки на высоте 0.52.
+
+    Та же метрика, что в `bodies2/metrics.md` («Поза рук по всем 30»):
+    замер на 0.52 высоты, потому что там рука отделена от корпуса у всех
+    рас и хвост зверолюдей в замер не попадает. Край плеча — крайняя
+    точка самой широкой строки в полосе 0.13–0.34 высоты.
+    """
+    sil = img[..., 3] > 0.5
+    ys, xs = np.where(sil)
+    y0, y1, x0, x1 = ys.min(), ys.max(), xs.min(), xs.max()
+    H = y1 - y0 + 1
+    sh_y = max(range(y0 + int(0.13 * H), y0 + int(0.34 * H)),
+               key=lambda y: int(sil[y].sum()))
+    row = np.where(sil[sh_y])[0]
+    edge = row.min() if side == "L" else row.max()
+    y_arm = y0 + int(0.52 * H)
+    runs = row_runs(sil[y_arm])
+    if not runs:
+        return float("nan")
+    r = runs[0] if side == "L" else runs[-1]
+    dx, dy = abs((r[0] + r[1]) / 2 - edge), max(y_arm - sh_y, 1)
+    return float(np.degrees(np.arctan2(dx, dy)))
+
+
+def palm_box(sil, side):
+    """Прямоугольник кисти: нижние 11% высоты руки.
+
+    Алгоритм тот же, что в `hand_fix.hand_box`, но для канона 384
+    (hand_fix считает в координатах исходника 1024²). Возвращает
+    (x0, y0, x1, y1) или None, если рука не отделена от корпуса.
+    """
+    ys, xs = np.where(sil)
+    y0, H = ys.min(), ys.max() - ys.min() + 1
+    y50 = y0 + int(0.50 * H)
+    sg = row_runs(sil[y50])
+    if len(sg) < 3:
+        return None
+    a, b = sg[0] if side == "L" else sg[-1]
+    win = np.zeros_like(sil, bool)
+    xa, xb = max(0, a - 12), min(sil.shape[1], b + 12)
+    lo, hi = y0 + int(0.42 * H), y0 + int(0.78 * H)
+    win[lo:hi, xa:xb] = sil[lo:hi, xa:xb]
+    lab, _ = ndimage.label(win)
+    comp = lab == lab[y50, (a + b) // 2]
+    cy, cx = np.where(comp)
+    if len(cy) < 20:
+        return None
+    tip = cy.max()
+    m = np.zeros_like(sil, bool)
+    m[max(cy.min(), tip - int(0.11 * H)):tip + 1, xa:xb] = \
+        comp[max(cy.min(), tip - int(0.11 * H)):tip + 1, xa:xb]
+    hy, hx = np.where(m)
+    if len(hy) < 10:
+        return None
+    return (int(hx.min()), int(hy.min()), int(hx.max()), int(hy.max()))
+
+
+def hands_check(name, img):
+    """Замер обеих рук против ворот позы. Возвращает (строку отчёта, брак).
+
+    `брак` — список человекочитаемых претензий; пустой, если кадр проходит.
+    """
+    sil = img[..., 3] > 0.5
+    parts, bad = [], []
+    for side, tag in (("L", "левая"), ("R", "правая")):
+        ang = arm_angle(img, side)
+        box = palm_box(sil, side)
+        if box is None:
+            parts.append(f"{tag} — кисть не отделена от корпуса")
+            bad.append(f"{tag}: рука сливается с корпусом на высоте 0.50")
+            continue
+        x0, y0, x1, y1 = box
+        w, h = x1 - x0 + 1, y1 - y0 + 1
+        fill = int(sil[y0:y1 + 1, x0:x1 + 1].sum()) / (w * h)
+        parts.append(f"{tag} {ang:4.1f}° кисть {w}×{h} заполн. {fill:.2f}")
+        if not ARM_DEG[0] <= ang <= ARM_DEG[1]:
+            bad.append(f"{tag}: угол руки {ang:.1f}° вне {ARM_DEG[0]:.0f}–"
+                       f"{ARM_DEG[1]:.0f}°")
+        if not PALM_W[0] <= w <= PALM_W[1]:
+            bad.append(f"{tag}: кисть {w} px по ширине вне {PALM_W[0]}–"
+                       f"{PALM_W[1]}")
+        if not PALM_FILL[0] <= fill <= PALM_FILL[1]:
+            bad.append(f"{tag}: заполненность кисти {fill:.2f} вне "
+                       f"{PALM_FILL[0]:.2f}–{PALM_FILL[1]:.2f}")
+    return f"{name:22s} " + "  |  ".join(parts), bad
+
+
 def fit_skin(img, target, lo=0.80, hi=1.25, min_delta=15):
     """Подтянуть тон кожи к лицу аватара Плавным усилением каналов.
 
@@ -361,7 +463,7 @@ def batch(race_key):
     folder = RACE_FOLDER[race_key]
     ref = read_rgba(f"{REPO}/assets/icons/characters/paper_dolls/bodies/human_male_01.png")
     ref_pose = pose_points(ref[..., 3] > 0.5)
-    rows = []
+    rows, fails = [], []
     for f in sorted(glob.glob(f"{WORK}/raw-{race_key}_*.png")):
         name = os.path.basename(f)[4:-4]
         try:
@@ -392,7 +494,19 @@ def batch(race_key):
         body = (ds[1] + ds[2] + ds[3] + ds[4]) / 4
         print(f"    поза тела {body:.2f} (руки {ds[1]:.2f}/{ds[2]:.2f}, "
               f"стопы {ds[3]:.2f}/{ds[4]:.2f}, голова {ds[0]:.2f}, плечи {ds[5]:.2f})")
+        line, bad = hands_check(name, canon)
+        print(f"    руки: {line.split(None, 1)[1]}")
+        for b in bad:
+            print(f"    БРАК ПОЗЫ — {b}")
+        if bad:
+            fails.append((name, bad))
         rows.append((name, canon, st, body))
+    if fails:
+        print(f"\nВОРОТА ПОЗЫ НЕ ПРОШЛИ {len(fails)} из {len(rows)}:")
+        for name, bad in fails:
+            print(f"  {name}: " + "; ".join(bad))
+    else:
+        print(f"\nворота позы прошли все {len(rows)} кадров")
     # листы
     W = 252
     def cell(src, label, idx):
