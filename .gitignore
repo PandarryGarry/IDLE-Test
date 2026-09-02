@@ -33,3 +33,7 @@ artifacts/qa-review/
 .local/
 .ccls-cache/
 .replit.local
+
+# Python (конвейер манекенов)
+__pycache__/
+*.pyc
