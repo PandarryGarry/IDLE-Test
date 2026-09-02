@@ -1,1 +1,2 @@
-- [Aethelia Idle RPG Architecture](aethelia-arch.md) — timing clock, offline calc rules, equip transactions, store layout, cn() location.
+- [Aethelia Idle RPG Architecture](aethelia-arch.md) — timing clock, offline calc rules, equip transactions, hero/attributes model (Stage 5), QA screenshots, cn() location.
+- [Aethelia workflow](aethelia-workflow.md) — how the owner reviews work, session/branch rules, verification loop without vision.
