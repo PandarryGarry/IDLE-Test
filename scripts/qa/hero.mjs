@@ -118,6 +118,27 @@ async function snap(page, name) {
   return path;
 }
 
+/** Кадр вокруг элемента — чтобы разглядеть мелкую деталь (центр доски, узел). */
+async function snapAround(page, selector, name, pad) {
+  const el = await page.$(selector);
+  if (!el) throw new Error(`нет ${selector}`);
+  const box = await el.boundingBox();
+  const path = join(OUT, `${name}.jpg`);
+  await page.screenshot({
+    path,
+    type: 'jpeg',
+    quality: 92,
+    clip: {
+      x: Math.max(0, box.x - pad),
+      y: Math.max(0, box.y - pad),
+      width: box.width + pad * 2,
+      height: box.height + pad * 2,
+    },
+  });
+  console.log(`  📷 ${path} (крупно: ${selector})`);
+  return path;
+}
+
 async function openHub(page, viewport, tag) {
   await page.setViewport(viewport);
   const seed = readFileSync(SEED, 'utf8');
@@ -185,6 +206,7 @@ async function runShots(browser, only) {
 
   if (only === 'all' || only === 'body') {
     await snap(page, '01-mobile-body');
+    await snapAround(page, '.hero-board__knot', '01b-mobile-board-center', 60);
     await page.evaluate(() => document.querySelectorAll('.hero-node--pillar')[0]?.click());
     await sleep(500);
     await snap(page, '02-mobile-pillar-modal');

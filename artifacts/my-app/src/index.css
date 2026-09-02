@@ -3215,24 +3215,22 @@
   box-shadow: var(--shadow-gold);
 }
 
+/* В центре доски — только знак «Топор и Перо»: без кольца и подложки,
+   чуть приглушён, чтобы не спорить с узлами столпов. */
 .hero-board__knot {
   position: absolute;
   display: grid;
   place-items: center;
   width: 44px;
   height: 44px;
-  overflow: hidden;
-  border: 2px solid var(--border-accent);
-  border-radius: var(--radius-full);
-  background: var(--bg-header);
-  box-shadow: var(--shadow-gold);
   transform: translate(-50%, -50%);
   pointer-events: none;
+  opacity: 0.55;
 }
 
 .hero-board__knot img {
-  width: 86%;
-  height: 86%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
