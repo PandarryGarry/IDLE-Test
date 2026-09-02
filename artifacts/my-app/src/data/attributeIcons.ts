@@ -61,6 +61,8 @@ export const SLOT_FRAME = {
   active: iconUrl('ui/slots/slot_parchment_legendary'),
 } as const;
 
+export const BOARD_EMBLEM = iconUrl('ui/emblem_axe_quill');
+
 export const HUB_NAV_ICON = {
   body: iconUrl('menu/menu_profile'),
   branches: iconUrl('stats/stat_xp'),

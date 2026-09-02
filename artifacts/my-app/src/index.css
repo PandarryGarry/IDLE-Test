@@ -3217,6 +3217,8 @@
 
 .hero-board__knot {
   position: absolute;
+  display: grid;
+  place-items: center;
   width: 44px;
   height: 44px;
   overflow: hidden;
@@ -3229,10 +3231,9 @@
 }
 
 .hero-board__knot img {
-  width: 118%;
-  height: 118%;
-  object-fit: cover;
-  object-position: center;
+  width: 86%;
+  height: 86%;
+  object-fit: contain;
 }
 
 .hero-board__node {

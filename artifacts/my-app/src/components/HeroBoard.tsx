@@ -6,7 +6,7 @@ import {
   type BranchId,
   type PillarId,
 } from '@/data/attributes';
-import { BRANCH_ICON, PILLAR_ICON } from '@/data/attributeIcons';
+import { BOARD_EMBLEM, BRANCH_ICON, PILLAR_ICON } from '@/data/attributeIcons';
 import type { computeAttributeSnapshot } from '@/lib/characterAttributes';
 
 type Arm = 'north' | 'south' | 'west' | 'east';
@@ -179,7 +179,7 @@ export function HeroBoard({
       >
         <div ref={worldRef} className="hero-board__world">
           <span className="hero-board__knot" style={{ left: CX, top: CY }} aria-hidden>
-            <img src="/assets/art/emblem_pair.webp" alt="" decoding="async" />
+            <img src={BOARD_EMBLEM} alt="" decoding="async" />
           </span>
           {ARMS.map(arm => {
             const pillar = pillarPos(arm);
