@@ -8,12 +8,16 @@ import { useCharacterStore } from '@/store/characterStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { getAvatarPath, getRaceLabel, type RaceId } from '@/data/characters';
 import {
+  BRANCHES,
+  DEEP_PASSIVES,
   HERO_HELP,
   PILLAR_IDS,
   PILLARS,
   SUBSTATS,
   SUBSTATS_BY_PILLAR,
   type BranchId,
+  type NodeRef,
+  type PassiveId,
   type PillarId,
 } from '@/data/attributes';
 import {
@@ -29,6 +33,8 @@ import {
   FREE_RESPEC_LIMIT,
   computeAttributeSnapshot,
   getLiveAttributes,
+  nodeBlockReason,
+  nodeRank,
   remainingFreeRespecs,
   respecBranchRanks,
   respecPillarRanks,
@@ -37,6 +43,7 @@ import {
   spentBranchRanks,
   spentPillarRanks,
 } from '@/lib/characterAttributes';
+import { NODE_RANK_CAP } from '@/data/balance/pillars';
 import { commitHeroAttributes } from '@/lib/heroPersist';
 import { HeroBoard } from '@/components/HeroBoard';
 
@@ -45,6 +52,7 @@ type GearSet = 'armor' | 'jewels' | 'hands';
 type Detail =
   | { kind: 'pillar'; id: PillarId }
   | { kind: 'branch'; id: BranchId }
+  | { kind: 'passive'; id: PassiveId }
   | { kind: 'synergy'; id: SynergyId }
   | { kind: 'gear'; slot: EquipSlot };
 
@@ -242,7 +250,11 @@ export function HeroHubPage() {
             snapshot={snapshot}
             canSpendBranch={state.unspentBranchPoints > 0}
             onOpenPillar={id => setDetail({ kind: 'pillar', id })}
-            onOpenBranch={id => setDetail({ kind: 'branch', id })}
+            onOpenNode={ref => setDetail(
+              ref.kind === 'branch'
+                ? { kind: 'branch', id: ref.id }
+                : { kind: 'passive', id: ref.id },
+            )}
           />
         )}
         {moduleId === 'gear' && (
@@ -282,29 +294,28 @@ export function HeroHubPage() {
         snapshot={snapshot}
         equipment={equipment}
         canSpendPillar={state.unspentPillarPoints > 0}
-        canSpendBranch={state.unspentBranchPoints > 0}
         onClose={() => setDetail(null)}
         onSpendPillar={id => applyState(spendPillarPoint(state, id))}
-        onSpendBranch={id => applyState(spendBranchPoint(state, id))}
+        onSpendNode={ref => applyState(spendBranchPoint(state, ref))}
       />
     </section>
   );
 }
 
 function BodyModule({
-  snapshot, canSpendBranch, onOpenPillar, onOpenBranch,
+  snapshot, canSpendBranch, onOpenPillar, onOpenNode,
 }: {
   snapshot: ReturnType<typeof computeAttributeSnapshot>;
   canSpendBranch: boolean;
   onOpenPillar: (id: PillarId) => void;
-  onOpenBranch: (id: BranchId) => void;
+  onOpenNode: (ref: NodeRef) => void;
 }) {
   return (
     <HeroBoard
       snapshot={snapshot}
       canSpendBranch={canSpendBranch}
       onOpenPillar={onOpenPillar}
-      onOpenBranch={onOpenBranch}
+      onOpenNode={onOpenNode}
     />
   );
 }
@@ -496,25 +507,25 @@ function HeroSettingsModal({
 
 function HeroDetailModal({
   detail, snapshot, equipment,
-  canSpendPillar, canSpendBranch,
-  onClose, onSpendPillar, onSpendBranch,
+  canSpendPillar,
+  onClose, onSpendPillar, onSpendNode,
 }: {
   detail: Detail | null;
   snapshot: ReturnType<typeof computeAttributeSnapshot>;
   equipment: Equipment;
   canSpendPillar: boolean;
-  canSpendBranch: boolean;
   onClose: () => void;
   onSpendPillar: (id: PillarId) => void;
-  onSpendBranch: (id: BranchId) => void;
+  onSpendNode: (ref: NodeRef) => void;
 }) {
   const unequip = usePlayerStore(s => s.unequipItem);
   const title = !detail
     ? ''
     : detail.kind === 'pillar' ? PILLARS[detail.id].nameRu
-      : detail.kind === 'branch' ? 'Пассивка'
-        : detail.kind === 'synergy' ? (SYNERGIES.find(s => s.id === detail.id)?.nameRu ?? '')
-          : GEAR_LABEL[detail.slot];
+      : detail.kind === 'branch' ? BRANCHES[detail.id].nameRu
+        : detail.kind === 'passive' ? DEEP_PASSIVES[detail.id].nameRu
+          : detail.kind === 'synergy' ? (SYNERGIES.find(s => s.id === detail.id)?.nameRu ?? '')
+            : GEAR_LABEL[detail.slot];
 
   const gearItemId = detail?.kind === 'gear' ? equipment[detail.slot] : null;
   const gearItem = gearItemId ? getItem(gearItemId) : undefined;
@@ -557,19 +568,25 @@ function HeroDetailModal({
           </div>
         );
       })()}
-      {detail?.kind === 'branch' && (() => {
-        const rank = snapshot.state.branchRanks[detail.id] || 0;
+      {(detail?.kind === 'branch' || detail?.kind === 'passive') && (() => {
+        const ref: NodeRef = detail.kind === 'branch'
+          ? { kind: 'branch', id: detail.id }
+          : { kind: 'passive', id: detail.id };
+        const info = detail.kind === 'branch' ? BRANCHES[detail.id] : DEEP_PASSIVES[detail.id];
+        const rank = nodeRank(snapshot.state, ref);
+        const blocked = nodeBlockReason(snapshot.state, ref);
         return (
           <div className="hero-hub-modal hero-hub-modal--card">
-            <p>Пассивка. Эффект ещё не написан.</p>
-            <GInfoRow label="Ранг" value={String(rank)} />
+            <p>{info.childRu}</p>
+            <GInfoRow label="Ранг" value={`${rank} из ${NODE_RANK_CAP}`} />
+            <GInfoRow label="Эффект" value="не подключён" />
             <GButton
               size="sm"
               fullWidth
-              disabled={!canSpendBranch}
-              onClick={() => onSpendBranch(detail.id)}
+              disabled={Boolean(blocked)}
+              onClick={() => onSpendNode(ref)}
             >
-              {canSpendBranch ? 'Положить очко пассивки' : 'Первое очко пассивки — на 5-м уровне'}
+              {blocked ?? 'Положить очко пассивки'}
             </GButton>
           </div>
         );

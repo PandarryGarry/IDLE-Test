@@ -2,12 +2,19 @@ import { useEffect, useRef, type PointerEvent } from 'react';
 import {
   BRANCHES,
   BRANCHES_BY_PILLAR,
+  DEEP_PASSIVES,
   PILLARS,
+  rayNodes,
   type BranchId,
+  type NodeRef,
   type PillarId,
 } from '@/data/attributes';
-import { BOARD_EMBLEM, BRANCH_ICON, PILLAR_ICON } from '@/data/attributeIcons';
-import type { computeAttributeSnapshot } from '@/lib/characterAttributes';
+import { BOARD_EMBLEM, BRANCH_ICON, PASSIVE_ICON, PILLAR_ICON } from '@/data/attributeIcons';
+import {
+  isNodeUnlocked,
+  nodeRank,
+  type computeAttributeSnapshot,
+} from '@/lib/characterAttributes';
 
 type Arm = 'north' | 'south' | 'west' | 'east';
 type Snapshot = ReturnType<typeof computeAttributeSnapshot>;
@@ -48,12 +55,12 @@ function clamp(n: number, a: number, b: number) {
 }
 
 export function HeroBoard({
-  snapshot, canSpendBranch, onOpenPillar, onOpenBranch,
+  snapshot, canSpendBranch, onOpenPillar, onOpenNode,
 }: {
   snapshot: Snapshot;
   canSpendBranch: boolean;
   onOpenPillar: (id: PillarId) => void;
-  onOpenBranch: (id: BranchId) => void;
+  onOpenNode: (ref: NodeRef) => void;
 }) {
   const viewRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<HTMLDivElement>(null);
@@ -161,9 +168,9 @@ export function HeroBoard({
     if (panned.current) return;
     onOpenPillar(id);
   };
-  const openBranch = (id: BranchId) => {
+  const openNode = (ref: NodeRef) => {
     if (panned.current) return;
-    onOpenBranch(id);
+    onOpenNode(ref);
   };
 
   return (
@@ -184,17 +191,57 @@ export function HeroBoard({
           {ARMS.map(arm => {
             const pillar = pillarPos(arm);
             const shown = Math.round(snapshot.finalPillars[arm.pillar]);
-            const live = BRANCHES_BY_PILLAR[arm.pillar];
+            const rays = BRANCHES_BY_PILLAR[arm.pillar];
             return (
               <span key={arm.arm}>
-                {live.map((id, slot) => (
-                  <Road
-                    key={id}
-                    from={pillar}
-                    to={ringPos(arm, 0, slot)}
-                    lit={(snapshot.state.branchRanks[id] || 0) > 0}
-                  />
-                ))}
+                {rays.map((branch, slot) => {
+                  const nodes = rayNodes(branch);
+                  const stops = [
+                    pillar,
+                    ringPos(arm, 0, slot),
+                    ringPos(arm, 1, slot),
+                    ringPos(arm, 2, slot),
+                  ];
+                  return (
+                    <span key={branch}>
+                      {nodes.map((ref, step) => (
+                        <Road
+                          key={`${branch}-road-${step}`}
+                          from={stops[step]}
+                          to={stops[step + 1]}
+                          lit={nodeRank(snapshot.state, ref) > 0}
+                        />
+                      ))}
+                      {nodes.map((ref, step) => {
+                        const rank = nodeRank(snapshot.state, ref);
+                        const locked = !isNodeUnlocked(snapshot.state, ref);
+                        const [x, y] = stops[step + 1];
+                        const name = ref.kind === 'branch'
+                          ? BRANCHES[ref.id].nameRu
+                          : DEEP_PASSIVES[ref.id].nameRu;
+                        const icon = ref.kind === 'branch'
+                          ? BRANCH_ICON[ref.id]
+                          : PASSIVE_ICON[ref.id];
+                        return (
+                          <BoardNode
+                            key={ref.id}
+                            kind="branch"
+                            x={x}
+                            y={y}
+                            src={icon}
+                            shown={rank}
+                            mark={rank > 0}
+                            title={name}
+                            lit={rank > 0}
+                            locked={locked}
+                            dimmed={rank === 0 && (locked || !canSpendBranch)}
+                            onOpen={() => openNode(ref)}
+                          />
+                        );
+                      })}
+                    </span>
+                  );
+                })}
                 <BoardNode
                   kind="pillar"
                   x={pillar[0]}
@@ -207,38 +254,6 @@ export function HeroBoard({
                   dimmed={false}
                   onOpen={() => openPillar(arm.pillar)}
                 />
-                {[0, 1, 2].flatMap(ring => [0, 1, 2].map(slot => {
-                  const [x, y] = ringPos(arm, ring, slot);
-                  if (ring === 0) {
-                    const id = live[slot];
-                    if (!id) return null;
-                    const rank = snapshot.state.branchRanks[id] || 0;
-                    const open = rank > 0;
-                    return (
-                      <BoardNode
-                        key={id}
-                        kind="branch"
-                        x={x}
-                        y={y}
-                        src={BRANCH_ICON[id]}
-                        shown={rank}
-                        mark={open}
-                        title={BRANCHES[id].nameRu}
-                        lit={open}
-                        dimmed={!open && !canSpendBranch}
-                        onOpen={() => openBranch(id)}
-                      />
-                    );
-                  }
-                  return (
-                    <span
-                      key={`${arm.arm}-void-${ring}-${slot}`}
-                      className="hero-node is-void hero-board__node"
-                      style={{ left: x, top: y }}
-                      aria-hidden
-                    />
-                  );
-                }))}
               </span>
             );
           })}
@@ -285,7 +300,7 @@ function Road({
 }
 
 function BoardNode({
-  kind, x, y, src, shown, mark, title, lit, dimmed, onOpen,
+  kind, x, y, src, shown, mark, title, lit, dimmed, locked = false, onOpen,
 }: {
   kind: 'pillar' | 'branch';
   x: number;
@@ -296,6 +311,8 @@ function BoardNode({
   title: string;
   lit: boolean;
   dimmed: boolean;
+  /** Узел заперт: предыдущий на луче не выкачан до конца. */
+  locked?: boolean;
   onOpen: () => void;
 }) {
   return (
@@ -304,8 +321,9 @@ function BoardNode({
       className={kind === 'pillar' ? 'hero-node hero-node--pillar hero-board__node' : 'hero-node hero-board__node'}
       data-on={lit ? 'true' : 'false'}
       data-dim={dimmed ? 'true' : 'false'}
-      title={`${title} ${shown}`}
-      aria-label={`${title} ${shown}`}
+      data-locked={locked ? 'true' : 'false'}
+      title={locked ? `${title} — закрыто` : `${title} ${shown}`}
+      aria-label={locked ? `${title} — закрыто` : `${title} ${shown}`}
       style={{ left: x, top: y }}
       onClick={onOpen}
     >

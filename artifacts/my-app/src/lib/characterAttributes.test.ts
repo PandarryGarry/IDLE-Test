@@ -2,12 +2,19 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   ATTRIBUTE_STATE_VERSION,
+  PASSIVE_IDS,
+  PASSIVES_BY_BRANCH,
   PILLAR_IDS,
   RACE_PILLAR_MODS,
   type AttributeRaceId,
 } from '../data/attributes.ts';
 import { SYNERGIES } from '../data/synergies.ts';
-import { BODY_BASE_STUB, SUBSTAT_GROWTH, pillarContribution } from '../data/balance/pillars.ts';
+import {
+  BODY_BASE_STUB,
+  NODE_RANK_CAP,
+  SUBSTAT_GROWTH,
+  pillarContribution,
+} from '../data/balance/pillars.ts';
 import { earnedBranchPoints, earnedPillarPoints } from '../data/balance/heroLevel.ts';
 import {
   attachAttributesToSave,
@@ -19,6 +26,8 @@ import {
   spendPillarPoint,
   respecBranchRanks,
   respecPillarRanks,
+  isNodeUnlocked,
+  nodeRank,
 } from './characterAttributes.ts';
 
 test('старт: 0 очков, уровень 1, без specializationId', () => {
@@ -141,7 +150,7 @@ test('трата очка и бесплатный respec', () => {
   assert.ok(afterPillar);
   assert.equal(afterPillar.unspentPillarPoints, 0);
   assert.equal(afterPillar.pillarRanks.finesse, 1);
-  const afterBranch = spendBranchPoint(afterPillar, 'tempo');
+  const afterBranch = spendBranchPoint(afterPillar, { kind: 'branch', id: 'tempo' });
   assert.ok(afterBranch);
   const reset = respecAttributes(afterBranch);
   assert.ok(reset);
@@ -162,7 +171,7 @@ test('ветка не качает столп; подхарактеристик�
   let state = createDefaultAttributes();
   state = { ...state, unspentPillarPoints: 1, unspentBranchPoints: 1 };
   const start = computeAttributeSnapshot({ state, raceId: 'human' });
-  const afterBranch = spendBranchPoint(state, 'health');
+  const afterBranch = spendBranchPoint(state, { kind: 'branch', id: 'health' });
   assert.ok(afterBranch);
   const branched = computeAttributeSnapshot({ state: afterBranch, raceId: 'human' });
   assert.equal(branched.finalPillars.fortitude, start.finalPillars.fortitude);
@@ -185,7 +194,7 @@ test('сброс столпов и ветвей раздельно, каждый
   };
   const afterPillar = spendPillarPoint(state, 'might');
   assert.ok(afterPillar);
-  const afterBranch = spendBranchPoint(afterPillar, 'tempo');
+  const afterBranch = spendBranchPoint(afterPillar, { kind: 'branch', id: 'tempo' });
   assert.ok(afterBranch);
   const resetPillars = respecPillarRanks(afterBranch);
   assert.ok(resetPillars);
@@ -199,4 +208,51 @@ test('сброс столпов и ветвей раздельно, каждый
   assert.equal(resetBranches.unspentBranchPoints, 1);
   assert.equal(resetBranches.freeRespecsUsed, 2);
   assert.equal(respecPillarRanks(resetBranches), null);
+});
+
+test('пассивки: старт в нуле, сброс чистит и их', () => {
+  const state = createDefaultAttributes();
+  for (const id of PASSIVE_IDS) assert.equal(state.passiveRanks[id], 0);
+});
+
+test('луч: пассивка открывается только после полной ветви', () => {
+  let state = createDefaultAttributes();
+  state = { ...state, unspentBranchPoints: 9 };
+  const [ring1, ring2] = PASSIVES_BY_BRANCH.health;
+  const deep1 = { kind: 'passive', id: ring1 } as const;
+  const deep2 = { kind: 'passive', id: ring2 } as const;
+  const root = { kind: 'branch', id: 'health' } as const;
+
+  assert.equal(isNodeUnlocked(state, root), true);
+  assert.equal(isNodeUnlocked(state, deep1), false);
+  assert.equal(spendBranchPoint(state, deep1), null);
+
+  for (let i = 0; i < NODE_RANK_CAP; i += 1) {
+    const next = spendBranchPoint(state, root);
+    assert.ok(next);
+    state = next;
+  }
+  assert.equal(nodeRank(state, root), NODE_RANK_CAP);
+  assert.equal(isNodeUnlocked(state, deep1), true);
+  assert.equal(isNodeUnlocked(state, deep2), false);
+  assert.equal(spendBranchPoint(state, deep2), null);
+
+  const onDeep = spendBranchPoint(state, deep1);
+  assert.ok(onDeep);
+  state = onDeep;
+  assert.equal(nodeRank(state, deep1), 1);
+  assert.equal(state.unspentBranchPoints, 5);
+
+  const capped = spendBranchPoint({ ...state, unspentBranchPoints: 9 }, root);
+  assert.equal(capped, null, 'потолок ранга узла');
+});
+
+test('мигратор: сейв без passiveRanks не ломается', () => {
+  const migrated = migrateSaveAttributes({
+    branchRanks: { health: 2 },
+    passiveRanks: { [PASSIVES_BY_BRANCH.health[0]]: 5 },
+  });
+  assert.equal(migrated.branchRanks.health, 2);
+  assert.equal(migrated.passiveRanks[PASSIVES_BY_BRANCH.health[0]], NODE_RANK_CAP);
+  assert.equal(migrated.passiveRanks[PASSIVES_BY_BRANCH.tempo[1]], 0);
 });

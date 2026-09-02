@@ -96,7 +96,7 @@ export const SUBSTATS_BY_PILLAR = BRANCHES_BY_PILLAR;
 export const PILLAR_OF_SUBSTAT = PILLAR_OF_BRANCH;
 
 export const HERO_HELP = {
-  body: 'Четыре столпа по сторонам доски. Каждый уровень — одно очко в один столп. Вместе со столпом растут три числа тела, каждое своим шагом: одно очко уже меняет расклад. Дальше по лучу — пассивки. Очко пассивки приходит на 5, 10, 15 уровне; эффект ячеек ещё не написан. Потяни доску, чтобы видеть все стороны.',
+  body: 'Четыре столпа по сторонам доски. Каждый уровень — одно очко в один столп. Вместе со столпом растут три числа тела, каждое своим шагом: одно очко уже меняет расклад. От столпа идут три луча: ветвь и две глубинные пассивки. Узел качается до трёх рангов; следующий на луче открывается, когда предыдущий выкачан до конца. Очко пассивки приходит на 5, 10, 15 уровне; эффекты ячеек пока не подключены. Потяни доску, чтобы видеть все стороны.',
   gear: 'Надетое на героя. Броня, украшения, руки. Двуручное занимает обе руки: справа горит, слева та же вещь тусклая. Надеть и снять можно из сумки. Сумки в этом окне нет.',
   synergies: 'Нить зажигается, когда два столпа доросли до нужных чисел. Нить сами столпы не увеличивает — это отдельный бонус. Пока чисел мало, нить спит и пишет, чего не хватает.',
   path: 'Уровень, сколько очков уже вложено в столпы и пассивки, сколько бесплатных сбросов осталось (два за жизнь). Ниже — все числа тела: столп и три подхарактеристики.',
@@ -186,14 +186,178 @@ export const RACE_BODY_CHILD_RU: Record<AttributeRaceId, string> = {
   beastfolk: 'Тело чует добычу и бьёт сильно, но держит удар хуже. Очков ещё нет — зверолюд уже такой.',
 };
 
+/**
+ * Глубинные пассивки — кольца 2 и 3 доски. По две на каждую ветвь:
+ * луч «столп → ветвь → пассивка → пассивка» (решено владельцем 2026-09-02).
+ * Эффекты НЕ подключены: в UI честно пишем, что ячейка пока ничего не делает.
+ */
+export type PassiveId =
+  | 'second_wind' | 'deep_sleep'
+  | 'buckler' | 'bone_shell'
+  | 'steady_spirit' | 'unbroken'
+  | 'heavy_hand' | 'piercing'
+  | 'sweeping' | 'stagger'
+  | 'bone_breaker' | 'finisher'
+  | 'light_step' | 'nimble'
+  | 'shade' | 'slip_away'
+  | 'flash' | 'anticipation'
+  | 'lucky_break' | 'hoard_sense'
+  | 'thrifty' | 'knows_value'
+  | 'nose' | 'experience';
+
+export interface DeepPassive extends NamedBlurb {
+  pillar: PillarId;
+  /** Ветвь-корень луча. */
+  branch: BranchId;
+  /** Кольцо на доске: 1 — второе, 2 — третье. */
+  ring: 1 | 2;
+}
+
+export const DEEP_PASSIVES: Record<PassiveId, DeepPassive> = {
+  second_wind: {
+    id: 'second_wind', pillar: 'fortitude', branch: 'health', ring: 1,
+    nameRu: 'Второе дыхание', childRu: 'Вне боя силы возвращаются сами, хоть и медленно.',
+  },
+  deep_sleep: {
+    id: 'deep_sleep', pillar: 'fortitude', branch: 'health', ring: 2,
+    nameRu: 'Крепкий сон', childRu: 'Отдых в таверне поднимает тебя быстрее.',
+  },
+  buckler: {
+    id: 'buckler', pillar: 'fortitude', branch: 'armor', ring: 1,
+    nameRu: 'Щиток', childRu: 'Иногда слабый удар отскакивает совсем.',
+  },
+  bone_shell: {
+    id: 'bone_shell', pillar: 'fortitude', branch: 'armor', ring: 2,
+    nameRu: 'Костяной панцирь', childRu: 'Самый тяжёлый удар по тебе чуть мягче.',
+  },
+  steady_spirit: {
+    id: 'steady_spirit', pillar: 'fortitude', branch: 'will', ring: 1,
+    nameRu: 'Стойкий дух', childRu: 'Страх и яд сбивают тебя слабее.',
+  },
+  unbroken: {
+    id: 'unbroken', pillar: 'fortitude', branch: 'will', ring: 2,
+    nameRu: 'Не сломаться', childRu: 'Когда сил осталось мало, держишься крепче.',
+  },
+
+  heavy_hand: {
+    id: 'heavy_hand', pillar: 'might', branch: 'strike', ring: 1,
+    nameRu: 'Тяжёлая рука', childRu: 'Твой сильный удар бьёт ещё больнее.',
+  },
+  piercing: {
+    id: 'piercing', pillar: 'might', branch: 'strike', ring: 2,
+    nameRu: 'Пробивание', childRu: 'Часть брони врага ты просто не замечаешь.',
+  },
+  sweeping: {
+    id: 'sweeping', pillar: 'might', branch: 'onslaught', ring: 1,
+    nameRu: 'Размашистый', childRu: 'Одним замахом задеваешь и второго.',
+  },
+  stagger: {
+    id: 'stagger', pillar: 'might', branch: 'onslaught', ring: 2,
+    nameRu: 'Сбивание', childRu: 'Иногда удар сбивает врага с ног.',
+  },
+  bone_breaker: {
+    id: 'bone_breaker', pillar: 'might', branch: 'destruction', ring: 1,
+    nameRu: 'Костолом', childRu: 'Крупным врагам от тебя больнее.',
+  },
+  finisher: {
+    id: 'finisher', pillar: 'might', branch: 'destruction', ring: 2,
+    nameRu: 'Добивание', childRu: 'Раненому врагу достаётся сильнее.',
+  },
+
+  light_step: {
+    id: 'light_step', pillar: 'finesse', branch: 'tempo', ring: 1,
+    nameRu: 'Лёгкая поступь', childRu: 'В долгом деле устаёшь реже.',
+  },
+  nimble: {
+    id: 'nimble', pillar: 'finesse', branch: 'tempo', ring: 2,
+    nameRu: 'Проворство', childRu: 'Добыча идёт чуть быстрее.',
+  },
+  shade: {
+    id: 'shade', pillar: 'finesse', branch: 'evasion', ring: 1,
+    nameRu: 'Тень', childRu: 'В опасном месте чаще остаёшься цел.',
+  },
+  slip_away: {
+    id: 'slip_away', pillar: 'finesse', branch: 'evasion', ring: 2,
+    nameRu: 'Ускользание', childRu: 'Увернулся — иногда отвечаешь сразу.',
+  },
+  flash: {
+    id: 'flash', pillar: 'finesse', branch: 'reaction', ring: 1,
+    nameRu: 'Миг', childRu: 'Иногда успеваешь сделать лишний шаг.',
+  },
+  anticipation: {
+    id: 'anticipation', pillar: 'finesse', branch: 'reaction', ring: 2,
+    nameRu: 'Опережение', childRu: 'Первый удар в бою чаще твой.',
+  },
+
+  lucky_break: {
+    id: 'lucky_break', pillar: 'instinct', branch: 'luck', ring: 1,
+    nameRu: 'Счастливый случай', childRu: 'Редкая добыча выпадает чаще.',
+  },
+  hoard_sense: {
+    id: 'hoard_sense', pillar: 'instinct', branch: 'luck', ring: 2,
+    nameRu: 'Чутьё на клад', childRu: 'Стоящая находка попадается чаще.',
+  },
+  thrifty: {
+    id: 'thrifty', pillar: 'instinct', branch: 'resourcefulness', ring: 1,
+    nameRu: 'Бережливый', childRu: 'Тратишь меньше припасов на то же дело.',
+  },
+  knows_value: {
+    id: 'knows_value', pillar: 'instinct', branch: 'resourcefulness', ring: 2,
+    nameRu: 'Знающий толк', childRu: 'Торговец даёт за вещи чуть больше.',
+  },
+  nose: {
+    id: 'nose', pillar: 'instinct', branch: 'intuition', ring: 1,
+    nameRu: 'Нюх', childRu: 'Чуешь заранее, что даст дело.',
+  },
+  experience: {
+    id: 'experience', pillar: 'instinct', branch: 'intuition', ring: 2,
+    nameRu: 'Опыт', childRu: 'За каждое дело приходит больше опыта.',
+  },
+};
+
+export const PASSIVE_IDS = Object.keys(DEEP_PASSIVES) as PassiveId[];
+
+/** Две пассивки луча в порядке колец: [кольцо 2, кольцо 3]. */
+export const PASSIVES_BY_BRANCH: Record<BranchId, readonly [PassiveId, PassiveId]> = {
+  health: ['second_wind', 'deep_sleep'],
+  armor: ['buckler', 'bone_shell'],
+  will: ['steady_spirit', 'unbroken'],
+  strike: ['heavy_hand', 'piercing'],
+  onslaught: ['sweeping', 'stagger'],
+  destruction: ['bone_breaker', 'finisher'],
+  tempo: ['light_step', 'nimble'],
+  evasion: ['shade', 'slip_away'],
+  reaction: ['flash', 'anticipation'],
+  luck: ['lucky_break', 'hoard_sense'],
+  resourcefulness: ['thrifty', 'knows_value'],
+  intuition: ['nose', 'experience'],
+};
+
+/** Узел доски: ветвь (кольцо 1) или глубинная пассивка (кольца 2–3). */
+export type NodeRef =
+  | { kind: 'branch'; id: BranchId }
+  | { kind: 'passive'; id: PassiveId };
+
+/** Луч от столпа: ветвь → пассивка кольца 2 → пассивка кольца 3. */
+export function rayNodes(branch: BranchId): readonly NodeRef[] {
+  const [first, second] = PASSIVES_BY_BRANCH[branch];
+  return [
+    { kind: 'branch', id: branch },
+    { kind: 'passive', id: first },
+    { kind: 'passive', id: second },
+  ];
+}
+
 export type PillarRanks = Record<PillarId, number>;
 export type BranchRanks = Record<BranchId, number>;
+export type PassiveRanks = Record<PassiveId, number>;
 
 /** Versioned-состояние в characters.save_data.attributes. Без specializationId. */
 export interface CharacterAttributeState {
   version: typeof ATTRIBUTE_STATE_VERSION;
   pillarRanks: PillarRanks;
   branchRanks: BranchRanks;
+  passiveRanks: PassiveRanks;
   unspentPillarPoints: number;
   unspentBranchPoints: number;
   heroLevel: number;
@@ -216,6 +380,12 @@ export function emptyBranchRanks(): BranchRanks {
     tempo: 0, evasion: 0, reaction: 0,
     luck: 0, resourcefulness: 0, intuition: 0,
   };
+}
+
+export function emptyPassiveRanks(): PassiveRanks {
+  const next = {} as PassiveRanks;
+  for (const id of PASSIVE_IDS) next[id] = 0;
+  return next;
 }
 
 export function racePercentFor(raceId: AttributeRaceId, pillar: PillarId): number {

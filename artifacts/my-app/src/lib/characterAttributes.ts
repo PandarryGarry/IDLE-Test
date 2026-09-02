@@ -6,21 +6,28 @@ import {
   ATTRIBUTE_STATE_VERSION,
   BRANCH_IDS,
   BRANCHES_BY_PILLAR,
+  DEEP_PASSIVES,
+  PASSIVES_BY_BRANCH,
+  PASSIVE_IDS,
   PILLAR_IDS,
   emptyBranchRanks,
+  emptyPassiveRanks,
   emptyPillarRanks,
   racePercentFor,
   type AttributeRaceId,
   type BranchId,
   type BranchRanks,
   type CharacterAttributeState,
+  type PassiveId,
+  type PassiveRanks,
+  type NodeRef,
   type PillarId,
   type PillarRanks,
 } from '../data/attributes.ts';
 import { SYNERGIES, type SynergyId } from '../data/synergies.ts';
 import {
   BODY_BASE_STUB,
-  BRANCH_RANK_CAP_STUB,
+  NODE_RANK_CAP,
   PILLAR_RANK_CAP_STUB,
   SUBSTAT_GROWTH,
   pillarContribution,
@@ -39,7 +46,7 @@ import {
   REPUTATION_START,
 } from '../data/balance/reputation.ts';
 
-export type { CharacterAttributeState, PillarId, BranchId };
+export type { CharacterAttributeState, PillarId, BranchId, PassiveId, NodeRef };
 
 /** Живое состояние столпов текущего героя — чтобы collectSaveData не тёр их. */
 let liveAttributes: CharacterAttributeState | null = null;
@@ -57,6 +64,7 @@ export function createDefaultAttributes(): CharacterAttributeState {
     version: ATTRIBUTE_STATE_VERSION,
     pillarRanks: emptyPillarRanks(),
     branchRanks: emptyBranchRanks(),
+    passiveRanks: emptyPassiveRanks(),
     unspentPillarPoints: 0,
     unspentBranchPoints: 0,
     heroLevel: HERO_START_LEVEL,
@@ -90,7 +98,18 @@ function migrateBranchRanks(raw: unknown): BranchRanks {
   if (!raw || typeof raw !== 'object') return next;
   const rec = raw as Record<string, unknown>;
   for (const id of BRANCH_IDS) {
-    next[id] = clampInt(asFiniteNumber(rec[id], 0), 0, BRANCH_RANK_CAP_STUB);
+    next[id] = clampInt(asFiniteNumber(rec[id], 0), 0, NODE_RANK_CAP);
+  }
+  return next;
+}
+
+/** Старых сейвов без passiveRanks ещё не было — все пассивки в нуле. */
+function migratePassiveRanks(raw: unknown): PassiveRanks {
+  const next = emptyPassiveRanks();
+  if (!raw || typeof raw !== 'object') return next;
+  const rec = raw as Record<string, unknown>;
+  for (const id of PASSIVE_IDS) {
+    next[id] = clampInt(asFiniteNumber(rec[id], 0), 0, NODE_RANK_CAP);
   }
   return next;
 }
@@ -110,6 +129,7 @@ export function migrateSaveAttributes(raw: unknown): CharacterAttributeState {
     version: ATTRIBUTE_STATE_VERSION,
     pillarRanks: migratePillarRanks(rec.pillarRanks),
     branchRanks: migrateBranchRanks(rec.branchRanks),
+    passiveRanks: migratePassiveRanks(rec.passiveRanks),
     unspentPillarPoints: clampInt(asFiniteNumber(rec.unspentPillarPoints, 0), 0, 9999),
     unspentBranchPoints: clampInt(asFiniteNumber(rec.unspentBranchPoints, 0), 0, 9999),
     heroLevel,
@@ -262,14 +282,53 @@ export function spendPillarPoint(state: CharacterAttributeState, pillar: PillarI
   };
 }
 
-export function spendBranchPoint(state: CharacterAttributeState, branch: BranchId): CharacterAttributeState | null {
-  if (state.unspentBranchPoints < 1) return null;
-  if (state.branchRanks[branch] >= BRANCH_RANK_CAP_STUB) return null;
-  return {
-    ...state,
-    unspentBranchPoints: state.unspentBranchPoints - 1,
-    branchRanks: { ...state.branchRanks, [branch]: state.branchRanks[branch] + 1 },
-  };
+/** Ранг узла доски: ветви или глубинной пассивки. */
+export function nodeRank(state: CharacterAttributeState, ref: NodeRef): number {
+  return ref.kind === 'branch'
+    ? state.branchRanks[ref.id] ?? 0
+    : state.passiveRanks[ref.id] ?? 0;
+}
+
+/** Узел, идущий по лучу перед этим. У корня луча (ветви) предыдущего нет. */
+export function previousNode(ref: NodeRef): NodeRef | null {
+  if (ref.kind === 'branch') return null;
+  const passive = DEEP_PASSIVES[ref.id];
+  if (passive.ring === 1) return { kind: 'branch', id: passive.branch };
+  const [first] = PASSIVES_BY_BRANCH[passive.branch];
+  return { kind: 'passive', id: first };
+}
+
+/**
+ * Лестница луча: следующий узел открыт, только когда предыдущий выкачан
+ * до потолка (решено владельцем 2026-09-02).
+ */
+export function isNodeUnlocked(state: CharacterAttributeState, ref: NodeRef): boolean {
+  const prev = previousNode(ref);
+  if (!prev) return true;
+  return nodeRank(state, prev) >= NODE_RANK_CAP;
+}
+
+/** Почему нельзя вложить очко: null — можно. */
+export function nodeBlockReason(state: CharacterAttributeState, ref: NodeRef): string | null {
+  if (!isNodeUnlocked(state, ref)) return 'Сначала выкачай предыдущий узел на этом луче';
+  if (nodeRank(state, ref) >= NODE_RANK_CAP) return `Узел выкачан — максимум ${NODE_RANK_CAP}`;
+  if (state.unspentBranchPoints < 1) return 'Очко пассивки приходит на 5, 10, 15 уровне';
+  return null;
+}
+
+export function spendBranchPoint(state: CharacterAttributeState, ref: NodeRef): CharacterAttributeState | null {
+  if (nodeBlockReason(state, ref)) return null;
+  return ref.kind === 'branch'
+    ? {
+        ...state,
+        unspentBranchPoints: state.unspentBranchPoints - 1,
+        branchRanks: { ...state.branchRanks, [ref.id]: (state.branchRanks[ref.id] ?? 0) + 1 },
+      }
+    : {
+        ...state,
+        unspentBranchPoints: state.unspentBranchPoints - 1,
+        passiveRanks: { ...state.passiveRanks, [ref.id]: (state.passiveRanks[ref.id] ?? 0) + 1 },
+      };
 }
 
 export function spentPillarRanks(state: CharacterAttributeState): number {
@@ -277,7 +336,9 @@ export function spentPillarRanks(state: CharacterAttributeState): number {
 }
 
 export function spentBranchRanks(state: CharacterAttributeState): number {
-  return BRANCH_IDS.reduce((sum, id) => sum + state.branchRanks[id], 0);
+  const branches = BRANCH_IDS.reduce((sum, id) => sum + state.branchRanks[id], 0);
+  const passives = PASSIVE_IDS.reduce((sum, id) => sum + (state.passiveRanks?.[id] ?? 0), 0);
+  return branches + passives;
 }
 
 function migrateFreeRespecsUsed(rec: Record<string, unknown>): number {
@@ -318,6 +379,7 @@ export function respecBranchRanks(state: CharacterAttributeState): CharacterAttr
   return {
     ...next,
     branchRanks: emptyBranchRanks(),
+    passiveRanks: emptyPassiveRanks(),
     unspentBranchPoints: state.unspentBranchPoints + spentB,
   };
 }
@@ -333,6 +395,7 @@ export function respecAttributes(state: CharacterAttributeState): CharacterAttri
     ...next,
     pillarRanks: emptyPillarRanks(),
     branchRanks: emptyBranchRanks(),
+    passiveRanks: emptyPassiveRanks(),
     unspentPillarPoints: state.unspentPillarPoints + spentP,
     unspentBranchPoints: state.unspentBranchPoints + spentB,
   };

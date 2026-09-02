@@ -3160,12 +3160,23 @@
   opacity: 0.45;
 }
 
-.hero-node.is-void {
-  width: 36px;
-  height: 36px;
-  cursor: default;
-  pointer-events: none;
-  opacity: 0.28;
+/* Запертый узел: видно, что он есть, но путь к нему ещё не пройден. */
+.hero-node[data-locked='true'] {
+  border-style: dashed;
+  filter: grayscale(0.7);
+}
+
+.hero-node[data-locked='true']::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  right: 2px;
+  top: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--text-muted);
+  opacity: 0.8;
 }
 
 .hero-board {

@@ -34,7 +34,12 @@ export const SUBSTAT_GROWTH: Record<string, { base: number; perPillar: number }>
 };
 
 export const PILLAR_RANK_CAP_STUB = 999;
-export const BRANCH_RANK_CAP_STUB = 999;
+/**
+ * Потолок ранга одного узла доски (ветвь или глубинная пассивка).
+ * Решено владельцем 2026-09-02: узел качается 1 → 2 → 3, следующий узел
+ * на луче открывается, когда предыдущий выкачан до конца.
+ */
+export const NODE_RANK_CAP = 3;
 
 export function pillarContribution(finalPillar: number): number {
   const ratio = 1 + (Number.isFinite(finalPillar) ? finalPillar : 0) / 100;

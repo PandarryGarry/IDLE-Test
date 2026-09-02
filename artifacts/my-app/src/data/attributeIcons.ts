@@ -1,5 +1,5 @@
 import { iconUrl } from '@/lib/assetUrl';
-import type { BranchId, PillarId } from './attributes';
+import type { BranchId, PassiveId, PillarId } from './attributes';
 import type { SynergyId } from './synergies';
 import type { EquipSlot } from './types';
 
@@ -25,6 +25,41 @@ export const BRANCH_ICON: Record<BranchId, string> = {
   luck: iconUrl('stats/stat_luck'),
   resourcefulness: iconUrl('stats/stat_xp'),
   intuition: iconUrl('skills/skill_buff_strength'),
+};
+
+/**
+ * Глубинные пассивки пока без собственного арта: берём существующие иконки
+ * навыков и статов по смыслу. Новый арт — отдельной задачей через
+ * scripts/assets/optimize.mjs.
+ */
+export const PASSIVE_ICON: Record<PassiveId, string> = {
+  second_wind: iconUrl('skills/skill_heal'),
+  deep_sleep: iconUrl('stats/stat_health'),
+  buckler: iconUrl('skills/skill_shield_block'),
+  bone_shell: iconUrl('stats/stat_defense'),
+  steady_spirit: iconUrl('skills/skill_buff_strength'),
+  unbroken: iconUrl('stats/stat_magic'),
+
+  heavy_hand: iconUrl('skills/skill_sword_strike'),
+  piercing: iconUrl('stats/stat_attack'),
+  sweeping: iconUrl('skills/skill_ultimate'),
+  stagger: iconUrl('stats/stat_crit'),
+  bone_breaker: iconUrl('skills/skill_crit_strike'),
+  finisher: iconUrl('stats/stat_strength'),
+
+  light_step: iconUrl('stats/stat_speed'),
+  nimble: iconUrl('skills/skill_arrow_shot'),
+  shade: iconUrl('skills/skill_frost_nova'),
+  slip_away: iconUrl('stats/stat_agility'),
+  flash: iconUrl('skills/skill_lightning'),
+  anticipation: iconUrl('stats/stat_ranged'),
+
+  lucky_break: iconUrl('stats/stat_luck'),
+  hoard_sense: iconUrl('skills/skill_fireball'),
+  thrifty: iconUrl('skills/skill_poison'),
+  knows_value: iconUrl('stats/stat_mana'),
+  nose: iconUrl('skills/skill_ice_shard'),
+  experience: iconUrl('stats/stat_xp'),
 };
 
 export const SYNERGY_ICON: Record<SynergyId, string> = {

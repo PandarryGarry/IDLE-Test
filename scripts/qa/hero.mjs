@@ -29,14 +29,18 @@ const HERO = 'Каель';
 const EMAIL = 'qa.tour@aethelia.local';
 const PASSWORD = 'qa-tour-pass';
 
-/** Герой 12 уровня с вложенными очками: видно и столпы, и пассивки. */
+/**
+ * Герой 30 уровня: луч «Здоровье» выкачан до конца и открыл пассивку,
+ * остальные лучи частично пусты — видно и лестницу, и запертые узлы.
+ */
 const DEMO_ATTRIBUTES = {
   version: 1,
-  pillarRanks: { fortitude: 4, might: 3, finesse: 2, instinct: 1 },
-  branchRanks: { health: 1, strike: 1 },
+  pillarRanks: { fortitude: 12, might: 8, finesse: 5, instinct: 3 },
+  branchRanks: { health: 3, tempo: 1 },
+  passiveRanks: { second_wind: 1 },
   unspentPillarPoints: 1,
-  unspentBranchPoints: 1,
-  heroLevel: 12,
+  unspentBranchPoints: 2,
+  heroLevel: 30,
   heroXp: 0,
   energy: { current: 100, max: 100 },
   reputation: 0,
@@ -139,6 +143,30 @@ async function snapAround(page, selector, name, pad) {
   return path;
 }
 
+/** Весь мир доски целиком (ниже MIN_SCALE — только для кадра, не для игры). */
+async function snapBoardFit(page, name) {
+  await page.evaluate(() => {
+    const world = document.querySelector('.hero-board__world');
+    const view = document.querySelector('.hero-board');
+    if (!world || !view) throw new Error('нет доски');
+    const scale = Math.min(view.clientWidth / 740, view.clientHeight / 740);
+    const dx = (view.clientWidth - 720 * scale) / 2;
+    const dy = (view.clientHeight - 720 * scale) / 2;
+    world.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
+  });
+  await sleep(300);
+  const path = join(OUT, `${name}.jpg`);
+  const box = await (await page.$('.hero-board')).boundingBox();
+  await page.screenshot({
+    path,
+    type: 'jpeg',
+    quality: 92,
+    clip: { x: box.x, y: box.y, width: box.width, height: box.height },
+  });
+  console.log(`  📷 ${path} (вся доска)`);
+  return path;
+}
+
 async function openHub(page, viewport, tag) {
   await page.setViewport(viewport);
   const seed = readFileSync(SEED, 'utf8');
@@ -207,6 +235,7 @@ async function runShots(browser, only) {
   if (only === 'all' || only === 'body') {
     await snap(page, '01-mobile-body');
     await snapAround(page, '.hero-board__knot', '01b-mobile-board-center', 60);
+    await snapBoardFit(page, '01c-mobile-board-fit');
     await page.evaluate(() => document.querySelectorAll('.hero-node--pillar')[0]?.click());
     await sleep(500);
     await snap(page, '02-mobile-pillar-modal');
