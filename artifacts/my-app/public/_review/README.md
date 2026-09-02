@@ -38,3 +38,7 @@
 | `review-09-chest-sets2.jpg` | второй заход: рукава и длина; слева иконка, справа надето |
 | `sets2/chest-*-layer.png`, `sets2/chest-*-worn.png` | слои и манекен в комплектах (ткань/кожа/латы) |
 | `sets2/metrics.md` | площади, длина, доля вне тела |
+| `review-10-cloth-shortened-leather-colors.jpg` | ткань укорочена + 4 варианта цвета кожи |
+| `sets3/chest-cloth-*.png` | укороченная ткань: слой и манекен |
+| `sets3/chest-leather-*.png` | кожа в четырёх цветах: слой и манекен |
+| `sets3/metrics.md` | что изменилось по ткани и палитра кожи |
