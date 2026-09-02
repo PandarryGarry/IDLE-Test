@@ -309,10 +309,18 @@ def palm_box(sil, side):
     return (int(hx.min()), int(hy.min()), int(hx.max()), int(hy.max()))
 
 
-def hands_check(name, img):
+def hands_check(name, img, stocky=False):
     """Замер обеих рук против ворот позы. Возвращает (строку отчёта, брак).
 
     `брак` — список человекочитаемых претензий; пустой, если кадр проходит.
+
+    `stocky=True` для гномов и орков: владелец решил (2026-09-03), что у
+    коренастых руки могут висеть почти вертикально у корпуса — шире
+    расставлять не красиво. Для них угол руки и заполненность кисти
+    печатаются как справка и в брак не попадают; браком остаётся только
+    рука, слитая с корпусом (кисть нельзя отделить — её не «оденешь»).
+    У людей, эльфов и зверолюдей (`stocky=False`) действует полный набор
+    ворот: угол 16–26°, ширина и заполненность кисти.
     """
     sil = img[..., 3] > 0.5
     parts, bad = [], []
@@ -327,6 +335,8 @@ def hands_check(name, img):
         w, h = x1 - x0 + 1, y1 - y0 + 1
         fill = int(sil[y0:y1 + 1, x0:x1 + 1].sum()) / (w * h)
         parts.append(f"{tag} {ang:4.1f}° кисть {w}×{h} заполн. {fill:.2f}")
+        if stocky:
+            continue  # у коренастых угол/заполненность — только справка
         if not ARM_DEG[0] <= ang <= ARM_DEG[1]:
             bad.append(f"{tag}: угол руки {ang:.1f}° вне {ARM_DEG[0]:.0f}–"
                        f"{ARM_DEG[1]:.0f}°")
@@ -494,7 +504,7 @@ def batch(race_key):
         body = (ds[1] + ds[2] + ds[3] + ds[4]) / 4
         print(f"    поза тела {body:.2f} (руки {ds[1]:.2f}/{ds[2]:.2f}, "
               f"стопы {ds[3]:.2f}/{ds[4]:.2f}, голова {ds[0]:.2f}, плечи {ds[5]:.2f})")
-        line, bad = hands_check(name, canon)
+        line, bad = hands_check(name, canon, stocky=race_key in ("dwarf", "orc"))
         print(f"    руки: {line.split(None, 1)[1]}")
         for b in bad:
             print(f"    БРАК ПОЗЫ — {b}")
