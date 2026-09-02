@@ -148,62 +148,12 @@ def report(name, img, avatar=None):
     med = np.median(cols, axis=0) * 255 if len(cols) else np.zeros(3)
     line = (f"{name:22s} фигура {x1-x0+1:3d}×{y1-y0+1:3d} @({x0},{y0})  "
             f"кусков {n:2d} (главный {biggest:6d} px)  асимметрия {asym:4.1f}%  "
-            f"рост/голова {(f'{head_ratio:4.1f}' if head_ratio==head_ratio else '  — ')}  кожа #{int(med[0]):02x}{int(med[1]):02x}{int(med[2]):02x}")
+            f"высота/ширина {H/max(x1-x0+1,1):4.2f}  кожа #{int(med[0]):02x}{int(med[1]):02x}{int(med[2]):02x}")
     if avatar is not None:
         line += f"  аватар #{int(avatar[0]):02x}{int(avatar[1]):02x}{int(avatar[2]):02x}"
     print(line, flush=True)
     return dict(pieces=n, biggest=biggest, asym=asym, head=head_ratio,
                 box=(x0, y0, x1, y1), skin=med)
-
-
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("files", nargs="*")
-    ap.add_argument("--check", action="store_true")
-    ap.add_argument("--avatar", default=None, help="путь к аватару для сверки тона кожи")
-    args = ap.parse_args()
-    os.makedirs(WORK, exist_ok=True)
-
-    if args.check:
-        src = f"{MASTERS}/human_male_01_source_1024.png"
-        approved = f"{REPO}/assets/icons/characters/paper_dolls/bodies/human_male_01.png"
-        img = read_rgba(src)
-        img = strip_background(img)
-        canon, info = to_canon(img)
-        write_rgba(f"{WORK}/canon-from-source.png", canon)
-        ref = read_rgba(approved)
-        print(f"масштаб {info['scale']:.4f}, исходная рамка {info['src_box']}, "
-              f"фигура {info['fig']}")
-        print("--- эталон из исходника ---")
-        report("из исходника", canon)
-        print("--- утверждённый в ассетах ---")
-        report("утверждённый", ref)
-        d = np.abs(canon - ref)
-        diff = (d.max(axis=2) > 0.08).sum()
-        print(f"расхождение: {diff} px из {int((ref[...,3]>0.5).sum())} "
-              f"({100*diff/max(int((ref[...,3]>0.5).sum()),1):.2f}%)")
-        return
-
-    av_med = None
-    if args.avatar:
-        av = read_rgba(args.avatar)
-        a = av[..., 3] > 0.5
-        av_med = np.median(av[..., :3][a], axis=0) * 255
-
-    for f in args.files:
-        img = strip_background(read_rgba(f))
-        try:
-            canon, info = to_canon(img)
-        except RuntimeError as e:
-            print(f"{os.path.basename(f)}: ОТБРАКОВАН — {e}")
-            continue
-        name = os.path.splitext(os.path.basename(f))[0]
-        write_rgba(f"{WORK}/canon-{name}.png", canon)
-        report(name, canon, av_med)
-
-
-if __name__ == "__main__":
-    main()
 
 
 # ------------------------------------------------------------------- поза
@@ -228,19 +178,26 @@ def pose_points(sil):
     row = np.where(sil[sh_y])[0]
     shoulder = (row.max() - row.min()) / W
 
-    def extreme(y0f, y1f, side):
-        best = None
-        for y in range(y0 + int(y0f * H), y0 + int(y1f * H)):
-            r = np.where(sil[y])[0]
-            if not len(r):
-                continue
-            x = r.min() if side == "L" else r.max()
-            if best is None or (x < best[0] if side == "L" else x > best[0]):
-                best = (x, y)
-        return (frac_x(best[0]), frac_y(best[1])) if best else (0, 0)
+    def hand_center(side):
+        """Центр кисти, а не крайняя точка.
 
-    hand_l = extreme(0.40, 0.75, "L")
-    hand_r = extreme(0.40, 0.75, "R")
+        Крайняя точка зависит от длины пальцев и даёт ложные 5%
+        расхождения на одинаковой позе — берём центр предплечья с
+        кистью ниже локтя.
+        """
+        m = np.zeros_like(sil, bool)
+        lo, hi = y0 + int(0.42 * H), y0 + int(0.75 * H)
+        if side == "L":
+            m[lo:hi, :x0 + int(0.22 * W)] = sil[lo:hi, :x0 + int(0.22 * W)]
+        else:
+            m[lo:hi, x0 + int(0.78 * W):] = sil[lo:hi, x0 + int(0.78 * W):]
+        ys2, xs2 = np.where(m)
+        if not len(ys2):
+            return (0.0, 0.0)
+        return (frac_x(xs2.mean()), frac_y(ys2.mean()))
+
+    hand_l = hand_center("L")
+    hand_r = hand_center("R")
 
     def foot(side):
         m = sil[y0 + int(0.92 * H):y1 + 1]
@@ -272,3 +229,139 @@ def pose_delta(a, b):
           for k in keys]
     ds.append(abs(a["shoulder"] - b["shoulder"]) * 100)
     return ds, sum(ds[:5]) / 5
+
+
+RACE_FOLDER = {"human": "humans", "elf": "elves", "dwarf": "dwarves",
+               "orc": "orcs", "beastfolk": "beastfolk"}
+
+
+def face_skin(av_path):
+    """Медианный цвет области лица аватара (волосы и фон не мешают)."""
+    r = subprocess.run(["identify", "-format", "%w %h", av_path], capture_output=True)
+    W, H = map(int, r.stdout.split())
+    r = subprocess.run(["convert", av_path,
+                        "-crop", f"{int(W*0.16)}x{int(H*0.10)}+{int(W*0.42)}+{int(H*0.30)}",
+                        "+repage", "-colors", "6", "-format", "%c", "histogram:info:"],
+                       capture_output=True)
+    cols = []
+    for ln in r.stdout.decode().splitlines():
+        m = ln.strip().split()
+        if not m or ":" not in m[0]:
+            continue
+        n = int(m[0].rstrip(":"))
+        rgb = [float(v) for v in ln[ln.find("(")+1:ln.find(")")].split(",")[:3]]
+        cols.append((n, rgb))
+    tot = sum(n for n, _ in cols)
+    acc = 0
+    for n, rgb in cols:
+        acc += n
+        if acc >= tot * 0.5:
+            return np.array(rgb)
+    return np.zeros(3)
+
+
+def batch(race_key):
+    import glob
+    folder = RACE_FOLDER[race_key]
+    ref = read_rgba(f"{REPO}/assets/icons/characters/paper_dolls/bodies/human_male_01.png")
+    ref_pose = pose_points(ref[..., 3] > 0.5)
+    rows = []
+    for f in sorted(glob.glob(f"{WORK}/raw-{race_key}_*.png")):
+        name = os.path.basename(f)[4:-4]
+        try:
+            img = strip_background(read_rgba(f))
+            canon, info = to_canon(img)
+        except RuntimeError as e:
+            print(f"{name}: ОТБРАКОВАН — {e}")
+            continue
+        write_rgba(f"{WORK}/canon-{name}.png", canon)
+        av = f"{REPO}/assets/icons/characters/avatars/{folder}/{name}.png"
+        st = report(name, canon, face_skin(av) if os.path.exists(av) else None)
+        p = pose_points(canon[..., 3] > 0.5)
+        ds, _ = pose_delta(p, ref_pose)
+        body = (ds[1] + ds[2] + ds[3] + ds[4]) / 4
+        print(f"    поза тела {body:.2f} (руки {ds[1]:.2f}/{ds[2]:.2f}, "
+              f"стопы {ds[3]:.2f}/{ds[4]:.2f}, голова {ds[0]:.2f}, плечи {ds[5]:.2f})")
+        rows.append((name, canon, st, body))
+    # листы
+    W = 252
+    def cell(src, label, idx):
+        out = f"{WORK}/c{idx}.png"
+        subprocess.run(["convert", src, "-background", "#202028", "-gravity", "north",
+                        "-splice", "0x44", "-resize", f"{W}x{W}", "-gravity", "north",
+                        "-fill", "#f2e7d5", "-font", "DejaVu-Sans", "-pointsize", "18",
+                        "-annotate", "+0+8", label, "-extent", f"{W}x{W+44}", out], check=True)
+        return out
+    seq, i = [], 0
+    for name, canon, st, body in rows:
+        av = f"{REPO}/assets/icons/characters/avatars/{folder}/{name}.png"
+        seq.append(cell(av, name, i)); i += 1
+        seq.append(cell(f"{WORK}/canon-{name}.png", "манекен", i)); i += 1
+    n = len(rows)
+    subprocess.run(["montage", *seq, "-tile", f"2x{n}", "-geometry", "+10+10",
+                    "-background", "#14141a",
+                    f"{REPO}/_review/review-24-{race_key}s-avatar-vs-body.jpg"], check=True)
+    seq, i = [], 0
+    for name, canon, st, body in rows:
+        seq.append(cell(f"{WORK}/canon-{name}.png", name.replace(race_key + "_", ""), i)); i += 1
+    subprocess.run(["montage", *seq, "-tile", f"{n}x1", "-geometry", "+10+10",
+                    "-background", "#14141a",
+                    f"{REPO}/_review/review-25-{race_key}s-lineup.jpg"], check=True)
+    print(f"\nлисты: review-24-{race_key}s-avatar-vs-body.jpg, "
+          f"review-25-{race_key}s-lineup.jpg")
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("files", nargs="*")
+    ap.add_argument("--check", action="store_true")
+    ap.add_argument("--avatar", default=None, help="путь к аватару для сверки тона кожи")
+    ap.add_argument("--race", default=None,
+                    help="обработать все raw-кадры расы: human|elf|dwarf|orc|beastfolk")
+    args = ap.parse_args()
+    os.makedirs(WORK, exist_ok=True)
+
+    if args.check:
+        src = f"{MASTERS}/human_male_01_source_1024.png"
+        approved = f"{REPO}/assets/icons/characters/paper_dolls/bodies/human_male_01.png"
+        img = read_rgba(src)
+        img = strip_background(img)
+        canon, info = to_canon(img)
+        write_rgba(f"{WORK}/canon-from-source.png", canon)
+        ref = read_rgba(approved)
+        print(f"масштаб {info['scale']:.4f}, исходная рамка {info['src_box']}, "
+              f"фигура {info['fig']}")
+        print("--- эталон из исходника ---")
+        report("из исходника", canon)
+        print("--- утверждённый в ассетах ---")
+        report("утверждённый", ref)
+        d = np.abs(canon - ref)
+        diff = (d.max(axis=2) > 0.08).sum()
+        print(f"расхождение: {diff} px из {int((ref[...,3]>0.5).sum())} "
+              f"({100*diff/max(int((ref[...,3]>0.5).sum()),1):.2f}%)")
+        return
+
+    if args.race:
+        batch(args.race)
+        return
+
+    av_med = None
+    if args.avatar:
+        av = read_rgba(args.avatar)
+        a = av[..., 3] > 0.5
+        av_med = np.median(av[..., :3][a], axis=0) * 255
+
+    for f in args.files:
+        img = strip_background(read_rgba(f))
+        try:
+            canon, info = to_canon(img)
+        except RuntimeError as e:
+            print(f"{os.path.basename(f)}: ОТБРАКОВАН — {e}")
+            continue
+        name = os.path.splitext(os.path.basename(f))[0]
+        write_rgba(f"{WORK}/canon-{name}.png", canon)
+        report(name, canon, av_med)
+
+
+if __name__ == "__main__":
+    main()
