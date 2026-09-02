@@ -100,6 +100,12 @@ def to_canon(img):
     new_rgb = ndimage.zoom(prem, zoom, order=1)
     new_a = ndimage.zoom(crop[..., 3], zoom[:2], order=1)
     small = np.dstack([new_rgb / np.maximum(new_a[..., None], 1e-6), new_a])
+    # после масштаба могут появиться одиночные пиксели — убираем и здесь
+    lab, n = ndimage.label(small[..., 3] > 0.5)
+    if n:
+        sizes = ndimage.sum(np.ones_like(lab, np.float32), lab, range(1, n + 1))
+        keep = [i + 1 for i, sz in enumerate(sizes) if sz >= 8]
+        small[..., 3] *= np.isin(lab, keep)
     ny0, ny1, nx0, nx1 = 0, small.shape[0] - 1, 0, small.shape[1] - 1
     cx = (nx0 + nx1) / 2
     out = np.zeros((CANON, CANON, 4), np.float32)
