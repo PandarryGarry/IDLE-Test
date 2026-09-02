@@ -231,6 +231,40 @@ def pose_delta(a, b):
     return ds, sum(ds[:5]) / 5
 
 
+def de_purple(img, hue_lo=245, hue_hi=345, factor=0.25):
+    """Приглушить фиолетовый отлив, не трогая остальные тона.
+
+    Модель любит подмешивать сиреневое в холодную серую кожу: на
+    elf_female_03 вышло 14% таких пикселей при 6% на аватаре. Гасим
+    насыщенность только у пикселей с фиолетовым тоном.
+    """
+    out = img.copy()
+    rgb = img[..., :3]
+    mx = rgb.max(axis=2)
+    mn = rgb.min(axis=2)
+    d = mx - mn
+    sat = np.where(mx > 1e-6, d / np.maximum(mx, 1e-6), 0)
+    h = np.zeros_like(mx)
+    m = d > 1e-6
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    idx = m & (mx == r)
+    h[idx] = (60 * ((g[idx] - b[idx]) / d[idx]) + 360) % 360
+    idx = m & (mx == g)
+    h[idx] = 60 * ((b[idx] - r[idx]) / d[idx]) + 120
+    idx = m & (mx == b)
+    h[idx] = 60 * ((r[idx] - g[idx]) / d[idx]) + 240
+    bad = (h >= hue_lo) & (h <= hue_hi) & (sat > 0.02)
+    k = np.where(bad, factor, 1.0)[..., None]
+    gray = mx[..., None]
+    out[..., :3] = np.clip(gray - (gray - rgb) * k, 0, 1)
+    return out
+
+
+# кому и насколько приглушать фиолетовый отлив (см. de_purple).
+# Модель подмешивает сиреневое в холодную серую кожу: у elf_female_03
+# вышло 14% таких пикселей при 0.0–0.4% у остальных.
+PURPLE_FIX = {"elf_female_03": 0.10}
+
 RACE_FOLDER = {"human": "humans", "elf": "elves", "dwarf": "dwarves",
                "orc": "orcs", "beastfolk": "beastfolk"}
 
@@ -274,6 +308,9 @@ def batch(race_key):
         except RuntimeError as e:
             print(f"{name}: ОТБРАКОВАН — {e}")
             continue
+        if name in PURPLE_FIX:
+            canon = de_purple(canon, factor=PURPLE_FIX[name])
+            print(f"  (приглушён фиолетовый отлив ×{PURPLE_FIX[name]})")
         write_rgba(f"{WORK}/canon-{name}.png", canon)
         av = f"{REPO}/assets/icons/characters/avatars/{folder}/{name}.png"
         st = report(name, canon, face_skin(av) if os.path.exists(av) else None)
