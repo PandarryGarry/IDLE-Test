@@ -231,6 +231,31 @@ def pose_delta(a, b):
     return ds, sum(ds[:5]) / 5
 
 
+def fit_skin(img, target, lo=0.80, hi=1.25, min_delta=15):
+    """Подтянуть тон кожи к лицу аватара Плавным усилением каналов.
+
+    Генерация иногда уводит кожу на 20–40 единиц от аватара. Тянем
+    мягко и не дальше ±25%, чтобы не испортить волосы и тени: сильное
+    усиление ломает всё изображение, а не только кожу.
+    """
+    sil = img[..., 3] > 0.5
+    ys, xs = np.where(sil)
+    if not len(ys):
+        return img, 1.0
+    y0, y1 = ys.min(), ys.max()
+    H = y1 - y0 + 1
+    band = np.zeros_like(sil, bool)
+    band[y0 + int(0.30 * H):y0 + int(0.62 * H), :] = \
+        sil[y0 + int(0.30 * H):y0 + int(0.62 * H), :]
+    cur = np.median(img[..., :3][band], axis=0) * 255
+    if np.abs(cur - target).max() < min_delta:
+        return img, 0.0
+    g = np.clip(target / np.maximum(cur, 1), lo, hi)
+    out = img.copy()
+    out[..., :3] = np.clip(img[..., :3] * g, 0, 1)
+    return out, float(g.mean())
+
+
 def de_purple(img, hue_lo=245, hue_hi=345, factor=0.25):
     """Приглушить фиолетовый отлив, не трогая остальные тона.
 
@@ -311,9 +336,13 @@ def batch(race_key):
         if name in PURPLE_FIX:
             canon = de_purple(canon, factor=PURPLE_FIX[name])
             print(f"  (приглушён фиолетовый отлив ×{PURPLE_FIX[name]})")
+        av_path = f"{REPO}/assets/icons/characters/avatars/{folder}/{name}.png"
+        if os.path.exists(av_path):
+            canon, g = fit_skin(canon, face_skin(av_path))
+            if g:
+                print(f"  (тон кожи подтянут к аватару ×{g:.2f})")
         write_rgba(f"{WORK}/canon-{name}.png", canon)
-        av = f"{REPO}/assets/icons/characters/avatars/{folder}/{name}.png"
-        st = report(name, canon, face_skin(av) if os.path.exists(av) else None)
+        st = report(name, canon, face_skin(av_path) if os.path.exists(av_path) else None)
         p = pose_points(canon[..., 3] > 0.5)
         ds, _ = pose_delta(p, ref_pose)
         body = (ds[1] + ds[2] + ds[3] + ds[4]) / 4
