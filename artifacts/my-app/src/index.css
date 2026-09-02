@@ -3099,15 +3099,24 @@
   border-width: 2px;
 }
 
+.hero-node__art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 .hero-node img {
-  width: 94%;
-  height: 94%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
+  transform: scale(1.28);
   pointer-events: none;
 }
 
 .hero-node b {
   position: absolute;
+  z-index: 2;
   right: 1px;
   bottom: 1px;
   min-width: 11px;
@@ -3208,14 +3217,22 @@
 
 .hero-board__knot {
   position: absolute;
-  width: 18px;
-  height: 18px;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
   border: 2px solid var(--border-accent);
-  border-radius: 3px;
+  border-radius: var(--radius-full);
   background: var(--bg-header);
   box-shadow: var(--shadow-gold);
-  transform: translate(-50%, -50%) rotate(45deg);
+  transform: translate(-50%, -50%);
   pointer-events: none;
+}
+
+.hero-board__knot img {
+  width: 118%;
+  height: 118%;
+  object-fit: cover;
+  object-position: center;
 }
 
 .hero-board__node {

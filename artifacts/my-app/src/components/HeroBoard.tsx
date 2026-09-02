@@ -178,15 +178,15 @@ export function HeroBoard({
         onPointerCancel={onPointerUp}
       >
         <div ref={worldRef} className="hero-board__world">
-          <span className="hero-board__knot" style={{ left: CX, top: CY }} aria-hidden />
+          <span className="hero-board__knot" style={{ left: CX, top: CY }} aria-hidden>
+            <img src="/assets/art/emblem_pair.webp" alt="" decoding="async" />
+          </span>
           {ARMS.map(arm => {
-            const from: [number, number] = [CX, CY];
             const pillar = pillarPos(arm);
             const shown = Math.round(snapshot.finalPillars[arm.pillar]);
             const live = BRANCHES_BY_PILLAR[arm.pillar];
             return (
               <span key={arm.arm}>
-                <Road from={from} to={pillar} lit={shown !== 0} />
                 {live.map((id, slot) => (
                   <Road
                     key={id}
@@ -309,7 +309,9 @@ function BoardNode({
       style={{ left: x, top: y }}
       onClick={onOpen}
     >
-      <img src={src} alt="" decoding="async" />
+      <span className="hero-node__art">
+        <img src={src} alt="" decoding="async" />
+      </span>
       {mark && <b>{shown}</b>}
     </button>
   );
