@@ -291,6 +291,37 @@ def de_purple(img, hue_lo=245, hue_hi=345, factor=0.25):
     return out
 
 
+def purple_share(img):
+    """Доля пикселей кожи, где синий и красный выше зелёного.
+
+    Именно это глаз видит как сиреневый отлив. Средний цвет кожи такой
+    брак не ловит: на orc_female_01 медиана кожи совпадала с лицом
+    аватара, а 18.7% пикселей всё равно светились фиолетом.
+    """
+    sil = img[..., 3] > 0.5
+    if not sil.any():
+        return 0.0
+    rgb = img[..., :3]
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    return float(((b > g + 0.02) & (r > g + 0.005) & sil).sum() / sil.sum() * 100)
+
+
+def ensure_no_purple(img, limit=0.4, hue_lo=235, hue_hi=355):
+    """Сбить фиолетовый отлив до нормы, если он выше нормы.
+
+    Гасим всё сильнее, пока доля не упадёт ниже limit. Возвращает
+    (кадр, доля до, доля после, коэффициент).
+    """
+    before = purple_share(img)
+    if before <= limit:
+        return img, before, before, None
+    for f in (0.25, 0.15, 0.10, 0.07, 0.05, 0.03, 0.01, 0.0):
+        cand = de_purple(img, hue_lo=hue_lo, hue_hi=hue_hi, factor=f)
+        if purple_share(cand) <= limit:
+            return cand, before, purple_share(cand), f
+    return cand, before, purple_share(cand), 0.0
+
+
 # кому и насколько приглушать фиолетовый отлив (см. de_purple).
 # Модель подмешивает сиреневое в холодную серую кожу: у elf_female_03
 # вышло 14% таких пикселей при 0.0–0.4% у остальных.
@@ -347,6 +378,13 @@ def batch(race_key):
             canon, g = fit_skin(canon, face_skin(av_path))
             if g:
                 print(f"  (тон кожи подтянут к аватару ×{g:.2f})")
+        # фиолет проверяем последним: подгон тона сама его иногда и
+        # разводит, усиливая синий канал (orc_female_01: 5.9% → 18.7%).
+        canon, p0, p1, pf = ensure_no_purple(canon)
+        if pf is None:
+            print(f"  фиолет {p1:.2f}% (норма до 0.4%)")
+        else:
+            print(f"  фиолет {p0:.2f}% → {p1:.2f}% (приглушён ×{pf})")
         write_rgba(f"{WORK}/canon-{name}.png", canon)
         st = report(name, canon, face_skin(av_path) if os.path.exists(av_path) else None)
         p = pose_points(canon[..., 3] > 0.5)
