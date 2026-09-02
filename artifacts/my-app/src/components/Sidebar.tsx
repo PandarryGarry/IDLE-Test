@@ -9,7 +9,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { getAvatarPath, getRaceLabel } from '@/data/characters';
-import { stopActiveActivities } from '@/lib/authActions';
+import { leaveAccount } from '@/lib/authActions';
 import { GUEST_NOTICE } from '@/lib/guestMode';
 
 interface NavItemProps {
@@ -69,7 +69,6 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
   const combatLevel = usePlayerStore(s => s.combatLevel);
   const inCombat    = useCombatStore(s => s.inCombat);
   const isGuest     = useAuthStore(s => s.isGuest);
-  const signOut     = useAuthStore(s => s.signOut);
   const activeCharacter = useCharacterStore(s => s.activeCharacter);
   const [, navigate] = useLocation();
 
@@ -78,8 +77,7 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
       navigate('/login');
       return;
     }
-    stopActiveActivities();
-    void signOut().then(() => navigate('/login'));
+    void leaveAccount().then(() => navigate('/login'));
   };
 
   return (
@@ -124,7 +122,7 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
 
       {/* ── Активный персонаж ── */}
       {!isGuest && activeCharacter && (
-        <Link href="/settings" onClick={onCloseMobile}>
+        <Link href="/hero" onClick={onCloseMobile}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
             margin: '10px 12px', padding: '9px 10px', borderRadius: 12,

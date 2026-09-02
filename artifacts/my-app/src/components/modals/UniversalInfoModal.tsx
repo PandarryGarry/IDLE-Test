@@ -62,6 +62,8 @@ const CATEGORY_NAMES: Record<string, string> = {
   gloves: 'Перчатки',
   amulet: 'Амулет',
   ring: 'Кольцо',
+  bracelet: 'Браслет',
+  belt: 'Пояс',
   shield: 'Щит',
   cape: 'Плащ',
   quiver: 'Колчан',
@@ -113,7 +115,16 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
   const visual = getItemVisual(itemId);
   const categoryLabel = CATEGORY_NAMES[item.category] || item.category;
 
-  const isEquipped = item.equipSlot ? equipment[item.equipSlot] === itemId : false;
+  const equippedSlot = item.equipSlot
+    ? equipment[item.equipSlot] === itemId
+      ? item.equipSlot
+      : item.equipSlot === 'ring' && equipment.ring2 === itemId
+        ? 'ring2'
+        : item.equipSlot === 'bracelet' && equipment.bracelet2 === itemId
+          ? 'bracelet2'
+          : null
+    : null;
+  const isEquipped = Boolean(equippedSlot);
 
   const handleEquip = () => {
     if (!item.equipSlot) return;

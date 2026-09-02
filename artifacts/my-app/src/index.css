@@ -176,6 +176,15 @@
   /* Контролы: высоты полей/кнопок — тоже из шкалы, а не вручную */
   --control-sm: clamp(2.375rem, 2.25rem + 0.62vw, 3rem);    /* 38–48px */
   --control-md: clamp(2.75rem, 2.6rem + 0.75vw, 3.5rem);    /* 44–56px */
+
+  /* Квадратная ячейка игрового поля (инвентарь / ветви / столпы).
+     Потолок держит сетку компактной; в узком кадре колонки сжимаются сами,
+     aspect-ratio:1 не даёт карточке стать «лапшой». */
+  --sq: clamp(3.75rem, 3.35rem + 1.2vw, 4.75rem);            /* 60–76px */
+  --slot: var(--sq);
+  --chip: var(--sq);
+  /* Хаб героя: слот не clamp — иначе сетка дышит. */
+  --hub-tile: 48px;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1897,6 +1906,27 @@
   line-height: 1.5;
 }
 
+.onboarding-account-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
+.onboarding-account-bar__email {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-family: var(--app-font-mono);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .character-create-steps {
   display: grid;
   grid-template-columns: auto minmax(1.5rem, 1fr) auto;
@@ -2813,5 +2843,625 @@
 
   .sign-intro__title h1 {
     opacity: 1;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HERO HUB — лист героя. Палитра — токены шелла, не cinematic.
+   Медиа — только структура. Слоты 48px / узлы ветвей 52px.
+   ═══════════════════════════════════════════════════════════ */
+
+.hero-hub {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+  color: var(--text-primary);
+}
+
+.hero-hub--empty {
+  min-height: 16rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+}
+
+.hero-hub__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-header);
+  box-shadow: var(--shadow-card);
+  color: var(--text-light);
+}
+
+.hero-hub__identity {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2xs);
+}
+
+.hero-hub__name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.hero-hub__identity strong {
+  overflow: hidden;
+  color: var(--text-light);
+  font-family: var(--app-font-display);
+  font-size: var(--text-md);
+  font-weight: 900;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hero-level {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 2px solid var(--border-accent);
+  border-radius: var(--radius-full);
+  background: var(--bg-slot);
+  box-shadow: var(--shadow-gold), inset 0 0 0 1px var(--border-light);
+  color: var(--text-gold);
+  font-family: var(--app-font-display);
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.hero-hub__points {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-xs);
+}
+
+.hero-point {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-full);
+  background: var(--bg-slot);
+  box-shadow: var(--shadow-slot);
+}
+
+.hero-point img {
+  position: absolute;
+  width: 1.15rem;
+  height: 1.15rem;
+  object-fit: contain;
+  opacity: 0.38;
+  pointer-events: none;
+}
+
+.hero-point b {
+  position: relative;
+  color: var(--text-gold);
+  font-family: var(--app-font-display);
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 1px 0 var(--border-strong);
+}
+
+.hero-point[data-ready='true'] {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-gold);
+}
+
+.hero-point[data-ready='true'] img {
+  opacity: 0.55;
+}
+
+.hero-point[data-ready='false'] {
+  opacity: 0.62;
+}
+
+.hero-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-sm);
+  background: var(--bg-slot);
+  color: var(--text-gold);
+  font-family: var(--app-font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.hero-hub__gear {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
+  background: var(--bg-slot);
+  color: var(--text-gold);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.hero-info {
+  flex-shrink: 0;
+  width: 1.375rem;
+  height: 1.375rem;
+  padding: 0;
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-full);
+  background: var(--bg-slot);
+  color: var(--text-gold);
+  font-family: var(--app-font-display);
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.hero-hub__tabs,
+.hero-gear-tabs {
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.hero-hub__tabs {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.hero-gear-tabs {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.hero-hub__tab {
+  appearance: none;
+  min-height: 28px;
+  padding: 0 var(--space-2xs);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-header);
+  color: var(--text-gold);
+  font-family: var(--app-font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.hero-hub__tab.is-on {
+  border-color: var(--border-accent);
+  background: var(--bg-card-dark);
+  color: var(--text-gold);
+  box-shadow: var(--shadow-gold);
+}
+
+.hero-hub__panel {
+  position: relative;
+  padding: var(--space-sm);
+  padding-top: calc(var(--space-sm) + 1.35rem);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+}
+
+.hero-info--pane {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  z-index: 3;
+}
+
+.hero-sheet {
+  display: grid;
+  gap: var(--space-sm);
+  justify-items: stretch;
+}
+
+.hero-node {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-slot);
+  box-shadow: var(--shadow-slot);
+  color: inherit;
+  appearance: none;
+  cursor: pointer;
+}
+
+.hero-node--pillar {
+  width: 64px;
+  height: 64px;
+  border-width: 2px;
+}
+
+.hero-node__art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-node img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scale(1.28);
+  pointer-events: none;
+}
+
+.hero-node b {
+  position: absolute;
+  z-index: 2;
+  right: 1px;
+  bottom: 1px;
+  min-width: 11px;
+  padding: 0 2px;
+  border-radius: 3px;
+  background: var(--bg-header);
+  color: var(--text-gold);
+  font-family: var(--app-font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.2;
+  pointer-events: none;
+}
+
+.hero-node--pillar b {
+  right: -2px;
+  bottom: -2px;
+  width: auto;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 3px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-full);
+  background: var(--bg-header);
+  box-shadow: var(--shadow-slot);
+  color: var(--text-gold);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-node[data-on='true'] {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-gold);
+}
+
+.hero-node[data-dim='true'] {
+  opacity: 0.45;
+}
+
+/* Запертый узел: видно, что он есть, но путь к нему ещё не пройден. */
+.hero-node[data-locked='true'] {
+  border-style: dashed;
+  filter: grayscale(0.7);
+}
+
+.hero-node[data-locked='true']::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  right: 2px;
+  top: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--text-muted);
+  opacity: 0.8;
+}
+
+.hero-board {
+  position: relative;
+  width: 100%;
+  height: min(62svh, 28rem);
+  min-height: 16rem;
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: contain;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(
+      ellipse 68% 68% at 50% 50%,
+      color-mix(in srgb, var(--accent-gold) 26%, var(--bg-card-dark)) 0%,
+      var(--bg-card-dark) 70%
+    );
+  box-shadow: var(--shadow-card);
+  cursor: grab;
+}
+
+.hero-board:active {
+  cursor: grabbing;
+}
+
+.hero-board__world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 720px;
+  height: 720px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.hero-board__road {
+  position: absolute;
+  height: 3px;
+  background: var(--border-light);
+  transform-origin: 0 50%;
+  pointer-events: none;
+}
+
+.hero-board__road[data-on='true'] {
+  background: var(--border-accent);
+  box-shadow: var(--shadow-gold);
+}
+
+/* В центре доски — только знак «Топор и Перо»: без кольца и подложки,
+   чуть приглушён, чтобы не спорить с узлами столпов. */
+.hero-board__knot {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.hero-board__knot img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.hero-board__node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+.hero-board__home {
+  position: absolute;
+  right: var(--space-xs);
+  bottom: var(--space-xs);
+  z-index: 2;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-sm);
+  background: var(--bg-header);
+  color: var(--text-gold);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (min-width: 720px) {
+  .hero-board {
+    height: min(64svh, 34rem);
+  }
+}
+
+.hero-talents,
+.hero-threads,
+.hero-path-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xs);
+}
+
+.hero-talent,
+.hero-thread,
+.hero-path-facts > div {
+  display: grid;
+  gap: var(--space-2xs);
+  min-width: 0;
+  padding: var(--space-xs);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-slot);
+  box-shadow: var(--shadow-slot);
+  color: inherit;
+  text-align: left;
+}
+
+.hero-thread {
+  width: 100%;
+  margin: 0;
+  font: inherit;
+  appearance: none;
+  cursor: pointer;
+}
+
+.hero-talent__head,
+.hero-thread__head {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.hero-talent__head img,
+.hero-thread__head img {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+}
+
+.hero-talent__head strong,
+.hero-thread__head strong {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-family: var(--app-font-display);
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hero-talent__head b,
+.hero-path-facts b {
+  color: var(--text-gold);
+  font-family: var(--app-font-mono);
+  font-size: var(--text-sm);
+  line-height: 1;
+}
+
+.hero-thread__reqs {
+  display: grid;
+  gap: 2px;
+}
+
+.hero-req span,
+.hero-path-facts span {
+  color: var(--text-muted);
+  font-family: var(--app-font-mono);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.hero-talent__nodes {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2xs);
+}
+
+.hero-gear-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 48px);
+  justify-content: center;
+  gap: var(--space-sm) var(--space-md);
+}
+
+.hero-gear-grid--hands {
+  grid-template-columns: repeat(2, 48px);
+}
+
+.hero-thread[data-on='true'] {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-gold);
+}
+
+.hero-req {
+  display: grid;
+  gap: 2px;
+}
+
+.hero-meter {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--bar-track);
+}
+
+.hero-meter > i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--bar-xp-from), var(--bar-xp-to));
+}
+
+.hero-path-facts > div {
+  justify-items: center;
+  align-content: center;
+  min-height: 3.25rem;
+}
+
+.hero-path-facts span {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hero-hub-modal {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.hero-hub-modal--card {
+  gap: var(--space-2xs);
+}
+
+.hero-hub-modal p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-2xs);
+  line-height: 1.4;
+}
+
+.hero-hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-2xs);
+  line-height: 1.45;
+}
+
+.hero-hint--flow {
+  flex: 1 0 100%;
+}
+
+.hero-stats {
+  gap: var(--space-sm);
+}
+
+.hero-stats__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+
+.hero-stats__head > span,
+.hero-stats__head > p {
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-stats__block {
+  display: grid;
+  gap: var(--space-2xs);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.hero-stats__block:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+@media (min-width: 900px) {
+  .hero-threads {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

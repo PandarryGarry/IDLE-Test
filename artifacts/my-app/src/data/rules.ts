@@ -43,10 +43,14 @@ export interface RulesState {
   acceptedAt: number | null;
 }
 
+function rulesStorageKey(userId?: string | null): string {
+  return userId ? `${RULES_ACCEPTANCE_KEY}:${userId}` : RULES_ACCEPTANCE_KEY;
+}
+
 /** Прочитать локально принятую версию правил (fallback-кэш, синхронизируется с БД). */
-export function readLocalRulesAccepted(): RulesState {
+export function readLocalRulesAccepted(userId?: string | null): RulesState {
   try {
-    const raw = window.localStorage.getItem(RULES_ACCEPTANCE_KEY);
+    const raw = window.localStorage.getItem(rulesStorageKey(userId));
     if (raw) {
       const parsed = JSON.parse(raw) as RulesState;
       return { acceptedVersion: parsed.acceptedVersion ?? null, acceptedAt: parsed.acceptedAt ?? null };
@@ -57,10 +61,10 @@ export function readLocalRulesAccepted(): RulesState {
   return { acceptedVersion: null, acceptedAt: null };
 }
 
-export function writeLocalRulesAccepted(version: string): void {
+export function writeLocalRulesAccepted(version: string, userId?: string | null): void {
   try {
     window.localStorage.setItem(
-      RULES_ACCEPTANCE_KEY,
+      rulesStorageKey(userId),
       JSON.stringify({ acceptedVersion: version, acceptedAt: Date.now() }),
     );
   } catch {

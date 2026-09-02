@@ -6,6 +6,7 @@ import { GPanel, GButton, GAvatar, GBadge } from '@/shared/ui/gameUI';
 import { getAvatarPath, getRaceLabel } from '@/data/characters';
 import { formatDuration } from '@/lib/utils';
 import { OnboardingScene } from '@/components/OnboardingScene';
+import { OnboardingAccountBar } from '@/components/OnboardingAccountBar';
 import { queueCinematic } from '@/lib/cinematicState';
 
 export function SelectCharacterPage() {
@@ -53,6 +54,7 @@ export function SelectCharacterPage() {
             <span className="onboarding-eyebrow">У ПОРОГА ТАВЕРНЫ</span>
             <h1 id="character-select-title">Кого ждёт Этелия?</h1>
             <p>Выберите героя — и город снова откроет перед ним свой путь.</p>
+            <OnboardingAccountBar />
           </header>
 
           {loading && (

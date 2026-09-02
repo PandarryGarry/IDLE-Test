@@ -5,12 +5,15 @@ import {
 } from '@/shared/ui/gameUI';
 import {
   RACES, RACE_MAP, getAvatarsForRace, getAvatarPath, prefetchAvatar, getRaceLabel, getRaceBlurb,
-  STAT_LABELS_RU, type RaceId,
+  type RaceId,
 } from '@/data/characters';
+import { PILLARS, RACE_BODY_CHILD_RU, RACE_PASSIVES } from '@/data/attributes';
 import { useCharacterStore } from '@/store/characterStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { OnboardingScene } from '@/components/OnboardingScene';
+import { OnboardingAccountBar } from '@/components/OnboardingAccountBar';
 import { queueCinematic } from '@/lib/cinematicState';
+import { describeCharacterError } from '@/lib/characterErrors';
 
 type CreationStep = 'race' | 'identity';
 
@@ -31,7 +34,8 @@ export function CreateCharacterPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const avatars = useMemo(() => getAvatarsForRace(selectedRace), [selectedRace]);
-  const race = RACE_MAP[selectedRace];
+  const race = RACE_MAP[selectedRace] ?? RACES[0];
+  const storeError = useCharacterStore(s => s.error);
 
   useEffect(() => {
     RACES.forEach(candidate => prefetchAvatar(getAvatarsForRace(candidate.id)[0]));
@@ -57,7 +61,7 @@ export function CreateCharacterPage() {
       queueCinematic('departure-new-hero');
       navigate('/');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Не удалось создать персонажа.';
+      const message = describeCharacterError(error, 'Не удалось создать персонажа.');
       setLocalError(message);
       notifyError(message);
     } finally {
@@ -97,6 +101,7 @@ export function CreateCharacterPage() {
                 ? 'Кто ты по крови? Ответь — и наследие станет частью будущего пути.'
                 : 'Какое лицо запомнит Этелия — и какое имя она произнесёт?'}
             </p>
+            <OnboardingAccountBar />
             <div className="character-create-steps" aria-label={`Шаг ${step === 'race' ? '1' : '2'} из 2`}>
               <span className={step === 'race' ? 'is-active' : 'is-done'}><b>1</b> Наследие</span>
               <i aria-hidden="true" />
@@ -135,16 +140,26 @@ export function CreateCharacterPage() {
 
               <div className="character-create-bonus-card">
                 <span className="character-create-bonus-card__label">
-                  Наследие: {getRaceLabel(selectedRace, 'ru')}
+                  Тело: {getRaceLabel(selectedRace, 'ru')}
                 </span>
                 <div className="character-create-bonus-list">
-                  {race.bonuses.map((bonus, index) => (
-                    <GBadge key={`${bonus.stat}-${index}`} variant={bonus.positive ? 'green' : 'red'} size="sm">
-                      {bonus.positive ? '+' : '−'}{bonus.value} {STAT_LABELS_RU[bonus.stat]}
-                    </GBadge>
-                  ))}
+                  {race.pillarMods.map(mod => {
+                    const pillar = PILLARS[mod.pillar];
+                    const positive = mod.percent > 0;
+                    const shown = positive ? `+${mod.percent}%` : `−${Math.abs(mod.percent)}%`;
+                    return (
+                      <GBadge key={mod.pillar} variant={positive ? 'green' : 'red'} size="sm">
+                        {pillar.icon} {pillar.nameRu} {shown}
+                      </GBadge>
+                    );
+                  })}
                 </div>
-                <p>Бонусы станут активны вместе с будущей системой характеристик.</p>
+                <p>{RACE_BODY_CHILD_RU[selectedRace]}</p>
+                <p>
+                  Пассив «{RACE_PASSIVES[selectedRace].nameRu}»: {RACE_PASSIVES[selectedRace].childRu}
+                  {' '}
+                  {RACE_PASSIVES[selectedRace].whenRu}
+                </p>
               </div>
 
               <GButton variant="primary" size="md" fullWidth onClick={continueToIdentity}>
@@ -196,11 +211,13 @@ export function CreateCharacterPage() {
                 <div>
                   <span>Будущий герой</span>
                   <strong>{nickname.trim() || 'Безымянный путник'}</strong>
-                  <p>{getRaceLabel(selectedRace, 'ru')} · Уровень 1 · Здоровье 10</p>
+                  <p>{getRaceLabel(selectedRace, 'ru')} · Уровень 1 · очков столпов пока нет</p>
                 </div>
               </div>
 
-              {localError && <p className="character-create-error">⚠ {localError}</p>}
+              {(localError || storeError) && (
+                <p className="character-create-error">⚠ {localError || storeError}</p>
+              )}
 
               {hasExisting && (
                 <div className="character-create-replace-warning">

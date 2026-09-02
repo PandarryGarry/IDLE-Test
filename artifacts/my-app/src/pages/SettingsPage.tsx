@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
-import { stopActiveActivities } from '@/lib/authActions';
+import { leaveAccount, stopActiveActivities } from '@/lib/authActions';
 import { importSave, manualSave, exportSaveAsFile } from '@/lib/saveManager';
 import { GUEST_NOTICE } from '@/lib/guestMode';
 import { useNotificationsStore } from '@/store/notificationsStore';

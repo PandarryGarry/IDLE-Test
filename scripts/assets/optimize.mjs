@@ -26,6 +26,10 @@ function presetFor(relPosix) {
   if (relPosix.includes('/characters/avatars/')) {
     return { size: 384, quality: 82, kind: 'portrait' };
   }
+  // Манекены рисуются в окне «Экип» крупно: на 256 бижутерия не читается.
+  if (relPosix.includes('/characters/paper_dolls/')) {
+    return { size: 384, quality: 84, kind: 'doll' };
+  }
   if (relPosix.startsWith('art/')) {
     return { size: 1920, quality: 80, kind: 'art' };
   }

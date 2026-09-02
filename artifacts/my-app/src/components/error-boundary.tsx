@@ -4,6 +4,8 @@ import {
   type ErrorInfo,
   type ReactNode,
 } from 'react';
+import { describeCaughtRenderError } from '@/lib/characterErrors';
+import { leaveAccount } from '@/lib/authActions';
 
 export interface ErrorFallbackProps {
   error: Error;
@@ -36,29 +38,46 @@ function toError(value: unknown): Error {
 }
 
 function DefaultFallback({ error, resetError }: ErrorFallbackProps) {
+  const friendly = describeCaughtRenderError(error);
+
+  const handleLeave = () => {
+    void leaveAccount().finally(() => {
+      window.location.assign('/login');
+    });
+  };
+
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-6">
+    <div className="min-h-screen w-full flex items-center justify-center p-6" style={{ background: 'var(--bg-header)' }}>
       <div className="max-w-lg w-full text-center">
-        <h1 className="text-xl font-semibold text-gray-900">
-          Something went wrong
+        <h1 className="text-xl font-semibold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--app-font-display)' }}>
+          Экран не открылся
         </h1>
-        <p className="mt-2 text-sm text-gray-600">
-          This part of the app hit an error. The rest of the app is still
-          running.
+        <p className="mt-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+          {friendly}
         </p>
-        {/* Dev only: messages can carry API responses and other internals. */}
         {import.meta.env.DEV ? (
-          <pre className="mt-4 overflow-x-auto rounded bg-gray-100 p-3 text-left text-xs text-gray-800">
+          <pre className="mt-4 overflow-x-auto rounded p-3 text-left text-xs" style={{ background: 'rgba(0,0,0,0.35)', color: 'var(--text-muted)' }}>
             {error.message || String(error)}
           </pre>
         ) : null}
-        <button
-          type="button"
-          onClick={resetError}
-          className="mt-4 rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700"
-        >
-          Try again
-        </button>
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <button
+            type="button"
+            onClick={resetError}
+            className="rounded px-4 py-2 text-sm"
+            style={{ background: 'var(--accent-gold)', color: 'var(--text-white)' }}
+          >
+            Попробовать снова
+          </button>
+          <button
+            type="button"
+            onClick={handleLeave}
+            className="rounded px-4 py-2 text-sm"
+            style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border-light)' }}
+          >
+            Сменить аккаунт
+          </button>
+        </div>
       </div>
     </div>
   );

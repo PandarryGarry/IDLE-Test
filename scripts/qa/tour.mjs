@@ -3,9 +3,10 @@
  * Визуальный прогон всей дороги. Без облака: локальный QA-мок
  * (localhost + aethelia_qa_mock_v1). Учётка только в памяти браузера.
  *
- *   node scripts/qa/tour.mjs            # холодный путь + возвращение героя
+ *   node scripts/qa/tour.mjs            # холодный + возвращение + вход без героя
  *   node scripts/qa/tour.mjs cold
  *   node scripts/qa/tour.mjs returning
+ *   node scripts/qa/tour.mjs gate       # вход без героя, reload, создание
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -76,15 +77,15 @@ async function setInput(page, selector, value) {
   }, value);
 }
 
-async function fillAuth(page, { register }) {
+async function fillAuth(page, { register, email = QA_EMAIL, password = QA_PASSWORD }) {
   if (register) {
     await clickText(page, 'Создать аккаунт');
     await page.waitForSelector('#auth-password-repeat', { timeout: 8000 });
     await sleep(300);
   }
-  await setInput(page, '#auth-email', QA_EMAIL);
-  await setInput(page, '#auth-password', QA_PASSWORD);
-  if (register) await setInput(page, '#auth-password-repeat', QA_PASSWORD);
+  await setInput(page, '#auth-email', email);
+  await setInput(page, '#auth-password', password);
+  if (register) await setInput(page, '#auth-password-repeat', password);
 }
 
 async function runCold(browser) {
@@ -173,6 +174,70 @@ async function runCold(browser) {
   await page.close();
 }
 
+function pageLooksCrashed(text) {
+  return /Something went wrong|Экран не открылся|TypeError|typescript/i.test(text || '');
+}
+
+async function assertNoCrash(page, name) {
+  const dump = await page.evaluate(() => ({
+    text: (document.body.innerText || '').slice(0, 800),
+    overlay: Boolean(document.querySelector('vite-error-overlay')),
+  }));
+  if (dump.overlay) throw new Error(`${name}: vite-error-overlay`);
+  if (pageLooksCrashed(dump.text)) {
+    throw new Error(`${name}: аварийный экран — ${dump.text.slice(0, 180)}`);
+  }
+}
+
+async function runIncompleteReload(browser) {
+  note('• ВХОД БЕЗ ГЕРОЯ → перезагрузка → создание без ошибки');
+  const page = await browser.newPage();
+  await enableQaMock(page, { reset: true });
+  await skipOnboardingStorage(page, { prologueSeen: true });
+  await page.goto(cfg.baseUrl, { waitUntil: 'domcontentloaded', timeout: 90000 });
+
+  await waitPastSplash(page, 20000);
+  await skipStoryIfAny(page, 8000);
+  await page.waitForSelector('.auth-screen, form.auth-form', { timeout: 15000 });
+  await fillAuth(page, { register: true });
+  await page.click('button.auth-button--primary');
+
+  await page.waitForSelector('.rules-panel, [aria-label="Правила Aethelia"]', { timeout: 20000 });
+  await page.click('.rules-accept input');
+  await sleep(200);
+  await clickText(page, 'Продолжить');
+  await skipStoryIfAny(page, 8000);
+  await page.waitForSelector('[aria-label="Создание персонажа"]', { timeout: 12000 });
+  await snap(page, '24-gate-create-before-reload');
+
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: 90000 });
+  await waitPastSplash(page, 20000);
+  await skipStoryIfAny(page, 8000);
+  await page.waitForSelector('[aria-label="Создание персонажа"]', { timeout: 20000 });
+  await sleep(400);
+  await assertNoCrash(page, '25-gate-create-after-reload');
+  const hasSwitch = await page.evaluate(() =>
+    [...document.querySelectorAll('button')].some(
+      (node) => (node.textContent || '').replace(/\s+/g, ' ').trim() === 'Сменить аккаунт',
+    ),
+  );
+  if (!hasSwitch) throw new Error('после reload нет кнопки «Сменить аккаунт»');
+  await snap(page, '25-gate-create-after-reload');
+
+  await clickText(page, 'Выбрать облик');
+  await setInput(page, 'input[placeholder*="запомнит"]', 'Лира');
+  await sleep(200);
+  await clickText(page, 'Создать героя');
+  await skipStoryIfAny(page, 15000);
+  await page.waitForFunction(
+    () => document.body.innerText.includes('Лира') && !document.querySelector('.story-scene'),
+    { timeout: 15000 },
+  );
+  await assertNoCrash(page, '26-gate-create-success');
+  await snap(page, '26-gate-create-success');
+  await page.close();
+}
+
 async function runReturning(browser) {
   note('• ВОЗВРАЩЕНИЕ игрока (пролог видели, аккаунт Каеля в моке)');
   const page = await browser.newPage();
@@ -223,6 +288,7 @@ const browser = await launchBrowser({
 try {
   if (only === 'all' || only === 'cold') await runCold(browser);
   if (only === 'all' || only === 'returning') await runReturning(browser);
+  if (only === 'all' || only === 'gate') await runIncompleteReload(browser);
 } catch (err) {
   note(`FAIL ${err?.stack || err}`);
   writeFileSync(join(outDir, 'tour-log.txt'), log.join('\n') + '\n');

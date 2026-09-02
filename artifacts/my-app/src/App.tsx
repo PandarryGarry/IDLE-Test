@@ -29,6 +29,7 @@ import { FiremakingPage } from '@/pages/FiremakingPage';
 import { CombatPage } from '@/pages/CombatPage';
 import { InventoryPage } from '@/pages/InventoryPage';
 import { SettingsPage } from '@/pages/SettingsPage';
+import { HeroHubPage } from '@/pages/HeroHubPage';
 import { AuthPage } from '@/pages/AuthPage';
 import { RulesPage } from '@/pages/RulesPage';
 import { CreateCharacterPage } from '@/pages/CreateCharacterPage';
@@ -42,6 +43,7 @@ import {
 } from '@/lib/characterSave';
 import { readLocalRulesAccepted, RULES_VERSION } from '@/data/rules';
 import { isGuestBlockedPath } from '@/lib/guestMode';
+import { resolveLoggedInPath } from '@/lib/accountGate';
 
 function NotFound() {
   return (
@@ -108,7 +110,9 @@ function Router() {
   // чтобы после «Войти» не мелькал пустой экран.
   if (isAuthPath) {
     if (isGuest) return <Redirect to="/" />;
-    if (hasUser && !authLoading && loadedUserId === user?.id) return <Redirect to="/" />;
+    if (hasUser && !authLoading && loadedUserId === user?.id) {
+      return <Redirect to={resolveLoggedInPath()} />;
+    }
     return <AuthPage initialMode={pathname === '/register' ? 'register' : 'login'} />;
   }
 
@@ -123,7 +127,7 @@ function Router() {
 
   // ─── Онбординг / выбор персонажа (только для аккаунтов) ───────────
   if (!isGuest) {
-    const { acceptedVersion: localRules } = readLocalRulesAccepted();
+    const { acceptedVersion: localRules } = readLocalRulesAccepted(user?.id);
     const acceptedVersion = profile?.rulesVersion || localRules;
     const rulesAccepted = acceptedVersion === RULES_VERSION;
     const hasAny = characters.some(c => !c.isDeleted);
@@ -198,6 +202,7 @@ function Router() {
             <Route path="/smithing" component={SmithingPage} />
             <Route path="/firemaking" component={FiremakingPage} />
             <Route path="/combat" component={CombatPage} />
+            <Route path="/hero" component={HeroHubPage} />
             <Route path="/inventory" component={InventoryPage} />
             <Route path="/bank">
               <Redirect to="/inventory" />

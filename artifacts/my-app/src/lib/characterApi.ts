@@ -14,6 +14,7 @@ import {
 import type { SaveData } from '../data/types';
 import type { RaceId } from '../data/characters';
 import { withTimeout } from './utils';
+import { attachAttributesToSave, createDefaultAttributes } from './characterAttributes';
 
 /** Потолок сетевых вызовов Supabase: зависший запрос не должен блокировать UI. */
 const API_TIMEOUT_MS = 12000;
@@ -66,7 +67,9 @@ function rowToCharacter(row: CharacterRow): Character {
     nickname: row.nickname,
     avatarId: row.avatar_id,
     raceId: (row.race_id as RaceId) ?? 'human',
-    saveData: row.save_data ?? null,
+    saveData: row.save_data
+      ? (attachAttributesToSave(row.save_data as unknown as Record<string, unknown>) as SaveData)
+      : null,
     hasChangedNickname: row.has_changed_nickname ?? false,
     hasChangedAvatar: row.has_changed_avatar ?? false,
     selected: row.selected ?? false,
@@ -170,7 +173,7 @@ export async function createCharacter(params: {
       nickname: params.nickname.trim(),
       avatar_id: params.avatarId,
       race_id: params.raceId,
-      save_data: params.saveData ?? {},
+      save_data: params.saveData ?? { attributes: createDefaultAttributes() },
       selected: true,
     })
     .select('*')

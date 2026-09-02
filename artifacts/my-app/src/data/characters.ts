@@ -2,53 +2,14 @@
  * ╔══════════════════════════════════════════════════════════════╗
  * ║          AETHELIA RPG — ПЕРСОНАЖИ, РАСЫ, АВАТАРЫ            ║
  * ║                                                              ║
- * ║  Здесь описаны: расы (5), их бонусы (структура «2+ / 1−»),   ║
- * ║  привязка аватаров (30 = 5 рас × 6) и утилиты путей.         ║
- * ║  Конкретные числа статов настраиваются ПОЗЖЕ, когда появится ║
- * ║  система характеристик. Сейчас бонусы — только структура.    ║
+ * ║  Расы (5), матрица столпов 2+/1−, аватары (30 = 5×6).        ║
+ * ║  Старый StatKey (Сила/Магия/…) не действует и не суммируется.║
  * ╚══════════════════════════════════════════════════════════════╝
  */
 import { iconUrl, prefetchImage } from '@/lib/assetUrl';
+import { RACE_PILLAR_MODS, type RacePillarMod } from './attributes';
 
 export type RaceId = 'human' | 'elf' | 'dwarf' | 'orc' | 'beastfolk';
-
-/** Имена потенциальных характеристик/бонусов (структура, не формулы). */
-export type StatKey =
-  | 'hitpoints'   // Здоровье
-  | 'strength'    // Сила
-  | 'defence'     // Защита
-  | 'agility'     // Уворот / ловкость
-  | 'luck'        // Удача
-  | 'magic'       // Магия
-  | 'intellect';  // Интеллект / крафт
-
-export interface RaceBonus {
-  stat: StatKey;
-  /** Положительный («+») или отрицательный («−») бонус. */
-  positive: boolean;
-  /** Черновое числовое значение (настраивается позже). */
-  value: number;
-}
-
-export const STAT_LABELS_RU: Record<StatKey, string> = {
-  hitpoints: 'Здоровье',
-  strength: 'Сила',
-  defence: 'Защита',
-  agility: 'Уворот',
-  luck: 'Удача',
-  magic: 'Магия',
-  intellect: 'Интеллект',
-};
-
-export const STAT_LABELS_EN: Record<StatKey, string> = {
-  hitpoints: 'Health',
-  strength: 'Strength',
-  defence: 'Defence',
-  agility: 'Evasion',
-  luck: 'Luck',
-  magic: 'Magic',
-  intellect: 'Intellect',
-};
 
 export interface Race {
   id: RaceId;
@@ -57,7 +18,8 @@ export interface Race {
   /** Краткое описание для карточки расы. */
   blurbRu: string;
   blurbEn: string;
-  bonuses: RaceBonus[]; // 2 positive + 1 negative
+  /** Канон Этапа 5: два плюса и один минус к столпам. */
+  pillarMods: readonly RacePillarMod[];
 }
 
 export const RACES: Race[] = [
@@ -65,25 +27,17 @@ export const RACES: Race[] = [
     id: 'human',
     nameRu: 'Человек',
     nameEn: 'Human',
-    blurbRu: 'Прирождённые искатели приключений — универсальны и удачливы.',
-    blurbEn: 'Born adventurers — versatile and lucky.',
-    bonuses: [
-      { stat: 'luck', positive: true, value: 5 },
-      { stat: 'intellect', positive: true, value: 3 },
-      { stat: 'magic', positive: false, value: 3 },
-    ],
+    blurbRu: 'Прирождённые искатели приключений — выносливы и быстры.',
+    blurbEn: 'Born adventurers — hardy and quick.',
+    pillarMods: RACE_PILLAR_MODS.human,
   },
   {
     id: 'elf',
     nameRu: 'Эльф',
     nameEn: 'Elf',
-    blurbRu: 'Изящные и магически одарённые жители древних лесов.',
-    blurbEn: 'Graceful, magically gifted dwellers of the ancient forests.',
-    bonuses: [
-      { stat: 'magic', positive: true, value: 6 },
-      { stat: 'agility', positive: true, value: 4 },
-      { stat: 'strength', positive: false, value: 3 },
-    ],
+    blurbRu: 'Точные и чуткие жители древних лесов — тело хрупкое.',
+    blurbEn: 'Precise, keen dwellers of the ancient forests — fragile of body.',
+    pillarMods: RACE_PILLAR_MODS.elf,
   },
   {
     id: 'dwarf',
@@ -91,35 +45,23 @@ export const RACES: Race[] = [
     nameEn: 'Dwarf',
     blurbRu: 'Крепкие горняки и кузнецы, ценящие камень и металл.',
     blurbEn: 'Sturdy miners and smiths who value stone and metal.',
-    bonuses: [
-      { stat: 'defence', positive: true, value: 6 },
-      { stat: 'strength', positive: true, value: 3 },
-      { stat: 'agility', positive: false, value: 3 },
-    ],
+    pillarMods: RACE_PILLAR_MODS.dwarf,
   },
   {
     id: 'orc',
     nameRu: 'Орк',
     nameEn: 'Orc',
-    blurbRu: 'Могучие воины с огромной живучестью, но вспыльчивым нравом.',
-    blurbEn: 'Mighty warriors with great vitality, but a hot temper.',
-    bonuses: [
-      { stat: 'strength', positive: true, value: 7 },
-      { stat: 'hitpoints', positive: true, value: 6 },
-      { stat: 'magic', positive: false, value: 5 },
-    ],
+    blurbRu: 'Могучие воины с натиском, к тонкостям удачи глуховаты.',
+    blurbEn: 'Mighty warriors of onslaught, deaf to fine luck.',
+    pillarMods: RACE_PILLAR_MODS.orc,
   },
   {
     id: 'beastfolk',
     nameRu: 'Зверолюд',
     nameEn: 'Beastfolk',
-    blurbRu: 'Быстрые и хитрые оборотни из диких земель.',
-    blurbEn: 'Swift, cunning shapeshifters from the wilds.',
-    bonuses: [
-      { stat: 'agility', positive: true, value: 6 },
-      { stat: 'luck', positive: true, value: 3 },
-      { stat: 'intellect', positive: false, value: 4 },
-    ],
+    blurbRu: 'Дикие охотники: чутьё и сила, тело держит удар хуже.',
+    blurbEn: 'Wild hunters: instinct and might, a body that holds less.',
+    pillarMods: RACE_PILLAR_MODS.beastfolk,
   },
 ];
 

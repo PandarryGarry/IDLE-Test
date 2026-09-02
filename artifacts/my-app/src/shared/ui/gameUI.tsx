@@ -13,6 +13,7 @@
  *   GModal      — модальное окно
  *   GBadge      — значок (уровень, редкость, статус)
  *   GAvatar     — аватар персонажа
+ *   GSlot       — квадратный слот фиксированного размера (иконка, не текст)
  *   GProgressBar— полоса прогресса
  *   GDivider    — разделитель секций с заголовком
  *   GTooltip    — всплывающая подсказка (обёртка)
@@ -21,7 +22,8 @@
  *   GEmptyState — заглушка пустого состояния
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { iconUrl } from '@/lib/assetUrl';
 
 /* ════════════════════════════════════════════════════════════════
    ЦВЕТА — берём из CSS-переменных (tokens.ts → index.css)
@@ -218,6 +220,7 @@ export function GInput({
   icon, type = 'text', maxLength, disabled = false, autoFocus = false,
 }: GInputProps) {
   const [focused, setFocused] = useState(false);
+  const text = typeof value === 'string' ? value : '';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -243,7 +246,7 @@ export function GInput({
         )}
         <input
           type={type}
-          value={value}
+          value={text}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
           maxLength={maxLength}
@@ -262,7 +265,7 @@ export function GInput({
           <span style={{
             fontFamily: C.fontMono, fontSize: 10, color: C.textDim, flexShrink: 0,
           }}>
-            {value.length}/{maxLength}
+            {text.length}/{maxLength}
           </span>
         )}
       </div>
@@ -417,14 +420,14 @@ interface GAvatarProps {
 }
 
 export function GAvatar({
-  src, emoji, size = 48, borderColor = '#c8880a', glow = false, style,
+  src, emoji, size = 48, borderColor = 'var(--border-accent)', glow = false, style,
 }: GAvatarProps) {
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%', flexShrink: 0,
-      background: 'linear-gradient(160deg,#2e1608,#1e0e04)',
+      background: 'var(--bg-slot)',
       border: `2px solid ${borderColor}`,
-      boxShadow: glow ? `0 0 16px ${borderColor}88, inset 0 2px 6px rgba(0,0,0,0.5)` : 'inset 0 2px 6px rgba(0,0,0,0.5)',
+      boxShadow: glow ? 'var(--shadow-gold), var(--shadow-slot)' : 'var(--shadow-slot)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       overflow: 'hidden',
       ...style,
@@ -435,6 +438,167 @@ export function GAvatar({
         <span style={{ fontSize: Math.round(size * 0.5), lineHeight: 1 }}>{emoji ?? '🛡️'}</span>
       )}
     </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════
+   GSlot — квадрат фиксированного px: рамка-WebP, иконка внутри,
+   подпись снаружи. Без hover-translate (иначе сетка дёргается).
+════════════════════════════════════════════════════════════════ */
+const SLOT_FRAME = {
+  empty: iconUrl('ui/slots/slot_parchment_empty'),
+  common: iconUrl('ui/slots/slot_parchment_common'),
+  /** Золотая рамка. slot_parchment_active — зелёный кант, не берём. */
+  active: iconUrl('ui/slots/slot_parchment_legendary'),
+} as const;
+
+interface GSlotProps {
+  src?: string;
+  emoji?: string;
+  size?: number;
+  selected?: boolean;
+  disabled?: boolean;
+  badge?: React.ReactNode;
+  label?: string;
+  title?: string;
+  frame?: keyof typeof SLOT_FRAME;
+  dimmed?: boolean;
+  onClick?: () => void;
+  className?: string;
+}
+
+export function GSlot({
+  src, emoji, size = 48, selected = false, disabled = false,
+  badge, label, title, frame: frameKey, dimmed = false, onClick, className,
+}: GSlotProps) {
+  const lit = selected && !dimmed;
+  const frame = SLOT_FRAME[frameKey ?? (lit ? 'active' : (src || emoji) ? 'common' : 'empty')];
+  const iconPad = Math.round(size * 0.18);
+  const faceStyle: React.CSSProperties = {
+    position: 'relative',
+    width: size,
+    height: size,
+    padding: 0,
+    border: 0,
+    outline: 'none',
+    background: 'transparent',
+    backgroundImage: `url(${frame})`,
+    backgroundSize: '100% 100%',
+    backgroundRepeat: 'no-repeat',
+    boxShadow: lit ? '0 0 0 1px var(--border-accent), var(--shadow-gold)' : 'none',
+    cursor: disabled ? 'not-allowed' : onClick ? 'pointer' : 'default',
+    opacity: disabled || dimmed ? 0.42 : 1,
+    filter: dimmed ? 'grayscale(0.35) saturate(0.7)' : undefined,
+    flexShrink: 0,
+  };
+
+  return (
+    <div
+      className={className}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 4,
+        width: size,
+        flexShrink: 0,
+      }}
+    >
+      {onClick ? (
+        <button
+          type="button"
+          title={title}
+          aria-label={title || label}
+          aria-pressed={selected}
+          disabled={disabled}
+          onClick={disabled ? undefined : onClick}
+          style={faceStyle}
+        >
+          <GSlotFace src={src} emoji={emoji} size={size} iconPad={iconPad} badge={badge} />
+        </button>
+      ) : (
+        <div title={title} aria-label={title || label} style={faceStyle}>
+          <GSlotFace src={src} emoji={emoji} size={size} iconPad={iconPad} badge={badge} />
+        </div>
+      )}
+      {label && (
+        <span
+          style={{
+            width: size,
+            overflow: 'hidden',
+            color: selected ? 'var(--text-gold)' : 'var(--text-muted)',
+            fontFamily: C.fontMono,
+            fontSize: 11,
+            fontWeight: 800,
+            lineHeight: 1.1,
+            textAlign: 'center',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {label}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function GSlotFace({
+  src, emoji, size, iconPad, badge,
+}: {
+  src?: string;
+  emoji?: string;
+  size: number;
+  iconPad: number;
+  badge?: React.ReactNode;
+}) {
+  return (
+    <>
+      <span
+        style={{
+          position: 'absolute',
+          inset: iconPad,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerEvents: 'none',
+        }}
+      >
+        {src ? (
+          <img
+            src={src}
+            alt=""
+            decoding="async"
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          />
+        ) : emoji ? (
+          <span style={{ fontSize: Math.round(size * 0.42), lineHeight: 1 }}>{emoji}</span>
+        ) : null}
+      </span>
+      {badge != null && (
+        <span
+          style={{
+            position: 'absolute',
+            right: 1,
+            bottom: 1,
+            minWidth: 14,
+            height: 14,
+            padding: '0 3px',
+            borderRadius: 4,
+            background: 'var(--bg-header)',
+            color: 'var(--text-gold)',
+            fontFamily: C.fontMono,
+            fontSize: 9,
+            fontWeight: 800,
+            lineHeight: '14px',
+            textAlign: 'center',
+            pointerEvents: 'none',
+          }}
+        >
+          {badge}
+        </span>
+      )}
+    </>
   );
 }
 

@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { resetForGuestStart } from '@/lib/authActions';
+import { resolveLoggedInPath } from '@/lib/accountGate';
 import { isAuthConfigured, SUPABASE_CONFIG_MESSAGE } from '@/lib/supabase';
 
 type AuthMode = 'login' | 'register';
@@ -200,7 +201,7 @@ export function AuthPage({ initialMode = 'login' }: AuthPageProps) {
       if (result.needsEmailConfirmation) return;
       const uid = useAuthStore.getState().user?.id;
       if (uid) await useCharacterStore.getState().loadCharacters(uid);
-      navigate('/rules');
+      navigate(resolveLoggedInPath());
     } finally {
       setSubmitting(false);
     }
