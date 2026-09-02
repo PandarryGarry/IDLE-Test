@@ -27,6 +27,8 @@ const RING_GAP = [84, 82, 82] as const;
 const SPREAD = [80, 98, 114] as const;
 const MIN_SCALE = 0.52;
 const MAX_SCALE = 1.65;
+/** Запас по краям, чтобы крайние узлы не прилипали к рамке. */
+const FIT_PAD = 32;
 const CLICK_PX = 8;
 
 const ARMS: { arm: Arm; pillar: PillarId; dir: [number, number]; perp: [number, number] }[] = [
@@ -78,26 +80,40 @@ export function HeroBoard({
     el.style.transform = `translate(${tx.current}px, ${ty.current}px) scale(${scale.current})`;
   };
 
-  const centerView = (nextScale = 1) => {
+  /** Масштаб, при котором весь мир целиком влезает в кадр доски. */
+  const fitScale = () => {
+    const view = viewRef.current;
+    if (!view) return 1;
+    const side = Math.min(view.clientWidth, view.clientHeight);
+    return side / (WORLD + FIT_PAD);
+  };
+
+  /** Телефон уже поля: даём дожать до полного кадра, но не больше нужного. */
+  const minScale = () => Math.min(MIN_SCALE, fitScale());
+
+  const centerView = (nextScale = fitScale()) => {
     const view = viewRef.current;
     if (!view) return;
-    scale.current = clamp(nextScale, MIN_SCALE, MAX_SCALE);
+    scale.current = clamp(nextScale, minScale(), MAX_SCALE);
     tx.current = view.clientWidth / 2 - CX * scale.current;
     ty.current = view.clientHeight / 2 - CY * scale.current;
     apply();
   };
 
   useEffect(() => {
-    centerView(1);
+    // Старт — весь мир в кадре: видно все 36 узлов, дальше игрок приближает сам.
+    centerView();
     const view = viewRef.current;
     if (!view) return;
+    const onResize = () => centerView(scale.current);
+    window.addEventListener('resize', onResize);
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
       const rect = view.getBoundingClientRect();
       const px = event.clientX - rect.left;
       const py = event.clientY - rect.top;
       const before = scale.current;
-      const after = clamp(before * (event.deltaY < 0 ? 1.08 : 0.92), MIN_SCALE, MAX_SCALE);
+      const after = clamp(before * (event.deltaY < 0 ? 1.08 : 0.92), minScale(), MAX_SCALE);
       const wx = (px - tx.current) / before;
       const wy = (py - ty.current) / before;
       scale.current = after;
@@ -106,7 +122,10 @@ export function HeroBoard({
       apply();
     };
     view.addEventListener('wheel', onWheel, { passive: false });
-    return () => view.removeEventListener('wheel', onWheel);
+    return () => {
+      view.removeEventListener('wheel', onWheel);
+      window.removeEventListener('resize', onResize);
+    };
   }, []);
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
@@ -140,7 +159,7 @@ export function HeroBoard({
       const pts = [...pointers.current.values()];
       const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
       if (pinch.current.d > 0) {
-        scale.current = clamp(pinch.current.scale * (d / pinch.current.d), MIN_SCALE, MAX_SCALE);
+        scale.current = clamp(pinch.current.scale * (d / pinch.current.d), minScale(), MAX_SCALE);
         apply();
         panned.current = true;
       }
@@ -264,7 +283,7 @@ export function HeroBoard({
           title="К центру"
           aria-label="К центру доски"
           onPointerDown={event => event.stopPropagation()}
-          onClick={() => centerView(1)}
+          onClick={() => centerView()}
         >
           ⌖
         </button>
