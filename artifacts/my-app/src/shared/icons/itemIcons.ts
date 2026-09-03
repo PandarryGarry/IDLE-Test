@@ -65,12 +65,16 @@ export const MISC_ICONS: Record<string, string> = {
   gold_coins: '🪙',
 };
 
+import { getItem } from '@/data/items';
+
 export function getItemVisual(itemId: string): { type: 'image' | 'emoji'; value: string } {
   if (ITEM_IMAGE_URLS[itemId]) {
     return { type: 'image', value: ITEM_IMAGE_URLS[itemId] };
   }
 
+  const item = getItem(itemId);
   const icon = 
+    item?.icon ||
     EQUIPMENT_ICONS[itemId] ||
     RESOURCE_ICONS[itemId] ||
     CONSUMABLE_ICONS[itemId] ||

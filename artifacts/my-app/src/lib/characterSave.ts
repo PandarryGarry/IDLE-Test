@@ -52,7 +52,12 @@ export async function pushCharacterCloud(force = false): Promise<void> {
  * применить более свежий, синхронизировать остальные.
  */
 export async function reconcileCharacterSave(character: Character): Promise<void> {
-  if (!isSupabaseConfigured) return;
+  if (!isSupabaseConfigured) {
+    if (isValidSave(character.saveData)) {
+      applySaveData(character.saveData);
+    }
+    return;
+  }
 
   const localRaw = loadFromSlot(AUTO_SAVE_SLOT);
   const local = isValidSave(localRaw) ? localRaw : null;

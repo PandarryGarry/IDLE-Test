@@ -93,6 +93,11 @@ export const EQUIP_SLOT_ICON: Record<EquipSlot, string> = {
 export const SLOT_FRAME = {
   empty: iconUrl('ui/slots/slot_parchment_empty'),
   common: iconUrl('ui/slots/slot_parchment_common'),
+  uncommon: iconUrl('ui/slots/slot_parchment_uncommon'),
+  rare: iconUrl('ui/slots/slot_parchment_rare'),
+  epic: iconUrl('ui/slots/slot_parchment_epic'),
+  legendary: iconUrl('ui/slots/slot_parchment_legendary'),
+  locked: iconUrl('ui/slots/slot_parchment_locked'),
   active: iconUrl('ui/slots/slot_parchment_legendary'),
 } as const;
 

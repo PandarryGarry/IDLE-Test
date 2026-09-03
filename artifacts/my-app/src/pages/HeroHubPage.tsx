@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import {
   GAvatar, GBadge, GButton, GEmptyState, GInfoRow, GModal, GSlot, GTag,
 } from '@/shared/ui/gameUI';
+import { TierBadge } from '@/shared/ui/kit/TierBadge';
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { usePlayerStore } from '@/store/playerStore';
@@ -10,6 +11,7 @@ import { useBankStore } from '@/store/bankStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { getAvatarPath, getDollPath, getDollPath2x, getRaceLabel, type RaceId } from '@/data/characters';
 import { getItemRarity } from '@/components/ItemIcon';
+import { getItemTier } from '@/components/modals/UniversalInfoModal';
 import {
   BRANCHES,
   DEEP_PASSIVES,
@@ -33,7 +35,7 @@ import { getItem } from '@/data/items';
 import type { EquipSlot, Equipment, Item } from '@/data/types';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { getLiveGearSets, loadGearSet, saveGearSet } from '@/lib/gearSets';
-import { diffCombatStats, EQUIP_STAT_META, sumEquipmentStats } from '@/lib/equipmentStats';
+import { diffCombatStats, EQUIP_STAT_META, sumEquipmentStats, type EquipStatKey } from '@/lib/equipmentStats';
 import {
   FREE_RESPEC_LIMIT,
   computeAttributeSnapshot,
@@ -59,9 +61,9 @@ type Detail =
   | { kind: 'passive'; id: PassiveId }
   | { kind: 'synergy'; id: SynergyId }
   | { kind: 'gear'; slot: EquipSlot }
+  | { kind: 'locked-slot' }
   | { kind: 'bag-item'; itemId: string };
 
-const TILE = 48;
 const PORTRAIT = 64;
 
 const MODULES: { id: HubModule; label: string }[] = [
@@ -71,47 +73,60 @@ const MODULES: { id: HubModule; label: string }[] = [
   { id: 'path', label: 'Путь' },
 ];
 
-/** Колонка гардероба слева: броня, анатомический порядок (верх → низ). */
-const DRESS_ARMOR: { slot: EquipSlot; label: string }[] = [
+export interface EquipSlotDef {
+  slot: EquipSlot | 'locked';
+  label: string;
+  locked?: boolean;
+}
+
+/** Слева 1-я колонка: боевая экипировка (7 слотов) */
+const GEAR_LEFT_COL1: EquipSlotDef[] = [
   { slot: 'helm', label: 'Шлем' },
-  { slot: 'gloves', label: 'Перчатки' },
   { slot: 'platebody', label: 'Торс' },
-  { slot: 'belt', label: 'Пояс' },
   { slot: 'platelegs', label: 'Штаны' },
   { slot: 'boots', label: 'Обувь' },
+  { slot: 'gloves', label: 'Перчатки' },
+  { slot: 'weapon', label: 'Оружие' },
+  { slot: 'shield', label: 'Щит' },
 ];
 
-/** Колонка справа: украшения. */
-const DRESS_JEWELS: { slot: EquipSlot; label: string }[] = [
-  { slot: 'amulet', label: 'Ожерелье' },
-  { slot: 'ring', label: 'Кольцо' },
-  { slot: 'ring2', label: 'Кольцо' },
+/** Слева 2-я колонка: аксессуары и украшения (7 слотов, 14-й — будущий контент) */
+const GEAR_LEFT_COL2: EquipSlotDef[] = [
+  { slot: 'cape', label: 'Плащ' },
+  { slot: 'belt', label: 'Пояс' },
+  { slot: 'amulet', label: 'Амулет' },
+  { slot: 'ring', label: 'Кольцо 1' },
+  { slot: 'ring2', label: 'Кольцо 2' },
   { slot: 'bracelet', label: 'Браслет' },
-  { slot: 'bracelet2', label: 'Браслет' },
+  { slot: 'locked', label: 'Скоро', locked: true },
 ];
 
-const DRESS_HANDS: { slot: EquipSlot; label: string }[] = [
-  { slot: 'weapon', label: 'Правая' },
-  { slot: 'shield', label: 'Левая' },
+const STAT_BADGES: { key: EquipStatKey; label: string; icon: string }[] = [
+  { key: 'attackBonus', label: 'Атака', icon: '⚔️' },
+  { key: 'strengthBonus', label: 'Сила', icon: '⚡' },
+  { key: 'defenceBonus', label: 'Защита', icon: '🛡️' },
+  { key: 'rangedAttackBonus', label: 'Стрельба', icon: '🏹' },
+  { key: 'magicAttackBonus', label: 'Магия', icon: '🔮' },
+  { key: 'prayerBonus', label: 'Молитва', icon: '✨' },
 ];
 
 type BagFilter = 'all' | 'weapon' | 'armor' | 'jewel';
 
-const BAG_FILTERS: { id: BagFilter; label: string }[] = [
-  { id: 'all', label: 'Всё' },
-  { id: 'weapon', label: 'Оружие' },
-  { id: 'armor', label: 'Броня' },
-  { id: 'jewel', label: 'Украшения' },
+const BAG_FILTERS: { id: BagFilter; label: string; icon: string }[] = [
+  { id: 'all', label: 'Всё', icon: '📦' },
+  { id: 'weapon', label: 'Оружие', icon: '⚔️' },
+  { id: 'armor', label: 'Броня', icon: '🛡️' },
+  { id: 'jewel', label: 'Бижа', icon: '💍' },
 ];
 
-const WEAPON_CATS = new Set(['weapon', 'shield']);
-const JEWEL_CATS = new Set(['amulet', 'ring', 'bracelet']);
+const WEAPON_CATS = new Set(['weapon', 'shield', 'quiver']);
+const JEWEL_CATS = new Set(['amulet', 'ring', 'bracelet', 'ring2', 'bracelet2', 'passive']);
 
 /** Категория предмета для фильтра сумки; null — не снаряжение. */
 function bagFilterOf(item: Item): BagFilter | null {
   if (!item.equipSlot) return null;
-  if (WEAPON_CATS.has(item.category)) return 'weapon';
-  if (JEWEL_CATS.has(item.category)) return 'jewel';
+  if (WEAPON_CATS.has(item.category) || item.equipSlot === 'weapon' || item.equipSlot === 'shield') return 'weapon';
+  if (JEWEL_CATS.has(item.category) || ['amulet', 'ring', 'ring2', 'bracelet', 'bracelet2', 'passive'].includes(item.equipSlot)) return 'jewel';
   return 'armor';
 }
 
@@ -130,7 +145,7 @@ const GEAR_LABEL: Record<EquipSlot, string> = {
   platelegs: 'Штаны',
   boots: 'Обувь',
   gloves: 'Перчатки',
-  amulet: 'Ожерелье',
+  amulet: 'Амулет',
   ring: 'Кольцо',
   ring2: 'Кольцо',
   bracelet: 'Браслет',
@@ -291,7 +306,7 @@ export function HeroHubPage() {
           <GearModule
             equipment={equipment}
             avatarId={active.avatarId}
-            onOpen={slot => setDetail({ kind: 'gear', slot })}
+            onOpen={slot => setDetail(slot === 'locked' ? { kind: 'locked-slot' } : { kind: 'gear', slot })}
             onOpenBagItem={itemId => setDetail({ kind: 'bag-item', itemId })}
             onGearSetsChanged={() => setTick(n => n + 1)}
           />
@@ -358,13 +373,14 @@ function GearModule({
 }: {
   equipment: Equipment;
   avatarId: string;
-  onOpen: (slot: EquipSlot) => void;
+  onOpen: (slot: EquipSlot | 'locked') => void;
   onOpenBagItem: (itemId: string) => void;
   onGearSetsChanged: () => void;
 }) {
   const bankItems = useBankStore(s => s.items);
   const notifyInfo = useNotificationsStore(s => s.notifyInfo);
   const [filter, setFilter] = useState<BagFilter>('all');
+  const [page, setPage] = useState(0);
   const [saveOpen, setSaveOpen] = useState(false);
 
   const presets = getLiveGearSets().presets;
@@ -394,6 +410,11 @@ function GearModule({
       : `Набор ${index + 1} надет`);
   };
 
+  const handleFilterChange = (f: BagFilter) => {
+    setFilter(f);
+    setPage(0);
+  };
+
   const bagItems = useMemo(() => {
     const out: {
       slot: { itemId: string; quantity: number };
@@ -405,180 +426,286 @@ function GearModule({
       const item = getItem(s.itemId);
       const equipSlot = item?.equipSlot;
       if (!item || !equipSlot) continue;
-      if (filter !== 'all' && bagFilterOf(item) !== filter) continue;
+      const itemFilter = bagFilterOf(item);
+      if (filter !== 'all' && itemFilter !== filter) continue;
       out.push({ slot: { itemId: s.itemId, quantity: s.quantity }, item, equipSlot });
     }
     return out;
   }, [bankItems, filter]);
 
+  const BAG_PAGE_SIZE = 14;
+  const totalPages = Math.max(1, Math.ceil(bagItems.length / BAG_PAGE_SIZE));
+  const safePage = Math.min(page, totalPages - 1);
+  const visibleBagItems = bagItems.slice(safePage * BAG_PAGE_SIZE, (safePage + 1) * BAG_PAGE_SIZE);
+  const emptyPlaceholders = Math.max(0, BAG_PAGE_SIZE - visibleBagItems.length);
+
+  const activeStats = STAT_BADGES.filter(
+    s => ['attackBonus', 'strengthBonus', 'defenceBonus'].includes(s.key) || (totals[s.key] ?? 0) > 0
+  );
+
   return (
     <div className="hero-sheet hero-gear2">
-      <div className="hero-gear2__sets" aria-label="Наборы снаряжения">
-        {presets.map((preset, i) => (
+      {/* 1. Верхняя панель: наборы экипировки 1, 2, 3 и Сохранить */}
+      <div className="hero-gear2__presets">
+        <div className="hero-gear2__presets-group">
+          {presets.map((preset, i) => (
+            <button
+              key={i}
+              type="button"
+              className={preset ? 'hero-set-chip is-filled' : 'hero-set-chip'}
+              title={preset ? `Надеть «${preset.name}»` : `Набор ${i + 1} — пуст`}
+              onClick={() => loadSet(i)}
+            >
+              {preset ? preset.name : `Набор ${i + 1}`}
+            </button>
+          ))}
+        </div>
+        <div style={{ position: 'relative' }}>
           <button
-            key={i}
             type="button"
-            className={preset ? 'hero-set-chip is-filled' : 'hero-set-chip'}
-            title={preset ? `Надеть «${preset.name}»` : `Набор ${i + 1} — пуст`}
-            onClick={() => loadSet(i)}
+            className="hero-set-chip hero-set-chip--save"
+            aria-expanded={saveOpen}
+            onClick={() => setSaveOpen(v => !v)}
           >
-            {preset ? preset.name : `Набор ${i + 1}`}
+            💾 Сохранить
           </button>
-        ))}
-        <button
-          type="button"
-          className="hero-set-chip hero-set-chip--save"
-          aria-expanded={saveOpen}
-          onClick={() => setSaveOpen(v => !v)}
-        >
-          Сохранить
-        </button>
-        {saveOpen && (
-          <div className="hero-gear2__sets-choose" role="menu">
-            {presets.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                className="hero-set-opt"
-                onClick={() => saveSet(i)}
-              >
-                в набор {i + 1}
-              </button>
-            ))}
-          </div>
-        )}
+          {saveOpen && (
+            <div className="hero-gear2__sets-choose" role="menu">
+              {presets.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className="hero-set-opt"
+                  onClick={() => saveSet(i)}
+                >
+                  в набор {i + 1}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="hero-gear2__dressing">
-        <div className="hero-gear2__col" role="group" aria-label="Броня">
-          {DRESS_ARMOR.map(({ slot, label }) => {
-            const visual = slotVisual(equipment[slot], slot);
-            return (
-              <GSlot
-                key={slot}
-                src={visual.src}
-                emoji={visual.emoji}
-                size={TILE}
-                selected={Boolean(equipment[slot])}
-                label={label}
-                title={label}
-                onClick={() => onOpen(slot)}
+      {/* 2. Основной блок: Слева (2×7 надетых) | Центр (Манекен) | Справа (2×7 мини-сумка) */}
+      <div className="hero-gear2__main">
+        {/* Слева: 14 слотов надетых вещей (2 колонки по 7) */}
+        <div className="hero-gear2__slots-col" role="group" aria-label="Надетая экипировка">
+          <div className="hero-gear2__grid-7">
+            {GEAR_LEFT_COL1.map(def => (
+              <HeroEquipSlotCard
+                key={def.slot}
+                slotDef={def}
+                equipment={equipment}
+                twoHand={twoHand}
+                onOpen={onOpen}
               />
-            );
-          })}
+            ))}
+          </div>
+          <div className="hero-gear2__grid-7">
+            {GEAR_LEFT_COL2.map(def => (
+              <HeroEquipSlotCard
+                key={def.slot}
+                slotDef={def}
+                equipment={equipment}
+                twoHand={twoHand}
+                onOpen={onOpen}
+              />
+            ))}
+          </div>
         </div>
 
+        {/* Центр: Манекен героя */}
         <div className="hero-gear2__center">
           <div className="hero-gear2__doll">
             <img
               src={getDollPath(avatarId)}
               srcSet={`${getDollPath(avatarId)} 1x, ${getDollPath2x(avatarId)} 2x`}
-              width={384}
-              height={384}
               alt="Манекен героя"
               decoding="async"
             />
+            <div className="hero-gear2__pedestal" />
           </div>
-          <div className="hero-gear2__totals" aria-label="Сила экипировки">
-            {EQUIP_STAT_META.filter(({ key }) => totals[key] > 0).map(({ key, label }) => (
-              <span key={key} className="hero-total">
-                <i>{label}</i>
-                <b>+{totals[key]}</b>
-              </span>
-            ))}
-            {EQUIP_STAT_META.every(({ key }) => totals[key] <= 0) && (
-              <span className="hero-gear2__totals-empty">
-                Сила экипировки появится, когда наденете что-нибудь
-              </span>
+        </div>
+
+        {/* Справа: Мини-инвентарь (кнопки сортировки + 2 колонки по 7) */}
+        <div className="hero-gear2__inv-col" role="group" aria-label="Мини-инвентарь">
+          <div className="hero-gear2__inv-head">
+            <div className="hero-gear2__inv-filters" role="tablist">
+              {BAG_FILTERS.map(f => (
+                <button
+                  key={f.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={filter === f.id}
+                  className={filter === f.id ? 'hero-gear2__filter-chip is-active' : 'hero-gear2__filter-chip'}
+                  title={f.label}
+                  onClick={() => handleFilterChange(f.id)}
+                >
+                  <span>{f.icon}</span>
+                </button>
+              ))}
+            </div>
+            {totalPages > 1 && (
+              <div className="hero-gear2__pager">
+                <button
+                  type="button"
+                  disabled={safePage === 0}
+                  className="hero-gear2__pager-btn"
+                  onClick={() => setPage(p => Math.max(0, p - 1))}
+                  title="Назад"
+                >
+                  ‹
+                </button>
+                <span>{safePage + 1}/{totalPages}</span>
+                <button
+                  type="button"
+                  disabled={safePage >= totalPages - 1}
+                  className="hero-gear2__pager-btn"
+                  onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                  title="Вперёд"
+                >
+                  ›
+                </button>
+              </div>
             )}
           </div>
-        </div>
 
-        <div className="hero-gear2__col hero-gear2__col--right">
-          {DRESS_JEWELS.map(({ slot, label }) => {
-            const visual = slotVisual(equipment[slot], slot);
-            return (
-              <GSlot
-                key={slot}
-                src={visual.src}
-                emoji={visual.emoji}
-                size={TILE}
-                selected={Boolean(equipment[slot])}
-                label={label}
-                title={label}
-                onClick={() => onOpen(slot)}
+          <div className="hero-gear2__inv-grid">
+            {visibleBagItems.map(({ slot, item, equipSlot }) => (
+              <HeroBagSlotCard
+                key={slot.itemId}
+                slot={slot}
+                item={item}
+                equipSlot={equipSlot}
+                onOpen={onOpenBagItem}
               />
-            );
-          })}
-          <div className="hero-gear2__hands" role="group" aria-label="Руки">
-            {DRESS_HANDS.map(({ slot, label }) => {
-              const ghostLeft = slot === 'shield' && twoHand;
-              const itemId = ghostLeft ? equipment.weapon : equipment[slot];
-              const visual = slotVisual(itemId, slot);
-              return (
-                <GSlot
-                  key={slot}
-                  src={visual.src}
-                  emoji={visual.emoji}
-                  size={TILE}
-                  selected={Boolean(itemId) && !ghostLeft}
-                  dimmed={ghostLeft}
-                  label={label}
-                  title={ghostLeft ? `${label} · двуручное` : label}
-                  onClick={() => onOpen(ghostLeft ? 'weapon' : slot)}
-                />
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      <div className="hero-gear2__bag">
-        <div className="hero-gear2__bag-head">
-          <strong>Сумка</strong>
-          <div className="hero-gear2__bag-filters" role="tablist" aria-label="Фильтр снаряжения">
-            {BAG_FILTERS.map(f => (
-              <button
-                key={f.id}
-                type="button"
-                role="tab"
-                aria-selected={filter === f.id}
-                className={filter === f.id ? 'hero-bag-filter is-on' : 'hero-bag-filter'}
-                onClick={() => setFilter(f.id)}
-              >
-                {f.label}
-              </button>
+            ))}
+            {Array.from({ length: emptyPlaceholders }).map((_, idx) => (
+              <HeroBagSlotCard key={`empty-${idx}`} />
             ))}
           </div>
         </div>
-        {bagItems.length === 0 ? (
-          <p className="hero-gear2__bag-empty">
-            {filter === 'all'
-              ? 'Снаряжения в сумке нет — добыча и крафт кладутся сюда.'
-              : 'Здесь пусто.'}
-          </p>
-        ) : (
-          <div className="hero-gear2__bag-grid">
-            {bagItems.map(({ slot, item, equipSlot }) => {
-              const visual = getItemVisual(item.id);
-              const rarity = getItemRarity(item.id, item.sellValue, equipSlot);
-              return (
-                <GSlot
-                  key={slot.itemId}
-                  src={visual.type === 'image' ? visual.value : undefined}
-                  emoji={visual.type === 'emoji' ? visual.value : undefined}
-                  size={TILE}
-                  badge={slot.quantity > 1 ? slot.quantity : undefined}
-                  className={`hero-bag-tile is-${rarity}`}
-                  title={`${item.name} · ${GEAR_LABEL[equipSlot]}`}
-                  onClick={() => onOpenBagItem(item.id)}
-                />
-              );
-            })}
-          </div>
-        )}
+      </div>
+
+      {/* 3. Снизу: Общие характеристики бонусов от экипировки */}
+      <div className="hero-gear2__stats-bar">
+        <div className="hero-gear2__stats-title">
+          <span>Бонусы снаряжения</span>
+        </div>
+        <div className="hero-gear2__stats-grid">
+          {activeStats.map(s => {
+            const val = totals[s.key] ?? 0;
+            return (
+              <div key={s.key} className="hero-gear2__stat-card">
+                <div className="hero-gear2__stat-meta">
+                  <span>{s.icon}</span>
+                  <span>{s.label}</span>
+                </div>
+                <div className="hero-gear2__stat-circle">
+                  {val > 0 ? `+${val}` : '0'}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
+  );
+}
+
+function HeroEquipSlotCard({
+  slotDef, equipment, twoHand, onOpen,
+}: {
+  slotDef: EquipSlotDef;
+  equipment: Equipment;
+  twoHand: boolean;
+  onOpen: (slot: EquipSlot | 'locked') => void;
+}) {
+  if (slotDef.locked) {
+    return (
+      <GSlot
+        size={38}
+        frame="locked"
+        emoji="🔒"
+        title="Скоро — будущий слот"
+        onClick={() => onOpen('locked')}
+      />
+    );
+  }
+
+  const slot = slotDef.slot as EquipSlot;
+  const ghostLeft = slot === 'shield' && twoHand;
+  const itemId = ghostLeft ? equipment.weapon : equipment[slot];
+  const item = itemId ? getItem(itemId) : undefined;
+  const visual = slotVisual(itemId, slot);
+  const rarity = itemId && item ? getItemRarity(itemId, item.sellValue, item.equipSlot) : undefined;
+  const tier = itemId && item ? getItemTier(itemId, item) : undefined;
+
+  return (
+    <GSlot
+      size={38}
+      src={visual.src}
+      emoji={visual.emoji}
+      frame={rarity as any}
+      selected={Boolean(itemId) && !ghostLeft}
+      dimmed={ghostLeft}
+      badge={tier ? <TierBadge tier={tier} size="sm" /> : undefined}
+      title={ghostLeft ? `${slotDef.label} · двуручное` : itemId && item ? `${item.name} (${slotDef.label})` : slotDef.label}
+      onClick={() => onOpen(ghostLeft ? 'weapon' : slot)}
+    />
+  );
+}
+
+function HeroBagSlotCard({
+  slot, item, equipSlot, onOpen,
+}: {
+  slot?: { itemId: string; quantity: number };
+  item?: Item;
+  equipSlot?: EquipSlot;
+  onOpen?: (itemId: string) => void;
+}) {
+  if (!slot || !item || !equipSlot) {
+    return (
+      <div
+        className="g-slot-empty"
+        style={{
+          width: 38,
+          height: 38,
+          borderRadius: 8,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'var(--bg-slot)',
+          border: '1px dashed var(--border-slot)',
+        }}
+      >
+        <div
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: '50%',
+            background: 'var(--border-slot)',
+            opacity: 0.35,
+          }}
+        />
+      </div>
+    );
+  }
+
+  const visual = getItemVisual(item.id);
+  const rarity = getItemRarity(item.id, item.sellValue, equipSlot);
+  const tier = getItemTier(item.id, item);
+
+  return (
+    <GSlot
+      size={38}
+      src={visual.type === 'image' ? visual.value : undefined}
+      emoji={visual.type === 'emoji' ? visual.value : undefined}
+      frame={rarity as any}
+      badge={tier ? <TierBadge tier={tier} size="sm" /> : undefined}
+      title={`${item.name} · ${GEAR_LABEL[equipSlot] ?? equipSlot}`}
+      onClick={() => onOpen?.(item.id)}
+    />
   );
 }
 
@@ -739,7 +866,8 @@ function HeroDetailModal({
         : detail.kind === 'passive' ? DEEP_PASSIVES[detail.id].nameRu
           : detail.kind === 'synergy' ? (SYNERGIES.find(s => s.id === detail.id)?.nameRu ?? '')
             : detail.kind === 'bag-item' ? (bagDetailItem?.name ?? '')
-              : GEAR_LABEL[detail.slot];
+              : detail.kind === 'locked-slot' ? 'Будущий слот'
+                : GEAR_LABEL[detail.slot];
 
   const gearItemId = detail?.kind === 'gear' ? equipment[detail.slot] : null;
   const gearItem = gearItemId ? getItem(gearItemId) : undefined;
@@ -748,7 +876,10 @@ function HeroDetailModal({
   const handleUnequip = () => {
     if (!detail || detail.kind !== 'gear' || !gearItemId) return;
     const removed = unequip(detail.slot);
-    if (removed) onClose();
+    if (removed) {
+      useNotificationsStore.getState().notifyInfo(`Снято в сумку: ${gearItem?.name ?? ''}`);
+      onClose();
+    }
   };
 
   return (
@@ -758,6 +889,20 @@ function HeroDetailModal({
       title={title}
       width={detail?.kind === 'bag-item' ? 320 : 280}
     >
+      {detail?.kind === 'locked-slot' && (
+        <div className="hero-hub-modal hero-hub-modal--card" style={{ textAlign: 'center', padding: '12px 6px' }}>
+          <span style={{ fontSize: 36, display: 'block', marginBottom: 8 }}>🔒</span>
+          <strong style={{ fontSize: 14, color: 'var(--text-gold)', display: 'block', fontFamily: 'var(--app-font-display)' }}>
+            Будущий контент
+          </strong>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '8px 0 14px', lineHeight: 1.4 }}>
+            Этот слот снаряжения станет доступен в следующих обновлениях мира Aethelia.
+          </p>
+          <GButton size="sm" fullWidth variant="secondary" onClick={onClose}>
+            Понятно
+          </GButton>
+        </div>
+      )}
       {detail?.kind === 'pillar' && (() => {
         const into = snapshot.state.pillarRanks[detail.id];
         const raceN = shownStat(snapshot.racialImprint[detail.id]);
@@ -837,11 +982,24 @@ function HeroDetailModal({
         <div className="hero-hub-modal">
           {gearItem ? (
             <>
-              <GTag>{gearItem.name}</GTag>
-              <em className={`hero-item-rarity is-${getItemRarity(gearItem.id, gearItem.sellValue, gearItem.equipSlot)}`}>
-                {RARITY_RU[getItemRarity(gearItem.id, gearItem.sellValue, gearItem.equipSlot)]}
-              </em>
-              {twoHand && <p>Двуручное: занимает обе руки.</p>}
+              <div className="hero-item-card">
+                <span className={`hero-item-card__tile is-${getItemRarity(gearItem.id, gearItem.sellValue, gearItem.equipSlot)}`}>
+                  {slotVisual(gearItem.id, detail.slot).src ? (
+                    <img src={slotVisual(gearItem.id, detail.slot).src} alt="" decoding="async" />
+                  ) : (
+                    <span>{slotVisual(gearItem.id, detail.slot).emoji}</span>
+                  )}
+                </span>
+                <span className="hero-item-card__meta">
+                  <strong>{gearItem.name}</strong>
+                  <em className={`hero-item-rarity is-${getItemRarity(gearItem.id, gearItem.sellValue, gearItem.equipSlot)}`}>
+                    {RARITY_RU[getItemRarity(gearItem.id, gearItem.sellValue, gearItem.equipSlot)]}
+                  </em>
+                  <small>{GEAR_LABEL[detail.slot]}</small>
+                </span>
+              </div>
+              {gearItem.description && <p className="hero-item-desc">{gearItem.description}</p>}
+              {twoHand && <p className="hero-item-note">Двуручное: занимает обе руки.</p>}
               {EQUIP_STAT_META
                 .map(({ key, label }) => ({ key, label, value: gearItem.combatStats?.[key] ?? 0 }))
                 .filter(r => r.value !== 0)
@@ -853,7 +1011,14 @@ function HeroDetailModal({
               </GButton>
             </>
           ) : (
-            <p>Слот пуст. Надеть можно из сумки внизу окна.</p>
+            <div style={{ textAlign: 'center', padding: '10px 0' }}>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
+                Слот «{GEAR_LABEL[detail.slot]}» пуст. Выберите предмет из мини-инвентаря справа.
+              </p>
+              <GButton size="sm" fullWidth variant="secondary" onClick={onClose}>
+                Понятно
+              </GButton>
+            </div>
           )}
         </div>
       )}
@@ -871,6 +1036,7 @@ function HeroDetailModal({
           const bank = useBankStore.getState();
           bank.removeItem(item.id, 1);
           if (oldItem) bank.addItem(oldItem, 1);
+          useNotificationsStore.getState().notifyInfo(`Экипировано: ${item.name}`);
           onClose();
         };
 

@@ -108,7 +108,47 @@ async function runSeed(browser) {
   parsed.characters = (parsed.characters ?? []).map((row) => ({
     ...row,
     selected: true,
-    saveData: { ...(row.saveData ?? {}), attributes: DEMO_ATTRIBUTES },
+    saveData: {
+      ...(row.saveData ?? {}),
+      attributes: DEMO_ATTRIBUTES,
+      player: {
+        ...(row.saveData?.player ?? {}),
+        equipment: {
+          helm: 'iron_helm',
+          platebody: 'iron_platebody',
+          platelegs: null,
+          boots: null,
+          gloves: null,
+          amulet: null,
+          ring: null,
+          ring2: null,
+          bracelet: null,
+          bracelet2: null,
+          belt: null,
+          weapon: 'steel_sword',
+          shield: 'bronze_shield',
+          cape: null,
+          quiver: null,
+          passive: null,
+        },
+      },
+      bank: {
+        ...(row.saveData?.bank ?? {}),
+        items: [
+          { itemId: 'bronze_sword', quantity: 1, locked: false },
+          { itemId: 'mithril_sword', quantity: 1, locked: false },
+          { itemId: 'adamant_sword', quantity: 1, locked: false },
+          { itemId: 'bronze_helm', quantity: 1, locked: false },
+          { itemId: 'steel_helm', quantity: 1, locked: false },
+          { itemId: 'mithril_helm', quantity: 1, locked: false },
+          { itemId: 'bronze_platebody', quantity: 1, locked: false },
+          { itemId: 'steel_platebody', quantity: 1, locked: false },
+          { itemId: 'mithril_platebody', quantity: 1, locked: false },
+          { itemId: 'iron_shield', quantity: 1, locked: false },
+          { itemId: 'steel_shield', quantity: 1, locked: false },
+        ],
+      },
+    },
   }));
   writeFileSync(SEED, JSON.stringify(parsed, null, 2));
   console.log(`Сид готов: ${SEED} (героев: ${parsed.characters.length})`);
@@ -170,14 +210,19 @@ async function snapBoardFit(page, name) {
 async function openHub(page, viewport, tag) {
   await page.setViewport(viewport);
   const seed = readFileSync(SEED, 'utf8');
-  await page.evaluateOnNewDocument((raw) => {
+  const parsed = JSON.parse(seed);
+  const heroSave = parsed.characters?.[0]?.saveData;
+  await page.evaluateOnNewDocument((raw, autoSave) => {
     try {
       localStorage.setItem('aethelia_qa_db_v1', raw);
       localStorage.setItem('aethelia_qa_mock_v1', '1');
       localStorage.setItem('aethelia_prologue_seen_v1', '1');
       localStorage.setItem('aethelia_last_seen_version', '0.2.0');
+      if (autoSave) {
+        localStorage.setItem('aethelia_save_auto', JSON.stringify(autoSave));
+      }
     } catch { /* private mode */ }
-  }, seed);
+  }, seed, heroSave);
   await page.goto(cfg.baseUrl, { waitUntil: 'domcontentloaded', timeout: 90000 });
   await waitPastSplash(page, 25000);
   await skipStoryIfAny(page, 10000);

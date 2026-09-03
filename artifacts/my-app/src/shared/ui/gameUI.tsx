@@ -453,7 +453,11 @@ export function GAvatar({
 const SLOT_FRAME = {
   empty: iconUrl('ui/slots/slot_parchment_empty'),
   common: iconUrl('ui/slots/slot_parchment_common'),
-  /** Золотая рамка. slot_parchment_active — зелёный кант, не берём. */
+  uncommon: iconUrl('ui/slots/slot_parchment_uncommon'),
+  rare: iconUrl('ui/slots/slot_parchment_rare'),
+  epic: iconUrl('ui/slots/slot_parchment_epic'),
+  legendary: iconUrl('ui/slots/slot_parchment_legendary'),
+  locked: iconUrl('ui/slots/slot_parchment_locked'),
   active: iconUrl('ui/slots/slot_parchment_legendary'),
 } as const;
 
