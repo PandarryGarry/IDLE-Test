@@ -3016,18 +3016,10 @@
   cursor: pointer;
 }
 
-.hero-hub__tabs,
-.hero-gear-tabs {
+.hero-hub__tabs {
   display: grid;
   gap: var(--space-2xs);
-}
-
-.hero-hub__tabs {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.hero-gear-tabs {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .hero-hub__tab {
@@ -3357,15 +3349,429 @@
   gap: var(--space-2xs);
 }
 
-.hero-gear-grid {
+/* ── Окно «Экип»: наборы, гардероб с манекеном, сила, сумка (5B) ──
+   Десктоп: броня | манекен | украшения+руки; сумка снизу.
+   Мобилка: манекен сверху, колонки во всю ширину. */
+
+.hero-gear2 {
   display: grid;
-  grid-template-columns: repeat(3, 48px);
+  gap: var(--space-md);
+}
+
+/* Наборы снаряжения */
+.hero-gear2__sets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+}
+
+.hero-set-chip {
+  font-family: var(--app-font-mono);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  color: var(--text-muted);
+  background: var(--bg-slot);
+  border: 1px solid var(--border-slot);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.hero-set-chip:hover {
+  color: var(--text-primary);
+  border-color: var(--border-accent);
+}
+
+.hero-set-chip.is-filled {
+  color: var(--text-gold);
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-gold);
+}
+
+.hero-set-chip--save {
+  border-style: dashed;
+}
+
+.hero-gear2__sets-choose {
+  flex-basis: 100%;
+  display: flex;
+  justify-content: center;
+  gap: var(--space-xs);
+}
+
+.hero-set-opt {
+  font-family: var(--app-font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  color: var(--text-light);
+  background: var(--bg-card-dark);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.hero-set-opt:hover {
+  border-color: var(--border-accent);
+  color: var(--text-gold);
+}
+
+/* Гардероб: броня | манекен | украшения + руки */
+.hero-gear2__dressing {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  justify-content: center;
+  align-items: start;
+  gap: var(--space-md);
+}
+
+.hero-gear2__col {
+  display: grid;
+  grid-template-columns: repeat(2, 48px);
+  justify-content: center;
+  align-content: start;
+  gap: var(--space-sm) var(--space-md);
+}
+
+.hero-gear2__center {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-sm);
+  padding-top: 4px;
+}
+
+.hero-gear2__doll {
+  position: relative;
+  width: clamp(190px, 26vw, 320px);
+  aspect-ratio: 1;
+}
+
+.hero-gear2__doll img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 16px rgba(10, 5, 0, 0.45));
+}
+
+/* Подставка-тень под манекеном */
+.hero-gear2__doll::after {
+  content: '';
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: 3%;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(10, 5, 0, 0.5), transparent 70%);
+  pointer-events: none;
+}
+
+/* Руки — строкой под украшениями, в обе колонки */
+.hero-gear2__hands {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, 48px);
   justify-content: center;
   gap: var(--space-sm) var(--space-md);
 }
 
-.hero-gear-grid--hands {
-  grid-template-columns: repeat(2, 48px);
+/* Сила экипировки */
+.hero-gear2__totals {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 340px;
+}
+
+.hero-total {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  background: var(--bg-slot);
+  border: 1px solid var(--border-slot);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  font-family: var(--app-font-mono);
+}
+
+.hero-total i {
+  font-style: normal;
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+}
+
+.hero-total b {
+  font-size: var(--text-xs);
+  color: var(--text-gold);
+}
+
+.hero-gear2__totals-empty {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Сумка */
+.hero-gear2__bag {
+  border-top: 1px solid var(--border-card);
+  padding-top: var(--space-sm);
+  display: grid;
+  gap: var(--space-sm);
+  justify-items: center;
+}
+
+.hero-gear2__bag-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  width: 100%;
+  max-width: 560px;
+}
+
+.hero-gear2__bag-head strong {
+  font-family: var(--app-font-display);
+  font-size: var(--text-md);
+  color: var(--text-light);
+  letter-spacing: 0.04em;
+}
+
+.hero-gear2__bag-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.hero-bag-filter {
+  font-family: var(--app-font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border-card);
+  border-radius: 999px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+
+.hero-bag-filter.is-on {
+  color: var(--text-gold);
+  border-color: var(--border-accent);
+  background: var(--bg-slot);
+}
+
+.hero-gear2__bag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: var(--space-sm);
+  width: 100%;
+  max-width: 560px;
+}
+
+.hero-gear2__bag-empty {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-style: italic;
+  margin: var(--space-xs) 0;
+}
+
+/* Редкость тайлов сумки — только токены темы */
+.hero-bag-tile.is-uncommon {
+  box-shadow: 0 0 0 1px var(--accent-teal);
+  border-radius: var(--radius-sm);
+}
+
+.hero-bag-tile.is-rare {
+  box-shadow: 0 0 0 1px var(--accent-sapphire), 0 0 8px rgba(24, 96, 192, 0.3);
+  border-radius: var(--radius-sm);
+}
+
+.hero-bag-tile.is-epic {
+  box-shadow: 0 0 0 1px var(--accent-amber), 0 0 10px rgba(208, 96, 16, 0.3);
+  border-radius: var(--radius-sm);
+}
+
+.hero-bag-tile.is-legendary {
+  box-shadow: 0 0 0 1px var(--accent-gold-light), 0 0 12px rgba(240, 168, 32, 0.4);
+  border-radius: var(--radius-sm);
+}
+
+.hero-bag-tile.is-mythic {
+  box-shadow: 0 0 0 1px var(--accent-ruby), 0 0 12px rgba(192, 40, 30, 0.4);
+  border-radius: var(--radius-sm);
+}
+
+/* Карточка предмета (модал) */
+.hero-hub-modal--item {
+  display: grid;
+  gap: var(--space-sm);
+  justify-items: stretch;
+}
+
+.hero-item-card {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.hero-item-card__tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  background: var(--bg-slot);
+  border: 1px solid var(--border-slot);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-slot);
+}
+
+.hero-item-card__tile img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+
+.hero-item-card__tile > span {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.hero-item-card__tile.is-uncommon { border-color: var(--accent-teal); }
+.hero-item-card__tile.is-rare {
+  border-color: var(--accent-sapphire);
+  box-shadow: 0 0 10px rgba(24, 96, 192, 0.35);
+}
+.hero-item-card__tile.is-epic {
+  border-color: var(--accent-amber);
+  box-shadow: 0 0 10px rgba(208, 96, 16, 0.35);
+}
+.hero-item-card__tile.is-legendary {
+  border-color: var(--accent-gold-light);
+  box-shadow: 0 0 12px rgba(240, 168, 32, 0.45);
+}
+.hero-item-card__tile.is-mythic {
+  border-color: var(--accent-ruby);
+  box-shadow: 0 0 12px rgba(192, 40, 30, 0.45);
+}
+
+.hero-item-card__meta {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.hero-item-card__meta strong {
+  font-family: var(--app-font-display);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero-item-card__meta small {
+  color: var(--text-muted);
+  font-size: var(--text-2xs);
+}
+
+.hero-item-rarity {
+  font-style: normal;
+  font-family: var(--app-font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+
+.hero-item-rarity.is-uncommon { color: var(--accent-teal); }
+.hero-item-rarity.is-rare { color: var(--accent-sapphire); }
+.hero-item-rarity.is-epic { color: var(--accent-amber); }
+.hero-item-rarity.is-legendary { color: var(--accent-gold-light); }
+.hero-item-rarity.is-mythic { color: var(--accent-ruby); }
+
+.hero-item-desc {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-style: italic;
+  margin: 0;
+}
+
+.hero-item-note {
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Сравнение с надетым: зелёное лучше, красное хуже */
+.hero-cmp {
+  display: grid;
+  gap: 4px;
+  border-top: 1px solid var(--border-card);
+  padding-top: var(--space-xs);
+}
+
+.hero-cmp__vs {
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.hero-cmp-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: var(--space-xs);
+  font-family: var(--app-font-mono);
+  font-size: var(--text-xs);
+}
+
+.hero-cmp-row > span:first-child {
+  color: var(--text-secondary);
+}
+
+.hero-cmp-row__vals {
+  color: var(--text-primary);
+}
+
+.hero-cmp-row__delta {
+  font-weight: 800;
+  min-width: 2.4em;
+  text-align: right;
+}
+
+.hero-cmp-row[data-delta='up'] .hero-cmp-row__delta { color: var(--accent-emerald); }
+.hero-cmp-row[data-delta='down'] .hero-cmp-row__delta { color: var(--accent-ruby); }
+.hero-cmp-row[data-delta='same'] .hero-cmp-row__delta { color: var(--text-muted); }
+
+/* Мобилка: манекен сверху, колонки во всю ширину */
+@media (max-width: 700px) {
+  .hero-gear2__dressing {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .hero-gear2__center {
+    order: -1;
+  }
+
+  .hero-gear2__doll {
+    width: clamp(170px, 52vw, 230px);
+  }
+
+  .hero-gear2__col {
+    grid-template-columns: repeat(3, 48px);
+    width: 100%;
+  }
+
+  .hero-gear2__bag-grid {
+    max-width: none;
+  }
 }
 
 .hero-thread[data-on='true'] {

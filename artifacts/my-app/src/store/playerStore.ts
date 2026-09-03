@@ -56,6 +56,8 @@ export interface PlayerStore {
   addMasteryXp: (skillId: SkillId, actionId: string, amount: number) => void;
   equipItem: (itemId: string, slot: EquipSlot) => string | null;
   unequipItem: (slot: EquipSlot) => string | null;
+  /** Влезут ли эти предметы в сумку (без изменений) — для предпроверок. */
+  canBankTake: (itemIds: string[]) => boolean;
   drainPrayerPoints: (amount: number) => void;
   restorePrayerPoints: (amount: number) => void;
   setSkillXp: (skillId: SkillId, xp: number) => void;
@@ -168,6 +170,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     set({ equipment: next });
     return previous;
   },
+
+  canBankTake: (itemIds) => bankCanTakeAll(itemIds),
 
   unequipItem: (slot) => {
     const bankStore = useBankStore.getState();

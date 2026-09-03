@@ -268,6 +268,8 @@ async function runShots(browser, only) {
     await snap(page, '07-desktop-body');
     await clickTab(page, 'Путь');
     await snap(page, '08-desktop-path');
+    await clickTab(page, 'Экип');
+    await snap(page, '09-desktop-gear');
   }
   await page.close();
 }

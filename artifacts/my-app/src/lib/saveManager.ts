@@ -10,6 +10,12 @@ import { useAuthStore } from '../store/authStore';
 import { GUEST_NOTICE } from './guestMode';
 import { calculateOfflineProgress } from '../gameEngine/offlineCalc';
 import { getLiveAttributes, setLiveAttributes, createDefaultAttributes, migrateSaveAttributes } from './characterAttributes';
+import {
+  createEmptyGearSets,
+  getLiveGearSets,
+  migrateGearSets,
+  setLiveGearSets,
+} from './gearSets';
 
 const SAVE_VERSION = '1.0.0';
 const SAVE_KEY_PREFIX = 'aethelia_save_';
@@ -67,6 +73,7 @@ export function collectSaveData(): SaveData {
     },
     settings: {},
     attributes: getLiveAttributes(),
+    gearSets: getLiveGearSets(),
   };
 }
 
@@ -76,6 +83,7 @@ export function applySaveData(data: SaveData): void {
   const gameStore = useGameStore.getState();
 
   setLiveAttributes(migrateSaveAttributes(data.attributes));
+  setLiveGearSets(migrateGearSets(data.gearSets));
   playerStore.loadFromSave(data.player.skills, data.player.equipment);
   bankStore.loadFromSave(data.bank.items, data.bank.gp, data.bank.maxSlots);
   gameStore.loadFromSave({
@@ -273,6 +281,7 @@ export function resetGameToFresh(): void {
     useBankStore.getState().reset();
     useGameStore.getState().reset();
     setLiveAttributes(createDefaultAttributes());
+    setLiveGearSets(createEmptyGearSets());
   } catch (e) {
     console.error('resetGameToFresh failed:', e);
   }

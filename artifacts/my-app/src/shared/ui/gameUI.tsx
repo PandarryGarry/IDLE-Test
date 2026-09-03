@@ -322,19 +322,23 @@ export function GModal({ open, onClose, title, children, width = 340, closeOnOve
         }}
       />
 
-      {/* Окно */}
-      <div style={{
-        position: 'fixed', zIndex: 201,
-        left: '50%', top: '50%',
-        transform: 'translate(-50%,-50%)',
-        width: `min(${typeof width === 'number' ? width + 'px' : width}, 92vw)`,
-        maxHeight: '85vh', overflowY: 'auto',
-        background: 'linear-gradient(160deg,#7a5028,#4a2c10)',
-        border: `2px solid ${C.borderAccent}`,
-        borderRadius: 20,
-        boxShadow: '0 8px 0 #2a1005, 0 12px 40px rgba(10,4,0,0.7)',
-        animation: 'slideUp 0.2s ease',
-      }}>
+      {/* Окно. role/aria-label — контракт QA-скриптов (scripts/qa closeModal). */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        style={{
+          position: 'fixed', zIndex: 201,
+          left: '50%', top: '50%',
+          transform: 'translate(-50%,-50%)',
+          width: `min(${typeof width === 'number' ? width + 'px' : width}, 92vw)`,
+          maxHeight: '85vh', overflowY: 'auto',
+          background: 'linear-gradient(160deg,#7a5028,#4a2c10)',
+          border: `2px solid ${C.borderAccent}`,
+          borderRadius: 20,
+          boxShadow: '0 8px 0 #2a1005, 0 12px 40px rgba(10,4,0,0.7)',
+          animation: 'slideUp 0.2s ease',
+        }}
+      >
         {/* Шапка */}
         {title && (
           <div style={{
@@ -348,6 +352,7 @@ export function GModal({ open, onClose, title, children, width = 340, closeOnOve
             }}>{title}</span>
             <button
               onClick={onClose}
+              aria-label="Закрыть"
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
                 color: C.textDim, fontSize: 20, padding: 4, lineHeight: 1,
