@@ -111,11 +111,17 @@ export function prefetchAvatar(avatarId: string): void {
 }
 
 /**
+ * Версия деривативов манекенов: ?v=… принудительно обновляет файлы
+ * в кэше браузеров (превью/телефоны видят новые картинки без очистки).
+ */
+const DOLL_ASSET_VERSION = 2;
+
+/**
  * Манекен тела по avatarId — одна-в-одну:
  * 'human_male_01' → paper_dolls/bodies/human_male_01 (WebP 384×384).
  */
 export function getDollPath(avatarId: string): string {
-  return iconUrl(`characters/paper_dolls/bodies/${avatarId}`);
+  return `${iconUrl(`characters/paper_dolls/bodies/${avatarId}`)}?v=${DOLL_ASSET_VERSION}`;
 }
 
 /**
@@ -124,7 +130,7 @@ export function getDollPath(avatarId: string): string {
  * увеличивается, контур остаётся чистым).
  */
 export function getDollPath2x(avatarId: string): string {
-  return iconUrl(`characters/paper_dolls/bodies/${avatarId}@2x`);
+  return `${iconUrl(`characters/paper_dolls/bodies/${avatarId}@2x`)}?v=${DOLL_ASSET_VERSION}`;
 }
 
 /** Префикс файла аватара → raceId ('beastfolk_male_01' → 'beastfolk'). */
