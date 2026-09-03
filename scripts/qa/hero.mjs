@@ -297,6 +297,29 @@ async function runShots(browser, only) {
   if (only === 'all' || only === 'gear') {
     await clickTab(page, 'Экип');
     await snap(page, '04-mobile-gear');
+
+    // Click on empty slot on the left
+    await page.evaluate(() => {
+      const emptySlot = document.querySelector('.hero-sq-slot--empty');
+      emptySlot?.click();
+    });
+    await sleep(400);
+    await snap(page, '04b-mobile-gear-left-selected');
+
+    // Click on bag item on the right
+    await page.evaluate(() => {
+      const bagItem = document.querySelector('.hero-sq-slot--bag-item');
+      bagItem?.click();
+    });
+    await sleep(400);
+    await snap(page, '04c-mobile-gear-right-modal');
+    await page.evaluate(() => {
+      const btns = Array.from(document.querySelectorAll('button'));
+      const closeBtn = btns.find(b => b.textContent.includes('Закрыть'));
+      closeBtn?.click();
+    });
+    await sleep(400);
+    await snap(page, '04d-mobile-gear-right-selected');
   }
   if (only === 'all' || only === 'synergies') {
     await clickTab(page, 'Нити');
