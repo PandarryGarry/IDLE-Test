@@ -95,24 +95,44 @@ export type GearSetLoadResult =
 /**
  * Надеть пресет `index`.
  *
- * Фаза 1 — проверки (до любого изменения):
- *  а) всё, что должно сойти в сумку, в сумку влезает;
- *  б) помечаем partial, если часть предметов пресета не найдена
- *     (ни в сумке, ни на теле).
- * Фаза 2 — снять всё, чего нет в пресете (в сумку).
- * Фаза 3 — надеть из пресета по SLOT_ORDER, предмет из сумки.
- *
- * Все шаги идут через существующие equipItem/unequipItem — их контракты
- * (возврат «предыдущего» предмета, проверка вместимости) дублируем.
+ * - Если ни один набор ещё не был сохранён игроком — ничего не трогаем (reason: 'empty').
+ * - Если игрок сохранил хотя бы один набор, а затем выбрал пустой набор — освобождаем все слоты (снимаем экипировку в сумку).
+ * - Если выбран сохранённый набор — снимаем лишнее и надеваем предметы набора.
  */
 export function loadGearSet(index: number): GearSetLoadResult {
   if (index < 0 || index >= GEAR_SETS_MAX) return { ok: false, reason: 'empty' };
-  const preset = getLiveGearSets().presets[index];
-  if (!preset) return { ok: false, reason: 'empty' };
-
+  const presets = getLiveGearSets().presets;
+  const preset = presets[index];
   const player = usePlayerStore.getState();
   const bank = useBankStore.getState();
   const current = player.equipment;
+
+  const hasAnySaved = presets.some(p => p !== null);
+
+  if (!preset) {
+    if (!hasAnySaved) {
+      // Игрок ещё не сохранил ни одного набора
+      return { ok: false, reason: 'empty' };
+    }
+    // Освобождаем все слоты (снимаем в сумку)
+    const displacedIds: string[] = [];
+    for (const slot of SLOT_ORDER) {
+      const id = current[slot];
+      if (id && !displacedIds.includes(id)) {
+        displacedIds.push(id);
+      }
+    }
+    if (displacedIds.length > 0 && !player.canBankTake(displacedIds)) {
+      return { ok: false, reason: 'bag-full' };
+    }
+    for (const slot of SLOT_ORDER) {
+      if (current[slot]) {
+        player.unequipItem(slot);
+      }
+    }
+    return { ok: true, partial: false };
+  }
+
   const target = preset.equipment;
 
   // 1а. Что сойдёт в сумку.

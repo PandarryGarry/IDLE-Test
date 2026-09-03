@@ -11,7 +11,7 @@ import { useBankStore } from '@/store/bankStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { getAvatarPath, getDollPath, getDollPath2x, getRaceLabel, type RaceId } from '@/data/characters';
 import { getItemRarity } from '@/components/ItemIcon';
-import { getItemTier } from '@/components/modals/UniversalInfoModal';
+import { getItemTier, UniversalInfoModal } from '@/components/modals/UniversalInfoModal';
 import {
   BRANCHES,
   DEEP_PASSIVES,
@@ -309,8 +309,6 @@ export function HeroHubPage() {
           <GearModule
             equipment={equipment}
             avatarId={active.avatarId}
-            onOpen={slot => setDetail(slot === 'locked' ? { kind: 'locked-slot' } : { kind: 'gear', slot })}
-            onOpenBagItem={itemId => setDetail({ kind: 'bag-item', itemId })}
             onGearSetsChanged={() => setTick(n => n + 1)}
           />
         )}
@@ -381,12 +379,10 @@ const RARITY_THEME: Record<string, { border: string; bg: string; glow: string; d
 };
 
 function GearModule({
-  equipment, avatarId, onOpen, onOpenBagItem, onGearSetsChanged,
+  equipment, avatarId, onGearSetsChanged,
 }: {
   equipment: Equipment;
   avatarId: string;
-  onOpen: (slot: EquipSlot | 'locked') => void;
-  onOpenBagItem: (itemId: string) => void;
   onGearSetsChanged: () => void;
 }) {
   const bankItems = useBankStore(s => s.items);
@@ -394,6 +390,9 @@ function GearModule({
   const [filter, setFilter] = useState<BagFilter>('all');
   const [page, setPage] = useState(0);
   const [saveOpen, setSaveOpen] = useState(false);
+  const [activeSetIndex, setActiveSetIndex] = useState<number | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<EquipSlot | 'locked' | null>(null);
 
   const presets = getLiveGearSets().presets;
   const totals = useMemo(() => sumEquipmentStats(equipment), [equipment]);
@@ -403,6 +402,7 @@ function GearModule({
     const next = saveGearSet(index);
     if (!next) return;
     commitGearSets(next);
+    setActiveSetIndex(index);
     onGearSetsChanged();
     setSaveOpen(false);
     notifyInfo(`Набор ${index + 1} сохранён`);
@@ -411,20 +411,47 @@ function GearModule({
   const loadSet = (index: number) => {
     const result = loadGearSet(index);
     if (!result.ok) {
-      notifyInfo(result.reason === 'bag-full'
-        ? 'Сумка заполнена — освободите места, чтобы надеть набор'
-        : `Набор ${index + 1} пуст`);
+      if (result.reason === 'bag-full') {
+        notifyInfo('Сумка заполнена — освободите места, чтобы надеть набор');
+      } else {
+        notifyInfo(`Набор ${index + 1} пуст. Нажмите 💾, чтобы сохранить текущий набор`);
+      }
       return;
     }
+    setActiveSetIndex(index);
     onGearSetsChanged();
     notifyInfo(result.partial
-      ? `Набор ${index + 1} надет. Часть предметов не найдена — их слоты не тронуты`
-      : `Набор ${index + 1} надет`);
+      ? `Набор ${index + 1} надет. Часть предметов не найдена в сумке`
+      : presets[index] ? `Набор ${index + 1} надет` : `Набор ${index + 1} (пустой) — экипировка снята в сумку`);
   };
 
   const handleFilterChange = (f: BagFilter) => {
     setFilter(f);
     setPage(0);
+  };
+
+  const handleEquipSlotClick = (slot: EquipSlot | 'locked') => {
+    if (slot === 'locked') {
+      notifyInfo('🔒 Будущий контент — этот слот станет доступен в следующих обновлениях');
+      return;
+    }
+    setSelectedSlot(slot);
+    const ghostLeft = slot === 'shield' && twoHand;
+    const itemId = ghostLeft ? equipment.weapon : equipment[slot];
+    if (itemId) {
+      setSelectedItemId(itemId);
+    } else {
+      // Empty slot: filter mini-bag to relevant category
+      if (['weapon', 'shield', 'quiver'].includes(slot)) {
+        setFilter('weapon');
+      } else if (['amulet', 'ring', 'ring2', 'bracelet', 'bracelet2', 'passive'].includes(slot)) {
+        setFilter('jewel');
+      } else {
+        setFilter('armor');
+      }
+      setPage(0);
+      notifyInfo(`Слот «${GEAR_LABEL[slot]}» пуст. Выберите предмет из инвентаря справа.`);
+    }
   };
 
   const bagItems = useMemo(() => {
@@ -466,7 +493,7 @@ function GearModule({
               <button
                 key={i}
                 type="button"
-                className={`hero-gear2__preset-pill ${preset ? 'is-saved' : ''}`}
+                className={`hero-gear2__preset-pill ${activeSetIndex === i ? 'is-active' : ''} ${preset ? 'is-saved' : ''}`}
                 title={preset ? `Надеть: ${preset.name}` : `Набор ${i + 1} (пуст)`}
                 onClick={() => loadSet(i)}
               >
@@ -558,26 +585,38 @@ function GearModule({
         {/* Слева: 14 слотов надетых вещей (2 колонки по 7) */}
         <div className="hero-gear2__slots-col" role="group" aria-label="Надетая экипировка">
           <div className="hero-gear2__grid-7">
-            {GEAR_LEFT_COL1.map(def => (
-              <HeroEquipSlotCard
-                key={def.slot}
-                slotDef={def}
-                equipment={equipment}
-                twoHand={twoHand}
-                onOpen={onOpen}
-              />
-            ))}
+            {GEAR_LEFT_COL1.map(def => {
+              const ghostLeft = def.slot === 'shield' && twoHand;
+              const itemId = ghostLeft ? equipment.weapon : def.slot !== 'locked' ? equipment[def.slot] : null;
+              const isSelected = selectedSlot === def.slot || (Boolean(itemId) && selectedItemId === itemId);
+              return (
+                <HeroEquipSlotCard
+                  key={def.slot}
+                  slotDef={def}
+                  equipment={equipment}
+                  twoHand={twoHand}
+                  isSelected={isSelected}
+                  onOpen={handleEquipSlotClick}
+                />
+              );
+            })}
           </div>
           <div className="hero-gear2__grid-7">
-            {GEAR_LEFT_COL2.map(def => (
-              <HeroEquipSlotCard
-                key={def.slot}
-                slotDef={def}
-                equipment={equipment}
-                twoHand={twoHand}
-                onOpen={onOpen}
-              />
-            ))}
+            {GEAR_LEFT_COL2.map(def => {
+              const ghostLeft = def.slot === 'shield' && twoHand;
+              const itemId = ghostLeft ? equipment.weapon : def.slot !== 'locked' ? equipment[def.slot] : null;
+              const isSelected = selectedSlot === def.slot || (Boolean(itemId) && selectedItemId === itemId);
+              return (
+                <HeroEquipSlotCard
+                  key={def.slot}
+                  slotDef={def}
+                  equipment={equipment}
+                  twoHand={twoHand}
+                  isSelected={isSelected}
+                  onOpen={handleEquipSlotClick}
+                />
+              );
+            })}
           </div>
         </div>
 
@@ -603,7 +642,8 @@ function GearModule({
                 slot={slot}
                 item={item}
                 equipSlot={equipSlot}
-                onOpen={onOpenBagItem}
+                isSelected={selectedItemId === item.id}
+                onOpen={itemId => setSelectedItemId(itemId)}
               />
             ))}
             {Array.from({ length: emptyPlaceholders }).map((_, idx) => (
@@ -641,16 +681,28 @@ function GearModule({
           })}
         </div>
       </div>
+
+      {/* 4. Универсальное модальное окно информации и экипировки */}
+      {selectedItemId && (
+        <UniversalInfoModal
+          itemId={selectedItemId}
+          onClose={() => {
+            setSelectedItemId(null);
+            setSelectedSlot(null);
+          }}
+        />
+      )}
     </div>
   );
 }
 
 function HeroEquipSlotCard({
-  slotDef, equipment, twoHand, onOpen,
+  slotDef, equipment, twoHand, isSelected, onOpen,
 }: {
   slotDef: EquipSlotDef;
   equipment: Equipment;
   twoHand: boolean;
+  isSelected: boolean;
   onOpen: (slot: EquipSlot | 'locked') => void;
 }) {
   if (slotDef.locked) {
@@ -658,7 +710,7 @@ function HeroEquipSlotCard({
       <button
         type="button"
         onClick={() => onOpen('locked')}
-        className="hero-sq-slot hero-sq-slot--locked"
+        className={`hero-sq-slot hero-sq-slot--locked ${isSelected ? 'is-selected' : ''}`}
         title="Скоро — будущий слот"
       >
         <Lock className="w-3.5 h-3.5 opacity-40 text-amber-500" />
@@ -680,7 +732,7 @@ function HeroEquipSlotCard({
       <button
         type="button"
         onClick={() => onOpen(slot)}
-        className="hero-sq-slot hero-sq-slot--empty"
+        className={`hero-sq-slot hero-sq-slot--empty ${isSelected ? 'is-selected' : ''}`}
         title={`Надеть: ${slotDef.label}`}
       >
         <img
@@ -696,7 +748,7 @@ function HeroEquipSlotCard({
     <button
       type="button"
       onClick={() => onOpen(ghostLeft ? 'weapon' : slot)}
-      className={`hero-sq-slot hero-sq-slot--equipped ${ghostLeft ? 'is-dimmed' : ''}`}
+      className={`hero-sq-slot hero-sq-slot--equipped ${ghostLeft ? 'is-dimmed' : ''} ${isSelected ? 'is-selected' : ''}`}
       style={{
         background: rs.bg,
         borderColor: rs.border,
@@ -727,11 +779,12 @@ function HeroEquipSlotCard({
 }
 
 function HeroBagSlotCard({
-  slot, item, equipSlot, onOpen,
+  slot, item, equipSlot, isSelected, onOpen,
 }: {
   slot?: { itemId: string; quantity: number };
   item?: Item;
   equipSlot?: EquipSlot;
+  isSelected?: boolean;
   onOpen?: (itemId: string) => void;
 }) {
   if (!slot || !item || !equipSlot) {
@@ -751,7 +804,7 @@ function HeroBagSlotCard({
     <button
       type="button"
       onClick={() => onOpen?.(item.id)}
-      className="hero-sq-slot hero-sq-slot--bag-item"
+      className={`hero-sq-slot hero-sq-slot--bag-item ${isSelected ? 'is-selected' : ''}`}
       style={{
         background: rs.bg,
         borderColor: rs.border,
