@@ -111,9 +111,10 @@ pip install --break-system-packages numpy scipy
 | `tools/doll_lib.py` | чтение/запись RGBA через ImageMagick, `dilate/erode/fill_holes/components`, `row_runs`, `over` |
 | `tools/hand_fix.py` | **незаконченная** точечная правка кистей — см. раздел 6 |
 
-Листы и логи: `public/_review/`. Рабочая папка
-`public/_review/bodies2/` — сырые кадры, каноны и `metrics.md` с
-таблицами замеров по всем партиям.
+Листы и логи велись в `public/_review/` — папка удалена 2026-09-03
+после всех вердиктов (см. §11). Итоговые визуальные сверки —
+`final_lineup_bodies.jpg` и `final_lineup_avatars.jpg` рядом с этим
+документом. Упоминания `_review` по тексту ниже — история.
 
 ---
 
@@ -429,8 +430,10 @@ PALM_FILL = (0.50, 0.63)   # у утверждённых 0.53–0.60
 
 После вердикта владельца по расе:
 
-1. `cp public/_review/bodies2/canon-{имя}.png \
-      public/assets/icons/characters/paper_dolls/bodies/{имя}.png`
+1. Мастер живёт прямо в ассетах:
+   `public/assets/icons/characters/paper_dolls/bodies/{имя}.png`.
+   При доработке: новый кадр → `tools/make_body.py` (ворота, канон) →
+   записать канон в ассеты поверх мастера.
 2. Из **корня репозитория `IDLE-Test`** (не из `artifacts/my-app`!):
    `node scripts/assets/optimize.mjs` — пресет
    `/characters/paper_dolls/` даёт 384 px, quality 84.
@@ -492,3 +495,5 @@ PALM_FILL = (0.50, 0.63)   # у утверждённых 0.53–0.60
 - **`human_male_01`:** трусы перекрашены из угольно-чёрных в кремовые как у остальных мужчин
   (поза/мастер не тронуты, только локальный реколор + заливка 1 дырки).
 - Числа после прохода: 30/30 тел — 1 связный кусок, 0 дырок, 0 мадженты; webp пересобраны.
+- Временная папка `public/_review/` удалена 2026-09-03: все вердикты зафиксированы
+  здесь, финальные сверки — `final_lineup_bodies.jpg` / `final_lineup_avatars.jpg`.
