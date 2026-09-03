@@ -8,7 +8,7 @@ import { useCharacterStore } from '@/store/characterStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useBankStore } from '@/store/bankStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
-import { getAvatarPath, getDollPath, getRaceLabel, type RaceId } from '@/data/characters';
+import { getAvatarPath, getDollPath, getDollPath2x, getRaceLabel, type RaceId } from '@/data/characters';
 import { getItemRarity } from '@/components/ItemIcon';
 import {
   BRANCHES,
@@ -470,7 +470,14 @@ function GearModule({
 
         <div className="hero-gear2__center">
           <div className="hero-gear2__doll">
-            <img src={getDollPath(avatarId)} alt="Манекен героя" decoding="async" />
+            <img
+              src={getDollPath(avatarId)}
+              srcSet={`${getDollPath(avatarId)} 1x, ${getDollPath2x(avatarId)} 2x`}
+              width={384}
+              height={384}
+              alt="Манекен героя"
+              decoding="async"
+            />
           </div>
           <div className="hero-gear2__totals" aria-label="Сила экипировки">
             {EQUIP_STAT_META.filter(({ key }) => totals[key] > 0).map(({ key, label }) => (

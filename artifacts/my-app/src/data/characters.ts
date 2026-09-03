@@ -118,6 +118,15 @@ export function getDollPath(avatarId: string): string {
   return iconUrl(`characters/paper_dolls/bodies/${avatarId}`);
 }
 
+/**
+ * 2x-версия манекена (768×768, WebP) — для Retina: браузер уменьшает
+ * её до нужного размера вместо растяжения 384px (шум у края не
+ * увеличивается, контур остаётся чистым).
+ */
+export function getDollPath2x(avatarId: string): string {
+  return iconUrl(`characters/paper_dolls/bodies/${avatarId}@2x`);
+}
+
 /** Префикс файла аватара → raceId ('beastfolk_male_01' → 'beastfolk'). */
 const AVATAR_PREFIX_TO_RACE: Record<string, RaceId> = {
   human: 'human',
