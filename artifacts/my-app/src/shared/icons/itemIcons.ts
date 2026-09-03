@@ -66,6 +66,7 @@ export const MISC_ICONS: Record<string, string> = {
 };
 
 import { getItem } from '@/data/items';
+import { EQUIP_SLOT_ICON } from '@/data/attributeIcons';
 
 export function getItemVisual(itemId: string): { type: 'image' | 'emoji'; value: string } {
   if (ITEM_IMAGE_URLS[itemId]) {
@@ -73,6 +74,10 @@ export function getItemVisual(itemId: string): { type: 'image' | 'emoji'; value:
   }
 
   const item = getItem(itemId);
+  if (item?.equipSlot && EQUIP_SLOT_ICON[item.equipSlot]) {
+    return { type: 'image', value: EQUIP_SLOT_ICON[item.equipSlot] };
+  }
+
   const icon = 
     item?.icon ||
     EQUIPMENT_ICONS[itemId] ||

@@ -3360,65 +3360,113 @@
   margin: 0 auto;
 }
 
-/* 1. Верхняя панель: наборы снаряжения */
-.hero-gear2__presets {
-  display: flex;
+/* 1. Верхняя панель: Наборы слева, Заголовок в центре, Фильтры справа */
+.hero-gear2__header-bar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
-  flex-wrap: wrap;
-  padding: 0 2px;
+  gap: 8px;
   width: 100%;
+  padding: 0 1px;
 }
 
-.hero-gear2__presets-group {
+.hero-gear2__presets-box {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.hero-set-chip {
+.hero-gear2__preset-pills {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--bg-card-dark);
+  border: 1px solid var(--border-default);
+  border-radius: 7px;
+  padding: 2px;
+}
+
+.hero-gear2__preset-pill {
+  width: 22px;
+  height: 20px;
   font-family: var(--app-font-mono);
-  font-size: var(--text-2xs);
+  font-size: 10px;
   font-weight: 800;
   color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  line-height: 1;
+}
+
+.hero-gear2__preset-pill:hover {
+  color: var(--text-primary);
+  background: var(--bg-slot);
+}
+
+.hero-gear2__preset-pill.is-saved {
+  color: var(--text-gold);
+  font-weight: 900;
+  background: rgba(212, 134, 10, 0.18);
+}
+
+.hero-gear2__preset-pill.is-active {
+  background: linear-gradient(135deg, #d97706, #f59e0b);
+  color: #1a0f05;
+  font-weight: 900;
+  box-shadow: 0 1px 4px rgba(245, 158, 11, 0.35);
+}
+
+.hero-gear2__save-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
   background: var(--bg-slot);
   border: 1px solid var(--border-slot);
-  border-radius: var(--radius-sm);
-  padding: 4px 10px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  line-height: 1.2;
-}
-
-.hero-set-chip:hover {
-  color: var(--text-primary);
-  border-color: var(--border-accent);
-}
-
-.hero-set-chip.is-filled {
+  border-radius: 6px;
   color: var(--text-gold);
-  border-color: var(--border-accent);
-  box-shadow: 0 0 8px rgba(212, 134, 10, 0.25);
+  cursor: pointer;
+  transition: all 0.12s ease;
 }
 
-.hero-set-chip--save {
-  border-style: dashed;
+.hero-gear2__save-btn:hover {
+  border-color: var(--border-accent);
+  box-shadow: 0 0 6px rgba(212, 134, 10, 0.3);
 }
 
 .hero-gear2__sets-choose {
   position: absolute;
-  right: 0;
+  left: 0;
   top: calc(100% + 4px);
-  z-index: 20;
+  z-index: 30;
   display: flex;
   flex-direction: column;
   gap: 3px;
   background: var(--bg-card-dark);
   border: 1px solid var(--border-accent);
   border-radius: var(--radius-sm);
-  padding: 4px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+  padding: 6px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
+  min-width: 100px;
+}
+
+.hero-gear2__sets-choose-title {
+  font-family: var(--app-font-display);
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--text-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 4px 2px;
 }
 
 .hero-set-opt {
@@ -3433,11 +3481,104 @@
   cursor: pointer;
   white-space: nowrap;
   text-align: left;
+  transition: all 0.12s ease;
 }
 
 .hero-set-opt:hover {
   border-color: var(--border-accent);
   color: var(--text-gold);
+  background: rgba(212, 134, 10, 0.15);
+}
+
+.hero-gear2__center-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--app-font-display);
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--text-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+}
+
+.hero-gear2__bag-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hero-gear2__filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg-card-dark);
+  border: 1px solid var(--border-default);
+  border-radius: 7px;
+  padding: 2px;
+}
+
+.hero-gear2__filter-chip {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 11px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  line-height: 1;
+  opacity: 0.65;
+}
+
+.hero-gear2__filter-chip:hover {
+  opacity: 1;
+  background: var(--bg-slot);
+}
+
+.hero-gear2__filter-chip.is-active {
+  opacity: 1;
+  background: #3d2010;
+  border: 1px solid var(--border-accent);
+  box-shadow: 0 0 6px rgba(212, 134, 10, 0.3);
+}
+
+.hero-gear2__pager {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--app-font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.hero-gear2__pager-btn {
+  background: var(--bg-slot);
+  border: 1px solid var(--border-slot);
+  border-radius: 4px;
+  color: var(--text-gold);
+  font-size: 10px;
+  font-weight: 900;
+  width: 16px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.hero-gear2__pager-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 /* 2. Основная 3-колоночная область: Слева (2×7) | Центр (Манекен) | Справа (2×7) */
@@ -3452,7 +3593,7 @@
 
 .hero-gear2__slots-col {
   display: grid;
-  grid-template-columns: repeat(2, 38px);
+  grid-template-columns: repeat(2, 42px);
   gap: 4px;
   justify-content: center;
 }
@@ -3469,8 +3610,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 290px;
-  min-width: 110px;
+  height: 318px;
+  min-width: 120px;
   max-width: 180px;
   margin: 0 auto;
 }
@@ -3485,10 +3626,10 @@
 }
 
 .hero-gear2__doll img {
-  max-height: 275px;
+  max-height: 290px;
   width: auto;
   object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(10, 5, 0, 0.45));
+  filter: drop-shadow(0 6px 14px rgba(10, 5, 0, 0.5));
   z-index: 1;
 }
 
@@ -3497,10 +3638,10 @@
   bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
-  width: 70%;
+  width: 80%;
   height: 14px;
   border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(212, 134, 10, 0.35) 0%, rgba(30, 16, 6, 0.8) 50%, transparent 75%);
+  background: radial-gradient(ellipse at center, rgba(212, 134, 10, 0.35) 0%, rgba(30, 16, 6, 0.75) 45%, transparent 75%);
   pointer-events: none;
   z-index: 0;
 }
@@ -3512,95 +3653,191 @@
   gap: 4px;
 }
 
-.hero-gear2__inv-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 20px;
-  gap: 2px;
-  padding: 0 1px;
-}
-
-.hero-gear2__inv-filters {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.hero-gear2__filter-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 19px;
-  height: 19px;
-  padding: 0;
-  font-size: 11px;
-  border-radius: 4px;
-  border: 1px solid var(--border-slot);
-  background: var(--bg-slot);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.12s ease;
-  line-height: 1;
-}
-
-.hero-gear2__filter-chip:hover {
-  color: var(--text-primary);
-  border-color: var(--border-accent);
-}
-
-.hero-gear2__filter-chip.is-active {
-  background: var(--bg-card-dark);
-  color: var(--text-gold);
-  border-color: var(--border-accent);
-  box-shadow: 0 0 6px rgba(212, 134, 10, 0.25);
-}
-
-.hero-gear2__pager {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  font-family: var(--app-font-mono);
-  font-size: 9px;
-  font-weight: 800;
-  color: var(--text-muted);
-}
-
-.hero-gear2__pager-btn {
-  background: var(--bg-slot);
-  border: 1px solid var(--border-slot);
-  border-radius: 3px;
-  color: var(--text-gold);
-  font-size: 10px;
-  font-weight: 900;
-  padding: 0 4px;
-  cursor: pointer;
-  line-height: 14px;
-}
-
-.hero-gear2__pager-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
 .hero-gear2__inv-grid {
   display: grid;
-  grid-template-columns: repeat(2, 38px);
-  grid-template-rows: repeat(7, 38px);
+  grid-template-columns: repeat(2, 42px);
+  grid-template-rows: repeat(7, 42px);
   gap: 4px;
   justify-content: center;
 }
 
+/* ── Единый Squircle Слот экипировки и сумки (42×42) ── */
+.hero-sq-slot {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--border-slot);
+  background: linear-gradient(160deg, #2d180c, #1a0e06);
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+  user-select: none;
+  flex-shrink: 0;
+  outline: none;
+}
+
+.hero-sq-slot:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-accent);
+  z-index: 5;
+}
+
+.hero-sq-slot:active {
+  transform: translateY(0);
+}
+
+/* Пустой слот экипировки с силуэтом */
+.hero-sq-slot--empty {
+  background: linear-gradient(160deg, rgba(38, 20, 10, 0.7), rgba(20, 10, 4, 0.85));
+  border: 1px solid rgba(139, 78, 32, 0.45);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.hero-sq-slot--empty:hover {
+  border-color: var(--border-accent);
+  background: linear-gradient(160deg, rgba(48, 26, 12, 0.85), rgba(28, 14, 6, 0.95));
+}
+
+.hero-sq-slot__silhouette {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  opacity: 0.3;
+  filter: grayscale(1) brightness(0.9);
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.hero-sq-slot--empty:hover .hero-sq-slot__silhouette {
+  opacity: 0.55;
+}
+
+/* Пустая ячейка мини-сумки */
+.hero-sq-slot--empty-bag {
+  background: linear-gradient(160deg, rgba(30, 16, 8, 0.5), rgba(16, 8, 3, 0.7));
+  border: 1px dashed rgba(139, 78, 32, 0.35);
+  cursor: default;
+}
+
+.hero-sq-slot__empty-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border-slot);
+  opacity: 0.3;
+}
+
+/* Заблокированный слот (14-й) */
+.hero-sq-slot--locked {
+  background: linear-gradient(160deg, rgba(24, 12, 6, 0.85), rgba(14, 6, 2, 0.95));
+  border: 1px dashed rgba(139, 78, 32, 0.4);
+  opacity: 0.6;
+}
+
+.hero-sq-slot--locked:hover {
+  opacity: 0.9;
+  border-color: var(--border-accent);
+}
+
+.hero-sq-slot__lock {
+  font-size: 13px;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+/* Иконка предмета внутри слота */
+.hero-sq-slot__icon-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  pointer-events: none;
+}
+
+.hero-sq-slot__icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.hero-sq-slot__emoji {
+  font-size: 1.35rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+/* Двуручное оружие (ghost shield) */
+.hero-sq-slot.is-dimmed {
+  opacity: 0.45;
+  filter: grayscale(0.4);
+}
+
+/* Тир-бейдж в левом верхнем углу */
+.hero-sq-slot__tier {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  z-index: 10;
+  font-family: var(--app-font-mono);
+  font-size: 8px;
+  font-weight: 900;
+  line-height: 1;
+  color: #f5d880;
+  background: rgba(14, 7, 2, 0.92);
+  border: 0.5px solid rgba(245, 216, 128, 0.6);
+  padding: 1px 3px;
+  border-radius: 3px;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+/* Точка редкости в правом верхнем углу */
+.hero-sq-slot__dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  z-index: 10;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Количество предметов в сумке */
+.hero-sq-slot__qty {
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
+  z-index: 10;
+  font-family: var(--app-font-mono);
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1;
+  color: #f5d880;
+  background: rgba(14, 7, 2, 0.92);
+  border: 0.5px solid #6b3810;
+  padding: 1px 3px;
+  border-radius: 3px;
+  pointer-events: none;
+}
+
 /* 3. Снизу: Общие характеристики бонусов экипировки */
 .hero-gear2__stats-bar {
-  background: linear-gradient(160deg, rgba(46, 26, 12, 0.92), rgba(26, 14, 6, 0.96));
+  background: linear-gradient(160deg, rgba(38, 20, 10, 0.92), rgba(20, 10, 4, 0.96));
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
-  padding: 8px 10px;
+  padding: 6px 8px;
   box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.45);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   width: 100%;
 }
 
@@ -3614,6 +3851,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 0 2px;
 }
 
 .hero-gear2__stats-grid {
@@ -3626,38 +3864,44 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 8px;
+  padding: 5px 8px;
   background: var(--bg-slot);
   border: 1px solid var(--border-slot);
-  border-radius: 8px;
+  border-radius: 7px;
   box-shadow: var(--shadow-slot);
+  transition: all 0.12s ease;
 }
 
 .hero-gear2__stat-meta {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--text-light);
+  gap: 4px;
 }
 
-.hero-gear2__stat-circle {
-  min-width: 26px;
-  height: 26px;
-  padding: 0 4px;
-  border-radius: 9999px;
-  background: linear-gradient(135deg, #3a2208, #1e0e04);
-  border: 1.5px solid var(--border-accent);
-  box-shadow: 0 0 6px rgba(212, 134, 10, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--app-font-mono);
+.hero-gear2__stat-icon {
   font-size: 11px;
+  line-height: 1;
+}
+
+.hero-gear2__stat-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-light);
+  font-family: var(--app-font-sans);
+}
+
+.hero-gear2__stat-val {
+  font-family: var(--app-font-mono);
+  font-size: 12px;
   font-weight: 900;
   color: var(--text-gold);
-  flex-shrink: 0;
+  letter-spacing: -0.02em;
+}
+
+.hero-gear2__stat-val.is-zero {
+  color: var(--text-muted);
+  font-weight: 700;
+  opacity: 0.6;
 }
 
 /* Редкость тайлов сумки — только токены темы */
