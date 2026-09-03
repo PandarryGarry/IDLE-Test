@@ -528,11 +528,8 @@ PALM_FILL = (0.50, 0.63)   # у утверждённых 0.53–0.60
 
 - **Мастера 1024**: `art_masters/paper_dolls/upscale_1024/{avatarId}.png`
   (решение владельца 2026-09-03: всё нужное хранить в репозитории — ничего не потерять).
-- **Готово 20/30** (в ассетах): beastfolk ×6, dwarf_female ×3, dwarf_male_01/02,
-  elf ×6, human_male ×3.
-- **Осталось 10** (лимит генерации 10/тур): dwarf_male_03, human_female_01..03,
-  orc_female_01..03, orc_male_01..03 — continuation в следующем чате,
-  прогон по пайплайну из §13 без изменений.
+- **Готово 30/30 (все тела, 2026-09-03)**: все 5 рас × 6 персонажей.
+  Деривативы 384/768 в `public/assets/.../paper_dolls/bodies/` — в игре.
 - Пайплайн (проверен):
   1) `identify` размер; не квадратный → `-resize 1024x1024 -background white -gravity center -extent 1024x1024`;
   2) вырезка фона: `-fuzz 8% -fill none -draw "color 0,0 floodfill" … (4 угла)`;
