@@ -370,13 +370,13 @@ function BodyModule({
   );
 }
 
-const RARITY_THEME: Record<string, { border: string; bg: string; glow: string; dot: string }> = {
-  common:    { border: 'rgba(139, 78, 32, 0.7)', bg: 'linear-gradient(160deg, #2d180c, #1a0e06)', glow: 'none', dot: '#8b4e20' },
-  uncommon:  { border: 'rgba(58, 158, 80, 0.85)', bg: 'linear-gradient(160deg, #182e14, #0e1c0c)', glow: '0 0 8px rgba(58,158,80,0.35)', dot: '#3a9e50' },
-  rare:      { border: 'rgba(37, 99, 235, 0.85)', bg: 'linear-gradient(160deg, #122244, #0a1428)', glow: '0 0 10px rgba(37,99,235,0.35)', dot: '#2563eb' },
-  epic:      { border: 'rgba(147, 51, 234, 0.85)', bg: 'linear-gradient(160deg, #2c1244, #180a28)', glow: '0 0 12px rgba(147,51,234,0.4)', dot: '#9333ea' },
-  legendary: { border: 'rgba(217, 119, 6, 0.9)', bg: 'linear-gradient(160deg, #44240a, #281404)', glow: '0 0 14px rgba(217,119,6,0.45)', dot: '#f59e0b' },
-  mythic:    { border: 'rgba(220, 38, 38, 0.9)', bg: 'linear-gradient(160deg, #440e14, #28060a)', glow: '0 0 16px rgba(220,38,38,0.5)', dot: '#ef4444' },
+const RARITY_DOT: Record<string, string> = {
+  common: '#8b4e20',
+  uncommon: '#22c55e',
+  rare: '#3b82f6',
+  epic: '#a855f7',
+  legendary: '#f59e0b',
+  mythic: '#ef4444',
 };
 
 function GearModule({
@@ -407,24 +407,18 @@ function GearModule({
     setActiveSetIndex(index);
     onGearSetsChanged();
     setSaveOpen(false);
-    notifyInfo(`Набор ${index + 1} сохранён`);
   };
 
   const loadSet = (index: number) => {
     const result = loadGearSet(index);
     if (!result.ok) {
       if (result.reason === 'bag-full') {
-        notifyInfo('Сумка заполнена — освободите места, чтобы надеть набор');
-      } else {
-        notifyInfo(`Набор ${index + 1} пуст. Нажмите 💾, чтобы сохранить текущий набор`);
+        notifyInfo('Сумка заполнена — освободите места');
       }
       return;
     }
     setActiveSetIndex(index);
     onGearSetsChanged();
-    notifyInfo(result.partial
-      ? `Набор ${index + 1} надет. Часть предметов не найдена в сумке`
-      : presets[index] ? `Набор ${index + 1} надет` : `Набор ${index + 1} (пустой) — экипировка снята в сумку`);
   };
 
   const handleFilterChange = (f: BagFilter) => {
@@ -433,10 +427,7 @@ function GearModule({
   };
 
   const handleEquipSlotClick = (slot: EquipSlot | 'locked') => {
-    if (slot === 'locked') {
-      notifyInfo('🔒 Будущий контент — этот слот станет доступен в следующих обновлениях');
-      return;
-    }
+    if (slot === 'locked') return;
     setSelectedSlot(slot);
     setSelectedBagItemId(null);
     const ghostLeft = slot === 'shield' && twoHand;
@@ -453,7 +444,6 @@ function GearModule({
         setFilter('armor');
       }
       setPage(0);
-      notifyInfo(`Слот «${GEAR_LABEL[slot]}» пуст. Выберите предмет из сумки справа.`);
     }
   };
 
@@ -489,7 +479,6 @@ function GearModule({
 
   const handleEmptyBagSlotClick = () => {
     setSelectedBagItemId(null);
-    notifyInfo(`Пустая ячейка сумки (свободно ${emptyPlaceholders} мест)`);
   };
 
   const activeStats = STAT_BADGES.filter(
@@ -768,7 +757,6 @@ function HeroEquipSlotCard({
   const visual = slotVisual(itemId, slot);
   const rarity = itemId && item ? getItemRarity(itemId, item.sellValue, item.equipSlot) : 'common';
   const tier = itemId && item ? getItemTier(itemId, item) : undefined;
-  const rs = RARITY_THEME[rarity] || RARITY_THEME.common;
 
   if (!itemId) {
     return (
@@ -788,11 +776,6 @@ function HeroEquipSlotCard({
       type="button"
       onClick={() => onOpen(ghostLeft ? 'weapon' : slot)}
       className={`hero-sq-slot hero-sq-slot--equipped ${ghostLeft ? 'is-dimmed' : ''} ${isSelected ? 'is-selected' : ''} ${isMatchingTarget ? 'is-matching-target' : ''}`}
-      style={{
-        background: rs.bg,
-        borderColor: rs.border,
-        boxShadow: rs.glow !== 'none' ? `var(--shadow-slot), ${rs.glow}` : 'var(--shadow-slot)',
-      }}
       title={ghostLeft ? `${slotDef.label} · двуручное` : `${item?.name ?? ''} (${slotDef.label})`}
     >
       {tier && (
@@ -803,7 +786,7 @@ function HeroEquipSlotCard({
       {rarity !== 'common' && (
         <span
           className="hero-sq-slot__dot"
-          style={{ background: rs.dot, boxShadow: rs.glow !== 'none' ? rs.glow : 'none' }}
+          style={{ background: RARITY_DOT[rarity] || '#8b4e20' }}
         />
       )}
       <div className="hero-sq-slot__icon-wrap">
@@ -835,27 +818,19 @@ function HeroBagSlotCard({
         onClick={onEmptyClick}
         className="hero-sq-slot hero-sq-slot--empty-bag"
         title="Пустая ячейка"
-      >
-        <div className="hero-sq-slot__empty-dot" />
-      </button>
+      />
     );
   }
 
   const visual = getItemVisual(item.id);
   const rarity = getItemRarity(item.id, item.sellValue, equipSlot);
   const tier = getItemTier(item.id, item);
-  const rs = RARITY_THEME[rarity] || RARITY_THEME.common;
 
   return (
     <button
       type="button"
       onClick={() => onOpen?.(item, equipSlot)}
       className={`hero-sq-slot hero-sq-slot--bag-item ${isSelected ? 'is-selected' : ''} ${isCompatible ? 'is-compatible' : ''}`}
-      style={{
-        background: rs.bg,
-        borderColor: rs.border,
-        boxShadow: rs.glow !== 'none' ? `var(--shadow-slot), ${rs.glow}` : 'var(--shadow-slot)',
-      }}
       title={`${item.name} · ${GEAR_LABEL[equipSlot] ?? equipSlot}`}
     >
       {tier && (
@@ -866,7 +841,7 @@ function HeroBagSlotCard({
       {rarity !== 'common' && (
         <span
           className="hero-sq-slot__dot"
-          style={{ background: rs.dot, boxShadow: rs.glow !== 'none' ? rs.glow : 'none' }}
+          style={{ background: RARITY_DOT[rarity] || '#8b4e20' }}
         />
       )}
       <div className="hero-sq-slot__icon-wrap">

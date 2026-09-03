@@ -31,9 +31,8 @@ export function SquircleSlot({ itemId, quantity, locked = false, isEmptyPlacehol
   if (isEmptyPlaceholder || !itemId) {
     return (
       <div className={`g-slot-empty ${className}`}
-        style={{ borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 10, height: 10, borderRadius: '50%', border: '1.5px solid var(--border-slot)', opacity: 0.5 }} />
-      </div>
+        style={{ borderRadius: 10, aspectRatio: '1/1', width: '100%' }}
+      />
     );
   }
 
