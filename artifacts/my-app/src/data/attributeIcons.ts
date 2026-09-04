@@ -6,69 +6,64 @@ import type { EquipSlot } from './types';
 /** Лицо слота — WebP из public/assets/icons. Текст в слот не кладём. */
 
 export const PILLAR_ICON: Record<PillarId, string> = {
-  fortitude: iconUrl('stats/stat_defense'),
-  might: iconUrl('stats/stat_strength'),
-  finesse: iconUrl('stats/stat_agility'),
-  instinct: iconUrl('stats/stat_luck'),
+  fortitude: iconUrl('pillars/pillar_fortitude'),
+  might: iconUrl('pillars/pillar_might'),
+  finesse: iconUrl('pillars/pillar_finesse'),
+  instinct: iconUrl('pillars/pillar_instinct'),
 };
 
 export const BRANCH_ICON: Record<BranchId, string> = {
-  health: iconUrl('stats/stat_health'),
-  armor: iconUrl('skills/skill_shield_block'),
-  will: iconUrl('skills/skill_heal'),
-  strike: iconUrl('skills/skill_sword_strike'),
-  onslaught: iconUrl('skills/skill_crit_strike'),
-  destruction: iconUrl('skills/skill_ultimate'),
-  tempo: iconUrl('stats/stat_speed'),
-  evasion: iconUrl('stats/stat_agility'),
-  reaction: iconUrl('skills/skill_lightning'),
-  luck: iconUrl('stats/stat_luck'),
-  resourcefulness: iconUrl('stats/stat_xp'),
-  intuition: iconUrl('skills/skill_buff_strength'),
+  health: iconUrl('branches/branch_health'),
+  armor: iconUrl('branches/branch_armor'),
+  will: iconUrl('branches/branch_will'),
+  strike: iconUrl('branches/branch_strike'),
+  onslaught: iconUrl('branches/branch_onslaught'),
+  destruction: iconUrl('branches/branch_destruction'),
+  tempo: iconUrl('branches/branch_tempo'),
+  evasion: iconUrl('branches/branch_evasion'),
+  reaction: iconUrl('branches/branch_reaction'),
+  luck: iconUrl('branches/branch_luck'),
+  resourcefulness: iconUrl('branches/branch_resourcefulness'),
+  intuition: iconUrl('branches/branch_intuition'),
 };
 
-/**
- * Глубинные пассивки пока без собственного арта: берём существующие иконки
- * навыков и статов по смыслу. Новый арт — отдельной задачей через
- * scripts/assets/optimize.mjs.
- */
 export const PASSIVE_ICON: Record<PassiveId, string> = {
-  second_wind: iconUrl('skills/skill_heal'),
-  deep_sleep: iconUrl('stats/stat_health'),
-  buckler: iconUrl('skills/skill_shield_block'),
-  bone_shell: iconUrl('stats/stat_defense'),
-  steady_spirit: iconUrl('skills/skill_buff_strength'),
-  unbroken: iconUrl('stats/stat_magic'),
+  second_wind: iconUrl('passives/passive_second_wind'),
+  deep_sleep: iconUrl('passives/passive_deep_sleep'),
+  buckler: iconUrl('passives/passive_buckler'),
+  bone_shell: iconUrl('passives/passive_bone_shell'),
+  steady_spirit: iconUrl('passives/passive_steady_spirit'),
+  unbroken: iconUrl('passives/passive_unbroken'),
 
-  heavy_hand: iconUrl('skills/skill_sword_strike'),
-  piercing: iconUrl('stats/stat_attack'),
-  sweeping: iconUrl('skills/skill_ultimate'),
-  stagger: iconUrl('stats/stat_crit'),
-  bone_breaker: iconUrl('skills/skill_crit_strike'),
-  finisher: iconUrl('stats/stat_strength'),
+  heavy_hand: iconUrl('passives/passive_heavy_hand'),
+  piercing: iconUrl('passives/passive_piercing'),
+  sweeping: iconUrl('passives/passive_sweeping'),
+  stagger: iconUrl('passives/passive_stagger'),
+  bone_breaker: iconUrl('passives/passive_bone_breaker'),
+  finisher: iconUrl('passives/passive_finisher'),
 
-  light_step: iconUrl('stats/stat_speed'),
-  nimble: iconUrl('skills/skill_arrow_shot'),
-  shade: iconUrl('skills/skill_frost_nova'),
-  slip_away: iconUrl('stats/stat_agility'),
-  flash: iconUrl('skills/skill_lightning'),
-  anticipation: iconUrl('stats/stat_ranged'),
+  light_step: iconUrl('passives/passive_light_step'),
+  nimble: iconUrl('passives/passive_nimble'),
+  shade: iconUrl('passives/passive_shade'),
+  slip_away: iconUrl('passives/passive_slip_away'),
+  flash: iconUrl('passives/passive_flash'),
+  anticipation: iconUrl('passives/passive_anticipation'),
 
-  lucky_break: iconUrl('stats/stat_luck'),
-  hoard_sense: iconUrl('skills/skill_fireball'),
-  thrifty: iconUrl('skills/skill_poison'),
-  knows_value: iconUrl('stats/stat_mana'),
-  nose: iconUrl('skills/skill_ice_shard'),
-  experience: iconUrl('stats/stat_xp'),
+  lucky_break: iconUrl('passives/passive_lucky_break'),
+  hoard_sense: iconUrl('passives/passive_hoard_sense'),
+  thrifty: iconUrl('passives/passive_thrifty'),
+  knows_value: iconUrl('passives/passive_knows_value'),
+  nose: iconUrl('passives/passive_nose'),
+  experience: iconUrl('passives/passive_experience'),
 };
 
 export const SYNERGY_ICON: Record<SynergyId, string> = {
-  solid_strike: iconUrl('skills/skill_sword_strike'),
-  quick_eye: iconUrl('stats/stat_crit'),
-  unstoppable: iconUrl('skills/skill_crit_strike'),
-  lucky_survivor: iconUrl('skills/skill_heal'),
-  tempo_master: iconUrl('stats/stat_speed'),
-  destroyer: iconUrl('skills/skill_ultimate'),
+  solid_strike: iconUrl('threads/synergy_solid_strike'),
+  quick_eye: iconUrl('threads/synergy_quick_eye'),
+  unstoppable: iconUrl('threads/synergy_unstoppable'),
+  lucky_survivor: iconUrl('threads/synergy_lucky_survivor'),
+  tempo_master: iconUrl('threads/synergy_tempo_master'),
+  destroyer: iconUrl('threads/synergy_destroyer'),
 };
 
 export const EQUIP_SLOT_ICON: Record<EquipSlot, string> = {

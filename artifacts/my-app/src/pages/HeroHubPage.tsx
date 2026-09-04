@@ -877,21 +877,21 @@ interface SoonThread {
  * порогов и эффектов не выдумываем — их в данных игры ещё нет.
  */
 const SOON_THREADS: readonly SoonThread[] = [
-  { id: 'soon_wall_of_muscle', nameRu: 'Стена мышц', icon: iconUrl('skills/skill_shield_block') },
-  { id: 'soon_blade_dance', nameRu: 'Танец клинка', icon: iconUrl('skills/skill_crit_strike') },
-  { id: 'soon_storm_eye', nameRu: 'Око бури', icon: iconUrl('stats/stat_crit') },
-  { id: 'soon_blood_oath', nameRu: 'Клятва крови', icon: iconUrl('skills/skill_heal') },
-  { id: 'soon_second_wind', nameRu: 'Второй ветер', icon: iconUrl('stats/stat_speed') },
-  { id: 'soon_crown_hunter', nameRu: 'Охотник на корон', icon: iconUrl('skills/skill_ultimate') },
-  { id: 'soon_iron_grip', nameRu: 'Железная хватка', icon: iconUrl('skills/skill_sword_strike') },
-  { id: 'soon_thunder_step', nameRu: 'Громовой шаг', icon: iconUrl('skills/skill_lightning') },
-  { id: 'soon_wind_shadow', nameRu: 'Тень ветра', icon: iconUrl('skills/skill_arrow_shot') },
-  { id: 'soon_stone_skin', nameRu: 'Каменная кожа', icon: iconUrl('stats/stat_defense') },
-  { id: 'soon_steel_vortex', nameRu: 'Стальной вихрь', icon: iconUrl('skills/skill_ultimate') },
-  { id: 'soon_ancestors_call', nameRu: 'Зов предков', icon: iconUrl('skills/skill_buff_strength') },
-  { id: 'soon_dark_bargain', nameRu: 'Тёмная сделка', icon: iconUrl('skills/skill_poison') },
-  { id: 'soon_storm_fury', nameRu: 'Ярость бури', icon: iconUrl('skills/skill_fireball') },
-  { id: 'soon_root_of_life', nameRu: 'Корень жизни', icon: iconUrl('skills/skill_heal') },
+  { id: 'soon_wall_of_muscle', nameRu: 'Стена мышц', icon: iconUrl('threads/soon_wall_of_muscle') },
+  { id: 'soon_blade_dance', nameRu: 'Танец клинка', icon: iconUrl('threads/soon_blade_dance') },
+  { id: 'soon_storm_eye', nameRu: 'Око бури', icon: iconUrl('threads/soon_storm_eye') },
+  { id: 'soon_blood_oath', nameRu: 'Клятва крови', icon: iconUrl('threads/soon_blood_oath') },
+  { id: 'soon_second_wind', nameRu: 'Второй ветер', icon: iconUrl('threads/soon_second_wind') },
+  { id: 'soon_crown_hunter', nameRu: 'Охотник на корон', icon: iconUrl('threads/soon_crown_hunter') },
+  { id: 'soon_iron_grip', nameRu: 'Железная хватка', icon: iconUrl('threads/soon_iron_grip') },
+  { id: 'soon_thunder_step', nameRu: 'Громовой шаг', icon: iconUrl('threads/soon_thunder_step') },
+  { id: 'soon_wind_shadow', nameRu: 'Тень ветра', icon: iconUrl('threads/soon_wind_shadow') },
+  { id: 'soon_stone_skin', nameRu: 'Каменная кожа', icon: iconUrl('threads/soon_stone_skin') },
+  { id: 'soon_steel_vortex', nameRu: 'Стальной вихрь', icon: iconUrl('threads/soon_steel_vortex') },
+  { id: 'soon_ancestors_call', nameRu: 'Зов предков', icon: iconUrl('threads/soon_ancestors_call') },
+  { id: 'soon_dark_bargain', nameRu: 'Тёмная сделка', icon: iconUrl('threads/soon_dark_bargain') },
+  { id: 'soon_storm_fury', nameRu: 'Ярость бури', icon: iconUrl('threads/soon_storm_fury') },
+  { id: 'soon_root_of_life', nameRu: 'Корень жизни', icon: iconUrl('threads/soon_root_of_life') },
 ];
 
 function synergyReqs(s: SynergyDef): [PillarId, number][] {
