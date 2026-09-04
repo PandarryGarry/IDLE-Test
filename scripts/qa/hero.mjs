@@ -320,6 +320,14 @@ async function runShots(browser, only) {
     });
     await sleep(400);
     await snap(page, '04d-mobile-gear-right-selected');
+
+    // Click on empty slot on the right
+    await page.evaluate(() => {
+      const emptyBagSlots = document.querySelectorAll('.hero-sq-slot--empty-bag');
+      emptyBagSlots[0]?.click();
+    });
+    await sleep(400);
+    await snap(page, '04e-mobile-gear-right-empty-selected');
   }
   if (only === 'all' || only === 'synergies') {
     await clickTab(page, 'Нити');

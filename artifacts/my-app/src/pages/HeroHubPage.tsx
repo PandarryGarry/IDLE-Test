@@ -678,7 +678,11 @@ function GearModule({
             {Array.from({ length: emptyPlaceholders }).map((_, idx) => (
               <HeroBagSlotCard
                 key={`empty-${idx}`}
-                onEmptyClick={handleEmptyBagSlotClick}
+                isSelected={selectedBagItemId === `empty-${idx}`}
+                onEmptyClick={() => {
+                  setSelectedBagItemId(`empty-${idx}`);
+                  setSelectedSlot(null);
+                }}
               />
             ))}
           </div>
@@ -816,7 +820,7 @@ function HeroBagSlotCard({
       <button
         type="button"
         onClick={onEmptyClick}
-        className="hero-sq-slot hero-sq-slot--empty-bag"
+        className={`hero-sq-slot hero-sq-slot--empty-bag ${isSelected ? 'is-selected' : ''}`}
         title="Пустая ячейка"
       />
     );

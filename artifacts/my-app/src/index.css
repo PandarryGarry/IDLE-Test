@@ -3612,8 +3612,9 @@
   justify-content: center;
   height: 318px;
   min-width: 120px;
-  max-width: 180px;
+  max-width: 190px;
   margin: 0 auto;
+  overflow: visible;
 }
 
 .hero-gear2__doll {
@@ -3623,25 +3624,29 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: visible;
 }
 
 .hero-gear2__doll img {
-  max-height: 290px;
+  height: 318px;
+  max-height: none;
   width: auto;
   object-fit: contain;
-  filter: drop-shadow(0 6px 14px rgba(10, 5, 0, 0.5));
+  filter: drop-shadow(0 8px 16px rgba(10, 5, 0, 0.55));
   z-index: 1;
+  transform: scale(1.88) translateY(6px);
+  pointer-events: none;
 }
 
 .hero-gear2__pedestal {
   position: absolute;
-  bottom: 8px;
+  bottom: 4px;
   left: 50%;
   transform: translateX(-50%);
-  width: 80%;
-  height: 14px;
+  width: 130px;
+  height: 16px;
   border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(212, 134, 10, 0.35) 0%, rgba(30, 16, 6, 0.75) 45%, transparent 75%);
+  background: radial-gradient(ellipse at center, rgba(212, 134, 10, 0.45) 0%, rgba(30, 16, 6, 0.85) 55%, transparent 75%);
   pointer-events: none;
   z-index: 0;
 }
@@ -3672,7 +3677,7 @@
   justify-content: center;
   padding: 0;
   border: 1px solid rgba(107, 56, 16, 0.7);
-  background: linear-gradient(160deg, #2a160a, #1a0e06);
+  background: linear-gradient(160deg, #2e180c, #1e0e06);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
   cursor: pointer;
   transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
@@ -3691,109 +3696,36 @@
 .hero-sq-slot:active {
   transform: scale(0.92) !important;
   border-color: #fbbf24 !important;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.95), inset 0 0 5px rgba(251, 191, 36, 0.6) !important;
+  z-index: 25 !important;
 }
 
 /* Пустой слот экипировки с силуэтом */
 .hero-sq-slot--empty {
-  background: linear-gradient(160deg, rgba(38, 20, 10, 0.7), rgba(20, 10, 4, 0.85));
-  border: 1px solid rgba(139, 78, 32, 0.5);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.4);
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(0, 0, 0, 0.2) 2px,
+      rgba(0, 0, 0, 0.2) 4px,
+      transparent 4px,
+      transparent 7px,
+      rgba(215, 140, 70, 0.22) 7px,
+      rgba(215, 140, 70, 0.22) 9px,
+      transparent 9px,
+      transparent 13px,
+      rgba(0, 0, 0, 0.15) 13px,
+      rgba(0, 0, 0, 0.15) 15px
+    ),
+    linear-gradient(165deg, #522d16 0%, #3d2010 50%, #29150a 100%);
+  border: 1px solid rgba(160, 95, 45, 0.65);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.45);
 }
 
 .hero-sq-slot--empty:hover {
   border-color: #f59e0b;
-  background: linear-gradient(160deg, rgba(48, 26, 12, 0.85), rgba(28, 14, 6, 0.95));
-}
-
-/* Векторный силуэт пустых слотов */
-.hero-sq-slot__vector-icon {
-  width: 20px;
-  height: 20px;
-  color: #a0784a;
-  opacity: 0.55;
-  transition: all 0.15s ease;
-  pointer-events: none;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
-}
-
-.hero-sq-slot--empty:hover .hero-sq-slot__vector-icon,
-.hero-sq-slot:hover .hero-sq-slot__vector-icon {
-  opacity: 0.9;
-  color: #f59e0b;
-  transform: scale(1.1);
-}
-
-.hero-sq-slot.is-selected .hero-sq-slot__vector-icon {
-  opacity: 1;
-  color: #fbbf24;
-  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.8));
-}
-
-.hero-sq-slot__silhouette {
-  width: 22px;
-  height: 22px;
-  object-fit: contain;
-  opacity: 0.55;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
-  pointer-events: none;
-  transition: all 0.15s ease;
-}
-
-/* Выделение активного слота при выборе / клике (золотое пульсирующее свечение) */
-.hero-sq-slot.is-selected {
-  border-color: #f59e0b !important;
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.95), inset 0 0 6px rgba(245, 158, 11, 0.55) !important;
-  transform: scale(1.06);
-  z-index: 15;
-  animation: hero-slot-pulse 1.8s infinite ease-in-out;
-}
-
-@keyframes hero-slot-pulse {
-  0% {
-    box-shadow: 0 0 8px rgba(245, 158, 11, 0.65), inset 0 0 3px rgba(245, 158, 11, 0.35);
-  }
-  50% {
-    box-shadow: 0 0 18px rgba(245, 158, 11, 1), inset 0 0 8px rgba(245, 158, 11, 0.7);
-  }
-  100% {
-    box-shadow: 0 0 8px rgba(245, 158, 11, 0.65), inset 0 0 3px rgba(245, 158, 11, 0.35);
-  }
-}
-
-/* Подсветка совместимых предметов в сумке при выборе слота экипировки */
-.hero-sq-slot.is-compatible,
-.hero-sq-slot.is-matching {
-  border-color: #f59e0b !important;
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.7), inset 0 0 4px rgba(245, 158, 11, 0.4) !important;
-  animation: hero-slot-pulse 2s infinite ease-in-out;
-  z-index: 8;
-}
-
-/* Подсветка целевого слота экипировки при выборе предмета в сумке */
-.hero-sq-slot.is-matching-target {
-  border-color: #38bdf8 !important;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.8), inset 0 0 5px rgba(56, 189, 248, 0.45) !important;
-  animation: hero-slot-target-pulse 1.8s infinite ease-in-out;
-  z-index: 10;
-}
-
-@keyframes hero-slot-target-pulse {
-  0% {
-    box-shadow: 0 0 6px rgba(56, 189, 248, 0.5), inset 0 0 2px rgba(56, 189, 248, 0.25);
-  }
-  50% {
-    box-shadow: 0 0 16px rgba(56, 189, 248, 0.95), inset 0 0 7px rgba(56, 189, 248, 0.6);
-  }
-  100% {
-    box-shadow: 0 0 6px rgba(56, 189, 248, 0.5), inset 0 0 2px rgba(56, 189, 248, 0.25);
-  }
-}
-
-/* Пустая ячейка мини-сумки и инвентаря — текстура коры дерева */
-.hero-sq-slot--empty-bag,
-.g-slot-empty {
   background: 
-    linear-gradient(170deg, #2b1509 0%, #1c0d05 55%, #130803 100%),
     repeating-linear-gradient(
       90deg,
       transparent 0px,
@@ -3802,49 +3734,169 @@
       rgba(0, 0, 0, 0.24) 4px,
       transparent 4px,
       transparent 7px,
-      rgba(85, 45, 18, 0.2) 7px,
-      rgba(85, 45, 18, 0.2) 9px
-    ) !important;
-  border: 1px solid rgba(85, 46, 20, 0.65) !important;
-  border-radius: 9px !important;
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6), inset 0 0 4px rgba(10, 5, 2, 0.7) !important;
+      rgba(240, 160, 80, 0.28) 7px,
+      rgba(240, 160, 80, 0.28) 9px,
+      transparent 9px,
+      transparent 13px,
+      rgba(0, 0, 0, 0.18) 13px,
+      rgba(0, 0, 0, 0.18) 15px
+    ),
+    linear-gradient(165deg, #63381c 0%, #4a2814 50%, #341a0c 100%);
+}
+
+/* Векторный силуэт пустых слотов */
+.hero-sq-slot__vector-icon {
+  width: 20px;
+  height: 20px;
+  color: #b8864e;
+  opacity: 0.6;
+  transition: all 0.15s ease;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+
+.hero-sq-slot--empty:hover .hero-sq-slot__vector-icon,
+.hero-sq-slot:hover .hero-sq-slot__vector-icon {
+  opacity: 0.95;
+  color: #f59e0b;
+  transform: scale(1.1);
+}
+
+.hero-sq-slot.is-selected .hero-sq-slot__vector-icon {
+  opacity: 1;
+  color: #fbbf24;
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.85));
+}
+
+.hero-sq-slot__silhouette {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  opacity: 0.6;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+  pointer-events: none;
+  transition: all 0.15s ease;
+}
+
+/* Выделение активного слота при выборе / клике (яркое золотое пульсирующее свечение) */
+.hero-sq-slot.is-selected,
+.hero-sq-slot--empty-bag.is-selected,
+.hero-sq-slot--bag-item.is-selected,
+.hero-sq-slot--equipped.is-selected,
+.hero-sq-slot--empty.is-selected {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 1), 0 0 6px rgba(245, 158, 11, 0.8), inset 0 0 6px rgba(245, 158, 11, 0.6) !important;
+  transform: scale(1.08) !important;
+  z-index: 20 !important;
+  animation: hero-slot-pulse 1.8s infinite ease-in-out !important;
+}
+
+@keyframes hero-slot-pulse {
+  0% {
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.8), inset 0 0 4px rgba(245, 158, 11, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 1), 0 0 8px rgba(251, 191, 36, 0.9), inset 0 0 8px rgba(245, 158, 11, 0.75);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.8), inset 0 0 4px rgba(245, 158, 11, 0.45);
+  }
+}
+
+/* Подсветка совместимых предметов в сумке при выборе слота экипировки */
+.hero-sq-slot.is-compatible,
+.hero-sq-slot--bag-item.is-compatible {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.85), inset 0 0 5px rgba(245, 158, 11, 0.45) !important;
+  animation: hero-slot-pulse 2s infinite ease-in-out !important;
+  z-index: 10 !important;
+}
+
+/* Подсветка целевого слота экипировки при выборе предмета в сумке */
+.hero-sq-slot.is-matching-target {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.9), 0 0 6px rgba(56, 189, 248, 0.6), inset 0 0 6px rgba(56, 189, 248, 0.5) !important;
+  animation: hero-slot-target-pulse 1.8s infinite ease-in-out !important;
+  z-index: 10 !important;
+}
+
+@keyframes hero-slot-target-pulse {
+  0% {
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.6), inset 0 0 3px rgba(56, 189, 248, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(56, 189, 248, 1), inset 0 0 8px rgba(56, 189, 248, 0.65);
+  }
+  100% {
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.6), inset 0 0 3px rgba(56, 189, 248, 0.3);
+  }
+}
+
+/* Пустая ячейка мини-сумки и инвентаря — тёплая выраженная текстура коры дерева */
+.hero-sq-slot--empty-bag,
+.g-slot-empty {
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(0, 0, 0, 0.2) 2px,
+      rgba(0, 0, 0, 0.2) 4px,
+      transparent 4px,
+      transparent 7px,
+      rgba(215, 140, 70, 0.22) 7px,
+      rgba(215, 140, 70, 0.22) 9px,
+      transparent 9px,
+      transparent 13px,
+      rgba(0, 0, 0, 0.15) 13px,
+      rgba(0, 0, 0, 0.15) 15px
+    ),
+    linear-gradient(165deg, #522d16 0%, #3d2010 50%, #29150a 100%);
+  border: 1px solid rgba(160, 95, 45, 0.65);
+  border-radius: 9px;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.45), inset 0 0 3px rgba(30, 15, 6, 0.5);
   cursor: pointer;
   aspect-ratio: 1;
 }
 
 .hero-sq-slot--empty-bag:hover,
 .g-slot-empty:hover {
-  border-color: rgba(245, 158, 11, 0.5) !important;
+  border-color: rgba(245, 158, 11, 0.85);
   background: 
-    linear-gradient(170deg, #361a0b 0%, #221006 55%, #180a03 100%),
     repeating-linear-gradient(
       90deg,
       transparent 0px,
       transparent 2px,
-      rgba(0, 0, 0, 0.28) 2px,
-      rgba(0, 0, 0, 0.28) 4px,
+      rgba(0, 0, 0, 0.24) 2px,
+      rgba(0, 0, 0, 0.24) 4px,
       transparent 4px,
       transparent 7px,
-      rgba(105, 55, 22, 0.25) 7px,
-      rgba(105, 55, 22, 0.25) 9px
-    ) !important;
+      rgba(240, 160, 80, 0.28) 7px,
+      rgba(240, 160, 80, 0.28) 9px,
+      transparent 9px,
+      transparent 13px,
+      rgba(0, 0, 0, 0.18) 13px,
+      rgba(0, 0, 0, 0.18) 15px
+    ),
+    linear-gradient(165deg, #63381c 0%, #4a2814 50%, #341a0c 100%);
 }
 
 .hero-sq-slot--empty-bag:active,
 .g-slot-empty:active {
   transform: scale(0.93) !important;
-  border-color: #f59e0b !important;
+  border-color: #fbbf24 !important;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.95), inset 0 0 5px rgba(251, 191, 36, 0.6) !important;
 }
 
 /* Заблокированный слот (14-й) */
 .hero-sq-slot--locked {
-  background: linear-gradient(160deg, rgba(24, 12, 6, 0.85), rgba(14, 6, 2, 0.95));
-  border: 1px solid rgba(139, 78, 32, 0.4);
-  opacity: 0.6;
+  background: linear-gradient(160deg, rgba(34, 18, 9, 0.85), rgba(20, 10, 4, 0.95));
+  border: 1px solid rgba(139, 78, 32, 0.45);
+  opacity: 0.65;
 }
 
 .hero-sq-slot--locked:hover {
-  opacity: 0.9;
+  opacity: 0.95;
   border-color: #f59e0b;
 }
 
