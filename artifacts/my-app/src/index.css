@@ -4200,9 +4200,12 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 2px 2px 9px;
+  padding: 10px 12px;
   margin-bottom: 10px;
-  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-slot);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-slot);
 }
 
 .hero-thread-summary__l {
@@ -4211,16 +4214,16 @@
 
 .hero-thread-summary__title {
   font-family: var(--app-font-display);
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 900;
   letter-spacing: 0.06em;
-  color: var(--bg-header);
+  color: var(--text-gold);
   text-transform: uppercase;
 }
 
 .hero-thread-summary__title i {
   font-style: normal;
-  color: var(--accent-gold);
+  color: var(--accent-gold-light);
 }
 
 .hero-thread-summary__sub {
@@ -4229,36 +4232,43 @@
   font-family: var(--app-font-mono);
   font-size: 9px;
   letter-spacing: 0.06em;
-  color: var(--border-default);
+  color: var(--text-muted);
   text-transform: uppercase;
 }
 
 .hero-thread-summary__pillars {
   display: flex;
-  gap: 5px;
+  gap: 8px;
   margin-left: auto;
 }
 
 .hero-thread-summary__pill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 7px;
-  border-radius: var(--radius-sm);
-  background: var(--slot-wood);
-  box-shadow: var(--shadow-slot-wood);
+  gap: 3px;
 }
 
 .hero-thread-summary__pill img {
-  width: 14px;
-  height: 14px;
+  width: 20px;
+  height: 20px;
   object-fit: contain;
 }
 
-.hero-thread-summary__pill b {
-  font-family: var(--app-font-mono);
-  font-size: 11px;
+.hero-thread-summary__pillnum {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-header);
+  border: 1px solid var(--border-accent);
   color: var(--text-gold);
+  font-family: var(--app-font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .hero-thread-tabs {

@@ -883,6 +883,15 @@ const SOON_THREADS: readonly SoonThread[] = [
   { id: 'soon_blood_oath', nameRu: 'Клятва крови', icon: iconUrl('skills/skill_heal') },
   { id: 'soon_second_wind', nameRu: 'Второй ветер', icon: iconUrl('stats/stat_speed') },
   { id: 'soon_crown_hunter', nameRu: 'Охотник на корон', icon: iconUrl('skills/skill_ultimate') },
+  { id: 'soon_iron_grip', nameRu: 'Железная хватка', icon: iconUrl('skills/skill_sword_strike') },
+  { id: 'soon_thunder_step', nameRu: 'Громовой шаг', icon: iconUrl('skills/skill_lightning') },
+  { id: 'soon_wind_shadow', nameRu: 'Тень ветра', icon: iconUrl('skills/skill_arrow_shot') },
+  { id: 'soon_stone_skin', nameRu: 'Каменная кожа', icon: iconUrl('stats/stat_defense') },
+  { id: 'soon_steel_vortex', nameRu: 'Стальной вихрь', icon: iconUrl('skills/skill_ultimate') },
+  { id: 'soon_ancestors_call', nameRu: 'Зов предков', icon: iconUrl('skills/skill_buff_strength') },
+  { id: 'soon_dark_bargain', nameRu: 'Тёмная сделка', icon: iconUrl('skills/skill_poison') },
+  { id: 'soon_storm_fury', nameRu: 'Ярость бури', icon: iconUrl('skills/skill_fireball') },
+  { id: 'soon_root_of_life', nameRu: 'Корень жизни', icon: iconUrl('skills/skill_heal') },
 ];
 
 function synergyReqs(s: SynergyDef): [PillarId, number][] {
@@ -989,7 +998,7 @@ function SynergiesModule({
           {PILLAR_IDS.map(id => (
             <span key={id} className="hero-thread-summary__pill">
               <img src={PILLAR_ICON[id]} alt="" decoding="async" />
-              <b>{Math.round(pillars[id])}</b>
+              <span className="hero-thread-summary__pillnum">{Math.round(pillars[id])}</span>
             </span>
           ))}
         </div>
