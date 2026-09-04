@@ -3702,54 +3702,22 @@
 
 /* Пустой слот экипировки с силуэтом */
 .hero-sq-slot--empty {
-  background: 
-    repeating-linear-gradient(
-      90deg,
-      transparent 0px,
-      transparent 2px,
-      rgba(0, 0, 0, 0.2) 2px,
-      rgba(0, 0, 0, 0.2) 4px,
-      transparent 4px,
-      transparent 7px,
-      rgba(215, 140, 70, 0.22) 7px,
-      rgba(215, 140, 70, 0.22) 9px,
-      transparent 9px,
-      transparent 13px,
-      rgba(0, 0, 0, 0.15) 13px,
-      rgba(0, 0, 0, 0.15) 15px
-    ),
-    linear-gradient(165deg, #522d16 0%, #3d2010 50%, #29150a 100%);
-  border: 1px solid rgba(160, 95, 45, 0.65);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.45);
+  background: linear-gradient(160deg, #6a4427 0%, #52331c 55%, #3c2210 100%);
+  border: 1px solid rgba(185, 125, 68, 0.55);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.4), inset 0 0 2px rgba(0, 0, 0, 0.2);
 }
 
 .hero-sq-slot--empty:hover {
   border-color: #f59e0b;
-  background: 
-    repeating-linear-gradient(
-      90deg,
-      transparent 0px,
-      transparent 2px,
-      rgba(0, 0, 0, 0.24) 2px,
-      rgba(0, 0, 0, 0.24) 4px,
-      transparent 4px,
-      transparent 7px,
-      rgba(240, 160, 80, 0.28) 7px,
-      rgba(240, 160, 80, 0.28) 9px,
-      transparent 9px,
-      transparent 13px,
-      rgba(0, 0, 0, 0.18) 13px,
-      rgba(0, 0, 0, 0.18) 15px
-    ),
-    linear-gradient(165deg, #63381c 0%, #4a2814 50%, #341a0c 100%);
+  background: linear-gradient(160deg, #7d5230 0%, #623e22 55%, #492a13 100%);
 }
 
 /* Векторный силуэт пустых слотов */
 .hero-sq-slot__vector-icon {
   width: 20px;
   height: 20px;
-  color: #b8864e;
-  opacity: 0.6;
+  color: #deb887;
+  opacity: 0.75;
   transition: all 0.15s ease;
   pointer-events: none;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
@@ -3757,7 +3725,7 @@
 
 .hero-sq-slot--empty:hover .hero-sq-slot__vector-icon,
 .hero-sq-slot:hover .hero-sq-slot__vector-icon {
-  opacity: 0.95;
+  opacity: 1;
   color: #f59e0b;
   transform: scale(1.1);
 }
@@ -3832,29 +3800,15 @@
   }
 }
 
-/* Пустая ячейка мини-сумки и инвентаря — тёплая выраженная текстура коры дерева */
+/* Пустая ячейка мини-сумки и инвентаря — светлая текстура слота */
 .hero-sq-slot--empty-bag,
 .g-slot-empty {
   background: 
-    repeating-linear-gradient(
-      90deg,
-      transparent 0px,
-      transparent 2px,
-      rgba(0, 0, 0, 0.2) 2px,
-      rgba(0, 0, 0, 0.2) 4px,
-      transparent 4px,
-      transparent 7px,
-      rgba(215, 140, 70, 0.22) 7px,
-      rgba(215, 140, 70, 0.22) 9px,
-      transparent 9px,
-      transparent 13px,
-      rgba(0, 0, 0, 0.15) 13px,
-      rgba(0, 0, 0, 0.15) 15px
-    ),
-    linear-gradient(165deg, #522d16 0%, #3d2010 50%, #29150a 100%);
-  border: 1px solid rgba(160, 95, 45, 0.65);
+    url('/assets/icons/ui/slots/slot_parchment_empty.webp') center / cover no-repeat,
+    linear-gradient(160deg, #785233 0%, #5d3d24 55%, #462c16 100%);
+  border: 1px solid rgba(175, 120, 65, 0.6);
   border-radius: 9px;
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.45), inset 0 0 3px rgba(30, 15, 6, 0.5);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35);
   cursor: pointer;
   aspect-ratio: 1;
 }
@@ -3863,22 +3817,8 @@
 .g-slot-empty:hover {
   border-color: rgba(245, 158, 11, 0.85);
   background: 
-    repeating-linear-gradient(
-      90deg,
-      transparent 0px,
-      transparent 2px,
-      rgba(0, 0, 0, 0.24) 2px,
-      rgba(0, 0, 0, 0.24) 4px,
-      transparent 4px,
-      transparent 7px,
-      rgba(240, 160, 80, 0.28) 7px,
-      rgba(240, 160, 80, 0.28) 9px,
-      transparent 9px,
-      transparent 13px,
-      rgba(0, 0, 0, 0.18) 13px,
-      rgba(0, 0, 0, 0.18) 15px
-    ),
-    linear-gradient(165deg, #63381c 0%, #4a2814 50%, #341a0c 100%);
+    url('/assets/icons/ui/slots/slot_parchment_empty.webp') center / cover no-repeat,
+    linear-gradient(160deg, #8c603c 0%, #6d482c 55%, #52341b 100%);
 }
 
 .hero-sq-slot--empty-bag:active,
