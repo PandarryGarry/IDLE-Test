@@ -758,7 +758,6 @@ function HeroEquipSlotCard({
   const ghostLeft = slot === 'shield' && twoHand;
   const itemId = ghostLeft ? equipment.weapon : equipment[slot];
   const item = itemId ? getItem(itemId) : undefined;
-  const visual = slotVisual(itemId, slot);
   const rarity = itemId && item ? getItemRarity(itemId, item.sellValue, item.equipSlot) : 'common';
   const tier = itemId && item ? getItemTier(itemId, item) : undefined;
 
@@ -794,11 +793,7 @@ function HeroEquipSlotCard({
         />
       )}
       <div className="hero-sq-slot__icon-wrap">
-        {visual.src ? (
-          <img src={visual.src} alt="" className="hero-sq-slot__icon" />
-        ) : (
-          <span className="hero-sq-slot__emoji">{visual.emoji}</span>
-        )}
+        <EquipSlotSilhouette slot={ghostLeft ? 'weapon' : slot} className="hero-sq-slot__vector-icon hero-sq-slot__vector-icon--filled" />
       </div>
     </button>
   );
@@ -826,7 +821,6 @@ function HeroBagSlotCard({
     );
   }
 
-  const visual = getItemVisual(item.id);
   const rarity = getItemRarity(item.id, item.sellValue, equipSlot);
   const tier = getItemTier(item.id, item);
 
@@ -849,11 +843,7 @@ function HeroBagSlotCard({
         />
       )}
       <div className="hero-sq-slot__icon-wrap">
-        {visual.type === 'image' ? (
-          <img src={visual.value} alt="" className="hero-sq-slot__icon" />
-        ) : (
-          <span className="hero-sq-slot__emoji">{visual.value}</span>
-        )}
+        <EquipSlotSilhouette slot={equipSlot} className="hero-sq-slot__vector-icon hero-sq-slot__vector-icon--filled" />
       </div>
       {slot.quantity > 1 && (
         <span className="hero-sq-slot__qty">

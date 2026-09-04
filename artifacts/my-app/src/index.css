@@ -46,6 +46,15 @@
   --bg-card-dark:   #a07040;
   --bg-slot:        #5a3418;
   --bg-slot-hover:  #6b4020;
+  /* Ячейки инвентаря/экипа — «каштан»: плоские, без рамки */
+  --slot-wood:      linear-gradient(160deg, #845d36 0%, #6e4727 100%);
+  --slot-wood-hover:linear-gradient(160deg, #926a3f 0%, #7c5230 100%);
+  --slot-wood-locked: linear-gradient(160deg, #4a3320 0%, #38251a 100%);
+  --shadow-slot-wood:
+      inset 0 1.5px 0 rgba(255,228,175,0.14),
+      inset 0 -4px 9px rgba(28,14,4,0.42),
+      inset 3px 0 7px rgba(28,14,4,0.12),
+      inset -3px 0 7px rgba(28,14,4,0.12);
   --bg-header:      #2a1508;
   --bg-overlay:     rgba(20,10,0,0.8);
 
@@ -253,10 +262,10 @@
 /* Ячейки */
 .g-slot {
   aspect-ratio: 1;
-  background: linear-gradient(160deg, #3d2010 0%, #2e1608 100%);
-  border: 2px solid #6b3810;
+  background: var(--slot-wood);
+  border: none;
   border-radius: var(--radius-md);
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(200,150,50,0.1), 0 1px 0 #8b5020;
+  box-shadow: var(--shadow-slot-wood);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -264,16 +273,28 @@
   transition: all 0.15s ease;
 }
 .g-slot:hover {
-  border-color: var(--border-accent);
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.4), 0 0 10px rgba(200,136,10,0.3);
+  background: var(--slot-wood-hover);
+  box-shadow: var(--shadow-slot-wood), 0 0 10px rgba(200,136,10,0.35);
 }
 
 .g-slot-empty {
-  background: linear-gradient(160deg, #3a1e0c 0%, #2a1406 100%);
-  border: 2px solid #5a3010;
+  background: var(--slot-wood);
+  border: none;
   border-radius: var(--radius-md);
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);
+  box-shadow: var(--shadow-slot-wood);
   aspect-ratio: 1;
+}
+.g-slot-empty:hover {
+  background: var(--slot-wood-hover);
+  box-shadow: var(--shadow-slot-wood), 0 0 10px rgba(200,136,10,0.35);
+}
+
+/* Векторный силуэт предмета внутри ячейки инвентаря */
+.g-slot__vec {
+  width: 100%;
+  height: 100%;
+  color: #f0d6ab;
+  filter: drop-shadow(0 1px 2px rgba(25,12,3,0.45));
 }
 
 /* Кнопки */
@@ -3676,11 +3697,11 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid rgba(107, 56, 16, 0.7);
-  background: linear-gradient(160deg, #2e180c, #1e0e06);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+  border: none;
+  background: var(--slot-wood);
+  box-shadow: var(--shadow-slot-wood);
   cursor: pointer;
-  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+  transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
   user-select: none;
   flex-shrink: 0;
   outline: none;
@@ -3689,27 +3710,27 @@
 
 .hero-sq-slot:hover {
   transform: translateY(-1px);
-  border-color: #f59e0b;
+  background: var(--slot-wood-hover);
+  box-shadow: var(--shadow-slot-wood), 0 0 10px rgba(245, 158, 11, 0.35);
   z-index: 5;
 }
 
 .hero-sq-slot:active {
   transform: scale(0.92) !important;
-  border-color: #fbbf24 !important;
   box-shadow: 0 0 14px rgba(251, 191, 36, 0.95), inset 0 0 5px rgba(251, 191, 36, 0.6) !important;
   z-index: 25 !important;
 }
 
-/* Пустой слот экипировки с силуэтом */
+/* Пустой слот экипировки с силуэтом — тот же каштан, без рамки */
 .hero-sq-slot--empty {
-  background: linear-gradient(160deg, #6a4427 0%, #52331c 55%, #3c2210 100%);
-  border: 1px solid rgba(185, 125, 68, 0.55);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.4), inset 0 0 2px rgba(0, 0, 0, 0.2);
+  background: var(--slot-wood);
+  border: none;
+  box-shadow: var(--shadow-slot-wood);
 }
 
 .hero-sq-slot--empty:hover {
-  border-color: #f59e0b;
-  background: linear-gradient(160deg, #7d5230 0%, #623e22 55%, #492a13 100%);
+  background: var(--slot-wood-hover);
+  box-shadow: var(--shadow-slot-wood), 0 0 10px rgba(245, 158, 11, 0.35);
 }
 
 /* Векторный силуэт пустых слотов */
@@ -3734,6 +3755,17 @@
   opacity: 1;
   color: #fbbf24;
   filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.85));
+}
+
+/* Занятый слот: силуэт предмета яркий, светло-кремовый */
+.hero-sq-slot__vector-icon--filled {
+  opacity: 1;
+  color: #f0d6ab;
+  filter: drop-shadow(0 1px 2px rgba(25, 12, 3, 0.5));
+}
+.hero-sq-slot:hover .hero-sq-slot__vector-icon--filled,
+.hero-sq-slot.is-selected .hero-sq-slot__vector-icon--filled {
+  color: #fde9c8;
 }
 
 .hero-sq-slot__silhouette {
@@ -3800,44 +3832,38 @@
   }
 }
 
-/* Пустая ячейка мини-сумки и инвентаря — светлая текстура слота */
+/* Пустая ячейка мини-сумки и инвентаря — плоский каштан, без рамки/текстуры */
 .hero-sq-slot--empty-bag,
 .g-slot-empty {
-  background: 
-    url('/assets/icons/ui/slots/slot_parchment_empty.webp') center / cover no-repeat,
-    linear-gradient(160deg, #785233 0%, #5d3d24 55%, #462c16 100%);
-  border: 1px solid rgba(175, 120, 65, 0.6);
+  background: var(--slot-wood);
+  border: none;
   border-radius: 9px;
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-slot-wood);
   cursor: pointer;
   aspect-ratio: 1;
 }
 
 .hero-sq-slot--empty-bag:hover,
 .g-slot-empty:hover {
-  border-color: rgba(245, 158, 11, 0.85);
-  background: 
-    url('/assets/icons/ui/slots/slot_parchment_empty.webp') center / cover no-repeat,
-    linear-gradient(160deg, #8c603c 0%, #6d482c 55%, #52341b 100%);
+  background: var(--slot-wood-hover);
+  box-shadow: var(--shadow-slot-wood), 0 0 10px rgba(245, 158, 11, 0.35);
 }
 
 .hero-sq-slot--empty-bag:active,
 .g-slot-empty:active {
   transform: scale(0.93) !important;
-  border-color: #fbbf24 !important;
   box-shadow: 0 0 14px rgba(251, 191, 36, 0.95), inset 0 0 5px rgba(251, 191, 36, 0.6) !important;
 }
 
 /* Заблокированный слот (14-й) */
 .hero-sq-slot--locked {
-  background: linear-gradient(160deg, rgba(34, 18, 9, 0.85), rgba(20, 10, 4, 0.95));
-  border: 1px solid rgba(139, 78, 32, 0.45);
-  opacity: 0.65;
+  background: var(--slot-wood-locked);
+  border: none;
+  opacity: 0.6;
 }
 
 .hero-sq-slot--locked:hover {
   opacity: 0.95;
-  border-color: #f59e0b;
 }
 
 .hero-sq-slot__lock {

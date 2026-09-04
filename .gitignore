@@ -27,6 +27,8 @@ Thumbs.db
 
 # Local QA screenshot dumps (not source)
 artifacts/qa-review/
+qa_inspect/
+.shots/
 
 # Replit local runtime state
 .cache/
