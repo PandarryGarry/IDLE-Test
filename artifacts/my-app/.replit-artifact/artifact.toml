@@ -9,7 +9,7 @@ router = "path"
 [[services]]
 name = "web"
 paths = [ "/" ]
-localPort = 19621
+localPort = 8080
 
 [services.development]
 run = "pnpm --filter @workspace/my-app run dev"
@@ -24,5 +24,5 @@ from = "/*"
 to = "/index.html"
 
 [services.env]
-PORT = "19621"
+PORT = "8080"
 BASE_PATH = "/"

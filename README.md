@@ -121,7 +121,10 @@ mythic_sword: {
 
 ## 🎮 Запуск и сборка
 
-- **Запуск dev-сервера**: `pnpm --filter @workspace/my-app run dev` (порт 3000)
+- **Запуск dev-сервера (локально)**: `pnpm --filter @workspace/my-app run dev` (порт 3000)
+- **Запуск в Replit**: `PORT=8080 BASE_PATH=/ pnpm --filter @workspace/my-app run dev`
+  — порт **8080**, API-сервер на **5000**, Canvas на **8081**. Канон и причины:
+  **`REPLIT_SETUP.md`** (расхождение портов = белое превью / `connection reset`).
 - **Сборка проекта**: `pnpm --filter @workspace/my-app run build`
 
 ---
@@ -137,8 +140,10 @@ mythic_sword: {
 | `scripts/qa/README.md` | Headless-браузер в песочнице, прогоны без облака | перед любым прогоном |
 | `scripts/assets/README.md` | Конвейер картинок: мастер PNG → runtime WebP | новая картинка |
 | `SUPABASE_SETUP.md` | Ключи и таблицы Supabase | настройка облака |
+| `REPLIT_SETUP.md` | **Канон портов Replit** (8080 web / 5000 api / 8081 canvas), причины правок, чек-лист запуска | белый экран, `connection reset`, правка `.replit` или `artifact.toml` |
 | `STAGE3_AUTH_HANDOFF.md`, `STAGE4_CHARACTER_HANDOFF.md` | Контракты Этапов 3–4 (история решений) | правки auth и персонажей |
 | `RESPONSIVE_SYSTEM_PLAN.md` | План централизованного адаптива (слой 1 сделан) | новые экраны |
+| `NITI_WINDOW_DESIGN.md` | Анализ MMO-интерфейсов + 4 варианта экрана «Нити» (A паутина / B руны / C гобелен / D колесо), рекомендация | редизайн вкладки «Нити» |
 
 **Законы проекта (коротко):** картинки — только WebP через `iconUrl()` /
 `getAvatarPath()`; числа Этапа 5 — только `src/data/balance/`; новые экраны —
