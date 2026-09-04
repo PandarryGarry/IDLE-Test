@@ -858,27 +858,13 @@ function HeroBagSlotCard({
   );
 }
 
-/* ── Нити · «Пульт», вариант 1 — плотная сетка 3×N ──────────────────
-   Карточка: иконка, имя (одна строка), одна полоса готовности и %.
+/* ── Нити · «Пульт» — плотная сетка 3×N ──────────────────────────────
+   Карточка: крупная иконка-плитка (главное), под ней имя и тонкая полоса %.
+   Шапка: «чернила по пергаменту» — заголовок + плитки столпов.
    Отсеки «Активные/Неактивные»; активные подсвечены, неактивные затемнены.
    Будущие «скоро» — внутри «Неактивных», с бейджем, без порогов.
    Палитра — только токены index.css (пергамент/тёмное дерево/каштан/золото/Cinzel).
 ────────────────────────────────────────────────────────────────────── */
-
-const PILLAR_SHORT: Record<PillarId, string> = {
-  fortitude: 'СТОЙ',
-  might: 'МОЩЬ',
-  finesse: 'СНОР',
-  instinct: 'ЧУТЬ',
-};
-
-/** Акцент столпа — существующие токены игры (сапфир/рубин/изумруд/чирок). */
-const PILLAR_ACCENT: Record<PillarId, string> = {
-  fortitude: 'var(--accent-sapphire)',
-  might: 'var(--accent-ruby)',
-  finesse: 'var(--accent-emerald)',
-  instinct: 'var(--accent-teal)',
-};
 
 interface SoonThread {
   id: string;
@@ -920,40 +906,6 @@ function synergyRank(s: SynergyDef): number {
   return needs.length ? Math.max(...needs) : 0;
 }
 
-function ThreadRing({ active, soon, total }: { active: number; soon: number; total: number }) {
-  const r = 15;
-  const c = 2 * Math.PI * r;
-  const actLen = total > 0 ? (active / total) * c : 0;
-  const soonLen = total > 0 ? (soon / total) * c : 0;
-  const soonStart = -90 + (total > 0 ? 360 * ((total - soon) / total) : 0);
-  return (
-    <svg viewBox="0 0 42 42" width="40" height="40" className="hero-thread-ring" aria-hidden>
-      <circle cx="21" cy="21" r={r} fill="none" stroke="var(--bar-track)" strokeWidth="6" />
-      <circle
-        cx="21" cy="21" r={r} fill="none" stroke="url(#heroThreadRingGold)" strokeWidth="6"
-        strokeLinecap="round" strokeDasharray={`${actLen} ${c}`} transform="rotate(-90 21 21)"
-      />
-      <circle
-        cx="21" cy="21" r={r} fill="none" stroke="var(--accent-purple)" strokeWidth="6"
-        strokeLinecap="round" strokeDasharray={`${soonLen} ${c}`} opacity="0.85"
-        transform={`rotate(${soonStart} 21 21)`}
-      />
-      <defs>
-        <linearGradient id="heroThreadRingGold" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="var(--bar-xp-from)" />
-          <stop offset="1" stopColor="var(--bar-xp-to)" />
-        </linearGradient>
-      </defs>
-      <text
-        x="21" y="25" textAnchor="middle" fill="var(--text-gold)"
-        fontFamily="var(--app-font-mono)" fontSize="11" fontWeight="800"
-      >
-        {active}
-      </text>
-    </svg>
-  );
-}
-
 function ThreadCard({
   icon, name, ratio, on, onOpen,
 }: {
@@ -970,10 +922,16 @@ function ThreadCard({
       data-on={on ? 'true' : 'false'}
       onClick={onOpen}
     >
-      <img className="hero-thread-card__icon" src={icon} alt="" decoding="async" />
-      <span className="hero-thread-card__name">{name}</span>
-      <GProgressBar value={on ? 1 : ratio} height={5} style={{ width: '100%' }} />
-      <span className="hero-thread-card__pct">{on ? '100%' : `${Math.round(ratio * 100)}%`}</span>
+      <span className="hero-thread-card__tile">
+        <img className="hero-thread-card__icon" src={icon} alt="" decoding="async" />
+      </span>
+      <span className="hero-thread-card__foot">
+        <span className="hero-thread-card__name">{name}</span>
+        <span className="hero-thread-card__bar">
+          <GProgressBar value={on ? 1 : ratio} height={4} style={{ flex: 1 }} />
+          <em>{on ? '100%' : `${Math.round(ratio * 100)}%`}</em>
+        </span>
+      </span>
     </button>
   );
 }
@@ -985,9 +943,15 @@ function SoonCard({ icon, name, onOpen }: { icon: string; name: string; onOpen: 
       className="hero-thread-card hero-thread-card--soon"
       onClick={onOpen}
     >
-      <img className="hero-thread-card__icon" src={icon} alt="" decoding="async" />
-      <span className="hero-thread-card__name">{name}</span>
-      <GBadge variant="purple" size="sm">скоро</GBadge>
+      <span className="hero-thread-card__badge">
+        <GBadge variant="purple" size="sm">скоро</GBadge>
+      </span>
+      <span className="hero-thread-card__tile">
+        <img className="hero-thread-card__icon" src={icon} alt="" decoding="async" />
+      </span>
+      <span className="hero-thread-card__foot">
+        <span className="hero-thread-card__name">{name}</span>
+      </span>
     </button>
   );
 }
@@ -1014,25 +978,18 @@ function SynergiesModule({
     .sort((a, b) => synergyDeficit(a, pillars) - synergyDeficit(b, pillars)
       || a.nameRu.localeCompare(b.nameRu, 'ru'));
 
-  const total = SYNERGIES.length + SOON_THREADS.length;
-
   return (
     <div className="hero-sheet">
       <div className="hero-thread-summary">
-        <ThreadRing active={active.length} soon={SOON_THREADS.length} total={total} />
-        <div className="hero-thread-summary__mid">
-          <span className="hero-thread-summary__title">гобелен нитей · {total}</span>
-          <span className="hero-thread-summary__counts">
-            <span className="is-burn">✦ горит {active.length}</span>
-            <span className="is-sleep">спит {sleeping.length}</span>
-            <span className="is-soon">скоро {SOON_THREADS.length}</span>
-          </span>
+        <div className="hero-thread-summary__l">
+          <span className="hero-thread-summary__title"><i>✦</i> Нити</span>
+          <span className="hero-thread-summary__sub">связь между столпами</span>
         </div>
         <div className="hero-thread-summary__pillars">
           {PILLAR_IDS.map(id => (
-            <span key={id} style={{ color: PILLAR_ACCENT[id] }}>
+            <span key={id} className="hero-thread-summary__pill">
               <img src={PILLAR_ICON[id]} alt="" decoding="async" />
-              {PILLAR_SHORT[id]} {Math.round(pillars[id])}
+              <b>{Math.round(pillars[id])}</b>
             </span>
           ))}
         </div>
@@ -1061,8 +1018,8 @@ function SynergiesModule({
         active.length === 0 ? (
           <GEmptyState
             icon="✦"
-            title="Нити пока спят"
-            description="Доведи два столпа до нужных чисел — и нить загорится."
+            title="Пока нет активных нитей"
+            description="Доведи два столпа до нужных чисел — и нить станет активной."
           />
         ) : (
           <div className="hero-thread-grid">
@@ -1312,7 +1269,7 @@ function HeroDetailModal({
             <div className="hero-thread-detail__head">
               <img src={SYNERGY_ICON[synergy.id]} alt="" decoding="async" />
               <b>{synergy.nameRu}</b>
-              <GBadge variant={on ? 'gold' : 'gray'} size="sm">{on ? 'горит' : 'спит'}</GBadge>
+              <GBadge variant={on ? 'gold' : 'gray'} size="sm">{on ? 'активна' : 'неактивна'}</GBadge>
             </div>
             {synergy.childRu && <p className="hero-thread-detail__flavor">{synergy.childRu}</p>}
             <div className="hero-thread-detail__block">
@@ -1330,7 +1287,7 @@ function HeroDetailModal({
                     <div key={id} className="hero-thread-detail__req">
                       <img src={PILLAR_ICON[id]} alt="" decoding="async" />
                       <GProgressBar value={ratio} height={5} style={{ flex: 1 }} />
-                      <span className="hero-thread-detail__val" style={{ color: PILLAR_ACCENT[id] }}>
+                      <span className="hero-thread-detail__val">
                         {Math.round(have)}/{need}{ok ? ' ✓' : ''}
                       </span>
                     </div>
@@ -1339,7 +1296,7 @@ function HeroDetailModal({
               </div>
               <p className="hero-thread-detail__hint" data-ok={on ? 'true' : 'false'}>
                 {on
-                  ? 'Все столпы выполнены — нить горит.'
+                  ? 'Все столпы выполнены — нить активна.'
                   : `Осталось повысить: ${missing.map(([id, gap]) => `${PILLARS[id].nameRu} +${gap}`).join(', ')}`}
               </p>
             </div>
