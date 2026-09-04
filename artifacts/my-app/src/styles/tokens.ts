@@ -65,7 +65,7 @@ export const THEME = {
     amberBg:    '#fff0d8',   // Фон янтаря
     teal:       '#0e8a7a',   // Бирюза — рыбалка
     tealBg:     '#d0f5f0',   // Фон бирюзы
-    purple:     '#7030b0',   // Фиолет — магия
+    purple:     '#a050e0',   // Фиолет — магия / «скоро» в Нити
     purpleBg:   '#f0e0ff',   // Фон фиолета
   },
 

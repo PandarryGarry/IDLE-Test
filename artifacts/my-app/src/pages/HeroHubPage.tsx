@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
 import {
-  GAvatar, GBadge, GButton, GEmptyState, GInfoRow, GModal, GSlot, GTag,
+  GAvatar, GBadge, GButton, GEmptyState, GInfoRow, GModal, GProgressBar, GSlot, GTag,
 } from '@/shared/ui/gameUI';
 import { TierBadge } from '@/shared/ui/kit/TierBadge';
 import { useAuthStore } from '@/store/authStore';
@@ -10,6 +10,7 @@ import { usePlayerStore } from '@/store/playerStore';
 import { useBankStore } from '@/store/bankStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { getAvatarPath, getDollPath, getDollPath2x, getRaceLabel, type RaceId } from '@/data/characters';
+import { iconUrl } from '@/lib/assetUrl';
 import { getItemRarity } from '@/components/ItemIcon';
 import { getItemTier, UniversalInfoModal } from '@/components/modals/UniversalInfoModal';
 import { EquipSlotSilhouette } from '@/shared/icons/EquipSlotIcons';
@@ -29,9 +30,10 @@ import {
 import {
   EQUIP_SLOT_ICON,
   HUB_NAV_ICON,
+  PILLAR_ICON,
   SYNERGY_ICON,
 } from '@/data/attributeIcons';
-import { SYNERGIES, type SynergyId } from '@/data/synergies';
+import { SYNERGIES, type SynergyDef, type SynergyId } from '@/data/synergies';
 import { getItem } from '@/data/items';
 import { formatNumber } from '@/lib/utils';
 import type { EquipSlot, Equipment, Item } from '@/data/types';
@@ -62,6 +64,7 @@ type Detail =
   | { kind: 'branch'; id: BranchId }
   | { kind: 'passive'; id: PassiveId }
   | { kind: 'synergy'; id: SynergyId }
+  | { kind: 'soon-thread'; name: string }
   | { kind: 'gear'; slot: EquipSlot }
   | { kind: 'locked-slot' }
   | { kind: 'bag-item'; itemId: string };
@@ -317,6 +320,7 @@ export function HeroHubPage() {
           <SynergiesModule
             snapshot={snapshot}
             onOpen={id => setDetail({ kind: 'synergy', id })}
+            onOpenSoon={name => setDetail({ kind: 'soon-thread', name })}
           />
         )}
         {moduleId === 'path' && <PathModule snapshot={snapshot} />}
@@ -854,49 +858,243 @@ function HeroBagSlotCard({
   );
 }
 
+/* ── Нити · «Пульт», вариант 1 — плотная сетка 3×N ──────────────────
+   Карточка: иконка, имя (одна строка), одна полоса готовности и %.
+   Отсеки «Активные/Неактивные»; активные подсвечены, неактивные затемнены.
+   Будущие «скоро» — внутри «Неактивных», с бейджем, без порогов.
+   Палитра — только токены index.css (пергамент/тёмное дерево/каштан/золото/Cinzel).
+────────────────────────────────────────────────────────────────────── */
+
+const PILLAR_SHORT: Record<PillarId, string> = {
+  fortitude: 'СТОЙ',
+  might: 'МОЩЬ',
+  finesse: 'СНОР',
+  instinct: 'ЧУТЬ',
+};
+
+/** Акцент столпа — существующие токены игры (сапфир/рубин/изумруд/чирок). */
+const PILLAR_ACCENT: Record<PillarId, string> = {
+  fortitude: 'var(--accent-sapphire)',
+  might: 'var(--accent-ruby)',
+  finesse: 'var(--accent-emerald)',
+  instinct: 'var(--accent-teal)',
+};
+
+interface SoonThread {
+  id: string;
+  nameRu: string;
+  icon: string;
+}
+
+/**
+ * Будущие ярусы нитей. Показываем только факт появления «скоро»:
+ * порогов и эффектов не выдумываем — их в данных игры ещё нет.
+ */
+const SOON_THREADS: readonly SoonThread[] = [
+  { id: 'soon_wall_of_muscle', nameRu: 'Стена мышц', icon: iconUrl('skills/skill_shield_block') },
+  { id: 'soon_blade_dance', nameRu: 'Танец клинка', icon: iconUrl('skills/skill_crit_strike') },
+  { id: 'soon_storm_eye', nameRu: 'Око бури', icon: iconUrl('stats/stat_crit') },
+  { id: 'soon_blood_oath', nameRu: 'Клятва крови', icon: iconUrl('skills/skill_heal') },
+  { id: 'soon_second_wind', nameRu: 'Второй ветер', icon: iconUrl('stats/stat_speed') },
+  { id: 'soon_crown_hunter', nameRu: 'Охотник на корон', icon: iconUrl('skills/skill_ultimate') },
+];
+
+function synergyReqs(s: SynergyDef): [PillarId, number][] {
+  return Object.entries(s.requires) as [PillarId, number][];
+}
+
+/** Готовность по «узкому месту»: минимум из долей have/need по столпам. */
+function synergyReadiness(s: SynergyDef, pillars: Record<PillarId, number>): number {
+  const ratios = synergyReqs(s).map(([id, need]) => (need > 0 ? Math.min(1, pillars[id] / need) : 1));
+  return ratios.length ? Math.min(...ratios) : 1;
+}
+
+/** Сколько очков столпов суммарно не хватает до открытия нити. */
+function synergyDeficit(s: SynergyDef, pillars: Record<PillarId, number>): number {
+  return synergyReqs(s).reduce((sum, [id, need]) => sum + Math.max(0, need - pillars[id]), 0);
+}
+
+/** «Ярус» нити — по верхнему порогу пары (50/30 → ниже, 70/40 → выше). */
+function synergyRank(s: SynergyDef): number {
+  const needs = synergyReqs(s).map(([, need]) => need);
+  return needs.length ? Math.max(...needs) : 0;
+}
+
+function ThreadRing({ active, soon, total }: { active: number; soon: number; total: number }) {
+  const r = 15;
+  const c = 2 * Math.PI * r;
+  const actLen = total > 0 ? (active / total) * c : 0;
+  const soonLen = total > 0 ? (soon / total) * c : 0;
+  const soonStart = -90 + (total > 0 ? 360 * ((total - soon) / total) : 0);
+  return (
+    <svg viewBox="0 0 42 42" width="40" height="40" className="hero-thread-ring" aria-hidden>
+      <circle cx="21" cy="21" r={r} fill="none" stroke="var(--bar-track)" strokeWidth="6" />
+      <circle
+        cx="21" cy="21" r={r} fill="none" stroke="url(#heroThreadRingGold)" strokeWidth="6"
+        strokeLinecap="round" strokeDasharray={`${actLen} ${c}`} transform="rotate(-90 21 21)"
+      />
+      <circle
+        cx="21" cy="21" r={r} fill="none" stroke="var(--accent-purple)" strokeWidth="6"
+        strokeLinecap="round" strokeDasharray={`${soonLen} ${c}`} opacity="0.85"
+        transform={`rotate(${soonStart} 21 21)`}
+      />
+      <defs>
+        <linearGradient id="heroThreadRingGold" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="var(--bar-xp-from)" />
+          <stop offset="1" stopColor="var(--bar-xp-to)" />
+        </linearGradient>
+      </defs>
+      <text
+        x="21" y="25" textAnchor="middle" fill="var(--text-gold)"
+        fontFamily="var(--app-font-mono)" fontSize="11" fontWeight="800"
+      >
+        {active}
+      </text>
+    </svg>
+  );
+}
+
+function ThreadCard({
+  icon, name, ratio, on, onOpen,
+}: {
+  icon: string;
+  name: string;
+  ratio: number;
+  on: boolean;
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="hero-thread-card"
+      data-on={on ? 'true' : 'false'}
+      onClick={onOpen}
+    >
+      <img className="hero-thread-card__icon" src={icon} alt="" decoding="async" />
+      <span className="hero-thread-card__name">{name}</span>
+      <GProgressBar value={on ? 1 : ratio} height={5} style={{ width: '100%' }} />
+      <span className="hero-thread-card__pct">{on ? '100%' : `${Math.round(ratio * 100)}%`}</span>
+    </button>
+  );
+}
+
+function SoonCard({ icon, name, onOpen }: { icon: string; name: string; onOpen: () => void }) {
+  return (
+    <button
+      type="button"
+      className="hero-thread-card hero-thread-card--soon"
+      onClick={onOpen}
+    >
+      <img className="hero-thread-card__icon" src={icon} alt="" decoding="async" />
+      <span className="hero-thread-card__name">{name}</span>
+      <GBadge variant="purple" size="sm">скоро</GBadge>
+    </button>
+  );
+}
+
 function SynergiesModule({
-  snapshot, onOpen,
+  snapshot, onOpen, onOpenSoon,
 }: {
   snapshot: ReturnType<typeof computeAttributeSnapshot>;
   onOpen: (id: SynergyId) => void;
+  onOpenSoon: (name: string) => void;
 }) {
+  const [tab, setTab] = useState<'active' | 'inactive'>('inactive');
+  const pillars = snapshot.finalPillars;
+
+  const active = SYNERGIES
+    .filter(s => snapshot.activeSynergies.includes(s.id))
+    .slice()
+    .sort((a, b) => synergyRank(a) - synergyRank(b) || a.nameRu.localeCompare(b.nameRu, 'ru'));
+
+  // Неактивные — ближайшие к открытию сверху (меньше всего очков не хватает).
+  const sleeping = SYNERGIES
+    .filter(s => !snapshot.activeSynergies.includes(s.id))
+    .slice()
+    .sort((a, b) => synergyDeficit(a, pillars) - synergyDeficit(b, pillars)
+      || a.nameRu.localeCompare(b.nameRu, 'ru'));
+
+  const total = SYNERGIES.length + SOON_THREADS.length;
+
   return (
     <div className="hero-sheet">
-      <div className="hero-threads">
-        {SYNERGIES.map(synergy => {
-          const on = snapshot.activeSynergies.includes(synergy.id);
-          const reqs = Object.entries(synergy.requires) as [PillarId, number][];
-          return (
-            <button
-              key={synergy.id}
-              type="button"
-              className="hero-thread"
-              data-on={on ? 'true' : 'false'}
-              onClick={() => onOpen(synergy.id)}
-            >
-              <span className="hero-thread__head">
-                <img src={SYNERGY_ICON[synergy.id]} alt="" decoding="async" />
-                <strong>{synergy.nameRu}</strong>
-                <GBadge variant={on ? 'gold' : 'gray'} size="sm">{on ? 'горит' : 'спит'}</GBadge>
-              </span>
-              <span className="hero-thread__reqs">
-                {reqs.map(([id, need]) => {
-                  const have = snapshot.finalPillars[id];
-                  const ratio = need > 0 ? Math.min(1, Math.max(0, have / need)) : 1;
-                  return (
-                    <span key={id} className="hero-req">
-                      <span>{PILLARS[id].nameRu} {Math.round(have)}/{need}</span>
-                      <span className="hero-meter" aria-hidden>
-                        <i style={{ width: `${Math.round(ratio * 100)}%` }} />
-                      </span>
-                    </span>
-                  );
-                })}
-              </span>
-            </button>
-          );
-        })}
+      <div className="hero-thread-summary">
+        <ThreadRing active={active.length} soon={SOON_THREADS.length} total={total} />
+        <div className="hero-thread-summary__mid">
+          <span className="hero-thread-summary__title">гобелен нитей · {total}</span>
+          <span className="hero-thread-summary__counts">
+            <span className="is-burn">✦ горит {active.length}</span>
+            <span className="is-sleep">спит {sleeping.length}</span>
+            <span className="is-soon">скоро {SOON_THREADS.length}</span>
+          </span>
+        </div>
+        <div className="hero-thread-summary__pillars">
+          {PILLAR_IDS.map(id => (
+            <span key={id} style={{ color: PILLAR_ACCENT[id] }}>
+              <img src={PILLAR_ICON[id]} alt="" decoding="async" />
+              {PILLAR_SHORT[id]} {Math.round(pillars[id])}
+            </span>
+          ))}
+        </div>
       </div>
+
+      <div className="hero-thread-tabs" role="tablist" aria-label="Отсеки нитей">
+        <button
+          type="button"
+          className={tab === 'active' ? 'is-on' : ''}
+          aria-pressed={tab === 'active'}
+          onClick={() => setTab('active')}
+        >
+          Активные <b>· {active.length}</b>
+        </button>
+        <button
+          type="button"
+          className={tab === 'inactive' ? 'is-on' : ''}
+          aria-pressed={tab === 'inactive'}
+          onClick={() => setTab('inactive')}
+        >
+          Неактивные <b>· {sleeping.length + SOON_THREADS.length}</b>
+        </button>
+      </div>
+
+      {tab === 'active' ? (
+        active.length === 0 ? (
+          <GEmptyState
+            icon="✦"
+            title="Нити пока спят"
+            description="Доведи два столпа до нужных чисел — и нить загорится."
+          />
+        ) : (
+          <div className="hero-thread-grid">
+            {active.map(s => (
+              <ThreadCard
+                key={s.id}
+                icon={SYNERGY_ICON[s.id]}
+                name={s.nameRu}
+                ratio={1}
+                on
+                onOpen={() => onOpen(s.id)}
+              />
+            ))}
+          </div>
+        )
+      ) : (
+        <div className="hero-thread-grid">
+          {sleeping.map(s => (
+            <ThreadCard
+              key={s.id}
+              icon={SYNERGY_ICON[s.id]}
+              name={s.nameRu}
+              ratio={synergyReadiness(s, pillars)}
+              on={false}
+              onOpen={() => onOpen(s.id)}
+            />
+          ))}
+          {SOON_THREADS.map(t => (
+            <SoonCard key={t.id} icon={t.icon} name={t.nameRu} onOpen={() => onOpenSoon(t.nameRu)} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -1010,7 +1208,8 @@ function HeroDetailModal({
       : detail.kind === 'branch' ? BRANCHES[detail.id].nameRu
         : detail.kind === 'passive' ? DEEP_PASSIVES[detail.id].nameRu
           : detail.kind === 'synergy' ? (SYNERGIES.find(s => s.id === detail.id)?.nameRu ?? '')
-            : detail.kind === 'bag-item' ? (bagDetailItem?.name ?? '')
+            : detail.kind === 'soon-thread' ? `Скоро · ${detail.name}`
+              : detail.kind === 'bag-item' ? (bagDetailItem?.name ?? '')
               : detail.kind === 'locked-slot' ? 'Будущий слот'
                 : GEAR_LABEL[detail.slot];
 
@@ -1104,25 +1303,58 @@ function HeroDetailModal({
         const synergy = SYNERGIES.find(s => s.id === detail.id);
         if (!synergy) return null;
         const on = snapshot.activeSynergies.includes(synergy.id);
-        const missing = Object.entries(synergy.requires)
-          .filter(([id, need]) => snapshot.finalPillars[id as PillarId] < (need ?? 0));
+        const reqs = synergyReqs(synergy);
+        const missing = reqs
+          .filter(([id, need]) => snapshot.finalPillars[id] < need)
+          .map(([id, need]) => [id, Math.ceil(need - snapshot.finalPillars[id])] as const);
         return (
-          <div className="hero-hub-modal hero-hub-modal--card">
-            <GBadge variant={on ? 'gold' : 'gray'}>{on ? 'горит' : 'спит'}</GBadge>
-            <p>{synergy.childRu}</p>
-            {on ? <p>{synergy.effectRu}</p> : (
-              <p>
-                Не хватает:{' '}
-                {missing.map(([id, need]) => {
-                  const have = snapshot.finalPillars[id as PillarId];
-                  const gap = Math.ceil((need ?? 0) - have);
-                  return `${PILLARS[id as PillarId].nameRu} ${gap}`;
-                }).join(', ')}
+          <div className="hero-thread-detail">
+            <div className="hero-thread-detail__head">
+              <img src={SYNERGY_ICON[synergy.id]} alt="" decoding="async" />
+              <b>{synergy.nameRu}</b>
+              <GBadge variant={on ? 'gold' : 'gray'} size="sm">{on ? 'горит' : 'спит'}</GBadge>
+            </div>
+            {synergy.childRu && <p className="hero-thread-detail__flavor">{synergy.childRu}</p>}
+            <div className="hero-thread-detail__block">
+              <span className="hero-thread-detail__lbl">что делает</span>
+              <p className="hero-thread-detail__fx">{synergy.effectRu}</p>
+            </div>
+            <div className="hero-thread-detail__block">
+              <span className="hero-thread-detail__lbl">чтобы зажечь</span>
+              <div className="hero-thread-detail__reqs">
+                {reqs.map(([id, need]) => {
+                  const have = snapshot.finalPillars[id];
+                  const ok = have >= need;
+                  const ratio = need > 0 ? Math.min(1, have / need) : 1;
+                  return (
+                    <div key={id} className="hero-thread-detail__req">
+                      <img src={PILLAR_ICON[id]} alt="" decoding="async" />
+                      <GProgressBar value={ratio} height={5} style={{ flex: 1 }} />
+                      <span className="hero-thread-detail__val" style={{ color: PILLAR_ACCENT[id] }}>
+                        {Math.round(have)}/{need}{ok ? ' ✓' : ''}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="hero-thread-detail__hint" data-ok={on ? 'true' : 'false'}>
+                {on
+                  ? 'Все столпы выполнены — нить горит.'
+                  : `Осталось повысить: ${missing.map(([id, gap]) => `${PILLARS[id].nameRu} +${gap}`).join(', ')}`}
               </p>
-            )}
+            </div>
           </div>
         );
       })()}
+      {detail?.kind === 'soon-thread' && (
+        <div className="hero-thread-detail">
+          <div className="hero-thread-detail__head">
+            <b>{detail.name}</b>
+            <GBadge variant="purple" size="sm">скоро</GBadge>
+          </div>
+          <p className="hero-thread-detail__fx">Нить появится в будущих обновлениях мира Aethelia.</p>
+        </div>
+      )}
       {detail?.kind === 'gear' && (
         <div className="hero-hub-modal">
           {gearItem ? (
