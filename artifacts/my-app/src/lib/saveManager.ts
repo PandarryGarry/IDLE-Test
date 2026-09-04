@@ -10,6 +10,12 @@ import { useAuthStore } from '../store/authStore';
 import { GUEST_NOTICE } from './guestMode';
 import { calculateOfflineProgress } from '../gameEngine/offlineCalc';
 import { getLiveAttributes, setLiveAttributes, createDefaultAttributes, migrateSaveAttributes } from './characterAttributes';
+import {
+  createEmptyGearSets,
+  getLiveGearSets,
+  migrateGearSets,
+  setLiveGearSets,
+} from './gearSets';
 
 const SAVE_VERSION = '1.0.0';
 const SAVE_KEY_PREFIX = 'aethelia_save_';
@@ -67,6 +73,7 @@ export function collectSaveData(): SaveData {
     },
     settings: {},
     attributes: getLiveAttributes(),
+    gearSets: getLiveGearSets(),
   };
 }
 
@@ -76,22 +83,23 @@ export function applySaveData(data: SaveData): void {
   const gameStore = useGameStore.getState();
 
   setLiveAttributes(migrateSaveAttributes(data.attributes));
-  playerStore.loadFromSave(data.player.skills, data.player.equipment);
-  bankStore.loadFromSave(data.bank.items, data.bank.gp, data.bank.maxSlots);
+  setLiveGearSets(migrateGearSets(data.gearSets));
+  playerStore.loadFromSave(data.player?.skills ?? ({} as any), data.player?.equipment);
+  bankStore.loadFromSave(data.bank?.items ?? [], data.bank?.gp ?? 0, data.bank?.maxSlots ?? 40);
   gameStore.loadFromSave({
-    gameMode: data.gameMode,
-    totalPlayTime: data.totalPlayTime,
-    activeSkill: data.game.activeSkill,
-    activeActionId: data.game.activeActionId,
-    lastSaveTime: data.savedAt,
+    gameMode: data.gameMode ?? 'normal',
+    totalPlayTime: data.totalPlayTime ?? 0,
+    activeSkill: data.game?.activeSkill ?? null,
+    activeActionId: data.game?.activeActionId ?? null,
+    lastSaveTime: data.savedAt ?? Date.now(),
   });
 
   // Автоматически возобновляем активный навык
-  if (data.game.activeSkill && data.game.activeActionId) {
+  if (data.game?.activeSkill && data.game?.activeActionId) {
     // Небольшая задержка чтобы tickManager успел запуститься
     setTimeout(() => {
       const gs = useGameStore.getState();
-      if (!gs.isRunning && data.game.activeSkill && data.game.activeActionId) {
+      if (!gs.isRunning && data.game?.activeSkill && data.game?.activeActionId) {
         gs.startSkillAction(data.game.activeSkill as any, data.game.activeActionId);
       }
     }, 500);
@@ -101,7 +109,7 @@ export function applySaveData(data: SaveData): void {
   // Используем leaveTime (точное время ухода) если есть, иначе savedAt
   const leaveStore = isGuestMode() ? window.sessionStorage : window.localStorage;
   const leaveTime = Number(leaveStore.getItem(leaveTimeKey()) || '0') || data.savedAt;
-  if (data.game.activeSkill && data.game.activeActionId) {
+  if (data.game?.activeSkill && data.game?.activeActionId) {
     const offlineResult = calculateOfflineProgress(data.game.activeSkill, data.game.activeActionId, leaveTime);
     if (offlineResult && offlineResult.xpGained > 0) {
       const skillNames: Record<string, string> = {
@@ -273,6 +281,7 @@ export function resetGameToFresh(): void {
     useBankStore.getState().reset();
     useGameStore.getState().reset();
     setLiveAttributes(createDefaultAttributes());
+    setLiveGearSets(createEmptyGearSets());
   } catch (e) {
     console.error('resetGameToFresh failed:', e);
   }

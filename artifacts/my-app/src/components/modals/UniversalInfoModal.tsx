@@ -45,12 +45,12 @@ export function getItemTier(itemId: string, item?: Item): string {
 }
 
 const RARITY_NAMES: Record<string, { label: string; text: string; bg: string; dot: string; border: string }> = {
-  common:    { label: 'Обычный',     text: 'text-stone-300', bg: 'bg-stone-800/80', dot: 'bg-slate-400', border: 'border-stone-700' },
-  uncommon:  { label: 'Необычный',   text: 'text-emerald-400', bg: 'bg-emerald-100/80', dot: 'bg-emerald-400', border: 'border-emerald-500/40' },
-  rare:      { label: 'Редкий',      text: 'text-blue-400', bg: 'bg-blue-50', dot: 'bg-blue-400', border: 'border-blue-500/40' },
-  epic:      { label: 'Эпический',   text: 'text-purple-400', bg: 'bg-purple-50', dot: 'bg-purple-400', border: 'border-purple-500/40' },
-  legendary: { label: 'Легендарный', text: 'text-amber-400', bg: 'bg-amber-50', dot: 'bg-amber-400', border: 'border-amber-500/40' },
-  mythic:    { label: 'Мифический',  text: 'text-rose-400', bg: 'bg-rose-950/40', dot: 'bg-rose-400', border: 'border-rose-500/40' },
+  common:    { label: 'Обычный',     text: 'text-stone-300', bg: 'bg-stone-800/80', dot: 'bg-stone-400', border: 'border-stone-700' },
+  uncommon:  { label: 'Необычный',   text: 'text-emerald-400', bg: 'bg-emerald-950/50', dot: 'bg-emerald-400', border: 'border-emerald-600/50' },
+  rare:      { label: 'Редкий',      text: 'text-blue-400', bg: 'bg-blue-950/50', dot: 'bg-blue-400', border: 'border-blue-600/50' },
+  epic:      { label: 'Эпический',   text: 'text-purple-400', bg: 'bg-purple-950/50', dot: 'bg-purple-400', border: 'border-purple-600/50' },
+  legendary: { label: 'Легендарный', text: 'text-amber-400', bg: 'bg-amber-950/50', dot: 'bg-amber-400', border: 'border-amber-600/50' },
+  mythic:    { label: 'Мифический',  text: 'text-rose-400', bg: 'bg-rose-950/50', dot: 'bg-rose-400', border: 'border-rose-600/50' },
 };
 
 const CATEGORY_NAMES: Record<string, string> = {
@@ -203,14 +203,14 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
 
         {/* Hero Visual & Name Row */}
         <div className="flex items-center gap-3.5">
-          <div className={`relative w-20 h-20 rounded-2xl border-2 flex items-center justify-center text-4xl shadow-inner shrink-0 overflow-hidden ${rarity.bg} ${rarity.border}`}>
+          <div className="relative w-20 h-20 rounded-2xl border border-stone-700/80 bg-stone-950/80 flex items-center justify-center text-4xl shadow-inner shrink-0 overflow-hidden">
             {visual.type === 'image' ? (
-              <img src={visual.value} alt={item.name} className="w-full h-full max-w-[85%] max-h-[85%] object-contain select-none pointer-events-none p-1" />
+              <img src={visual.value} alt={item.name} className="w-full h-full max-w-[80%] max-h-[80%] object-contain select-none pointer-events-none p-1" />
             ) : (
               <span className="drop-shadow-md">{visual.value}</span>
             )}
             {quantity > 1 && (
-              <span className="absolute -bottom-1 -right-1 bg-[var(--bg-slot)] border border-amber-400/50 text-amber-300 font-mono text-[10px] font-black px-1.5 py-0.2 rounded-full shadow">
+              <span className="absolute bottom-1.5 right-1.5 z-10 bg-stone-950/95 border border-amber-500/70 text-amber-300 font-mono text-[10px] font-black px-1.5 py-0.5 rounded leading-none shadow-md pointer-events-none">
                 x{formatNumber(quantity)}
               </span>
             )}

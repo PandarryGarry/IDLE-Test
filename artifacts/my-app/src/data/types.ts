@@ -197,6 +197,21 @@ export const EMPTY_EQUIPMENT: Equipment = {
   weapon: null, shield: null, cape: null, quiver: null, passive: null,
 };
 
+// ── Наборы снаряжения (пресеты) ──────────────────────────────
+/** Сколько пресетов у героя. Больше — только отдельным решением. */
+export const GEAR_SETS_MAX = 3;
+
+export interface GearSetPreset {
+  name: string;
+  equipment: Equipment;
+}
+
+export interface GearSetsState {
+  version: 1;
+  /** Длина всегда GEAR_SETS_MAX; null — пустой пресет. */
+  presets: (GearSetPreset | null)[];
+}
+
 export function normalizeEquipment(raw?: Partial<Equipment> | null): Equipment {
   return { ...EMPTY_EQUIPMENT, ...raw };
 }
@@ -245,4 +260,6 @@ export interface SaveData {
   settings: Record<string, unknown>;
   /** Четыре Столпа. Старые сейвы без поля мигрируют в коде, не новой таблицей. */
   attributes?: import('./attributes').CharacterAttributeState;
+  /** Наборы снаряжения (до 3 пресетов). Старые сейвы без поля — пустые наборы. */
+  gearSets?: GearSetsState;
 }

@@ -10,7 +10,7 @@ import {
 } from '@/lib/characterApi';
 import { isAuthConfigured } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
-import { resetGameToFresh } from '@/lib/saveManager';
+import { resetGameToFresh, applySaveData } from '@/lib/saveManager';
 import { describeCharacterError } from '@/lib/characterErrors';
 import {
   attributesFromSave,
@@ -134,6 +134,9 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
       }));
       writeLastCharacterId(character.id);
       setLiveAttributes(attributesFromSave(character.saveData));
+      if (character.saveData) {
+        applySaveData(character.saveData);
+      }
     } catch (e) {
       const message = describeCharacterError(e, 'Не удалось выбрать персонажа.');
       set({ error: message });

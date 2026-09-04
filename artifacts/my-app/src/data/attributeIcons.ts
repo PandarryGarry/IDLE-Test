@@ -76,7 +76,7 @@ export const EQUIP_SLOT_ICON: Record<EquipSlot, string> = {
   platebody: iconUrl('ui/equipment_slots/slot_equip_chest'),
   platelegs: iconUrl('ui/equipment_slots/slot_equip_pants'),
   boots: iconUrl('ui/equipment_slots/slot_equip_boots'),
-  gloves: iconUrl('armor/leather/t01/gloves'),
+  gloves: iconUrl('ui/equipment_slots/slot_equip_boots'),
   weapon: iconUrl('ui/equipment_slots/slot_equip_weapon'),
   shield: iconUrl('ui/equipment_slots/slot_equip_shield'),
   amulet: iconUrl('ui/equipment_slots/slot_equip_amulet'),
@@ -84,7 +84,7 @@ export const EQUIP_SLOT_ICON: Record<EquipSlot, string> = {
   ring2: iconUrl('ui/equipment_slots/slot_equip_ring'),
   bracelet: iconUrl('ui/equipment_slots/slot_equip_ring'),
   bracelet2: iconUrl('ui/equipment_slots/slot_equip_ring'),
-  belt: iconUrl('ui/equipment_slots/slot_equip_pants'),
+  belt: iconUrl('ui/equipment_slots/slot_equip_chest'),
   cape: iconUrl('ui/equipment_slots/slot_equip_chest'),
   quiver: iconUrl('ui/equipment_slots/slot_equip_weapon'),
   passive: iconUrl('ui/equipment_slots/slot_equip_amulet'),
@@ -93,6 +93,11 @@ export const EQUIP_SLOT_ICON: Record<EquipSlot, string> = {
 export const SLOT_FRAME = {
   empty: iconUrl('ui/slots/slot_parchment_empty'),
   common: iconUrl('ui/slots/slot_parchment_common'),
+  uncommon: iconUrl('ui/slots/slot_parchment_uncommon'),
+  rare: iconUrl('ui/slots/slot_parchment_rare'),
+  epic: iconUrl('ui/slots/slot_parchment_epic'),
+  legendary: iconUrl('ui/slots/slot_parchment_legendary'),
+  locked: iconUrl('ui/slots/slot_parchment_locked'),
   active: iconUrl('ui/slots/slot_parchment_legendary'),
 } as const;
 

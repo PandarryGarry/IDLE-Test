@@ -46,6 +46,15 @@
   --bg-card-dark:   #a07040;
   --bg-slot:        #5a3418;
   --bg-slot-hover:  #6b4020;
+  /* Ячейки инвентаря/экипа — «каштан»: плоские, без рамки */
+  --slot-wood:      linear-gradient(160deg, #845d36 0%, #6e4727 100%);
+  --slot-wood-hover:linear-gradient(160deg, #926a3f 0%, #7c5230 100%);
+  --slot-wood-locked: linear-gradient(160deg, #4a3320 0%, #38251a 100%);
+  --shadow-slot-wood:
+      inset 0 1.5px 0 rgba(255,228,175,0.14),
+      inset 0 -4px 9px rgba(28,14,4,0.42),
+      inset 3px 0 7px rgba(28,14,4,0.12),
+      inset -3px 0 7px rgba(28,14,4,0.12);
   --bg-header:      #2a1508;
   --bg-overlay:     rgba(20,10,0,0.8);
 
@@ -253,10 +262,10 @@
 /* Ячейки */
 .g-slot {
   aspect-ratio: 1;
-  background: linear-gradient(160deg, #3d2010 0%, #2e1608 100%);
-  border: 2px solid #6b3810;
+  background: var(--slot-wood);
+  border: none;
   border-radius: var(--radius-md);
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(200,150,50,0.1), 0 1px 0 #8b5020;
+  box-shadow: var(--shadow-slot-wood);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -264,16 +273,28 @@
   transition: all 0.15s ease;
 }
 .g-slot:hover {
-  border-color: var(--border-accent);
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.4), 0 0 10px rgba(200,136,10,0.3);
+  background: var(--slot-wood-hover);
+  box-shadow: var(--shadow-slot-wood), 0 0 10px rgba(200,136,10,0.35);
 }
 
 .g-slot-empty {
-  background: linear-gradient(160deg, #3a1e0c 0%, #2a1406 100%);
-  border: 2px solid #5a3010;
+  background: var(--slot-wood);
+  border: none;
   border-radius: var(--radius-md);
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);
+  box-shadow: var(--shadow-slot-wood);
   aspect-ratio: 1;
+}
+.g-slot-empty:hover {
+  background: var(--slot-wood-hover);
+  box-shadow: var(--shadow-slot-wood), 0 0 10px rgba(200,136,10,0.35);
+}
+
+/* Векторный силуэт предмета внутри ячейки инвентаря */
+.g-slot__vec {
+  width: 100%;
+  height: 100%;
+  color: #f0d6ab;
+  filter: drop-shadow(0 1px 2px rgba(25,12,3,0.45));
 }
 
 /* Кнопки */
@@ -3016,18 +3037,10 @@
   cursor: pointer;
 }
 
-.hero-hub__tabs,
-.hero-gear-tabs {
+.hero-hub__tabs {
   display: grid;
   gap: var(--space-2xs);
-}
-
-.hero-hub__tabs {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.hero-gear-tabs {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .hero-hub__tab {
@@ -3357,15 +3370,847 @@
   gap: var(--space-2xs);
 }
 
-.hero-gear-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 48px);
-  justify-content: center;
-  gap: var(--space-sm) var(--space-md);
+/* ── Окно «Экип»: наборы, 2×7 слотов слева | манекен | 2×7 мини-сумка справа, сводка бонусов (5B) ── */
+
+.hero-gear2 {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
 }
 
-.hero-gear-grid--hands {
-  grid-template-columns: repeat(2, 48px);
+/* 1. Верхняя панель: Наборы слева, Заголовок в центре, Фильтры справа */
+.hero-gear2__header-bar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 0 1px;
+}
+
+.hero-gear2__presets-box {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hero-gear2__preset-pills {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--bg-card-dark);
+  border: 1px solid var(--border-default);
+  border-radius: 7px;
+  padding: 2px;
+}
+
+.hero-gear2__preset-pill {
+  width: 22px;
+  height: 20px;
+  font-family: var(--app-font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  line-height: 1;
+}
+
+.hero-gear2__preset-pill:hover {
+  color: var(--text-primary);
+  background: var(--bg-slot);
+}
+
+.hero-gear2__preset-pill.is-saved {
+  color: var(--text-gold);
+  font-weight: 900;
+  background: rgba(212, 134, 10, 0.18);
+}
+
+.hero-gear2__preset-pill.is-active {
+  background: linear-gradient(135deg, #d97706, #f59e0b);
+  color: #1a0f05;
+  font-weight: 900;
+  box-shadow: 0 1px 4px rgba(245, 158, 11, 0.35);
+}
+
+.hero-gear2__save-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  background: var(--bg-slot);
+  border: 1px solid var(--border-slot);
+  border-radius: 6px;
+  color: var(--text-gold);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.hero-gear2__save-btn:hover {
+  border-color: var(--border-accent);
+  box-shadow: 0 0 6px rgba(212, 134, 10, 0.3);
+}
+
+.hero-gear2__sets-choose {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: var(--bg-card-dark);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
+  min-width: 100px;
+}
+
+.hero-gear2__sets-choose-title {
+  font-family: var(--app-font-display);
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--text-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 4px 2px;
+}
+
+.hero-set-opt {
+  font-family: var(--app-font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  color: var(--text-light);
+  background: var(--bg-slot);
+  border: 1px solid var(--border-slot);
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: left;
+  transition: all 0.12s ease;
+}
+
+.hero-set-opt:hover {
+  border-color: var(--border-accent);
+  color: var(--text-gold);
+  background: rgba(212, 134, 10, 0.15);
+}
+
+.hero-gear2__center-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--app-font-display);
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--text-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+}
+
+.hero-gear2__bag-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hero-gear2__filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg-card-dark);
+  border: 1px solid var(--border-default);
+  border-radius: 7px;
+  padding: 2px;
+}
+
+.hero-gear2__filter-chip {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 11px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  line-height: 1;
+  opacity: 0.65;
+}
+
+.hero-gear2__filter-chip:hover {
+  opacity: 1;
+  background: var(--bg-slot);
+}
+
+.hero-gear2__filter-chip.is-active {
+  opacity: 1;
+  background: #3d2010;
+  border: 1px solid var(--border-accent);
+  box-shadow: 0 0 6px rgba(212, 134, 10, 0.3);
+}
+
+.hero-gear2__pager {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--app-font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.hero-gear2__pager-btn {
+  background: var(--bg-slot);
+  border: 1px solid var(--border-slot);
+  border-radius: 4px;
+  color: var(--text-gold);
+  font-size: 10px;
+  font-weight: 900;
+  width: 16px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.hero-gear2__pager-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* 2. Основная 3-колоночная область: Слева (2×7) | Центр (Манекен) | Справа (2×7) */
+.hero-gear2__main {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.hero-gear2__slots-col {
+  display: grid;
+  grid-template-columns: repeat(2, 42px);
+  gap: 4px;
+  justify-content: center;
+}
+
+.hero-gear2__grid-7 {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hero-gear2__center {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 318px;
+  min-width: 120px;
+  max-width: 190px;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.hero-gear2__doll {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.hero-gear2__doll img {
+  height: 318px;
+  max-height: none;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 16px rgba(10, 5, 0, 0.55));
+  z-index: 1;
+  transform: scale(1.88) translateY(6px);
+  pointer-events: none;
+}
+
+.hero-gear2__pedestal {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 130px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(212, 134, 10, 0.45) 0%, rgba(30, 16, 6, 0.85) 55%, transparent 75%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Правая колонка: Мини-инвентарь */
+.hero-gear2__inv-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hero-gear2__inv-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 42px);
+  grid-template-rows: repeat(7, 42px);
+  gap: 4px;
+  justify-content: center;
+}
+
+/* ── Единый Squircle Слот экипировки и сумки (42×42) ── */
+.hero-sq-slot {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: var(--slot-wood);
+  box-shadow: var(--shadow-slot-wood);
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+  user-select: none;
+  flex-shrink: 0;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.hero-sq-slot:hover {
+  transform: translateY(-1px);
+  background: var(--slot-wood-hover);
+  box-shadow: var(--shadow-slot-wood), 0 0 10px rgba(245, 158, 11, 0.35);
+  z-index: 5;
+}
+
+.hero-sq-slot:active {
+  transform: scale(0.92) !important;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.95), inset 0 0 5px rgba(251, 191, 36, 0.6) !important;
+  z-index: 25 !important;
+}
+
+/* Пустой слот экипировки с силуэтом — тот же каштан, без рамки */
+.hero-sq-slot--empty {
+  background: var(--slot-wood);
+  border: none;
+  box-shadow: var(--shadow-slot-wood);
+}
+
+.hero-sq-slot--empty:hover {
+  background: var(--slot-wood-hover);
+  box-shadow: var(--shadow-slot-wood), 0 0 10px rgba(245, 158, 11, 0.35);
+}
+
+/* Векторный силуэт пустых слотов */
+.hero-sq-slot__vector-icon {
+  width: 20px;
+  height: 20px;
+  color: #deb887;
+  opacity: 0.75;
+  transition: all 0.15s ease;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+
+.hero-sq-slot--empty:hover .hero-sq-slot__vector-icon,
+.hero-sq-slot:hover .hero-sq-slot__vector-icon {
+  opacity: 1;
+  color: #f59e0b;
+  transform: scale(1.1);
+}
+
+.hero-sq-slot.is-selected .hero-sq-slot__vector-icon {
+  opacity: 1;
+  color: #fbbf24;
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.85));
+}
+
+/* Занятый слот: силуэт предмета яркий, светло-кремовый */
+.hero-sq-slot__vector-icon--filled {
+  opacity: 1;
+  color: #f0d6ab;
+  filter: drop-shadow(0 1px 2px rgba(25, 12, 3, 0.5));
+}
+.hero-sq-slot:hover .hero-sq-slot__vector-icon--filled,
+.hero-sq-slot.is-selected .hero-sq-slot__vector-icon--filled {
+  color: #fde9c8;
+}
+
+.hero-sq-slot__silhouette {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  opacity: 0.6;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+  pointer-events: none;
+  transition: all 0.15s ease;
+}
+
+/* Выделение активного слота при выборе / клике (яркое золотое пульсирующее свечение) */
+.hero-sq-slot.is-selected,
+.hero-sq-slot--empty-bag.is-selected,
+.hero-sq-slot--bag-item.is-selected,
+.hero-sq-slot--equipped.is-selected,
+.hero-sq-slot--empty.is-selected {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 1), 0 0 6px rgba(245, 158, 11, 0.8), inset 0 0 6px rgba(245, 158, 11, 0.6) !important;
+  transform: scale(1.08) !important;
+  z-index: 20 !important;
+  animation: hero-slot-pulse 1.8s infinite ease-in-out !important;
+}
+
+@keyframes hero-slot-pulse {
+  0% {
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.8), inset 0 0 4px rgba(245, 158, 11, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 1), 0 0 8px rgba(251, 191, 36, 0.9), inset 0 0 8px rgba(245, 158, 11, 0.75);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.8), inset 0 0 4px rgba(245, 158, 11, 0.45);
+  }
+}
+
+/* Подсветка совместимых предметов в сумке при выборе слота экипировки */
+.hero-sq-slot.is-compatible,
+.hero-sq-slot--bag-item.is-compatible {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.85), inset 0 0 5px rgba(245, 158, 11, 0.45) !important;
+  animation: hero-slot-pulse 2s infinite ease-in-out !important;
+  z-index: 10 !important;
+}
+
+/* Подсветка целевого слота экипировки при выборе предмета в сумке */
+.hero-sq-slot.is-matching-target {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.9), 0 0 6px rgba(56, 189, 248, 0.6), inset 0 0 6px rgba(56, 189, 248, 0.5) !important;
+  animation: hero-slot-target-pulse 1.8s infinite ease-in-out !important;
+  z-index: 10 !important;
+}
+
+@keyframes hero-slot-target-pulse {
+  0% {
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.6), inset 0 0 3px rgba(56, 189, 248, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(56, 189, 248, 1), inset 0 0 8px rgba(56, 189, 248, 0.65);
+  }
+  100% {
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.6), inset 0 0 3px rgba(56, 189, 248, 0.3);
+  }
+}
+
+/* Пустая ячейка мини-сумки и инвентаря — плоский каштан, без рамки/текстуры */
+.hero-sq-slot--empty-bag,
+.g-slot-empty {
+  background: var(--slot-wood);
+  border: none;
+  border-radius: 9px;
+  box-shadow: var(--shadow-slot-wood);
+  cursor: pointer;
+  aspect-ratio: 1;
+}
+
+.hero-sq-slot--empty-bag:hover,
+.g-slot-empty:hover {
+  background: var(--slot-wood-hover);
+  box-shadow: var(--shadow-slot-wood), 0 0 10px rgba(245, 158, 11, 0.35);
+}
+
+.hero-sq-slot--empty-bag:active,
+.g-slot-empty:active {
+  transform: scale(0.93) !important;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.95), inset 0 0 5px rgba(251, 191, 36, 0.6) !important;
+}
+
+/* Заблокированный слот (14-й) */
+.hero-sq-slot--locked {
+  background: var(--slot-wood-locked);
+  border: none;
+  opacity: 0.6;
+}
+
+.hero-sq-slot--locked:hover {
+  opacity: 0.95;
+}
+
+.hero-sq-slot__lock {
+  font-size: 13px;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+/* Иконка предмета внутри слота */
+.hero-sq-slot__icon-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  pointer-events: none;
+}
+
+.hero-sq-slot__icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.hero-sq-slot__emoji {
+  font-size: 1.35rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+/* Двуручное оружие (ghost shield) */
+.hero-sq-slot.is-dimmed {
+  opacity: 0.45;
+  filter: grayscale(0.4);
+}
+
+/* Тир-бейдж в левом верхнем углу */
+.hero-sq-slot__tier {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  z-index: 10;
+  font-family: var(--app-font-mono);
+  font-size: 8px;
+  font-weight: 900;
+  line-height: 1;
+  color: #f5d880;
+  background: rgba(14, 7, 2, 0.92);
+  border: 0.5px solid rgba(245, 216, 128, 0.6);
+  padding: 1px 3px;
+  border-radius: 3px;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+/* Точка редкости в правом верхнем углу */
+.hero-sq-slot__dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  z-index: 10;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Количество предметов в сумке */
+.hero-sq-slot__qty {
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
+  z-index: 10;
+  font-family: var(--app-font-mono);
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1;
+  color: #f5d880;
+  background: rgba(14, 7, 2, 0.92);
+  border: 0.5px solid #6b3810;
+  padding: 1px 3px;
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+/* 3. Снизу: Общие характеристики бонусов экипировки */
+.hero-gear2__stats-bar {
+  background: linear-gradient(160deg, rgba(38, 20, 10, 0.92), rgba(20, 10, 4, 0.96));
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 6px 8px;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+.hero-gear2__stats-title {
+  font-family: var(--app-font-display);
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--text-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px;
+}
+
+.hero-gear2__stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.hero-gear2__stat-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  background: var(--bg-slot);
+  border: 1px solid var(--border-slot);
+  border-radius: 7px;
+  box-shadow: var(--shadow-slot);
+  transition: all 0.12s ease;
+}
+
+.hero-gear2__stat-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hero-gear2__stat-icon {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.hero-gear2__stat-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-light);
+  font-family: var(--app-font-sans);
+}
+
+.hero-gear2__stat-val {
+  font-family: var(--app-font-mono);
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--text-gold);
+  letter-spacing: -0.02em;
+}
+
+.hero-gear2__stat-val.is-zero {
+  color: var(--text-muted);
+  font-weight: 700;
+  opacity: 0.6;
+}
+
+/* Редкость тайлов сумки — только токены темы */
+.hero-bag-tile.is-uncommon {
+  box-shadow: 0 0 0 1px var(--accent-teal);
+  border-radius: var(--radius-sm);
+}
+
+.hero-bag-tile.is-rare {
+  box-shadow: 0 0 0 1px var(--accent-sapphire), 0 0 8px rgba(24, 96, 192, 0.3);
+  border-radius: var(--radius-sm);
+}
+
+.hero-bag-tile.is-epic {
+  box-shadow: 0 0 0 1px var(--accent-amber), 0 0 10px rgba(208, 96, 16, 0.3);
+  border-radius: var(--radius-sm);
+}
+
+.hero-bag-tile.is-legendary {
+  box-shadow: 0 0 0 1px var(--accent-gold-light), 0 0 12px rgba(240, 168, 32, 0.4);
+  border-radius: var(--radius-sm);
+}
+
+.hero-bag-tile.is-mythic {
+  box-shadow: 0 0 0 1px var(--accent-ruby), 0 0 12px rgba(192, 40, 30, 0.4);
+  border-radius: var(--radius-sm);
+}
+
+/* Карточка предмета (модал) */
+.hero-hub-modal--item {
+  display: grid;
+  gap: var(--space-sm);
+  justify-items: stretch;
+}
+
+.hero-item-card {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.hero-item-card__tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  background: var(--bg-slot);
+  border: 1px solid var(--border-slot);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-slot);
+}
+
+.hero-item-card__tile img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+
+.hero-item-card__tile > span {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.hero-item-card__tile.is-uncommon { border-color: var(--accent-teal); }
+.hero-item-card__tile.is-rare {
+  border-color: var(--accent-sapphire);
+  box-shadow: 0 0 10px rgba(24, 96, 192, 0.35);
+}
+.hero-item-card__tile.is-epic {
+  border-color: var(--accent-amber);
+  box-shadow: 0 0 10px rgba(208, 96, 16, 0.35);
+}
+.hero-item-card__tile.is-legendary {
+  border-color: var(--accent-gold-light);
+  box-shadow: 0 0 12px rgba(240, 168, 32, 0.45);
+}
+.hero-item-card__tile.is-mythic {
+  border-color: var(--accent-ruby);
+  box-shadow: 0 0 12px rgba(192, 40, 30, 0.45);
+}
+
+.hero-item-card__meta {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.hero-item-card__meta strong {
+  font-family: var(--app-font-display);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero-item-card__meta small {
+  color: var(--text-muted);
+  font-size: var(--text-2xs);
+}
+
+.hero-item-rarity {
+  font-style: normal;
+  font-family: var(--app-font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+
+.hero-item-rarity.is-uncommon { color: var(--accent-teal); }
+.hero-item-rarity.is-rare { color: var(--accent-sapphire); }
+.hero-item-rarity.is-epic { color: var(--accent-amber); }
+.hero-item-rarity.is-legendary { color: var(--accent-gold-light); }
+.hero-item-rarity.is-mythic { color: var(--accent-ruby); }
+
+.hero-item-desc {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-style: italic;
+  margin: 0;
+}
+
+.hero-item-note {
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Сравнение с надетым: зелёное лучше, красное хуже */
+.hero-cmp {
+  display: grid;
+  gap: 4px;
+  border-top: 1px solid var(--border-card);
+  padding-top: var(--space-xs);
+}
+
+.hero-cmp__vs {
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.hero-cmp-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: var(--space-xs);
+  font-family: var(--app-font-mono);
+  font-size: var(--text-xs);
+}
+
+.hero-cmp-row > span:first-child {
+  color: var(--text-secondary);
+}
+
+.hero-cmp-row__vals {
+  color: var(--text-primary);
+}
+
+.hero-cmp-row__delta {
+  font-weight: 800;
+  min-width: 2.4em;
+  text-align: right;
+}
+
+.hero-cmp-row[data-delta='up'] .hero-cmp-row__delta { color: var(--accent-emerald); }
+.hero-cmp-row[data-delta='down'] .hero-cmp-row__delta { color: var(--accent-ruby); }
+.hero-cmp-row[data-delta='same'] .hero-cmp-row__delta { color: var(--text-muted); }
+
+/* Адаптив: сохранение 3-колоночной композиции на всех устройствах */
+@media (min-width: 700px) {
+  .hero-gear2__slots-col {
+    grid-template-columns: repeat(2, 42px);
+    gap: 6px;
+  }
+  .hero-gear2__inv-grid {
+    grid-template-columns: repeat(2, 42px);
+    grid-template-rows: repeat(7, 42px);
+    gap: 6px;
+  }
+  .hero-gear2__center {
+    height: 310px;
+    max-width: 220px;
+  }
 }
 
 .hero-thread[data-on='true'] {

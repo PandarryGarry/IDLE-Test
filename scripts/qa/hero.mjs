@@ -108,7 +108,47 @@ async function runSeed(browser) {
   parsed.characters = (parsed.characters ?? []).map((row) => ({
     ...row,
     selected: true,
-    saveData: { ...(row.saveData ?? {}), attributes: DEMO_ATTRIBUTES },
+    saveData: {
+      ...(row.saveData ?? {}),
+      attributes: DEMO_ATTRIBUTES,
+      player: {
+        ...(row.saveData?.player ?? {}),
+        equipment: {
+          helm: 'iron_helm',
+          platebody: 'iron_platebody',
+          platelegs: null,
+          boots: null,
+          gloves: null,
+          amulet: null,
+          ring: null,
+          ring2: null,
+          bracelet: null,
+          bracelet2: null,
+          belt: null,
+          weapon: 'steel_sword',
+          shield: 'bronze_shield',
+          cape: null,
+          quiver: null,
+          passive: null,
+        },
+      },
+      bank: {
+        ...(row.saveData?.bank ?? {}),
+        items: [
+          { itemId: 'bronze_sword', quantity: 1, locked: false },
+          { itemId: 'mithril_sword', quantity: 1, locked: false },
+          { itemId: 'adamant_sword', quantity: 1, locked: false },
+          { itemId: 'bronze_helm', quantity: 1, locked: false },
+          { itemId: 'steel_helm', quantity: 1, locked: false },
+          { itemId: 'mithril_helm', quantity: 1, locked: false },
+          { itemId: 'bronze_platebody', quantity: 1, locked: false },
+          { itemId: 'steel_platebody', quantity: 1, locked: false },
+          { itemId: 'mithril_platebody', quantity: 1, locked: false },
+          { itemId: 'iron_shield', quantity: 1, locked: false },
+          { itemId: 'steel_shield', quantity: 1, locked: false },
+        ],
+      },
+    },
   }));
   writeFileSync(SEED, JSON.stringify(parsed, null, 2));
   console.log(`Сид готов: ${SEED} (героев: ${parsed.characters.length})`);
@@ -170,14 +210,19 @@ async function snapBoardFit(page, name) {
 async function openHub(page, viewport, tag) {
   await page.setViewport(viewport);
   const seed = readFileSync(SEED, 'utf8');
-  await page.evaluateOnNewDocument((raw) => {
+  const parsed = JSON.parse(seed);
+  const heroSave = parsed.characters?.[0]?.saveData;
+  await page.evaluateOnNewDocument((raw, autoSave) => {
     try {
       localStorage.setItem('aethelia_qa_db_v1', raw);
       localStorage.setItem('aethelia_qa_mock_v1', '1');
       localStorage.setItem('aethelia_prologue_seen_v1', '1');
       localStorage.setItem('aethelia_last_seen_version', '0.2.0');
+      if (autoSave) {
+        localStorage.setItem('aethelia_save_auto', JSON.stringify(autoSave));
+      }
     } catch { /* private mode */ }
-  }, seed);
+  }, seed, heroSave);
   await page.goto(cfg.baseUrl, { waitUntil: 'domcontentloaded', timeout: 90000 });
   await waitPastSplash(page, 25000);
   await skipStoryIfAny(page, 10000);
@@ -252,6 +297,37 @@ async function runShots(browser, only) {
   if (only === 'all' || only === 'gear') {
     await clickTab(page, 'Экип');
     await snap(page, '04-mobile-gear');
+
+    // Click on empty slot on the left
+    await page.evaluate(() => {
+      const emptySlot = document.querySelector('.hero-sq-slot--empty');
+      emptySlot?.click();
+    });
+    await sleep(400);
+    await snap(page, '04b-mobile-gear-left-selected');
+
+    // Click on bag item on the right
+    await page.evaluate(() => {
+      const bagItem = document.querySelector('.hero-sq-slot--bag-item');
+      bagItem?.click();
+    });
+    await sleep(400);
+    await snap(page, '04c-mobile-gear-right-modal');
+    await page.evaluate(() => {
+      const btns = Array.from(document.querySelectorAll('button'));
+      const closeBtn = btns.find(b => b.textContent.includes('Закрыть'));
+      closeBtn?.click();
+    });
+    await sleep(400);
+    await snap(page, '04d-mobile-gear-right-selected');
+
+    // Click on empty slot on the right
+    await page.evaluate(() => {
+      const emptyBagSlots = document.querySelectorAll('.hero-sq-slot--empty-bag');
+      emptyBagSlots[0]?.click();
+    });
+    await sleep(400);
+    await snap(page, '04e-mobile-gear-right-empty-selected');
   }
   if (only === 'all' || only === 'synergies') {
     await clickTab(page, 'Нити');
@@ -268,6 +344,8 @@ async function runShots(browser, only) {
     await snap(page, '07-desktop-body');
     await clickTab(page, 'Путь');
     await snap(page, '08-desktop-path');
+    await clickTab(page, 'Экип');
+    await snap(page, '09-desktop-gear');
   }
   await page.close();
 }
