@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aethelia · Нити · 4 современных варианта</title>
+<style>
+:root{
+  --bg:#0e0b12; --bg2:#151020;
+  --glass:rgba(255,255,255,.045); --glass2:rgba(255,255,255,.07);
+  --edge:rgba(232,176,75,.28); --edge-soft:rgba(255,255,255,.10);
+  --gold:#e8b04b; --gold-hi:#ffd98a; --arcane:#59e0c8;
+  --text:#f4ecdd; --muted:#9a91a6; --dim:#6d6579;
+  --track:rgba(255,255,255,.08);
+  --mono:'JetBrains Mono','DejaVu Sans Mono',monospace;
+  --disp:'Cinzel','DejaVu Serif',Georgia,serif;
+  --sans:'Inter',-apple-system,'DejaVu Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(1200px 700px at 50% -10%,#241a33 0%,var(--bg) 60%);color:var(--text);
+  font-family:var(--sans);padding:36px 20px 80px;display:flex;flex-direction:column;align-items:center;gap:56px}
+.sheet-label{width:390px;text-align:left}
+.sheet-label h2{font-family:var(--disp);font-size:21px;letter-spacing:.08em;color:var(--gold-hi);text-transform:uppercase}
+.sheet-label p{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.5}
+.sheet-label .tag{display:inline-block;margin-top:8px;padding:3px 10px;border:1px solid var(--edge);border-radius:999px;color:var(--gold);font-family:var(--mono);font-size:11px}
+.vwrap{display:flex;flex-direction:column;gap:14px;align-items:flex-start}
+body.grid4{flex-direction:row;flex-wrap:nowrap;gap:40px;align-items:flex-start;padding:28px}
+.svg-mono{font-family:var(--mono);font-weight:700}
+.svg-disp{font-family:var(--disp);font-weight:700}
+
+.phone{width:390px;border-radius:28px;overflow:hidden;padding:12px 12px 18px;
+  background:linear-gradient(180deg,#171122 0%,#0e0b12 55%,#0b0810 100%);
+  border:1px solid rgba(255,255,255,.08);box-shadow:0 30px 80px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.06)}
+
+.hh{display:grid;gap:10px}
+.hdr{display:flex;align-items:center;gap:10px;padding:10px;border-radius:16px;background:var(--glass);border:1px solid var(--edge-soft);backdrop-filter:blur(8px)}
+.hdr .av{width:44px;height:44px;border-radius:14px;flex:none;background:linear-gradient(145deg,#2b2140,#171122);border:1px solid var(--edge);display:grid;place-items:center;box-shadow:0 0 18px rgba(232,176,75,.25)}
+.hdr .av img{width:30px;height:30px;object-fit:contain}
+.hdr .id{flex:1;min-width:0}
+.hdr .nm{display:flex;align-items:center;gap:7px}
+.hdr .nm b{font-family:var(--disp);font-size:15px;letter-spacing:.03em}
+.hdr .lv{font-family:var(--mono);font-size:11px;color:var(--gold-hi);border:1px solid var(--edge);border-radius:6px;padding:1px 6px}
+.hdr .chip{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.hdr .pts{display:flex;gap:6px;flex:none}
+.hdr .pt{min-width:30px;height:30px;padding:0 6px;border-radius:9px;background:var(--glass2);border:1px solid var(--edge-soft);display:grid;place-items:center}
+.hdr .pt b{font-family:var(--mono);font-size:12px;color:var(--gold)}
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.tabs button{min-height:30px;border-radius:10px;border:1px solid var(--edge-soft);background:transparent;color:var(--muted);
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+.tabs button.on{color:#1a1206;background:linear-gradient(140deg,var(--gold-hi),var(--gold));border-color:transparent;box-shadow:0 0 22px rgba(232,176,75,.45)}
+.panel{position:relative;padding:12px;padding-top:34px;border-radius:18px;background:var(--glass);border:1px solid var(--edge-soft);backdrop-filter:blur(10px)}
+.panel .i{position:absolute;top:9px;right:10px;width:20px;height:20px;border-radius:7px;border:1px solid var(--edge-soft);color:var(--muted);font-family:var(--mono);font-size:11px;display:grid;place-items:center}
+.pane-title{position:absolute;top:11px;left:13px;display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+.pane-title img{width:14px;height:14px;filter:drop-shadow(0 0 6px rgba(232,176,75,.6))}
+
+.sumbar{display:flex;justify-content:space-between;align-items:center;gap:8px;min-width:0;
+  padding:6px 10px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--edge-soft);margin-bottom:10px}
+.sumbar .t{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase;white-space:nowrap}
+.sumbar .chips{display:flex;gap:8px;min-width:0}
+.sumbar .chips span{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:10px;white-space:nowrap}
+.sumbar .chips img{width:12px;height:12px}
+
+.bar{display:block;height:4px;border-radius:999px;background:var(--track);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--gold),var(--gold-hi));box-shadow:0 0 8px rgba(232,176,75,.55)}
+.bar i.lack{background:linear-gradient(90deg,#4a4358,#6d6579);box-shadow:none}
+.gem{width:9px;height:9px;transform:rotate(45deg);border-radius:2px;flex:none}
+.dot{width:7px;height:7px;border-radius:50%;flex:none}
+.card{border-radius:14px;background:rgba(0,0,0,.30);border:1px solid var(--edge-soft)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const IC = p => '../../artifacts/my-app/public/assets/icons/' + p + '.webp';
+const PILLARS = {
+  fortitude:{ru:'Стойкость', short:'СТОЙ', icon:IC('stats/stat_defense'), c:'#6ea8ff', val:62},
+  might:    {ru:'Мощь',      short:'МОЩЬ', icon:IC('stats/stat_strength'), c:'#ff7a6b', val:41},
+  finesse:  {ru:'Сноровка',  short:'СНОР', icon:IC('stats/stat_agility'),  c:'#4fe0b0', val:44},
+  instinct: {ru:'Чутьё',     short:'ЧУТЬ', icon:IC('stats/stat_luck'),     c:'#c792ff', val:33},
+};
+const THREADS = [
+  {id:'solid_strike',  ru:'Крепкий удар',     child:'Крепкий и сильный бьёт больнее за свою крепость.', fx:'+10% урона за каждые 100 Стойкости.',             a:'fortitude',an:50,b:'might',bn:30,   icon:IC('skills/skill_sword_strike'), tier:1},
+  {id:'unstoppable',   ru:'Неудержимый',      child:'Сильный и быстрый иногда бьёт дважды.',            fx:'Каждый пятый удар — двойной.',                     a:'might',an:50,    b:'finesse',bn:30,  icon:IC('skills/skill_crit_strike'),  tier:1},
+  {id:'quick_eye',     ru:'Быстрый глаз',     child:'Ловкий и чуткий после удачного удара быстрее готов снова.', fx:'Криты ускоряют перезарядку на 5%.',       a:'finesse',an:50,  b:'instinct',bn:30, icon:IC('stats/stat_crit'),           tier:1},
+  {id:'lucky_survivor',ru:'Живучий везунчик', child:'Когда совсем плохо — удача вспыхивает.',           fx:'При малом здоровье выше шанс критического удара.', a:'fortitude',an:50,b:'instinct',bn:30, icon:IC('skills/skill_heal'),          tier:1},
+  {id:'tempo_master',  ru:'Мастер темпа',     child:'Быстрый и крепкий не бросает ночной путь из-за элиты.', fx:'Offline-фарм не прерывается элитными мобами.', a:'finesse',an:70, b:'fortitude',bn:40, icon:IC('stats/stat_speed'),          tier:2},
+  {id:'destroyer',     ru:'Разрушитель',      child:'Сильный и чуткий больнее бьёт боссов на критах.',  fx:'Боссы получают +15% урона от критов.',              a:'might',an:70,    b:'instinct',bn:40, icon:IC('skills/skill_ultimate'),     tier:2},
+];
+THREADS.forEach(t => t.on = PILLARS[t.a].val >= t.an && PILLARS[t.b].val >= t.bn);
+const missing = t => [[t.a,t.an],[t.b,t.bn]].filter(([k,n])=>PILLARS[k].val<n).map(([k,n])=>`${PILLARS[k].ru} ${n-PILLARS[k].val}`).join(', ');
+
+function chrome(inner,title){
+  return `<div class="hh">
+    <div class="hdr">
+      <span class="av"><img src="${IC('menu/menu_profile')}"></span>
+      <span class="id"><span class="nm"><b>Каэль</b><span class="lv">47</span></span><span class="chip">человек</span></span>
+      <span class="pts"><span class="pt"><b>3</b></span><span class="pt"><b>1</b></span></span>
+    </div>
+    <div class="tabs"><button>Тело</button><button>Экип</button><button class="on">Нити</button><button>Путь</button></div>
+    <div class="panel"><span class="i">i</span>
+      <span class="pane-title"><img src="${IC('skills/skill_lightning')}">${title}</span>
+      ${inner}
+    </div>
+  </div>`;
+}
+function sumbar(){
+  const n=THREADS.filter(t=>t.on).length;
+  return `<div class="sumbar"><span class="t">горит ${n} / ${THREADS.length}</span><span class="chips">${
+    Object.values(PILLARS).map(p=>`<span style="color:${p.c}"><img src="${p.icon}">${p.val}</span>`).join('')
+  }</span></div>`;
+}
+const tierGem = t => `<span class="gem" style="background:${t.tier===2?'linear-gradient(140deg,#ffd98a,#e8b04b)':'linear-gradient(140deg,#cfd6e4,#8b93a5)'};box-shadow:0 0 8px ${t.tier===2?'rgba(232,176,75,.7)':'rgba(255,255,255,.25)'}"></span>`;
+const statusDot = t => `<span class="dot" style="background:${t.on?'var(--gold-hi)':'#4a4358'};box-shadow:${t.on?'0 0 10px rgba(255,217,138,.9)':'none'}"></span>`;
+
+/* ═══ A · СОЗВЕЗДИЕ ═══ */
+function variantA(){
+  const pos={fortitude:[170,52],might:[292,152],finesse:[170,252],instinct:[48,152]};
+  const straight=[['fortitude','might'],['might','finesse'],['finesse','instinct'],['instinct','fortitude']];
+  const bowed=[{id:'tempo_master',d:'M 170 52 Q 92 152 170 252',k:[133,152]},{id:'destroyer',d:'M 48 152 Q 170 230 292 152',k:[170,191]}];
+  const th=id=>THREADS.find(x=>x.id===id);
+  let glow='',lines='';
+  const seg=(d,on,curve)=>{
+    glow+=`<path d="${d}" fill="none" stroke="${on?'#ffd98a':'#3a3348'}" stroke-width="${on?7:4}" stroke-linecap="round" opacity="${on?.28:.5}" filter="url(#blur)"/>`;
+    lines+=`<path d="${d}" fill="none" stroke="${on?'url(#gld)':'#3a3348'}" stroke-width="${on?1.8:1.2}" stroke-linecap="round" stroke-dasharray="${on?'':'3 7'}" opacity="${on?1:.8}"/>`;
+  };
+  for(const [a,b] of straight){const t=th(a+'|'+b)||THREADS.find(x=>(x.a===a&&x.b===b)||(x.a===b&&x.b===a));seg(`M ${pos[a][0]} ${pos[a][1]} L ${pos[b][0]} ${pos[b][1]}`,t.on);}
+  for(const bw of bowed) seg(bw.d, th(bw.id).on, true);
+  let knots='';
+  const knot=(t,x,y,sel)=>{knots+=`<g transform="translate(${x},${y})">
+    ${t.on?`<circle r="20" fill="none" stroke="#ffd98a" stroke-width="1" opacity=".5" filter="url(#blur)"/>`:''}
+    <circle r="${sel?17:14}" fill="#171122" stroke="${sel?'#ffd98a':(t.on?'var(--gold)':'#3a3348')}" stroke-width="${sel?1.6:1}"/>
+    <image x="-9" y="-9" width="18" height="18" href="${t.icon}" opacity="${t.on?1:.45}"/></g>`;};
+  for(const [a,b] of straight){const t=THREADS.find(x=>(x.a===a&&x.b===b)||(x.a===b&&x.b===a));knot(t,(pos[a][0]+pos[b][0])/2,(pos[a][1]+pos[b][1])/2,t.id==='solid_strike');}
+  for(const bw of bowed) knot(th(bw.id),bw.k[0],bw.k[1],false);
+  let stars='';
+  const lbl={fortitude:[0,-32],might:[0,-32],finesse:[0,40],instinct:[0,-32]};
+  for(const [k,p] of Object.entries(PILLARS)){const [x,y]=pos[k];stars+=`<g transform="translate(${x},${y})">
+    <circle r="26" fill="none" stroke="${p.c}" stroke-width="1" opacity=".35"/>
+    <circle r="26" fill="${p.c}" opacity=".08"/>
+    <circle r="19" fill="#171122" stroke="${p.c}" stroke-width="1.4"/>
+    <image x="-11" y="-11" width="22" height="22" href="${p.icon}"/>
+    <text x="${lbl[k][0]}" y="${lbl[k][1]}" text-anchor="middle" fill="${p.c}" class="svg-mono" font-size="9" letter-spacing="1">${p.short} ${p.val}</text></g>`;}
+  const sel=THREADS[0];
+  return chrome(`${sumbar()}
+  <svg viewBox="0 0 340 306" width="100%" style="display:block">
+    <defs>
+      <filter id="blur" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4"/></filter>
+      <linearGradient id="gld" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e8b04b"/><stop offset="1" stop-color="#ffd98a"/></linearGradient>
+    </defs>
+    ${[...Array(26)].map((_,i)=>`<circle cx="${(i*67)%340}" cy="${(i*113)%306}" r="${i%3?0.8:1.3}" fill="#fff" opacity="${0.05+(i%4)*0.04}"/>`).join('')}
+    ${glow}${lines}${knots}${stars}
+  </svg>
+  <div class="card" style="margin-top:8px;padding:11px;border-color:var(--edge);box-shadow:0 0 26px rgba(232,176,75,.16)">
+    <div style="display:flex;align-items:center;gap:8px">
+      <img src="${sel.icon}" style="width:24px;height:24px">
+      <b style="font-family:var(--disp);font-size:14px;letter-spacing:.03em">${sel.ru}</b>
+      <span style="margin-left:auto;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--gold-hi);text-transform:uppercase">${statusDot(sel)}горит</span>
+    </div>
+    <p style="margin:7px 0 0;font-size:12px;color:var(--muted);line-height:1.5">${sel.fx}</p>
+    <div style="display:flex;gap:12px;margin-top:8px">
+      <span style="font-family:var(--mono);font-size:9.5px;color:${PILLARS[sel.a].c}">${PILLARS[sel.a].ru.toUpperCase()} ${PILLARS[sel.a].val}/${sel.an}</span>
+      <span style="font-family:var(--mono);font-size:9.5px;color:${PILLARS[sel.b].c}">${PILLARS[sel.b].ru.toUpperCase()} ${PILLARS[sel.b].val}/${sel.bn}</span>
+    </div>
+  </div>`,'нити · созвездие');
+}
+
+/* ═══ B · БЕНТО-ЧИПЫ ═══ */
+function variantB(){
+  const chip=(t,featured)=>`
+  <div class="card" style="${featured?'grid-column:1/-1;':''}min-width:0;padding:10px;display:grid;gap:8px;${t.on?'border-color:var(--edge);box-shadow:0 0 24px rgba(232,176,75,.14);':''}">
+    <div style="display:flex;align-items:center;gap:8px;min-width:0">
+      <span style="width:34px;height:34px;flex:none;border-radius:11px;display:grid;place-items:center;background:linear-gradient(145deg,${t.on?'#2b2140':'#1b1626'},#120e1a);border:1px solid ${t.on?'var(--edge)':'var(--edge-soft)'}">
+        <img src="${t.icon}" style="width:20px;height:20px;${t.on?'':'opacity:.5'}">
+      </span>
+      <b style="flex:1;min-width:0;font-family:var(--disp);font-size:${featured?15:12.5}px;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.ru}</b>
+      ${tierGem(t)}${statusDot(t)}
+    </div>
+    <div style="display:grid;gap:5px">
+      ${[[t.a,t.an],[t.b,t.bn]].map(([k,n])=>{const p=PILLARS[k],ok=p.val>=n;return `
+      <div style="display:grid;grid-template-columns:14px minmax(0,1fr) auto;align-items:center;gap:7px">
+        <img src="${p.icon}" style="width:13px;height:13px;opacity:.9">
+        <span class="bar"><i class="${ok?'':'lack'}" style="width:${Math.min(100,p.val/n*100)}%"></i></span>
+        <span style="font-family:var(--mono);font-size:9.5px;color:${ok?p.c:'var(--dim)'}">${p.val}/${n}</span>
+      </div>`;}).join('')}
+    </div>
+    ${featured?`<p style="font-size:11.5px;color:var(--muted);line-height:1.5">${t.child} <span style="color:var(--gold-hi)">${t.fx}</span></p>`
+      :`<p style="min-width:0;font-size:10px;color:var(--dim);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.child}</p>`}
+  </div>`;
+  return chrome(`${sumbar()}
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px">
+    ${chip(THREADS[0],true)}${chip(THREADS[1])}${chip(THREADS[2])}${chip(THREADS[3])}${chip(THREADS[4])}${chip(THREADS[5])}
+  </div>`,'нити · чипы');
+}
+
+/* ═══ C · ЛЕНТА-ТАЙМЛАЙН ═══ */
+function variantC(){
+  const rows=THREADS.map((t,i)=>{
+    const open=(i===4);
+    return `<div style="position:relative;padding-left:26px">
+      <span style="position:absolute;left:7px;top:0;bottom:0;width:1px;background:linear-gradient(180deg,transparent,${t.on?'var(--gold)':'#3a3348'} 12%,${t.on?'var(--gold)':'#3a3348'} 88%,transparent);${t.on?'box-shadow:0 0 8px rgba(232,176,75,.6);':''}"></span>
+      <span style="position:absolute;left:3px;top:16px;width:9px;height:9px;border-radius:50%;background:${t.on?'var(--gold-hi)':'#2b2438'};box-shadow:${t.on?'0 0 12px rgba(255,217,138,.95)':'0 0 0 1px #3a3348'}"></span>
+      <div class="card" style="margin-bottom:9px;padding:10px;${t.on?'border-color:var(--edge);background:rgba(232,176,75,.06);':''}">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0">
+          <img src="${t.icon}" style="width:20px;height:20px;flex:none;${t.on?'':'opacity:.5'}">
+          <b style="flex:1;min-width:0;font-family:var(--disp);font-size:13px;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.ru}</b>
+          ${t.tier===2?tierGem(t):''}${statusDot(t)}
+        </div>
+        <div style="display:grid;gap:5px;margin-top:8px">
+          ${[[t.a,t.an],[t.b,t.bn]].map(([k,n])=>{const p=PILLARS[k],ok=p.val>=n;return `
+          <div style="display:grid;grid-template-columns:14px minmax(0,1fr) auto;align-items:center;gap:7px">
+            <img src="${p.icon}" style="width:13px;height:13px;opacity:.9">
+            <span class="bar"><i class="${ok?'':'lack'}" style="width:${Math.min(100,p.val/n*100)}%"></i></span>
+            <span style="font-family:var(--mono);font-size:9.5px;color:${ok?p.c:'var(--dim)'}">${p.val}/${n}</span>
+          </div>`;}).join('')}
+        </div>
+        ${open?`<div style="margin-top:9px;padding-top:9px;border-top:1px solid var(--edge-soft);display:grid;gap:6px">
+          <p style="font-size:11px;color:var(--muted);line-height:1.5">${t.child}</p>
+          <p style="font-size:11.5px;color:var(--text);line-height:1.5"><span style="color:var(--gold-hi);font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase">Эффект · </span>${t.fx}</p>
+          <p style="font-family:var(--mono);font-size:9.5px;color:#ff9d85">не хватает: ${missing(t)}</p>
+        </div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  return chrome(`<div class="sumbar" style="margin-bottom:12px"><span class="t">гобелен судьбы</span><span class="t">✦ ${THREADS.filter(t=>t.on).length} / ${THREADS.length}</span></div>${rows}`,'нити · лента');
+}
+
+/* ═══ D · ОРБИТАЛЬНЫЙ РАДАР ═══ */
+function variantD(){
+  const cx=170,cy=172,R=142,r2=96,r3=52;
+  let rings=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#2b2438" stroke-width="1"/>
+    <circle cx="${cx}" cy="${cy}" r="${r2}" fill="none" stroke="#2b2438" stroke-width="1" stroke-dasharray="2 6"/>
+    <circle cx="${cx}" cy="${cy}" r="${r3}" fill="none" stroke="#2b2438" stroke-width="1"/>`;
+  let arcs='';
+  ['fortitude','might','finesse','instinct'].forEach((k,i)=>{
+    const p=PILLARS[k],a0=(-90+i*90+10)*Math.PI/180,a1=(-90+(i+1)*90-10)*Math.PI/180;
+    arcs+=`<path d="M ${cx+R*Math.cos(a0)} ${cy+R*Math.sin(a0)} A ${R} ${R} 0 0 1 ${cx+R*Math.cos(a1)} ${cy+R*Math.sin(a1)}" fill="none" stroke="${p.c}" stroke-width="2.5" stroke-linecap="round" opacity=".85"/>`;
+    const am=(-90+i*90)*Math.PI/180,bx=cx+R*Math.cos(am),by=cy+R*Math.sin(am);
+    arcs+=`<g transform="translate(${bx},${by})">
+      <rect x="-15" y="-21" width="30" height="42" rx="10" fill="#171122" stroke="${p.c}" stroke-width="1.2"/>
+      <image x="-9" y="-17" width="18" height="18" href="${p.icon}"/>
+      <text y="14" text-anchor="middle" fill="${p.c}" class="svg-mono" font-size="10">${p.val}</text></g>`;
+  });
+  let sats='';
+  THREADS.forEach((t,i)=>{
+    const ang=(-90+i*60)*Math.PI/180,x=cx+r2*Math.cos(ang),y=cy+r2*Math.sin(ang);
+    const sel=(i===4);
+    const trail0=ang-0.5;
+    sats+=`<path d="M ${cx+r2*Math.cos(trail0)} ${cy+r2*Math.sin(trail0)} A ${r2} ${r2} 0 0 1 ${x} ${y}" fill="none" stroke="${t.on?'#ffd98a':'#3a3348'}" stroke-width="2" stroke-linecap="round" opacity="${t.on?.8:.6}"/>
+    <g transform="translate(${x},${y})">
+      ${t.on?`<circle r="22" fill="none" stroke="#ffd98a" stroke-width="1" opacity=".45" filter="url(#blur2)"/>`:''}
+      <circle r="${sel?19:16}" fill="#171122" stroke="${sel?'#ffd98a':(t.on?'var(--gold)':'#3a3348')}" stroke-width="${sel?1.6:1}"/>
+      <image x="-10" y="-10" width="20" height="20" href="${t.icon}" opacity="${t.on?1:.5}"/></g>`;
+  });
+  const sel=THREADS[4];
+  return chrome(`
+  <svg viewBox="0 0 340 344" width="100%" style="display:block">
+    <defs><filter id="blur2" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4"/></filter>
+      <radialGradient id="core" cx=".5" cy=".45" r=".7"><stop offset="0" stop-color="#2b2140"/><stop offset="1" stop-color="#120e1a"/></radialGradient></defs>
+    ${rings}${arcs}${sats}
+    <circle cx="${cx}" cy="${cy}" r="${r3-6}" fill="url(#core)" stroke="var(--edge)" stroke-width="1"/>
+    <text x="${cx}" y="${cy-2}" text-anchor="middle" fill="#ffd98a" class="svg-disp" font-size="17">${THREADS.filter(t=>t.on).length} / ${THREADS.length}</text>
+    <text x="${cx}" y="${cy+14}" text-anchor="middle" fill="var(--dim)" class="svg-mono" font-size="8" letter-spacing="2">ГОРЯТ</text>
+  </svg>
+  <div class="card" style="margin-top:6px;padding:11px;${''}border-color:var(--edge-soft)">
+    <div style="display:flex;align-items:center;gap:8px;min-width:0">
+      <img src="${sel.icon}" style="width:22px;height:22px;opacity:.85;flex:none">
+      <b style="min-width:0;flex:1;font-family:var(--disp);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sel.ru}</b>
+      ${tierGem(sel)}
+      <span style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase">${statusDot(sel)}спит</span>
+    </div>
+    <p style="margin:7px 0 8px;font-size:11.5px;color:var(--muted);line-height:1.5">${sel.fx}</p>
+    <div style="display:grid;gap:5px">
+      ${[[sel.a,sel.an],[sel.b,sel.bn]].map(([k,n])=>{const p=PILLARS[k],ok=p.val>=n;return `
+      <div style="display:grid;grid-template-columns:14px minmax(0,1fr) auto;align-items:center;gap:7px">
+        <img src="${p.icon}" style="width:13px;height:13px;opacity:.9">
+        <span class="bar"><i class="${ok?'':'lack'}" style="width:${Math.min(100,p.val/n*100)}%"></i></span>
+        <span style="font-family:var(--mono);font-size:9.5px;color:${ok?p.c:'var(--dim)'}">${p.val}/${n}</span>
+      </div>`;}).join('')}
+    </div>
+  </div>`,'нити · радар');
+}
+
+const VARIANTS=[
+  ['A','Созвездие','Звёздная карта судьбы на тёмном стекле: столпы — светила с ореолами, нити — светящиеся градиентные линии с блюмом, узелки-медальоны. Микро-типографика mono, звёздная пыль.','современно · уникально · тот же риск тап-целей'],
+  ['B','Бенто-чипы','Трендовая bento-сетка: широкая featured-карточка + чипы; дуотон-плитки иконок, алмазные гемы рангов, светящиеся точки статуса. Вся информация сразу.','современно · плотно · масштабируется'],
+  ['C','Лента-таймлайн','Вертикальный feed со светящимся рельсом слева и узлами-точками; карточки-стёкла, раскрытие с «не хватает». Читается как современная лента событий.','современно · одна рука · лучшая читаемость'],
+  ['D','Орбитальный радар','HUD-радар: концентрические тонкие кольца, дуги столпов с капсулами, нити-спутники со шлейфами, центр-ридаут. Уголки-скобы, sci-fantasy.','современно · AAA-витрина · центр ест место'],
+];
+const builders=[variantA,variantB,variantC,variantD];
+document.getElementById('root').innerHTML = VARIANTS.map(([letter,name,desc,trade],i)=>`
+  <div class="vwrap">
+    <div class="sheet-label"><h2>Вариант ${letter} — ${name}</h2><p>${desc}</p><span class="tag">${trade}</span></div>
+    <div class="phone" id="variant-${letter}">${builders[i]()}</div>
+  </div>`).join('');
+</script>
+</body>
+</html>
