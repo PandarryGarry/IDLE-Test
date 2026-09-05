@@ -29,9 +29,15 @@ import {
   BODY_BASE_STUB,
   NODE_RANK_CAP,
   PILLAR_RANK_CAP_STUB,
-  SUBSTAT_GROWTH,
   pillarContribution,
 } from '../data/balance/pillars.ts';
+import {
+  BRANCH_RANK_IN_PILLAR_POINTS,
+  SUBSTATS,
+  ratingToPercent,
+  type SubstatDef,
+  type SubstatKind,
+} from '../data/balance/substats.ts';
 import { ENERGY_MAX_STUB } from '../data/balance/energy.ts';
 import {
   FREE_RESPEC_LIMIT,
@@ -185,6 +191,8 @@ export interface AttributeSnapshot {
   professionBonus: PillarRanks;
   finalPillars: PillarRanks;
   substats: BranchRanks;
+  /** Готовые к показу значения: проценты для rating/percent. */
+  substatDisplays: Record<BranchId, SubstatDisplay>;
   contributions: Record<PillarId, number>;
   activeSynergies: SynergyId[];
   nextSynergy: SynergyProgress | null;
@@ -200,17 +208,58 @@ export function computeInvested(state: CharacterAttributeState): PillarRanks {
   return invested;
 }
 
-/** Подхарактеристики: база + столп × свой шаг. Не копия столпа. */
-export function computeSubstats(finalPillars: PillarRanks): BranchRanks {
+/**
+ * Сырое значение подхарактеристики: база + столп × шаг + вклад ветви.
+ * Ветвь идёт вровень со столпом: 1 ранг = BRANCH_RANK_IN_PILLAR_POINTS очков.
+ * Для rating это ещё не проценты — их даёт substatDisplay().
+ */
+export function computeSubstats(
+  finalPillars: PillarRanks,
+  branchRanks?: BranchRanks,
+): BranchRanks {
   const next = emptyBranchRanks();
   for (const pillar of PILLAR_IDS) {
     const p = finalPillars[pillar];
     for (const id of BRANCHES_BY_PILLAR[pillar]) {
-      const growth = SUBSTAT_GROWTH[id];
-      next[id] = growth.base + p * growth.perPillar;
+      const def = SUBSTATS[id];
+      const branchBoost = (branchRanks?.[id] ?? 0) * BRANCH_RANK_IN_PILLAR_POINTS;
+      next[id] = def.base + (p + branchBoost) * def.perPillar;
     }
   }
   return next;
+}
+
+/** Что показать игроку: flat — как есть, rating — процент по асимптоте, percent — с капом. */
+export interface SubstatDisplay {
+  id: BranchId;
+  kind: SubstatKind;
+  /** Сырое значение (рейтинг для rating, итог для flat/percent). */
+  raw: number;
+  /** Значение для показа: HP/урон для flat, проценты для остальных. */
+  value: number;
+  unit: SubstatDef['unit'];
+  /** Достигнутая доля от потолка, 0..1. Для flat всегда null. */
+  capRatio: number | null;
+}
+
+export function substatDisplay(id: BranchId, raw: number): SubstatDisplay {
+  const def = SUBSTATS[id];
+  if (def.kind === 'flat') {
+    return { id, kind: def.kind, raw, value: raw, unit: def.unit, capRatio: null };
+  }
+  if (def.kind === 'rating') {
+    const pct = ratingToPercent(raw, def.cap ?? 100, def.k ?? 100);
+    return { id, kind: def.kind, raw, value: pct, unit: def.unit, capRatio: pct / (def.cap ?? 100) };
+  }
+  const capped = Math.min(raw, def.cap ?? 100);
+  return { id, kind: def.kind, raw, value: capped, unit: def.unit, capRatio: capped / (def.cap ?? 100) };
+}
+
+/** Все 12 в готовом для UI виде. */
+export function computeSubstatDisplays(substats: BranchRanks): Record<BranchId, SubstatDisplay> {
+  const out = {} as Record<BranchId, SubstatDisplay>;
+  for (const id of BRANCH_IDS) out[id] = substatDisplay(id, substats[id]);
+  return out;
 }
 
 function professionBonusStub(_levels: ProfessionLevels | undefined): PillarRanks {
@@ -235,7 +284,8 @@ export function computeAttributeSnapshot(input: ComputeInput): AttributeSnapshot
     finalPillars[pillar] = invested[pillar] + racialImprint[pillar] + professionBonus[pillar];
     contributions[pillar] = pillarContribution(finalPillars[pillar]);
   }
-  const substats = computeSubstats(finalPillars);
+  const substats = computeSubstats(finalPillars, state.branchRanks);
+  const substatDisplays = computeSubstatDisplays(substats);
 
   const activeSynergies: SynergyId[] = [];
   const inactive: SynergyProgress[] = [];
@@ -264,6 +314,7 @@ export function computeAttributeSnapshot(input: ComputeInput): AttributeSnapshot
     professionBonus,
     finalPillars,
     substats,
+    substatDisplays,
     contributions,
     activeSynergies,
     nextSynergy: inactive[0] ?? null,

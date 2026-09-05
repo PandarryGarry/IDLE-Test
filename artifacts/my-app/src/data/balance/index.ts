@@ -4,3 +4,5 @@ export * from './energy';
 export * from './professions';
 export * from './reputation';
 export * from './offline';
+export * from './substats';
+export * from './threads';

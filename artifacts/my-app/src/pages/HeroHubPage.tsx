@@ -53,6 +53,7 @@ import {
   spendPillarPoint,
   spentBranchRanks,
   spentPillarRanks,
+  type SubstatDisplay,
 } from '@/lib/characterAttributes';
 import { NODE_RANK_CAP } from '@/data/balance/pillars';
 import { commitGearSets, commitHeroAttributes } from '@/lib/heroPersist';
@@ -176,10 +177,11 @@ function signedStat(value: number): string {
   return '0';
 }
 
-function formatSubstat(value: number): string {
-  const rounded = Math.round(value * 10) / 10;
-  if (Number.isInteger(rounded)) return String(rounded);
-  return rounded.toFixed(1);
+/** Показ по типу стата: HP/урон как число, rating/percent — процентом. */
+function formatSubstat(d: SubstatDisplay): string {
+  const rounded = Math.round(d.value * 10) / 10;
+  const num = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  return d.unit === 'percent' ? `${num}%` : num;
 }
 
 function isTwoHanded(itemId: string | null): boolean {
@@ -1094,7 +1096,7 @@ function PathModule({
               <GInfoRow
                 key={id}
                 label={SUBSTATS[id].nameRu}
-                value={formatSubstat(snapshot.substats[id])}
+                value={formatSubstat(snapshot.substatDisplays[id])}
               />
             ))}
           </div>
@@ -1228,7 +1230,7 @@ function HeroDetailModal({
               <GInfoRow
                 key={id}
                 label={SUBSTATS[id].nameRu}
-                value={formatSubstat(snapshot.substats[id])}
+                value={formatSubstat(snapshot.substatDisplays[id])}
               />
             ))}
             <GButton
