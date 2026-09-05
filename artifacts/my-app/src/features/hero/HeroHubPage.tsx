@@ -56,8 +56,10 @@ import {
   type SubstatDisplay,
 } from '@/domain/attributes/characterAttributes';
 import { NODE_RANK_CAP } from '@/data/balance/pillars';
+import { XP_TO_NEXT_LEVEL_STUB } from '@/data/balance/heroLevel';
 import { commitGearSets, commitHeroAttributes } from '@/lib/heroPersist';
 import { HeroBoard } from '@/features/hero/HeroBoard';
+import { CRIT_CHANCE_STUB, formatStrikeRange } from '@/features/hero/heroReadout';
 
 type HubModule = 'body' | 'gear' | 'synergies' | 'path';
 type Detail =
@@ -235,7 +237,9 @@ export function HeroHubPage() {
   return (
     <section className="hero-hub" aria-label="Герой">
       <header className="hero-hub__header">
-        <GAvatar src={getAvatarPath(active.avatarId)} size={PORTRAIT} glow />
+        <div className="hero-hub__portrait">
+          <GAvatar src={getAvatarPath(active.avatarId)} size={PORTRAIT} glow />
+        </div>
         <div className="hero-hub__identity">
           <div className="hero-hub__name-row">
             <strong>{active.nickname}</strong>
@@ -244,6 +248,18 @@ export function HeroHubPage() {
             </span>
           </div>
           <span className="hero-chip">{getRaceLabel(raceId, 'ru')}</span>
+        </div>
+        <div
+          className="hero-hub__xp"
+          aria-label="Опыт до следующего уровня"
+          title="Кривая опыта ещё не закрыта"
+        >
+          <span>опыт</span>
+          <GProgressBar
+            value={Math.min(1, state.heroXp / XP_TO_NEXT_LEVEL_STUB)}
+            height={8}
+            style={{ flex: 1 }}
+          />
         </div>
         <div className="hero-hub__points" aria-label="Свободные очки">
           <span
@@ -1069,7 +1085,7 @@ function HeroSettingsModal({
 
   return (
     <GModal open={open} onClose={onClose} title="Настройки персонажа" width={340}>
-      <div className="hero-hub-modal">
+      <div className="hero-settings">
         <GInfoRow label="Бесплатных сбросов" value={`${left} / ${FREE_RESPEC_LIMIT}`} />
         <GButton
           size="sm"
@@ -1078,7 +1094,7 @@ function HeroSettingsModal({
           onClick={onRespecPillars}
         >
           {left < 1
-            ? 'Сброс столпов — золото (цена не назначена)'
+            ? 'Столпы — за золото'
             : spentP === 0
               ? 'Столпы: сбрасывать нечего'
               : 'Сбросить очки столпов'}
@@ -1091,11 +1107,12 @@ function HeroSettingsModal({
           onClick={onRespecBranches}
         >
           {left < 1
-            ? 'Сброс пассивок — золото (цена не назначена)'
+            ? 'Пассивки — за золото'
             : spentB === 0
               ? 'Пассивки: сбрасывать нечего'
               : 'Сбросить очки пассивок'}
         </GButton>
+        <p className="hero-settings__hint">Дальше — за золото. Цена не назначена.</p>
       </div>
     </GModal>
   );

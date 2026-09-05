@@ -2889,15 +2889,40 @@
 }
 
 .hero-hub__header {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'avatar identity points gear'
+    'xp xp xp xp';
   align-items: center;
-  gap: var(--space-sm);
+  gap: var(--space-xs) var(--space-sm);
   padding: var(--space-xs) var(--space-sm);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
   background: var(--bg-header);
   box-shadow: var(--shadow-card);
   color: var(--text-light);
+}
+.hero-hub__portrait { grid-area: avatar; }
+.hero-hub__identity { grid-area: identity; }
+.hero-hub__points { grid-area: points; }
+.hero-hub__gear { grid-area: gear; }
+.hero-hub__xp {
+  grid-area: xp;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+  padding-top: 2px;
+}
+.hero-hub__xp > span {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-family: var(--app-font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .hero-hub__identity {
@@ -4536,6 +4561,58 @@
 
 .hero-hint--flow {
   flex: 1 0 100%;
+}
+
+.hero-readout {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-xs);
+}
+
+.hero-plaque {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: var(--space-2xs);
+  min-height: 5.5rem;
+  padding: var(--space-sm) var(--space-2xs);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--slot-wood);
+  box-shadow: var(--shadow-slot-wood);
+}
+
+.hero-plaque__label {
+  color: var(--text-light);
+  font-family: var(--app-font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-align: center;
+  line-height: 1.15;
+}
+
+.hero-plaque__value {
+  color: var(--text-gold);
+  font-family: var(--app-font-display);
+  font-size: 1.35rem;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-settings {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.hero-settings__hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-family: var(--app-font-mono);
+  font-size: 10px;
+  line-height: 1.4;
+  text-align: center;
 }
 
 .hero-stats {

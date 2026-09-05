@@ -13,7 +13,7 @@ export function earnedBranchPoints(heroLevel: number): number {
   return Math.floor(heroLevel / 5);
 }
 
-/** Заглушка XP до следующего уровня. Не закрыто — не в UI. */
+/** Заглушка XP до следующего уровня. Кривая не закрыта; полоса в шапке героя читает это. */
 export const XP_TO_NEXT_LEVEL_STUB = 1000;
 
 /** Бесплатных сбросов очков за жизнь героя. Дальше — золото (цена не закрыта). */
