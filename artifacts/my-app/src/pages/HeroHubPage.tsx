@@ -65,7 +65,6 @@ type Detail =
   | { kind: 'branch'; id: BranchId }
   | { kind: 'passive'; id: PassiveId }
   | { kind: 'synergy'; id: SynergyId }
-  | { kind: 'soon-thread'; name: string }
   | { kind: 'gear'; slot: EquipSlot }
   | { kind: 'locked-slot' }
   | { kind: 'bag-item'; itemId: string };
@@ -322,7 +321,6 @@ export function HeroHubPage() {
           <SynergiesModule
             snapshot={snapshot}
             onOpen={id => setDetail({ kind: 'synergy', id })}
-            onOpenSoon={name => setDetail({ kind: 'soon-thread', name })}
           />
         )}
         {moduleId === 'path' && <PathModule snapshot={snapshot} />}
@@ -864,37 +862,9 @@ function HeroBagSlotCard({
    Карточка: крупная иконка-плитка (главное), под ней имя и тонкая полоса %.
    Шапка: «чернила по пергаменту» — заголовок + плитки столпов.
    Отсеки «Активные/Неактивные»; активные подсвечены, неактивные затемнены.
-   Будущие «скоро» — внутри «Неактивных», с бейджем, без порогов.
+   Все 21 нить настоящие: 6 пар столпов x 3 яруса + 3 тройные.
    Палитра — только токены index.css (пергамент/тёмное дерево/каштан/золото/Cinzel).
 ────────────────────────────────────────────────────────────────────── */
-
-interface SoonThread {
-  id: string;
-  nameRu: string;
-  icon: string;
-}
-
-/**
- * Будущие ярусы нитей. Показываем только факт появления «скоро»:
- * порогов и эффектов не выдумываем — их в данных игры ещё нет.
- */
-const SOON_THREADS: readonly SoonThread[] = [
-  { id: 'soon_wall_of_muscle', nameRu: 'Стена мышц', icon: iconUrl('threads/soon_wall_of_muscle') },
-  { id: 'soon_blade_dance', nameRu: 'Танец клинка', icon: iconUrl('threads/soon_blade_dance') },
-  { id: 'soon_storm_eye', nameRu: 'Око бури', icon: iconUrl('threads/soon_storm_eye') },
-  { id: 'soon_blood_oath', nameRu: 'Клятва крови', icon: iconUrl('threads/soon_blood_oath') },
-  { id: 'soon_second_wind', nameRu: 'Второй ветер', icon: iconUrl('threads/soon_second_wind') },
-  { id: 'soon_crown_hunter', nameRu: 'Охотник на корон', icon: iconUrl('threads/soon_crown_hunter') },
-  { id: 'soon_iron_grip', nameRu: 'Железная хватка', icon: iconUrl('threads/soon_iron_grip') },
-  { id: 'soon_thunder_step', nameRu: 'Громовой шаг', icon: iconUrl('threads/soon_thunder_step') },
-  { id: 'soon_wind_shadow', nameRu: 'Тень ветра', icon: iconUrl('threads/soon_wind_shadow') },
-  { id: 'soon_stone_skin', nameRu: 'Каменная кожа', icon: iconUrl('threads/soon_stone_skin') },
-  { id: 'soon_steel_vortex', nameRu: 'Стальной вихрь', icon: iconUrl('threads/soon_steel_vortex') },
-  { id: 'soon_ancestors_call', nameRu: 'Зов предков', icon: iconUrl('threads/soon_ancestors_call') },
-  { id: 'soon_dark_bargain', nameRu: 'Тёмная сделка', icon: iconUrl('threads/soon_dark_bargain') },
-  { id: 'soon_storm_fury', nameRu: 'Ярость бури', icon: iconUrl('threads/soon_storm_fury') },
-  { id: 'soon_root_of_life', nameRu: 'Корень жизни', icon: iconUrl('threads/soon_root_of_life') },
-];
 
 function synergyReqs(s: SynergyDef): [PillarId, number][] {
   return Object.entries(s.requires) as [PillarId, number][];
@@ -947,32 +917,11 @@ function ThreadCard({
   );
 }
 
-function SoonCard({ icon, name, onOpen }: { icon: string; name: string; onOpen: () => void }) {
-  return (
-    <button
-      type="button"
-      className="hero-thread-card hero-thread-card--soon"
-      onClick={onOpen}
-    >
-      <span className="hero-thread-card__badge">
-        <GBadge variant="purple" size="sm">скоро</GBadge>
-      </span>
-      <span className="hero-thread-card__tile">
-        <img className="hero-thread-card__icon" src={icon} alt="" decoding="async" />
-      </span>
-      <span className="hero-thread-card__foot">
-        <span className="hero-thread-card__name">{name}</span>
-      </span>
-    </button>
-  );
-}
-
 function SynergiesModule({
-  snapshot, onOpen, onOpenSoon,
+  snapshot, onOpen,
 }: {
   snapshot: ReturnType<typeof computeAttributeSnapshot>;
   onOpen: (id: SynergyId) => void;
-  onOpenSoon: (name: string) => void;
 }) {
   const [tab, setTab] = useState<'active' | 'inactive'>('inactive');
   const pillars = snapshot.finalPillars;
@@ -1021,7 +970,7 @@ function SynergiesModule({
           aria-pressed={tab === 'inactive'}
           onClick={() => setTab('inactive')}
         >
-          Неактивные <b>· {sleeping.length + SOON_THREADS.length}</b>
+          Неактивные <b>· {sleeping.length}</b>
         </button>
       </div>
 
@@ -1057,9 +1006,6 @@ function SynergiesModule({
               on={false}
               onOpen={() => onOpen(s.id)}
             />
-          ))}
-          {SOON_THREADS.map(t => (
-            <SoonCard key={t.id} icon={t.icon} name={t.nameRu} onOpen={() => onOpenSoon(t.nameRu)} />
           ))}
         </div>
       )}
@@ -1176,7 +1122,6 @@ function HeroDetailModal({
       : detail.kind === 'branch' ? BRANCHES[detail.id].nameRu
         : detail.kind === 'passive' ? DEEP_PASSIVES[detail.id].nameRu
           : detail.kind === 'synergy' ? (SYNERGIES.find(s => s.id === detail.id)?.nameRu ?? '')
-            : detail.kind === 'soon-thread' ? `Скоро · ${detail.name}`
               : detail.kind === 'bag-item' ? (bagDetailItem?.name ?? '')
               : detail.kind === 'locked-slot' ? 'Будущий слот'
                 : GEAR_LABEL[detail.slot];
@@ -1314,15 +1259,6 @@ function HeroDetailModal({
           </div>
         );
       })()}
-      {detail?.kind === 'soon-thread' && (
-        <div className="hero-thread-detail">
-          <div className="hero-thread-detail__head">
-            <b>{detail.name}</b>
-            <GBadge variant="purple" size="sm">скоро</GBadge>
-          </div>
-          <p className="hero-thread-detail__fx">Нить появится в будущих обновлениях мира Aethelia.</p>
-        </div>
-      )}
       {detail?.kind === 'gear' && (
         <div className="hero-hub-modal">
           {gearItem ? (

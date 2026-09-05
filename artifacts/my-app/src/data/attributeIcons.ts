@@ -58,12 +58,29 @@ export const PASSIVE_ICON: Record<PassiveId, string> = {
 };
 
 export const SYNERGY_ICON: Record<SynergyId, string> = {
+  // Шесть первых нитей — свои иконки synergy_*.
   solid_strike: iconUrl('threads/synergy_solid_strike'),
   quick_eye: iconUrl('threads/synergy_quick_eye'),
   unstoppable: iconUrl('threads/synergy_unstoppable'),
   lucky_survivor: iconUrl('threads/synergy_lucky_survivor'),
   tempo_master: iconUrl('threads/synergy_tempo_master'),
   destroyer: iconUrl('threads/synergy_destroyer'),
+  // Остальные 15 — бывшие «скоро», теперь полноценные нити.
+  wall_of_muscle: iconUrl('threads/soon_wall_of_muscle'),
+  stone_skin: iconUrl('threads/soon_stone_skin'),
+  wind_shadow: iconUrl('threads/soon_wind_shadow'),
+  storm_eye: iconUrl('threads/soon_storm_eye'),
+  blade_dance: iconUrl('threads/soon_blade_dance'),
+  steel_vortex: iconUrl('threads/soon_steel_vortex'),
+  root_of_life: iconUrl('threads/soon_root_of_life'),
+  ancestors_call: iconUrl('threads/soon_ancestors_call'),
+  second_wind: iconUrl('threads/soon_second_wind'),
+  iron_grip: iconUrl('threads/soon_iron_grip'),
+  crown_hunter: iconUrl('threads/soon_crown_hunter'),
+  blood_oath: iconUrl('threads/soon_blood_oath'),
+  thunder_step: iconUrl('threads/soon_thunder_step'),
+  storm_fury: iconUrl('threads/soon_storm_fury'),
+  dark_bargain: iconUrl('threads/soon_dark_bargain'),
 };
 
 export const EQUIP_SLOT_ICON: Record<EquipSlot, string> = {
