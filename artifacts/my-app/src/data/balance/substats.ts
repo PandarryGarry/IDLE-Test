@@ -72,9 +72,10 @@ export const SUBSTATS: Record<BranchId, SubstatDef> = {
   },
 
   // ── Сноровка: плотность действий ─────────────────────────────
+  /** cap 140 > максимума 137 (99 очков + 14 расы + 24 ветви): потолок недостижим. */
   tempo: {
     id: 'tempo', pillar: 'finesse', kind: 'percent',
-    base: 0, perPillar: 0.9, cap: 100, unit: 'percent',
+    base: 0, perPillar: 0.9, cap: 140, unit: 'percent',
   },
   evasion: {
     id: 'evasion', pillar: 'finesse', kind: 'rating',
@@ -83,7 +84,7 @@ export const SUBSTATS: Record<BranchId, SubstatDef> = {
   /** Бывш. «Реакция». Теперь Сноровка рук: скорость ремесла. */
   reaction: {
     id: 'reaction', pillar: 'finesse', kind: 'percent',
-    base: 0, perPillar: 0.9, cap: 100, unit: 'percent',
+    base: 0, perPillar: 0.9, cap: 140, unit: 'percent',
   },
 
   // ── Чутьё: качество результата ───────────────────────────────
@@ -93,7 +94,7 @@ export const SUBSTATS: Record<BranchId, SubstatDef> = {
   },
   resourcefulness: {
     id: 'resourcefulness', pillar: 'instinct', kind: 'percent',
-    base: 0, perPillar: 0.7, cap: 80, unit: 'percent',
+    base: 0, perPillar: 0.7, cap: 100, unit: 'percent',
   },
   intuition: {
     id: 'intuition', pillar: 'instinct', kind: 'percent',

@@ -8,6 +8,7 @@ import {
   RACE_PILLAR_MODS,
   type AttributeRaceId,
   BRANCH_IDS,
+  BRANCHES_BY_PILLAR,
 } from './attributes.ts';
 import { SYNERGIES } from './synergies.ts';
 import {
@@ -15,7 +16,7 @@ import {
   NODE_RANK_CAP,
   pillarContribution,
 } from '../../data/balance/pillars.ts';
-import { SUBSTATS as SUBSTAT_DEFS } from '../../data/balance/substats.ts';
+import { SUBSTATS as SUBSTAT_DEFS, ratingToPercent } from '../../data/balance/substats.ts';
 import { RACE_START_PILLARS, RACE_START_TOTAL, RACE_TIER } from '../../data/balance/races.ts';
 import { earnedBranchPoints, earnedPillarPoints } from '../../data/balance/heroLevel.ts';
 import {
@@ -269,4 +270,36 @@ test('мигратор: сейв без passiveRanks не ломается', () 
   assert.equal(migrated.branchRanks.health, 2);
   assert.equal(migrated.passiveRanks[PASSIVES_BY_BRANCH.health[0]], NODE_RANK_CAP);
   assert.equal(migrated.passiveRanks[PASSIVES_BY_BRANCH.tempo[1]], 0);
+});
+
+test('ни один percent-стат не упирается в потолок в пределах достижимого', () => {
+  // максимум вложений: 99 очков уровня + 14 расы + 24 от трёх рангов ветви
+  const MAX_REACHABLE = 99 + 14 + 24;
+  for (const id of BRANCH_IDS) {
+    const d = SUBSTAT_DEFS[id];
+    if (d.kind !== 'percent' || !d.cap) continue;
+    const need = (d.cap - d.base) / d.perPillar;
+    assert.ok(need > MAX_REACHABLE, `${id}: упрётся на ${need.toFixed(0)}, а достижимо ${MAX_REACHABLE} — мёртвая зона`);
+  }
+});
+
+test('в каждом столпе есть flat-стат без потолка', () => {
+  for (const p of PILLAR_IDS) {
+    const kinds = BRANCHES_BY_PILLAR[p].map(b => SUBSTAT_DEFS[b].kind);
+    const hasEndless = kinds.includes('flat')
+      || BRANCHES_BY_PILLAR[p].some(b => {
+        const d = SUBSTAT_DEFS[b];
+        return d.kind === 'percent' && d.cap && (d.cap - d.base) / d.perPillar > 137;
+      });
+    assert.ok(hasEndless, `${p}: нет стата без достижимого потолка`);
+  }
+});
+
+test('rating-статы никогда не достигают своей асимптоты', () => {
+  for (const id of BRANCH_IDS) {
+    const d = SUBSTAT_DEFS[id];
+    if (d.kind !== 'rating' || !d.cap || !d.k) continue;
+    const huge = ratingToPercent(1e9, d.cap, d.k);
+    assert.ok(huge < d.cap, `${id}: асимптота пробита`);
+  }
 });

@@ -43,8 +43,13 @@ export const PILLAR_PAIRS: readonly (readonly [PillarId, PillarId])[] = [
   ['finesse', 'instinct'],
 ];
 
-/** Пороги тройной нити (эндгейм): три столпа сразу, каждый по 30. */
-export const TRIPLE_THREAD_THRESHOLD = 30;
+/**
+ * Пороги тройной нити (эндгейм): три столпа сразу.
+ * 42 x 3 = 126 очков — выше 99 уровня, поэтому тройная нить требует
+ * ветвей/расы и остаётся редкой наградой. При пороге 30 распылённый билд
+ * забирал сразу три тройные плюс все шесть первого яруса — фокус проигрывал.
+ */
+export const TRIPLE_THREAD_THRESHOLD = 42;
 
 /** Требования нити по ярусу: major — ведущий столп пары, minor — второй. */
 export function thresholdsFor(

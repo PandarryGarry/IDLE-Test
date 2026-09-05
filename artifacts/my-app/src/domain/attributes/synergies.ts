@@ -200,7 +200,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Громовой шаг',
     childRu: 'Быстрый, сильный и крепкий идёт как гроза.',
     tier: 3,
-    requires: { might: 30, finesse: 30, fortitude: 30 },
+    requires: { might: 42, finesse: 42, fortitude: 42 },
     effectRu: 'Каждый третий заход мгновенный.',
   },
   {
@@ -209,7 +209,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Ярость бури',
     childRu: 'Всё, что умеешь, бьёт разом.',
     tier: 3,
-    requires: { might: 30, finesse: 30, instinct: 30 },
+    requires: { might: 42, finesse: 42, instinct: 42 },
     effectRu: 'Криты бьют по всем целям сразу.',
   },
   {
@@ -218,7 +218,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Тёмная сделка',
     childRu: 'Отдаёшь покой — получаешь силу.',
     tier: 3,
-    requires: { fortitude: 30, instinct: 30, might: 30 },
+    requires: { fortitude: 42, instinct: 42, might: 42 },
     effectRu: 'Ночь идёт вдвое дольше, но опаснее.',
   },
 ];
