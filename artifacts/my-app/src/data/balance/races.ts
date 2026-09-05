@@ -10,6 +10,7 @@
  *   2. Бюджет у всех рас РАВНЫЙ — сумма ровно RACE_START_TOTAL.
  *   3. Ни один столп не ноль: слабая сторона тоже играбельна.
  *   4. Разница между сильным и слабым столпом заметна, но не решает за игрока.
+ *   5. Бюджет маленький: новый герой — непрокаченный, рост впереди.
  *
  * Раса задаёт наклон, а не путь: игрок сам выбирает, усиливать сильное
  * или закрывать слабое своими 99 очками.
@@ -19,17 +20,18 @@ import type { AttributeRaceId, PillarId } from '../../domain/attributes/attribut
 /** Ступени распределения. Сумма = RACE_START_TOTAL. */
 export const RACE_TIER = {
   /** Сильная сторона расы. */
-  strong: 14,
+  strong: 4,
   /** Вторая по силе. */
-  good: 11,
+  good: 3,
   /** Обычная. */
-  plain: 9,
-  /** Слабая — но не ноль и не минус. */
-  weak: 6,
+  plain: 2,
+  /** Слабая — не ноль и не минус. */
+  weak: 1,
 } as const;
 
-/** Единый стартовый бюджет: 14 + 11 + 9 + 6. Одинаков для всех рас. */
-export const RACE_START_TOTAL = 40;
+/** Единый стартовый бюджет: 4 + 3 + 2 + 1. Одинаков для всех рас. */
+export const RACE_START_TOTAL =
+  RACE_TIER.strong + RACE_TIER.good + RACE_TIER.plain + RACE_TIER.weak;
 
 export type RaceStartPillars = Record<PillarId, number>;
 

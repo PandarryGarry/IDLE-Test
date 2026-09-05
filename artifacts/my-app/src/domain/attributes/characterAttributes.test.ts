@@ -16,8 +16,9 @@ import {
   NODE_RANK_CAP,
   pillarContribution,
 } from '../../data/balance/pillars.ts';
-import { SUBSTATS as SUBSTAT_DEFS, ratingToPercent } from '../../data/balance/substats.ts';
+import { BRANCH_RANK_IN_PILLAR_POINTS, HERO_LEVEL_CAP, SUBSTATS as SUBSTAT_DEFS, ratingToPercent } from '../../data/balance/substats.ts';
 import { RACE_START_PILLARS, RACE_START_TOTAL, RACE_TIER } from '../../data/balance/races.ts';
+import { THREAD_TIER_THRESHOLDS, TRIPLE_THREAD_THRESHOLD, thresholdsFor } from '../../data/balance/threads.ts';
 import { earnedBranchPoints, earnedPillarPoints } from '../../data/balance/heroLevel.ts';
 import {
   attachAttributesToSave,
@@ -272,14 +273,17 @@ test('мигратор: сейв без passiveRanks не ломается', () 
   assert.equal(migrated.passiveRanks[PASSIVES_BY_BRANCH.tempo[1]], 0);
 });
 
+const MAX_SUBSTAT_INVESTMENT =
+  earnedPillarPoints(HERO_LEVEL_CAP)
+  + RACE_TIER.strong
+  + NODE_RANK_CAP * BRANCH_RANK_IN_PILLAR_POINTS;
+
 test('ни один percent-стат не упирается в потолок в пределах достижимого', () => {
-  // максимум вложений: 99 очков уровня + 14 расы + 24 от трёх рангов ветви
-  const MAX_REACHABLE = 99 + 14 + 24;
   for (const id of BRANCH_IDS) {
     const d = SUBSTAT_DEFS[id];
     if (d.kind !== 'percent' || !d.cap) continue;
     const need = (d.cap - d.base) / d.perPillar;
-    assert.ok(need > MAX_REACHABLE, `${id}: упрётся на ${need.toFixed(0)}, а достижимо ${MAX_REACHABLE} — мёртвая зона`);
+    assert.ok(need > MAX_SUBSTAT_INVESTMENT, `${id}: упрётся на ${need.toFixed(0)}, а достижимо ${MAX_SUBSTAT_INVESTMENT} — мёртвая зона`);
   }
 });
 
@@ -289,7 +293,7 @@ test('в каждом столпе есть flat-стат без потолка'
     const hasEndless = kinds.includes('flat')
       || BRANCHES_BY_PILLAR[p].some(b => {
         const d = SUBSTAT_DEFS[b];
-        return d.kind === 'percent' && d.cap && (d.cap - d.base) / d.perPillar > 137;
+        return d.kind === 'percent' && d.cap && (d.cap - d.base) / d.perPillar > MAX_SUBSTAT_INVESTMENT;
       });
     assert.ok(hasEndless, `${p}: нет стата без достижимого потолка`);
   }
@@ -301,5 +305,50 @@ test('rating-статы никогда не достигают своей аси
     if (d.kind !== 'rating' || !d.cap || !d.k) continue;
     const huge = ratingToPercent(1e9, d.cap, d.k);
     assert.ok(huge < d.cap, `${id}: асимптота пробита`);
+  }
+});
+
+test('утверждённый старт: 10 врождённых по ступеням 4/3/2/1', () => {
+  assert.equal(RACE_START_TOTAL, 10);
+  assert.equal(RACE_TIER.strong, 4);
+  assert.equal(RACE_TIER.good, 3);
+  assert.equal(RACE_TIER.plain, 2);
+  assert.equal(RACE_TIER.weak, 1);
+});
+
+test('пороги нитей совпадают с таблицей balance/threads', () => {
+  assert.deepEqual(THREAD_TIER_THRESHOLDS, {
+    1: { major: 15, minor: 10 },
+    2: { major: 35, minor: 20 },
+    3: { major: 55, minor: 35 },
+  });
+  assert.equal(TRIPLE_THREAD_THRESHOLD, 35);
+  for (const thread of SYNERGIES) {
+    if (thread.pillars.length === 3) {
+      assert.equal(thread.pillars.length, Object.keys(thread.requires).length, thread.id);
+      for (const pillar of thread.pillars) {
+        assert.equal(thread.requires[pillar], TRIPLE_THREAD_THRESHOLD, `${thread.id}/${pillar}`);
+      }
+    } else {
+      const [major, minor] = thread.pillars;
+      assert.deepEqual(thread.requires, thresholdsFor(thread.tier, major, minor), thread.id);
+    }
+  }
+});
+
+test('каждая нить достижима каждой расой к потолку уровня', () => {
+  const budget = earnedPillarPoints(HERO_LEVEL_CAP);
+  for (const raceId of Object.keys(RACE_START_PILLARS) as AttributeRaceId[]) {
+    const base = RACE_START_PILLARS[raceId];
+    for (const thread of SYNERGIES) {
+      const needed = Object.entries(thread.requires).reduce(
+        (sum, [pillar, target]) => sum + Math.max(0, (target ?? 0) - base[pillar as keyof typeof base]),
+        0,
+      );
+      assert.ok(
+        needed <= budget,
+        `${raceId}/${thread.id}: нужно ${needed} очков при бюджете ${budget} (уровень ${needed + 1})`,
+      );
+    }
   }
 });

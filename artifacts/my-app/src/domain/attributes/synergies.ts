@@ -1,5 +1,9 @@
 import type { PillarId } from './attributes.ts';
-import { THREAD_TIER_THRESHOLDS, type ThreadTier } from '../../data/balance/threads.ts';
+import {
+  TRIPLE_THREAD_THRESHOLD,
+  thresholdsFor,
+  type ThreadTier,
+} from '../../data/balance/threads.ts';
 
 export type SynergyId =
   // Стойкость + Мощь
@@ -38,7 +42,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Крепкий удар',
     childRu: 'Крепкий и сильный бьёт больнее за свою крепость.',
     tier: 1,
-    requires: { fortitude: 25, might: 15 },
+    requires: thresholdsFor(1, 'fortitude', 'might'),
     effectRu: '+1% урона за каждые 10 очков Стойкости.',
   },
   {
@@ -47,7 +51,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Быстрый глаз',
     childRu: 'Ловкий и чуткий переносит меткость на добычу.',
     tier: 1,
-    requires: { finesse: 25, instinct: 15 },
+    requires: thresholdsFor(1, 'finesse', 'instinct'),
     effectRu: 'Криты срабатывают и на добыче ресурсов.',
   },
   {
@@ -56,7 +60,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Неудержимый',
     childRu: 'Сильный и быстрый иногда бьёт дважды.',
     tier: 2,
-    requires: { might: 40, finesse: 25 },
+    requires: thresholdsFor(2, 'might', 'finesse'),
     effectRu: 'Каждый пятый удар — двойной.',
   },
   {
@@ -65,7 +69,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Живучий везунчик',
     childRu: 'Когда совсем плохо — удача вспыхивает.',
     tier: 2,
-    requires: { fortitude: 40, instinct: 25 },
+    requires: thresholdsFor(2, 'fortitude', 'instinct'),
     effectRu: 'При малом здоровье выше шанс критического удара.',
   },
   {
@@ -74,7 +78,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Мастер темпа',
     childRu: 'Быстрый и крепкий не бросает ночной путь из‑за элиты.',
     tier: 3,
-    requires: { finesse: 55, fortitude: 35 },
+    requires: thresholdsFor(3, 'finesse', 'fortitude'),
     effectRu: 'Offline-фарм не прерывается элитными мобами.',
   },
   {
@@ -83,7 +87,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Разрушитель',
     childRu: 'Сильный и чуткий проламывает любую защиту.',
     tier: 3,
-    requires: { might: 55, instinct: 35 },
+    requires: thresholdsFor(3, 'might', 'instinct'),
     effectRu: 'Криты игнорируют защиту цели полностью.',
   },
   {
@@ -92,7 +96,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Стена мышц',
     childRu: 'Крепкий и сильный держит удар всем телом.',
     tier: 2,
-    requires: { fortitude: 40, might: 25 },
+    requires: thresholdsFor(2, 'fortitude', 'might'),
     effectRu: 'Часть урона по тебе уходит в ответный удар.',
   },
   {
@@ -101,7 +105,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Каменная кожа',
     childRu: 'Тебя уже почти не пробить.',
     tier: 3,
-    requires: { fortitude: 55, might: 35 },
+    requires: thresholdsFor(3, 'fortitude', 'might'),
     effectRu: 'Самый сильный удар за бой не проходит вовсе.',
   },
   {
@@ -110,7 +114,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Тень ветра',
     childRu: 'Ловкий и чуткий уходит раньше, чем его заметят.',
     tier: 2,
-    requires: { finesse: 40, instinct: 25 },
+    requires: thresholdsFor(2, 'finesse', 'instinct'),
     effectRu: 'Уворот приносит редкую добычу.',
   },
   {
@@ -119,7 +123,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Око бури',
     childRu: 'Видит спокойствие в самой гуще.',
     tier: 3,
-    requires: { finesse: 55, instinct: 35 },
+    requires: thresholdsFor(3, 'finesse', 'instinct'),
     effectRu: 'Каждый десятый заход идёт без затрат.',
   },
   {
@@ -128,7 +132,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Танец клинка',
     childRu: 'Сильный и быстрый не даёт врагу вдохнуть.',
     tier: 1,
-    requires: { might: 25, finesse: 15 },
+    requires: thresholdsFor(1, 'might', 'finesse'),
     effectRu: 'Серия ударов подряд ускоряет следующий.',
   },
   {
@@ -137,7 +141,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Стальной вихрь',
     childRu: 'Замах достаёт всех вокруг.',
     tier: 3,
-    requires: { might: 55, finesse: 35 },
+    requires: thresholdsFor(3, 'might', 'finesse'),
     effectRu: 'Удар по нескольким целям бьёт в полную силу.',
   },
   {
@@ -146,7 +150,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Корень жизни',
     childRu: 'Крепкий и чуткий берёт силу у земли.',
     tier: 1,
-    requires: { fortitude: 25, instinct: 15 },
+    requires: thresholdsFor(1, 'fortitude', 'instinct'),
     effectRu: 'Часть добычи превращается в здоровье.',
   },
   {
@@ -155,7 +159,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Зов предков',
     childRu: 'Предки помнят тебя и помогают.',
     tier: 3,
-    requires: { fortitude: 55, instinct: 35 },
+    requires: thresholdsFor(3, 'fortitude', 'instinct'),
     effectRu: 'Раз за ночь смерть не отнимает добычу.',
   },
   {
@@ -164,7 +168,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Второй ветер',
     childRu: 'Быстрый и крепкий находит силы там, где их нет.',
     tier: 1,
-    requires: { finesse: 25, fortitude: 15 },
+    requires: thresholdsFor(1, 'finesse', 'fortitude'),
     effectRu: 'Усталость ночью приходит вдвое позже.',
   },
   {
@@ -173,7 +177,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Железная хватка',
     childRu: 'Что взял — то твоё.',
     tier: 2,
-    requires: { finesse: 40, fortitude: 25 },
+    requires: thresholdsFor(2, 'finesse', 'fortitude'),
     effectRu: 'Добыча не теряется при прерывании.',
   },
   {
@@ -182,7 +186,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Охотник на корон',
     childRu: 'Сильный и чуткий выбирает добычу покрупнее.',
     tier: 1,
-    requires: { might: 25, instinct: 15 },
+    requires: thresholdsFor(1, 'might', 'instinct'),
     effectRu: 'Крупные враги роняют больше золота.',
   },
   {
@@ -191,7 +195,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Клятва крови',
     childRu: 'Платит здоровьем за силу удара.',
     tier: 2,
-    requires: { might: 40, instinct: 25 },
+    requires: thresholdsFor(2, 'might', 'instinct'),
     effectRu: 'Чем меньше здоровья, тем сильнее удар.',
   },
   {
@@ -200,7 +204,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Громовой шаг',
     childRu: 'Быстрый, сильный и крепкий идёт как гроза.',
     tier: 3,
-    requires: { might: 42, finesse: 42, fortitude: 42 },
+    requires: { might: TRIPLE_THREAD_THRESHOLD, finesse: TRIPLE_THREAD_THRESHOLD, fortitude: TRIPLE_THREAD_THRESHOLD },
     effectRu: 'Каждый третий заход мгновенный.',
   },
   {
@@ -209,7 +213,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Ярость бури',
     childRu: 'Всё, что умеешь, бьёт разом.',
     tier: 3,
-    requires: { might: 42, finesse: 42, instinct: 42 },
+    requires: { might: TRIPLE_THREAD_THRESHOLD, finesse: TRIPLE_THREAD_THRESHOLD, instinct: TRIPLE_THREAD_THRESHOLD },
     effectRu: 'Криты бьют по всем целям сразу.',
   },
   {
@@ -218,7 +222,7 @@ export const SYNERGIES: readonly SynergyDef[] = [
     nameRu: 'Тёмная сделка',
     childRu: 'Отдаёшь покой — получаешь силу.',
     tier: 3,
-    requires: { fortitude: 42, instinct: 42, might: 42 },
+    requires: { fortitude: TRIPLE_THREAD_THRESHOLD, instinct: TRIPLE_THREAD_THRESHOLD, might: TRIPLE_THREAD_THRESHOLD },
     effectRu: 'Ночь идёт вдвое дольше, но опаснее.',
   },
 ];
