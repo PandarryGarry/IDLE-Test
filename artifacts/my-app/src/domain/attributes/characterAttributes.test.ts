@@ -7,6 +7,7 @@ import {
   PILLAR_IDS,
   RACE_PILLAR_MODS,
   type AttributeRaceId,
+  BRANCH_IDS,
 } from './attributes.ts';
 import { SYNERGIES } from './synergies.ts';
 import {
@@ -15,6 +16,7 @@ import {
   pillarContribution,
 } from '../../data/balance/pillars.ts';
 import { SUBSTATS as SUBSTAT_DEFS } from '../../data/balance/substats.ts';
+import { RACE_START_PILLARS, RACE_START_TOTAL, RACE_TIER } from '../../data/balance/races.ts';
 import { earnedBranchPoints, earnedPillarPoints } from '../../data/balance/heroLevel.ts';
 import {
   attachAttributesToSave,
@@ -84,26 +86,38 @@ test('кривая: 0 без расы = 1; 50 сильнее следующих 
   assert.ok(pillarContribution(150) > pillarContribution(100));
 });
 
-test('0 очков: расы различаются; % от базы тела', () => {
+test('0 очков: расы различаются наклоном, бюджет равный', () => {
   const state = createDefaultAttributes();
   const human = computeAttributeSnapshot({ state, raceId: 'human' });
   const elf = computeAttributeSnapshot({ state, raceId: 'elf' });
-  assert.equal(human.finalPillars.fortitude, BODY_BASE_STUB * 0.12);
-  assert.equal(elf.finalPillars.finesse, BODY_BASE_STUB * 0.15);
-  assert.equal(elf.finalPillars.fortitude, BODY_BASE_STUB * -0.15);
+  assert.equal(human.finalPillars.fortitude, RACE_TIER.strong);
+  assert.equal(elf.finalPillars.finesse, RACE_TIER.strong);
   assert.notEqual(human.finalPillars.fortitude, elf.finalPillars.fortitude);
-  assert.ok(human.contributions.fortitude > 1);
-  assert.ok(elf.contributions.fortitude < 1);
 });
 
-test('сноровка без расового штрафа у всех пяти рас', () => {
-  for (const [raceId, mods] of Object.entries(RACE_PILLAR_MODS) as [AttributeRaceId, typeof RACE_PILLAR_MODS.human][]) {
-    const finesse = mods.find(mod => mod.pillar === 'finesse');
-    if (finesse) assert.ok(finesse.percent >= 0, raceId);
-    const penalties = mods.filter(mod => mod.percent < 0);
-    assert.equal(penalties.length, 1);
-    assert.equal(mods.filter(mod => mod.percent > 0).length, 2);
-    assert.notEqual(penalties[0]?.pillar, 'finesse');
+test('стартовый бюджет одинаков у всех рас и равен RACE_START_TOTAL', () => {
+  for (const raceId of Object.keys(RACE_START_PILLARS) as AttributeRaceId[]) {
+    const snap = computeAttributeSnapshot({ state: createDefaultAttributes(), raceId });
+    const total = PILLAR_IDS.reduce((sum, p) => sum + snap.finalPillars[p], 0);
+    assert.equal(total, RACE_START_TOTAL, raceId);
+  }
+});
+
+test('ни один стартовый столп и подхарактеристика не уходят в минус', () => {
+  for (const raceId of Object.keys(RACE_START_PILLARS) as AttributeRaceId[]) {
+    const snap = computeAttributeSnapshot({ state: createDefaultAttributes(), raceId });
+    for (const p of PILLAR_IDS) assert.ok(snap.finalPillars[p] > 0, `${raceId}/${p}`);
+    for (const id of BRANCH_IDS) {
+      assert.ok(snap.substatDisplays[id].value >= 0, `${raceId}/${id}`);
+    }
+  }
+});
+
+test('каждая раса получает все четыре ступени ровно по разу', () => {
+  const want = [RACE_TIER.strong, RACE_TIER.good, RACE_TIER.plain, RACE_TIER.weak].sort((a, b) => a - b);
+  for (const raceId of Object.keys(RACE_START_PILLARS) as AttributeRaceId[]) {
+    const got = PILLAR_IDS.map(p => RACE_START_PILLARS[raceId][p]).sort((a, b) => a - b);
+    assert.deepEqual(got, want, raceId);
   }
 });
 

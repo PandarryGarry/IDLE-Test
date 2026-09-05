@@ -13,7 +13,6 @@ import {
   emptyBranchRanks,
   emptyPassiveRanks,
   emptyPillarRanks,
-  racePercentFor,
   type AttributeRaceId,
   type BranchId,
   type BranchRanks,
@@ -26,11 +25,11 @@ import {
 } from './attributes.ts';
 import { SYNERGIES, type SynergyId } from './synergies.ts';
 import {
-  BODY_BASE_STUB,
   NODE_RANK_CAP,
   PILLAR_RANK_CAP_STUB,
   pillarContribution,
 } from '../../data/balance/pillars.ts';
+import { raceStartFor } from '../../data/balance/races.ts';
 import {
   BRANCH_RANK_IN_PILLAR_POINTS,
   SUBSTATS,
@@ -279,8 +278,8 @@ export function computeAttributeSnapshot(input: ComputeInput): AttributeSnapshot
   const contributions = emptyPillarRanks() as unknown as Record<PillarId, number>;
 
   for (const pillar of PILLAR_IDS) {
-    const percent = racePercentFor(input.raceId, pillar);
-    racialImprint[pillar] = BODY_BASE_STUB * (percent / 100);
+    // Раса даёт стартовые ОЧКИ столпа, а не % от базы: минусов на старте нет.
+    racialImprint[pillar] = raceStartFor(input.raceId, pillar);
     finalPillars[pillar] = invested[pillar] + racialImprint[pillar] + professionBonus[pillar];
     contributions[pillar] = pillarContribution(finalPillars[pillar]);
   }

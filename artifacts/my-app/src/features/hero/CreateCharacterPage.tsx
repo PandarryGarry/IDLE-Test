@@ -7,7 +7,8 @@ import {
   RACES, RACE_MAP, getAvatarsForRace, getAvatarPath, prefetchAvatar, getRaceLabel, getRaceBlurb,
   type RaceId,
 } from '@/data/characters';
-import { PILLARS, RACE_BODY_CHILD_RU, RACE_PASSIVES } from '@/domain/attributes/attributes';
+import { PILLARS, PILLAR_IDS, RACE_BODY_CHILD_RU, RACE_PASSIVES } from '@/domain/attributes/attributes';
+import { RACE_START_PILLARS, RACE_START_TOTAL, raceTierLabel } from '@/data/balance/races';
 import { useCharacterStore } from '@/store/characterStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { OnboardingScene } from '@/components/OnboardingScene';
@@ -143,17 +144,24 @@ export function CreateCharacterPage() {
                   Тело: {getRaceLabel(selectedRace, 'ru')}
                 </span>
                 <div className="character-create-bonus-list">
-                  {race.pillarMods.map(mod => {
-                    const pillar = PILLARS[mod.pillar];
-                    const positive = mod.percent > 0;
-                    const shown = positive ? `+${mod.percent}%` : `−${Math.abs(mod.percent)}%`;
+                  {PILLAR_IDS.map(id => {
+                    const pillar = PILLARS[id];
+                    const value = RACE_START_PILLARS[selectedRace][id];
+                    const tier = raceTierLabel(value);
+                    const variant = tier === 'strong' ? 'green'
+                      : tier === 'good' ? 'blue'
+                      : tier === 'weak' ? 'gray'
+                      : 'gold';
                     return (
-                      <GBadge key={mod.pillar} variant={positive ? 'green' : 'red'} size="sm">
-                        {pillar.icon} {pillar.nameRu} {shown}
+                      <GBadge key={id} variant={variant} size="sm">
+                        {pillar.icon} {pillar.nameRu} {value}
                       </GBadge>
                     );
                   })}
                 </div>
+                <p className="character-create-bonus-card__total">
+                  Всего {RACE_START_TOTAL} — поровну у каждого народа. Разный только наклон.
+                </p>
                 <p>{RACE_BODY_CHILD_RU[selectedRace]}</p>
                 <p>
                   Пассив «{RACE_PASSIVES[selectedRace].nameRu}»: {RACE_PASSIVES[selectedRace].childRu}
