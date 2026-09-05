@@ -1,13 +1,13 @@
 import { create } from 'zustand';
-import type { Monster } from '../data/types';
-import { MONSTERS_MAP, AREAS_MAP } from '../data/monsters';
-import { calcMaxHitMelee, calcAttackRating, calcDefenceRating, calcHitChance, calcAutoEatThreshold, rollDrops, rollGp } from '../gameEngine/formulas';
-import { usePlayerStore } from './playerStore';
-import { useBankStore } from './bankStore';
-import { useNotificationsStore } from './notificationsStore';
-import { useAuthStore } from './authStore';
-import { GUEST_NOTICE } from '../lib/guestMode';
-import { getItem } from '../data/items';
+import type { Monster } from '@/data/types';
+import { MONSTERS_MAP, AREAS_MAP } from '@/domain/combat/monsters';
+import { calcMaxHitMelee, calcAttackRating, calcDefenceRating, calcHitChance, calcAutoEatThreshold, rollDrops, rollGp } from '@/core/formulas';
+import { usePlayerStore } from '@/store/playerStore';
+import { useBankStore } from '@/store/bankStore';
+import { useNotificationsStore } from '@/store/notificationsStore';
+import { useAuthStore } from '@/store/authStore';
+import { GUEST_NOTICE } from '@/lib/guestMode';
+import { getItem } from '@/domain/items/items';
 
 export interface CombatLogEntry {
   id: string;

@@ -8,7 +8,7 @@
  * Найденная и исправленная поломка: старые пороги яруса 2 (70/40 = 110 очков)
  * недостижимы никаким билдом, т.к. на 100 уровне очков всего 99.
  */
-import type { PillarId } from '../attributes.ts';
+import type { PillarId } from '../../domain/attributes/attributes.ts';
 
 export type ThreadTier = 1 | 2 | 3;
 

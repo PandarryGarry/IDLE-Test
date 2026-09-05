@@ -1,19 +1,19 @@
 import { create } from 'zustand';
-import type { SkillId, GameMode } from '../data/types';
-import { WOODCUTTING_TREES_MAP } from '../data/woodcutting';
-import { MINING_ROCKS_MAP, GEM_DROPS } from '../data/mining';
-import { FISHING_SPOTS_MAP } from '../data/fishing';
-import { COOKING_RECIPES_MAP } from '../data/cooking';
-import { SMITHING_MAP } from '../data/smithing';
-import { FIREMAKING_MAP } from '../data/firemaking';
-import { usePlayerStore } from './playerStore';
-import { useBankStore } from './bankStore';
-import { useNotificationsStore } from './notificationsStore';
-import { useAuthStore } from './authStore';
-import { isSkillAllowedForGuest, GUEST_NOTICE } from '../lib/guestMode';
-import { calcBurnChance, calcXpPerHour } from '../gameEngine/formulas';
-import { getItem } from '../data/items';
-import { chance, randomRange } from '../lib/utils';
+import type { SkillId, GameMode } from '@/data/types';
+import { WOODCUTTING_TREES_MAP } from '@/domain/professions/woodcutting';
+import { MINING_ROCKS_MAP, GEM_DROPS } from '@/domain/professions/mining';
+import { FISHING_SPOTS_MAP } from '@/domain/professions/fishing';
+import { COOKING_RECIPES_MAP } from '@/domain/professions/cooking';
+import { SMITHING_MAP } from '@/domain/professions/smithing';
+import { FIREMAKING_MAP } from '@/domain/professions/firemaking';
+import { usePlayerStore } from '@/store/playerStore';
+import { useBankStore } from '@/store/bankStore';
+import { useNotificationsStore } from '@/store/notificationsStore';
+import { useAuthStore } from '@/store/authStore';
+import { isSkillAllowedForGuest, GUEST_NOTICE } from '@/lib/guestMode';
+import { calcBurnChance, calcXpPerHour } from '@/core/formulas';
+import { getItem } from '@/domain/items/items';
+import { chance, randomRange } from '@/lib/utils';
 
 export interface ActionResult {
   items: { itemId: string; quantity: number }[];

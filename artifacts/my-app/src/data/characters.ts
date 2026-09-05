@@ -6,8 +6,8 @@
  * ║  Старый StatKey (Сила/Магия/…) не действует и не суммируется.║
  * ╚══════════════════════════════════════════════════════════════╝
  */
-import { iconUrl, prefetchImage } from '@/lib/assetUrl';
-import { RACE_PILLAR_MODS, type RacePillarMod } from './attributes';
+import { iconUrl, prefetchImage } from '../lib/assetUrl.ts';
+import { RACE_PILLAR_MODS, type RacePillarMod } from '../domain/attributes/attributes.ts';
 
 export type RaceId = 'human' | 'elf' | 'dwarf' | 'orc' | 'beastfolk';
 

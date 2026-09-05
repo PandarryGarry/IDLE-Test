@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import type { BankSlot as InventorySlot } from '../data/types';
-import { getItem } from '../data/items';
-import { useAuthStore } from './authStore';
+import type { BankSlot as InventorySlot } from '@/data/types';
+import { getItem } from '@/domain/items/items';
+import { useAuthStore } from '@/store/authStore';
 
 const DEFAULT_MAX_SLOTS = 24;
 const SLOTS_PER_UPGRADE = 10;

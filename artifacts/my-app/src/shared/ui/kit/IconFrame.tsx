@@ -1,6 +1,6 @@
 import React from 'react';
 import { Lock } from 'lucide-react';
-import { TierBadge } from './TierBadge';
+import { TierBadge } from '@/shared/ui/kit/TierBadge';
 
 export type IconShape = 'circle' | 'squircle' | 'rounded' | 'diamond' | 'none';
 export type IconSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';

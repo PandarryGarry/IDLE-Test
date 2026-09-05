@@ -1,2 +1,2 @@
 // Re-export from inventoryStore for backward compatibility
-export * from './inventoryStore';
+export * from '@/store/inventoryStore';

@@ -1,4 +1,4 @@
-import { supabase, getSupabaseClient, isSupabaseConfigured } from './supabase';
+import { supabase, getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase';
 import {
   isQaMockEnabled,
   qaCreateCharacter,
@@ -10,11 +10,11 @@ import {
   qaSetSelectedCharacter,
   qaSoftDeleteCharacter,
   qaUpdateCharacter,
-} from './qaMock';
-import type { SaveData } from '../data/types';
-import type { RaceId } from '../data/characters';
-import { withTimeout } from './utils';
-import { attachAttributesToSave, createDefaultAttributes } from './characterAttributes';
+} from '@/lib/qaMock';
+import type { SaveData } from '@/data/types';
+import type { RaceId } from '@/data/characters';
+import { withTimeout } from '@/lib/utils';
+import { attachAttributesToSave, createDefaultAttributes } from '@/domain/attributes/characterAttributes';
 
 /** Потолок сетевых вызовов Supabase: зависший запрос не должен блокировать UI. */
 const API_TIMEOUT_MS = 12000;

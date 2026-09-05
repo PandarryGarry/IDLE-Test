@@ -1,11 +1,11 @@
 import React from 'react';
-import { getItem } from '@/data/items';
+import { getItem } from '@/domain/items/items';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { EquipSlotSilhouette } from '@/shared/icons/EquipSlotIcons';
 import { getItemTier } from '@/components/modals/UniversalInfoModal';
-import { getItemRarity } from '@/components/ItemIcon';
+import { getItemRarity } from '@/features/bank/ItemIcon';
 import { formatNumber } from '@/lib/utils';
-import { TierBadge } from './TierBadge';
+import { TierBadge } from '@/shared/ui/kit/TierBadge';
 
 interface SquircleSlotProps {
   itemId?: string;

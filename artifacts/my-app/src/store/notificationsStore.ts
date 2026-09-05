@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import type { GameNotification, NotificationType, SkillId } from '../data/types';
-import { generateId } from '../lib/utils';
+import type { GameNotification, NotificationType, SkillId } from '@/data/types';
+import { generateId } from '@/lib/utils';
 
 const MAX_NOTIFICATIONS = 20;
 const AUTO_DISMISS_MS = 4000;

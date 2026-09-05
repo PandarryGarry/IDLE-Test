@@ -1,21 +1,21 @@
 // Save/Load manager for Aethelia Idle RPG
 // Supports: localStorage auto-save, multiple save slots, JSON export/import
 
-import type { SaveData } from '../data/types';
-import { usePlayerStore } from '../store/playerStore';
-import { useBankStore } from '../store/bankStore';
-import { useGameStore } from '../store/gameStore';
-import { useSettingsStore } from '../store/settingsStore';
-import { useAuthStore } from '../store/authStore';
-import { GUEST_NOTICE } from './guestMode';
-import { calculateOfflineProgress } from '../gameEngine/offlineCalc';
-import { getLiveAttributes, setLiveAttributes, createDefaultAttributes, migrateSaveAttributes } from './characterAttributes';
+import type { SaveData } from '@/data/types';
+import { usePlayerStore } from '@/store/playerStore';
+import { useBankStore } from '@/store/bankStore';
+import { useGameStore } from '@/store/gameStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { useAuthStore } from '@/store/authStore';
+import { GUEST_NOTICE } from '@/lib/guestMode';
+import { calculateOfflineProgress } from '@/core/offlineCalc';
+import { getLiveAttributes, setLiveAttributes, createDefaultAttributes, migrateSaveAttributes } from '@/domain/attributes/characterAttributes';
 import {
   createEmptyGearSets,
   getLiveGearSets,
   migrateGearSets,
   setLiveGearSets,
-} from './gearSets';
+} from '@/domain/items/gearSets';
 
 const SAVE_VERSION = '1.0.0';
 const SAVE_KEY_PREFIX = 'aethelia_save_';

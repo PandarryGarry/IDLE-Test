@@ -7,7 +7,7 @@ import React, { memo, useState, useCallback } from 'react';
 import { Link } from 'wouter';
 import { usePlayerStore } from '@/store/playerStore';
 import { useGameStore } from '@/store/gameStore';
-import { getLevelProgress, getXpForLevel } from '@/gameEngine/xpTable';
+import { getLevelProgress, getXpForLevel } from '@/core/xpTable';
 import { getSkillShortName, getSkillVisual } from '@/shared/icons/skillIcons';
 import { formatNumber } from '@/lib/utils';
 import type { SkillId } from '@/data/types';

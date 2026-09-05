@@ -9,7 +9,7 @@
  * Горизонт: 100 уровень = 99 очков столпов, 20 очков ветвей.
  * Все шаги сверены по контрольным точкам 10 / 40 / 70 очков в один столп.
  */
-import type { BranchId, PillarId } from '../attributes.ts';
+import type { BranchId, PillarId } from '../../domain/attributes/attributes.ts';
 
 /** Потолок уровня героя. Столпов к нему: 99, ветвей: 20. */
 export const HERO_LEVEL_CAP = 100;

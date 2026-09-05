@@ -11,7 +11,7 @@
  * Hard-Idle: фарм и крафт ресурсов высокого яруса всё дороже и дольше,
  * поэтому ускорение и удешевление — главная валюта прогресса.
  */
-import type { BranchId } from '../attributes.ts';
+import type { BranchId } from '../../domain/attributes/attributes.ts';
 
 /** Куда бьёт второй эффект. Нужен, чтобы системы забирали только своё. */
 export type BranchEffectDomain =

@@ -16,7 +16,7 @@ import {
   attributesFromSave,
   createDefaultAttributes,
   setLiveAttributes,
-} from '@/lib/characterAttributes';
+} from '@/domain/attributes/characterAttributes';
 import type { RaceId } from '@/data/characters';
 
 const LAST_CHAR_KEY = 'aethelia_last_active_character';

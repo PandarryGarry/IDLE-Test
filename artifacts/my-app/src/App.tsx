@@ -4,7 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ErrorBoundary } from '@/components/error-boundary';
 
-import { tickManager } from '@/gameEngine/tickManager';
+import { tickManager } from '@/core/tickManager';
 import { initGame, setupOfflineTracking } from '@/lib/saveManager';
 import { Sidebar } from '@/components/Sidebar';
 import { TopNavBar } from '@/components/TopNavBar';
@@ -19,21 +19,21 @@ import { getUnseenChangelog, markChangelogSeen, type VersionEntry } from '@/data
 import { getQueuedCinematic, hasSeenFullPrologue, queueCinematic } from '@/lib/cinematicState';
 import { FULL_PROLOGUE_READY } from '@/data/onboardingStory';
 
-import { DashboardPage } from '@/pages/DashboardPage';
-import { WoodcuttingPage } from '@/pages/WoodcuttingPage';
-import { MiningPage } from '@/pages/MiningPage';
-import { FishingPage } from '@/pages/FishingPage';
-import { CookingPage } from '@/pages/CookingPage';
-import { SmithingPage } from '@/pages/SmithingPage';
-import { FiremakingPage } from '@/pages/FiremakingPage';
-import { CombatPage } from '@/pages/CombatPage';
-import { InventoryPage } from '@/pages/InventoryPage';
-import { SettingsPage } from '@/pages/SettingsPage';
-import { HeroHubPage } from '@/pages/HeroHubPage';
-import { AuthPage } from '@/pages/AuthPage';
-import { RulesPage } from '@/pages/RulesPage';
-import { CreateCharacterPage } from '@/pages/CreateCharacterPage';
-import { SelectCharacterPage } from '@/pages/SelectCharacterPage';
+import { DashboardPage } from '@/features/system/DashboardPage';
+import { WoodcuttingPage } from '@/features/professions/WoodcuttingPage';
+import { MiningPage } from '@/features/professions/MiningPage';
+import { FishingPage } from '@/features/professions/FishingPage';
+import { CookingPage } from '@/features/professions/CookingPage';
+import { SmithingPage } from '@/features/professions/SmithingPage';
+import { FiremakingPage } from '@/features/professions/FiremakingPage';
+import { CombatPage } from '@/features/combat/CombatPage';
+import { InventoryPage } from '@/features/bank/InventoryPage';
+import { SettingsPage } from '@/features/system/SettingsPage';
+import { HeroHubPage } from '@/features/hero/HeroHubPage';
+import { AuthPage } from '@/features/auth/AuthPage';
+import { RulesPage } from '@/features/system/RulesPage';
+import { CreateCharacterPage } from '@/features/hero/CreateCharacterPage';
+import { SelectCharacterPage } from '@/features/hero/SelectCharacterPage';
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
 import {

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArtEngine, detectMode, DEFAULT_TINT, type ArtMode, type ArtTint, type SigilConfig, type SignMotionConfig, type LightBloomConfig } from './artEngine';
+import { ArtEngine, detectMode, DEFAULT_TINT, type ArtMode, type ArtTint, type SigilConfig, type SignMotionConfig, type LightBloomConfig } from '@/components/art/artEngine';
 
-export type { ArtMode, ArtTint, SigilConfig, SignMotionConfig, LightBloomConfig } from './artEngine';
-export { ArtEngine, detectMode } from './artEngine';
+export type { ArtMode, ArtTint, SigilConfig, SignMotionConfig, LightBloomConfig } from '@/components/art/artEngine';
+export { ArtEngine, detectMode } from '@/components/art/artEngine';
 
 /**
  * AnimatedArt — React-обёртка над artEngine.
