@@ -79,21 +79,6 @@ export function AdminItemsPage() {
 
   return (
     <div className="space-y-4 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="rounded-2xl p-4 sm:p-5" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.25)' }}>
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-2xl border border-amber-500/30 flex items-center justify-center text-2xl shrink-0">
-            🛡️
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-display font-black text-[var(--text-primary)]">Админ-панель · Каталог предметов</h1>
-            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-              Клик по ячейке открывает карточку. Внутри — просмотр и правка предмета.
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Filters + search */}
       <div className="flex items-center justify-between gap-2 p-1.5 rounded-xl" style={{ background: '#1c1108', border: '1px solid #3a2b1a' }}>
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1">
