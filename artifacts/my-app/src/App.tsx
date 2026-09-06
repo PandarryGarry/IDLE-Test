@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Route, Switch, Router as WouterRouter, Redirect, useLocation } from 'wouter';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -244,8 +244,14 @@ function App() {
   const activeCharacter = useCharacterStore(s => s.activeCharacter);
   const loadedUserId = useCharacterStore(s => s.loadedUserId);
   const loadCharacters = useCharacterStore(s => s.loadCharacters);
-  const bootAvatarIds = useCharacterStore(s =>
-    s.characters.filter(c => !c.isDeleted).map(c => c.avatarId),
+  // Селектор возвращает стабильную ссылку `s.characters`, а производный
+  // массив считаем через useMemo. Раньше filter().map() жил прямо в
+  // селекторе Zustand и каждый рендер создавал новый массив — React 19
+  // считал это вечно меняющимся snapshot и падал до показа игры.
+  const characters = useCharacterStore(s => s.characters);
+  const bootAvatarIds = useMemo(
+    () => characters.filter(c => !c.isDeleted).map(c => c.avatarId),
+    [characters],
   );
 
   // Вывеска / акт 0 держат кадр, пока сессия не восстановится и
