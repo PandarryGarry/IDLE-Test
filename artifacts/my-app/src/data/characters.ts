@@ -6,8 +6,8 @@
  * ║  Старый StatKey (Сила/Магия/…) не действует и не суммируется.║
  * ╚══════════════════════════════════════════════════════════════╝
  */
-import { iconUrl, prefetchImage } from '@/lib/assetUrl';
-import { RACE_PILLAR_MODS, type RacePillarMod } from './attributes';
+import { iconUrl, prefetchImage } from '../lib/assetUrl.ts';
+import { RACE_PILLAR_MODS, type RacePillarMod } from '../domain/attributes/attributes.ts';
 
 export type RaceId = 'human' | 'elf' | 'dwarf' | 'orc' | 'beastfolk';
 
@@ -18,7 +18,7 @@ export interface Race {
   /** Краткое описание для карточки расы. */
   blurbRu: string;
   blurbEn: string;
-  /** Канон Этапа 5: два плюса и один минус к столпам. */
+  /** Устарело: проценты не входят в расчёт. Старт — RACE_START_PILLARS. */
   pillarMods: readonly RacePillarMod[];
 }
 
@@ -27,40 +27,40 @@ export const RACES: Race[] = [
     id: 'human',
     nameRu: 'Человек',
     nameEn: 'Human',
-    blurbRu: 'Прирождённые искатели приключений — выносливы и быстры.',
-    blurbEn: 'Born adventurers — hardy and quick.',
+    blurbRu: 'Старт 4/3/2/1: Стойкость, Сноровка, Мощь, Чутьё.',
+    blurbEn: 'Start 4/3/2/1: Fortitude, Finesse, Might, Instinct.',
     pillarMods: RACE_PILLAR_MODS.human,
   },
   {
     id: 'elf',
     nameRu: 'Эльф',
     nameEn: 'Elf',
-    blurbRu: 'Точные и чуткие жители древних лесов — тело хрупкое.',
-    blurbEn: 'Precise, keen dwellers of the ancient forests — fragile of body.',
+    blurbRu: 'Старт 4/3/2/1: Сноровка, Чутьё, Мощь, Стойкость.',
+    blurbEn: 'Start 4/3/2/1: Finesse, Instinct, Might, Fortitude.',
     pillarMods: RACE_PILLAR_MODS.elf,
   },
   {
     id: 'dwarf',
     nameRu: 'Дварф',
     nameEn: 'Dwarf',
-    blurbRu: 'Крепкие горняки и кузнецы, ценящие камень и металл.',
-    blurbEn: 'Sturdy miners and smiths who value stone and metal.',
+    blurbRu: 'Старт 4/3/2/1: Стойкость, Мощь, Чутьё, Сноровка.',
+    blurbEn: 'Start 4/3/2/1: Fortitude, Might, Instinct, Finesse.',
     pillarMods: RACE_PILLAR_MODS.dwarf,
   },
   {
     id: 'orc',
     nameRu: 'Орк',
     nameEn: 'Orc',
-    blurbRu: 'Могучие воины с натиском, к тонкостям удачи глуховаты.',
-    blurbEn: 'Mighty warriors of onslaught, deaf to fine luck.',
+    blurbRu: 'Старт 4/3/2/1: Мощь, Стойкость, Сноровка, Чутьё.',
+    blurbEn: 'Start 4/3/2/1: Might, Fortitude, Finesse, Instinct.',
     pillarMods: RACE_PILLAR_MODS.orc,
   },
   {
     id: 'beastfolk',
     nameRu: 'Зверолюд',
     nameEn: 'Beastfolk',
-    blurbRu: 'Дикие охотники: чутьё и сила, тело держит удар хуже.',
-    blurbEn: 'Wild hunters: instinct and might, a body that holds less.',
+    blurbRu: 'Старт 4/3/2/1: Чутьё, Сноровка, Мощь, Стойкость.',
+    blurbEn: 'Start 4/3/2/1: Instinct, Finesse, Might, Fortitude.',
     pillarMods: RACE_PILLAR_MODS.beastfolk,
   },
 ];

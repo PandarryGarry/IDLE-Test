@@ -12,11 +12,11 @@ import {
   loadFromSlot,
   saveToSlot,
   AUTO_SAVE_SLOT,
-} from './saveManager';
-import { saveCharacterToCloud, loadCharacterFromCloud } from './characterApi';
-import { isSupabaseConfigured } from './supabase';
+} from '@/lib/saveManager';
+import { saveCharacterToCloud, loadCharacterFromCloud } from '@/lib/characterApi';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import type { SaveData } from '@/data/types';
-import type { Character } from './characterApi';
+import type { Character } from '@/lib/characterApi';
 
 const CLOUD_INTERVAL_MS = 3 * 60 * 1000; // ~3 мин
 const CHECK_INTERVAL_MS = 30 * 1000;      // проверяем каждые 30с (локальный сейв — там же)

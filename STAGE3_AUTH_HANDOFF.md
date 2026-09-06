@@ -1,8 +1,12 @@
-# Stage 3 Auth — handoff для следующего чата
+# Stage 3 Auth — исторический контракт
+
+> Карта файлов и ветка ниже — **на дату 2026-08-29**. Актуальный вход:
+> `NEXT_CHAT_HANDOFF.md`, `ARCHITECTURE.md`, `SUPABASE_SETUP.md`.
+> Auth-страница сейчас: `src/features/auth/AuthPage.tsx`.
 
 Дата фиксации: **2026-08-29**  
-Ветка Arena: `arena/01a04c15-idle-test`  
-Статус: **Supabase/auth foundation реализован и смёржен (PR #4); остаётся тест в Replit.**
+Ветка Arena тогда: `arena/01a04c15-idle-test`  
+Статус тогда: **Supabase/auth foundation реализован и смёржен (PR #4).**
 
 > 🔄 **Обновление (Сессия 5):** Supabase больше НЕ «визуальный» — добавлены
 > `@supabase/supabase-js`, `src/lib/supabase.ts`, `src/store/authStore.ts`,

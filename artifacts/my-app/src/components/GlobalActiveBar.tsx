@@ -1,17 +1,17 @@
 import React from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { useCombatStore } from '@/store/combatStore';
-import { WOODCUTTING_TREES_MAP } from '@/data/woodcutting';
-import { MINING_ROCKS_MAP } from '@/data/mining';
-import { FISHING_SPOTS_MAP } from '@/data/fishing';
-import { COOKING_RECIPES_MAP } from '@/data/cooking';
-import { SMITHING_MAP } from '@/data/smithing';
-import { FIREMAKING_MAP } from '@/data/firemaking';
-import { ActionProgressBar } from '@/components/ActionProgressBar';
+import { WOODCUTTING_TREES_MAP } from '@/domain/professions/woodcutting';
+import { MINING_ROCKS_MAP } from '@/domain/professions/mining';
+import { FISHING_SPOTS_MAP } from '@/domain/professions/fishing';
+import { COOKING_RECIPES_MAP } from '@/domain/professions/cooking';
+import { SMITHING_MAP } from '@/domain/professions/smithing';
+import { FIREMAKING_MAP } from '@/domain/professions/firemaking';
+import { ActionProgressBar } from '@/features/professions/ActionProgressBar';
 import { Link } from 'wouter';
 import { Square, ArrowUpRight, Flame, ShieldAlert } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { SkillIcon } from '@/components/SkillIcon';
+import { SkillIcon } from '@/features/professions/SkillIcon';
 
 const SKILL_THEMES: Record<string, { nameKey: string; icon: string; path: string; color: 'green' | 'blue' | 'amber' | 'red'; accent: string }> = {
   woodcutting: { nameKey: 'skill.woodcutting', icon: '🪓', path: '/woodcutting', color: 'green', accent: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' },

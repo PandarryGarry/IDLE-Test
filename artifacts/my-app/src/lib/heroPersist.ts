@@ -1,7 +1,7 @@
 import type { GearSetsState, SaveData } from '@/data/types';
 import { useCharacterStore } from '@/store/characterStore';
-import { setLiveAttributes, type CharacterAttributeState } from '@/lib/characterAttributes';
-import { setLiveGearSets } from '@/lib/gearSets';
+import { setLiveAttributes, type CharacterAttributeState } from '@/domain/attributes/characterAttributes';
+import { setLiveGearSets } from '@/domain/items/gearSets';
 
 /** Живое состояние + save_data активного героя. Облако подхватит collectSaveData. */
 export function commitHeroAttributes(next: CharacterAttributeState): void {

@@ -259,7 +259,7 @@ export interface SaveData {
   };
   settings: Record<string, unknown>;
   /** Четыре Столпа. Старые сейвы без поля мигрируют в коде, не новой таблицей. */
-  attributes?: import('./attributes').CharacterAttributeState;
+  attributes?: import('@/domain/attributes/attributes').CharacterAttributeState;
   /** Наборы снаряжения (до 3 пресетов). Старые сейвы без поля — пустые наборы. */
   gearSets?: GearSetsState;
 }

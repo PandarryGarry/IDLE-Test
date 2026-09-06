@@ -14,7 +14,7 @@ import {
   interpolateBeats,
   type StoryBeat,
 } from '@/data/onboardingStory';
-import { StoryScene } from './StoryScene';
+import { StoryScene } from '@/components/StoryScene';
 
 interface CinematicDirectorProps {
   onBusyChange?: (busy: boolean) => void;

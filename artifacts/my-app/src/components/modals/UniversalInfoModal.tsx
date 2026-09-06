@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { getItem } from '@/data/items';
+import { getItem } from '@/domain/items/items';
 import type { Item, EquipSlot } from '@/data/types';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useCombatStore } from '@/store/combatStore';
 import { getItemVisual } from '@/shared/icons/itemIcons';
-import { getItemRarity } from '@/components/ItemIcon';
+import { getItemRarity } from '@/features/bank/ItemIcon';
 import { formatNumber } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CoinsDisplay } from '@/shared/ui/CoinsDisplay';

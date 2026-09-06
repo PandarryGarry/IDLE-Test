@@ -1,4 +1,4 @@
-/** XP «на месяцы» не закрыт. Здесь только закон очков. */
+/** Закон очков от уровня. Кривая XP — xpRates.ts. */
 
 export const HERO_START_LEVEL = 1;
 
@@ -12,9 +12,6 @@ export function earnedBranchPoints(heroLevel: number): number {
   if (heroLevel < 5) return 0;
   return Math.floor(heroLevel / 5);
 }
-
-/** Заглушка XP до следующего уровня. Не закрыто — не в UI. */
-export const XP_TO_NEXT_LEVEL_STUB = 1000;
 
 /** Бесплатных сбросов очков за жизнь героя. Дальше — золото (цена не закрыта). */
 export const FREE_RESPEC_LIMIT = 2;

@@ -5,6 +5,7 @@ import {
   collectBeatImages,
 } from '@/data/onboardingStory';
 import { markFullPrologueSeen } from '@/lib/cinematicState';
+import { bootBackgroundUrls, bootGateUrls, waitDecoded, warmImages } from '@/lib/bootPreload';
 
 const SIGN_ART = '/assets/art/intro_sign.webp';
 
@@ -70,36 +71,15 @@ export function FirstLaunchIntro({ onFinished, authReady = false }: FirstLaunchI
 
 
 
-  /* Мини-загрузка: греем ВСЕ арты пролога, не первый попавшийся. */
+  /* Мини-загрузка: арты пролога + первый кадр игры. */
   useEffect(() => {
     let disposed = false;
-    const sources = collectBeatImages(PROLOGUE_FULL);
-    if (sources.length === 0) {
-      setArtsReady(true);
-      return;
-    }
-    let remaining = sources.length;
-    const finishOne = () => {
-      remaining -= 1;
-      if (remaining <= 0 && !disposed) setArtsReady(true);
-    };
-    const images = sources.map((src) => {
-      const img = new Image();
-      img.onload = img.onerror = finishOne;
-      img.src = src;
-      return img;
-    });
-    const cap = window.setTimeout(() => {
+    warmImages(bootBackgroundUrls());
+    const sources = [...collectBeatImages(PROLOGUE_FULL), ...bootGateUrls()];
+    void waitDecoded(sources, SIGN_CAP_MS).then(() => {
       if (!disposed) setArtsReady(true);
-    }, SIGN_CAP_MS);
-    return () => {
-      disposed = true;
-      window.clearTimeout(cap);
-      images.forEach((img) => {
-        img.onload = null;
-        img.onerror = null;
-      });
-    };
+    });
+    return () => { disposed = true; };
   }, []);
 
   useEffect(() => {

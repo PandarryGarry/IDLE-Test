@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844">
+  <defs>
+    <linearGradient id="plaque" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#845d36"/>
+      <stop offset="100%" stop-color="#5a3418"/>
+    </linearGradient>
+    <linearGradient id="xp" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#c8880a"/>
+      <stop offset="100%" stop-color="#f0c030"/>
+    </linearGradient>
+    <style>
+      .sans { font-family: DejaVu Sans, Noto Sans, sans-serif; }
+      .num { font-family: DejaVu Sans, Noto Sans, sans-serif; font-weight: 700; }
+    </style>
+  </defs>
+  <rect width="390" height="844" fill="#a07038"/>
+  <!-- header -->
+  <rect x="10" y="10" width="370" height="118" rx="14" fill="#2a1508" stroke="#3d1e08"/>
+  <circle cx="48" cy="58" r="28" fill="#5a3418" stroke="#c8880a" stroke-width="2"/>
+  <text x="48" y="64" text-anchor="middle" class="sans" font-size="22" fill="#f5d880">Г</text>
+  <text x="88" y="42" class="sans" font-size="18" font-weight="700" fill="#fff8d0">Гарольд</text>
+  <circle cx="96" cy="62" r="11" fill="#5a3418" stroke="#c8880a" stroke-width="2"/>
+  <text x="96" y="66" text-anchor="middle" class="num" font-size="11" fill="#f0c030">1</text>
+  <rect x="114" y="50" width="72" height="22" rx="6" fill="#5a3418" stroke="#c8880a"/>
+  <text x="150" y="65" text-anchor="middle" class="sans" font-size="11" fill="#f0c030">Человек</text>
+  <circle cx="322" cy="40" r="16" fill="#5a3418" stroke="#8b5020"/>
+  <text x="322" y="45" text-anchor="middle" class="num" font-size="12" fill="#f0c030">0</text>
+  <circle cx="358" cy="40" r="16" fill="#5a3418" stroke="#8b5020"/>
+  <text x="358" y="45" text-anchor="middle" class="num" font-size="12" fill="#f0c030">0</text>
+  <text x="20" y="104" class="sans" font-size="9" fill="#c8a050">опыт</text>
+  <rect x="52" y="94" width="318" height="10" rx="5" fill="#2e1808" stroke="#5a3010"/>
+  <rect x="53" y="95" width="28" height="8" rx="4" fill="url(#xp)"/>
+  <!-- tabs -->
+  <g font-size="11" font-weight="700" class="sans">
+    <rect x="10" y="136" width="88" height="30" rx="6" fill="#2a1508" stroke="#5c3010"/>
+    <text x="54" y="156" text-anchor="middle" fill="#f0c030">ТЕЛО</text>
+    <rect x="104" y="136" width="88" height="30" rx="6" fill="#2a1508" stroke="#5c3010"/>
+    <text x="148" y="156" text-anchor="middle" fill="#f0c030">ЭКИП</text>
+    <rect x="198" y="136" width="88" height="30" rx="6" fill="#2a1508" stroke="#5c3010"/>
+    <text x="242" y="156" text-anchor="middle" fill="#f0c030">НИТИ</text>
+    <rect x="292" y="136" width="88" height="30" rx="6" fill="#a07040" stroke="#c8880a"/>
+    <text x="336" y="156" text-anchor="middle" fill="#f0c030">ПУТЬ</text>
+  </g>
+  <!-- panel -->
+  <rect x="10" y="174" width="370" height="650" rx="14" fill="#b89060" stroke="#5c3010"/>
+  <!-- 3x2 plaques -->
+  <g id="tiles">
+    <!-- r1 -->
+    <g transform="translate(22,198)">
+      <rect width="110" height="150" rx="12" fill="url(#plaque)" stroke="#3d1e08"/>
+      <text x="55" y="32" text-anchor="middle" class="sans" font-size="13" fill="#fff8d0">Здоровье</text>
+      <text x="55" y="92" text-anchor="middle" class="num" font-size="32" fill="#f0c030">176</text>
+    </g>
+    <g transform="translate(140,198)">
+      <rect width="110" height="150" rx="12" fill="url(#plaque)" stroke="#3d1e08"/>
+      <text x="55" y="32" text-anchor="middle" class="sans" font-size="13" fill="#fff8d0">Удар</text>
+      <text x="55" y="92" text-anchor="middle" class="num" font-size="26" fill="#f0c030">12–16</text>
+    </g>
+    <g transform="translate(258,198)">
+      <rect width="110" height="150" rx="12" fill="url(#plaque)" stroke="#3d1e08"/>
+      <text x="55" y="32" text-anchor="middle" class="sans" font-size="13" fill="#fff8d0">Броня</text>
+      <text x="55" y="92" text-anchor="middle" class="num" font-size="32" fill="#f0c030">13%</text>
+    </g>
+    <!-- r2 -->
+    <g transform="translate(22,362)">
+      <rect width="110" height="150" rx="12" fill="url(#plaque)" stroke="#3d1e08"/>
+      <text x="55" y="32" text-anchor="middle" class="sans" font-size="13" fill="#fff8d0">Уворот</text>
+      <text x="55" y="92" text-anchor="middle" class="num" font-size="32" fill="#f0c030">8%</text>
+    </g>
+    <g transform="translate(140,362)">
+      <rect width="110" height="150" rx="12" fill="url(#plaque)" stroke="#3d1e08"/>
+      <text x="55" y="32" text-anchor="middle" class="sans" font-size="13" fill="#fff8d0">Крит</text>
+      <text x="55" y="92" text-anchor="middle" class="num" font-size="32" fill="#f0c030">5%</text>
+    </g>
+    <g transform="translate(258,362)">
+      <rect width="110" height="150" rx="12" fill="url(#plaque)" stroke="#3d1e08"/>
+      <text x="55" y="32" text-anchor="middle" class="sans" font-size="12" fill="#fff8d0">Удача</text>
+      <text x="55" y="92" text-anchor="middle" class="num" font-size="28" fill="#f0c030">10%</text>
+    </g>
+  </g>
+  <text x="195" y="800" text-anchor="middle" class="sans" font-size="11" fill="#5c3010">B3 · последняя дощечка — удача</text>
+</svg>

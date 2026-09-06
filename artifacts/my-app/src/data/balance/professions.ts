@@ -1,4 +1,4 @@
-import type { BranchId, PillarId } from '../attributes';
+import type { BranchId, PillarId } from '../../domain/attributes/attributes.ts';
 
 /**
  * Профессия = ремесло. Ярлыка «Охотник» нет.

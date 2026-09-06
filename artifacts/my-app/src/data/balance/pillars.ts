@@ -13,25 +13,7 @@ export const BODY_BASE_STUB = 100;
 /** Ветка-пассивка столп больше не качает. Оставлен 0, чтобы старые сейвы не кормили итог. */
 export const BRANCH_TO_PILLAR_PER_RANK_STUB = 0;
 
-/**
- * Рост тела от 1 единицы столпа. Как аспекты в Доте: дети одного столпа
- * идут разным шагом — главное число заметно, тонкие копятся.
- * База держит штраф расы выше нуля. Это единицы тела, не HP/урон боя.
- */
-export const SUBSTAT_GROWTH: Record<string, { base: number; perPillar: number }> = {
-  health: { base: 100, perPillar: 5 },
-  armor: { base: 14, perPillar: 0.4 },
-  will: { base: 16, perPillar: 0.6 },
-  strike: { base: 22, perPillar: 1.2 },
-  onslaught: { base: 14, perPillar: 0.7 },
-  destruction: { base: 16, perPillar: 0.9 },
-  tempo: { base: 12, perPillar: 1 },
-  evasion: { base: 12, perPillar: 0.4 },
-  reaction: { base: 12, perPillar: 0.7 },
-  luck: { base: 14, perPillar: 0.5 },
-  resourcefulness: { base: 16, perPillar: 0.8 },
-  intuition: { base: 14, perPillar: 0.45 },
-};
+/** Устарело: заменено таблицей SUBSTATS в balance/substats.ts (фундамент). */
 
 export const PILLAR_RANK_CAP_STUB = 999;
 /**

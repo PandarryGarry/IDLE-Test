@@ -1,4 +1,4 @@
-import { supabase, getSupabaseClient, isSupabaseConfigured } from './supabase';
+import { supabase, getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase';
 import {
   isQaMockEnabled,
   qaCreateCharacter,
@@ -10,11 +10,11 @@ import {
   qaSetSelectedCharacter,
   qaSoftDeleteCharacter,
   qaUpdateCharacter,
-} from './qaMock';
-import type { SaveData } from '../data/types';
-import type { RaceId } from '../data/characters';
-import { withTimeout } from './utils';
-import { attachAttributesToSave, createDefaultAttributes } from './characterAttributes';
+} from '@/lib/qaMock';
+import type { SaveData } from '@/data/types';
+import type { RaceId } from '@/data/characters';
+import { withTimeout } from '@/lib/utils';
+import { attachAttributesToSave, createDefaultAttributes } from '@/domain/attributes/characterAttributes';
 
 /** Потолок сетевых вызовов Supabase: зависший запрос не должен блокировать UI. */
 const API_TIMEOUT_MS = 12000;
@@ -73,7 +73,7 @@ function rowToCharacter(row: CharacterRow): Character {
     hasChangedNickname: row.has_changed_nickname ?? false,
     hasChangedAvatar: row.has_changed_avatar ?? false,
     selected: row.selected ?? false,
-    lastSavedAt: toMs(row.last_saved_at),
+    lastSavedAt: row.last_saved_at ? toMs(row.last_saved_at) : 0,
     createdAt: toMs(row.created_at),
     updatedAt: toMs(row.updated_at),
     isDeleted: row.is_deleted ?? false,

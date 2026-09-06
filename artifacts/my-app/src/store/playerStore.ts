@@ -1,10 +1,10 @@
 import { create } from 'zustand';
-import type { SkillId, SkillState, Equipment, EquipSlot } from '../data/types';
-import { EMPTY_EQUIPMENT, normalizeEquipment } from '../data/types';
-import { getItem } from '../data/items';
-import { getLevelForXp, getXpForLevel, XP_TABLE, MAX_LEVEL } from '../gameEngine/xpTable';
-import { calcCombatLevel } from '../gameEngine/formulas';
-import { useBankStore } from './bankStore';
+import type { SkillId, SkillState, Equipment, EquipSlot } from '@/data/types';
+import { EMPTY_EQUIPMENT, normalizeEquipment } from '@/data/types';
+import { getItem } from '@/domain/items/items';
+import { getLevelForXp, getXpForLevel, XP_TABLE, MAX_LEVEL } from '@/core/xpTable';
+import { calcCombatLevel } from '@/core/formulas';
+import { useBankStore } from '@/store/bankStore';
 
 function bankCanTakeAll(itemIds: string[]): boolean {
   const bank = useBankStore.getState();
