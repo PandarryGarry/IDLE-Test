@@ -364,7 +364,7 @@ export function isNodeUnlocked(state: CharacterAttributeState, ref: NodeRef): bo
 export function nodeBlockReason(state: CharacterAttributeState, ref: NodeRef): string | null {
   if (!isNodeUnlocked(state, ref)) return 'Сначала выкачай предыдущий узел на этом луче';
   if (nodeRank(state, ref) >= NODE_RANK_CAP) return `Узел выкачан — максимум ${NODE_RANK_CAP}`;
-  if (state.unspentBranchPoints < 1) return 'Очко пассивки приходит на 5, 10, 15 уровне';
+  if (state.unspentBranchPoints < 1) return 'Нет очков узлов. +1 каждые 5 уровней (5, 10, 15…)';
   return null;
 }
 

@@ -52,6 +52,8 @@ import {
   type SubstatDisplay,
 } from '@/domain/attributes/characterAttributes';
 import { NODE_RANK_CAP } from '@/data/balance/pillars';
+import { BRANCH_EFFECTS } from '@/data/balance/branchEffects';
+import { BRANCH_RANK_IN_PILLAR_POINTS } from '@/data/balance/substats';
 import { xpToNextLevel } from '@/data/balance/xpRates';
 import { commitGearSets, commitHeroAttributes } from '@/lib/heroPersist';
 import { HeroBoard } from '@/features/hero/HeroBoard';
@@ -960,7 +962,7 @@ function SynergiesModule({
       <div className="hero-thread-summary">
         <div className="hero-thread-summary__l">
           <span className="hero-thread-summary__title"><i>✦</i> Нити</span>
-          <span className="hero-thread-summary__sub">связь между столпами</span>
+          <span className="hero-thread-summary__sub">правило за пару столпов</span>
         </div>
         <div className="hero-thread-summary__pillars">
           {PILLAR_IDS.map(id => (
@@ -995,8 +997,8 @@ function SynergiesModule({
         active.length === 0 ? (
           <GEmptyState
             icon="✦"
-            title="Пока нет активных нитей"
-            description="Доведи два столпа до нужных чисел — и нить станет активной."
+            title="Нет активных нитей"
+            description="Нить включается, когда итоговые очки столпов доходят до порога пары. Ярус I: 15/10."
           />
         ) : (
           <div className="hero-thread-grid">
@@ -1049,7 +1051,15 @@ function PathModule({
     <div className="hero-sheet">
       <div className="hero-readout" aria-label="Главные числа тела">
         {plaques.map(plaque => (
-          <div key={plaque.id} className="hero-plaque">
+          <div
+            key={plaque.id}
+            className="hero-plaque"
+            title={plaque.id === 'crit'
+              ? 'Заглушка 5%. Бой ещё не читает Удачу как шанс крита.'
+              : plaque.id === 'strike'
+                ? BRANCHES.strike.ruleRu
+                : BRANCHES[plaque.id as BranchId]?.ruleRu}
+          >
             <span className="hero-plaque__label">{plaque.label}</span>
             <b className="hero-plaque__value">{plaque.value}</b>
           </div>
@@ -1068,7 +1078,7 @@ function PathModule({
               <b>ур. {Math.round(snapshot.finalPillars[group.pillar])}</b>
             </header>
             {group.stats.map(id => (
-              <div key={id} className="hero-path-more__row">
+              <div key={id} className="hero-path-more__row" title={SUBSTATS[id].ruleRu}>
                 <span>{SUBSTATS[id].nameRu}</span>
                 <b>{id === 'strike' ? formatStrikeRange(snapshot.substats.strike) : formatSubstat(d[id])}</b>
               </div>
@@ -1123,7 +1133,7 @@ function HeroDetailModal({
       open={Boolean(detail)}
       onClose={onClose}
       title={title}
-      width={detail?.kind === 'bag-item' ? 320 : 280}
+      width={detail?.kind === 'bag-item' || detail?.kind === 'branch' || detail?.kind === 'passive' || detail?.kind === 'pillar' || detail?.kind === 'synergy' ? 320 : 280}
     >
       {detail?.kind === 'locked-slot' && (
         <div className="hero-hub-modal hero-hub-modal--card" style={{ textAlign: 'center', padding: '12px 6px' }}>
@@ -1146,7 +1156,8 @@ function HeroDetailModal({
         const total = shownStat(snapshot.finalPillars[detail.id]);
         return (
           <div className="hero-hub-modal hero-hub-modal--card">
-            <GInfoRow label={PILLARS[detail.id].nameRu} value={String(total)} />
+            <p className="hero-rule">{PILLARS[detail.id].ruleRu}</p>
+            <GInfoRow label="Итого" value={String(total)} />
             <GInfoRow label="Раса" value={signedStat(raceN)} />
             <GInfoRow label="Вложил" value={signedStat(into)} />
             {jobN !== 0 && <GInfoRow label="Ремесло" value={signedStat(jobN)} />}
@@ -1163,7 +1174,7 @@ function HeroDetailModal({
               disabled={!canSpendPillar}
               onClick={() => onSpendPillar(detail.id)}
             >
-              {canSpendPillar ? 'Положить очко' : 'Очков пока нет'}
+              {canSpendPillar ? 'Положить очко' : 'Очков столпа нет'}
             </GButton>
           </div>
         );
@@ -1175,18 +1186,36 @@ function HeroDetailModal({
         const info = detail.kind === 'branch' ? BRANCHES[detail.id] : DEEP_PASSIVES[detail.id];
         const rank = nodeRank(snapshot.state, ref);
         const blocked = nodeBlockReason(snapshot.state, ref);
+        const branchFx = detail.kind === 'branch' ? BRANCH_EFFECTS[detail.id] : null;
         return (
           <div className="hero-hub-modal hero-hub-modal--card">
-            <p>{info.childRu}</p>
+            <p className="hero-rule">{info.ruleRu}</p>
             <GInfoRow label="Ранг" value={`${rank} из ${NODE_RANK_CAP}`} />
-            <GInfoRow label="Эффект" value="не подключён" />
+            {detail.kind === 'branch' && (
+              <>
+                <GInfoRow
+                  label="К телу"
+                  value={`+${rank * BRANCH_RANK_IN_PILLAR_POINTS} оч. столпа к числу`}
+                />
+                {branchFx && (
+                  <>
+                    <p className="hero-rule">{branchFx.nameRu}. {branchFx.ruleRu}</p>
+                    <GInfoRow label="На 3 ранге" value={branchFx.atMaxRu} />
+                  </>
+                )}
+                <p className="hero-rule hero-rule--status">Число тела уже растёт. Выгода idle — не действует.</p>
+              </>
+            )}
+            {detail.kind === 'passive' && (
+              <p className="hero-rule hero-rule--status">Не действует: бой и idle не читают этот узел.</p>
+            )}
             <GButton
               size="sm"
               fullWidth
               disabled={Boolean(blocked)}
               onClick={() => onSpendNode(ref)}
             >
-              {blocked ?? 'Положить очко пассивки'}
+              {blocked ?? 'Положить очко узла'}
             </GButton>
           </div>
         );
@@ -1204,15 +1233,18 @@ function HeroDetailModal({
             <div className="hero-thread-detail__head">
               <img src={SYNERGY_ICON[synergy.id]} alt="" decoding="async" />
               <b>{synergy.nameRu}</b>
-              <GBadge variant={on ? 'gold' : 'gray'} size="sm">{on ? 'активна' : 'неактивна'}</GBadge>
+              <GBadge variant={on ? 'gold' : 'gray'} size="sm">
+                {on ? 'порог закрыт' : 'порог не закрыт'}
+              </GBadge>
             </div>
-            {synergy.childRu && <p className="hero-thread-detail__flavor">{synergy.childRu}</p>}
+            <GInfoRow label="Ярус" value={['', 'I', 'II', 'III'][synergy.tier] ?? String(synergy.tier)} />
             <div className="hero-thread-detail__block">
-              <span className="hero-thread-detail__lbl">что делает</span>
+              <span className="hero-thread-detail__lbl">правило</span>
               <p className="hero-thread-detail__fx">{synergy.effectRu}</p>
+              <p className="hero-rule hero-rule--status">Не действует: бой и idle нить не применяют.</p>
             </div>
             <div className="hero-thread-detail__block">
-              <span className="hero-thread-detail__lbl">чтобы зажечь</span>
+              <span className="hero-thread-detail__lbl">порог столпов</span>
               <div className="hero-thread-detail__reqs">
                 {reqs.map(([id, need]) => {
                   const have = snapshot.finalPillars[id];
@@ -1231,8 +1263,8 @@ function HeroDetailModal({
               </div>
               <p className="hero-thread-detail__hint" data-ok={on ? 'true' : 'false'}>
                 {on
-                  ? 'Все столпы выполнены — нить активна.'
-                  : `Осталось повысить: ${missing.map(([id, gap]) => `${PILLARS[id].nameRu} +${gap}`).join(', ')}`}
+                  ? 'Порог закрыт. Эффект в бой и idle ещё не входит.'
+                  : `Не хватает: ${missing.map(([id, gap]) => `${PILLARS[id].nameRu} +${gap}`).join(', ')}`}
               </p>
             </div>
           </div>

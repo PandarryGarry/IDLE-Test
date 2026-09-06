@@ -26,8 +26,8 @@ export interface BranchEffect {
   branch: BranchId;
   domain: BranchEffectDomain;
   nameRu: string;
-  /** Язык, понятный ребёнку — канон проекта. */
-  childRu: string;
+  /** Правило для карточки узла. */
+  ruleRu: string;
   /** Прирост за 1 ранг. Ранги 1→3. */
   perRank: number;
   /** Единица: percent — проценты, hours — часы, flat — штуки. */
@@ -44,70 +44,70 @@ export const BRANCH_EFFECTS: Record<BranchId, BranchEffect> = {
   // ── Стойкость: длительность вылазки ──────────────────────────
   health: {
     branch: 'health', domain: 'offline',
-    nameRu: 'Долгая ночь', childRu: 'Ночью успеваешь больше, прежде чем устанешь.',
-    perRank: 2, unit: 'hours', atMaxRu: '+6 часов к пределу ночного накопления',
+    nameRu: 'Долгая ночь', ruleRu: '+2 ч к пределу ночного накопления за ранг.',
+    perRank: 2, unit: 'hours', atMaxRu: '+6 ч к пределу ночного накопления',
   },
   armor: {
     branch: 'armor', domain: 'gathering',
-    nameRu: 'Крепкая спина', childRu: 'В опасных местах добываешь спокойнее.',
+    nameRu: 'Крепкая спина', ruleRu: '+8% добычи в опасных зонах за ранг.',
     perRank: 8, unit: 'percent', atMaxRu: '+24% добычи в опасных зонах',
   },
   will: {
     branch: 'will', domain: 'offline',
-    nameRu: 'Твёрдый уговор', childRu: 'Голодная ночь отнимает у тебя меньше.',
+    nameRu: 'Твёрдый уговор', ruleRu: '−25% потерь голодной ночи за ранг.',
     perRank: 25, unit: 'percent', atMaxRu: 'потери голодной ночи меньше на 75%',
   },
 
   // ── Мощь: скорость убийства ──────────────────────────────────
   strike: {
     branch: 'strike', domain: 'gathering',
-    nameRu: 'Силовая добыча', childRu: 'Тяжёлую породу разбиваешь с одного раза.',
+    nameRu: 'Силовая добыча', ruleRu: '+7% скорости тяжёлой добычи за ранг.',
     perRank: 7, unit: 'percent', atMaxRu: '+21% скорости тяжёлой добычи',
   },
   onslaught: {
     branch: 'onslaught', domain: 'gathering',
-    nameRu: 'Широкий замах', childRu: 'Иногда за раз выносишь лишнюю единицу.',
+    nameRu: 'Широкий замах', ruleRu: '+5% шанс лишней единицы за цикл добычи за ранг.',
     perRank: 5, unit: 'percent', atMaxRu: '15% шанс лишней единицы за цикл',
   },
   /** Пробой (бывш. Разрушение). */
   destruction: {
     branch: 'destruction', domain: 'progression',
-    nameRu: 'Взлом яруса', childRu: 'Берёшься за материалы, которые другим не по зубам.',
+    nameRu: 'Взлом яруса', ruleRu: '+1 ярус к доступной переработке материалов за ранг.',
     perRank: 1, unit: 'flat', atMaxRu: 'переработка материалов на 3 яруса выше',
   },
 
   // ── Сноровка: плотность действий ─────────────────────────────
   tempo: {
     branch: 'tempo', domain: 'gathering',
-    nameRu: 'Без остановки', childRu: 'Штраф за трудный ярус тебя тормозит слабее.',
+    nameRu: 'Без остановки', ruleRu: '−10% штрафа яруса за ранг.',
     perRank: 10, unit: 'percent', atMaxRu: 'штраф яруса меньше на 30%',
   },
   evasion: {
     branch: 'evasion', domain: 'offline',
-    nameRu: 'Ночной ход', childRu: 'Ночью тебя реже сбивают с пути.',
+    nameRu: 'Ночной ход', ruleRu: '+12% шанс игнорировать прерывание ночи за ранг.',
     perRank: 12, unit: 'percent', atMaxRu: '36% прерываний ночи проходят мимо',
   },
   /** Сноровка рук (бывш. Реакция). */
   reaction: {
     branch: 'reaction', domain: 'crafting',
-    nameRu: 'Ловкие пальцы', childRu: 'Мастеришь заметно быстрее.',
+    nameRu: 'Ловкие пальцы', ruleRu: '+9% скорости ремесла за ранг.',
     perRank: 9, unit: 'percent', atMaxRu: '+27% скорости ремесла',
   },
 
   // ── Чутьё: качество результата ───────────────────────────────
   luck: {
     branch: 'luck', domain: 'loot',
-    nameRu: 'Золотой тик', childRu: 'Иногда один заход приносит вдвое больше.',
+    nameRu: 'Золотой тик', ruleRu: '+4% шанс двойной добычи за цикл за ранг.',
     perRank: 4, unit: 'percent', atMaxRu: '12% шанс двойной добычи',
   },
   resourcefulness: {
     branch: 'resourcefulness', domain: 'crafting',
-    nameRu: 'Ничего не пропадёт', childRu: 'Часть сырья остаётся у тебя после работы.',
+    nameRu: 'Ничего не пропадёт', ruleRu: '+8% сырья возвращается при крафте за ранг.',
     perRank: 8, unit: 'percent', atMaxRu: '24% сырья возвращается при крафте',
   },
   intuition: {
     branch: 'intuition', domain: 'economy',
-    nameRu: 'Знает цену', childRu: 'Продаёшь дороже, покупаешь дешевле.',
+    nameRu: 'Знает цену', ruleRu: '+6% к выгоде сделок (продажа выше, покупка ниже) за ранг.',
     perRank: 6, unit: 'percent', atMaxRu: '+18% выгоды в сделках',
   },
 };

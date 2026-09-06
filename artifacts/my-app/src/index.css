@@ -4552,6 +4552,19 @@
   line-height: 1.4;
 }
 
+.hero-rule {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.hero-rule--status {
+  color: var(--text-muted);
+  font-family: var(--app-font-mono);
+  font-size: 10px;
+}
+
 .hero-hint {
   margin: 0;
   color: var(--text-muted);
