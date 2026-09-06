@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'wouter';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { manualSave } from '@/lib/saveManager';
@@ -53,14 +54,14 @@ export function TopNavBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void 
 
         {/* ── Правая: админ + язык + сохранить ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <a href="/admin" style={{
+          <Link href="/admin" style={{
             ...btn,
             background: 'linear-gradient(180deg,#5a2a6a,#3a1444)',
             borderColor: '#2a0e33',
           }} title="Админ-панель: каталог предметов">
             <ShieldCheck size={13} color="#d9a6ff" />
             <span className="hidden sm:inline">Админ</span>
-          </a>
+          </Link>
 
           <button onClick={() => updateSetting('language', language === 'ru' ? 'en' : 'ru')}
             style={{ ...btn, padding: '5px 8px' }}>

@@ -83,6 +83,10 @@ function Router() {
   const isAuthPath = pathname === '/auth' || pathname === '/login' || pathname === '/register';
   const isOnboardingPath =
     pathname === '/rules' || pathname === '/create-character' || pathname === '/select-character';
+  // Админ-панель — служебный раздел. Она не должна требовать выбранного героя:
+  // иначе прямой заход на /admin (обновление/перенаправление извне) уводил бы
+  // в «возвращение в игру» (сначала выбор персонажа, потом дашборд).
+  const isAdminPath = pathname === '/admin' || pathname.startsWith('/admin/');
 
   useEffect(() => {
     if (user && loadedUserId !== user.id) {
@@ -151,10 +155,13 @@ function Router() {
     }
 
     // Игровой шелл доступен только после правил + выбранного персонажа.
-    if (!rulesAccepted) return <Redirect to="/rules" />;
-    if (!hasAny) return <Redirect to="/create-character" />;
-    // always_select: при логине (без активного персонажа) показываем выбор.
-    if (!activeCharacter) return <Redirect to="/select-character" />;
+    // Админ-панель — исключение: она нужна и без героя (для сверки каталога).
+    if (!isAdminPath) {
+      if (!rulesAccepted) return <Redirect to="/rules" />;
+      if (!hasAny) return <Redirect to="/create-character" />;
+      // always_select: при логине (без активного персонажа) показываем выбор.
+      if (!activeCharacter) return <Redirect to="/select-character" />;
+    }
   }
 
   // Guests can only open the limited game shell.
