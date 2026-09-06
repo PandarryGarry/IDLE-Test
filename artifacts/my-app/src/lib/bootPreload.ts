@@ -6,9 +6,11 @@ import { ONBOARDING_ART_PRELOAD } from '@/shared/artRegistry';
 import {
   BOARD_EMBLEM,
   BRANCH_ICON,
+  EQUIP_SLOT_ICON,
   HUB_NAV_ICON,
   PILLAR_ICON,
   PASSIVE_ICON,
+  SLOT_FRAME,
   SYNERGY_ICON,
 } from '@/domain/attributes/attributeIcons';
 import { getAvatarPath, getDollPath, getDollPath2x } from '@/data/characters';

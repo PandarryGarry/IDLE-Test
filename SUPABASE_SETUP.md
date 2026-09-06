@@ -54,23 +54,18 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIs...
 
 ---
 
-## 3. Проверить код ветки
+## 3. Проверить на Replit
 
-Уже закоммичено и запушено в PR #4. В Replit, после добавления секретов:
+Секреты те же на `main` и на рабочей ветке. После `git fetch` / checkout ветки:
 
 ```bash
-git fetch origin
-git checkout arena/01a04c15-idle-test
-corepack pnpm --dir artifacts/my-app install   # или pnpm install
-corepack pnpm --dir artifacts/my-app dev
+corepack pnpm --dir artifacts/my-app install
+PORT=8080 BASE_PATH=/ pnpm --filter @workspace/my-app run dev
 ```
 
-В Webview проверь:
-- `/login` — вход
-- `/register` — регистрация
-- `/` — после входа
-- `/combat` и `/cooking`, `/smithing`, `/firemaking`, `/mining` — для гостя заблокированы
-- guest-режим: кнопка «Войти гостем»
+В Webview: `/login`, `/register`, гость, session restore.
+Актуальная ветка и чек-лист мержа — `NEXT_CHAT_HANDOFF.md`.
+Схему таблиц не плодить под предметы: прогресс героя живёт в `characters.save_data`.
 
 ---
 
