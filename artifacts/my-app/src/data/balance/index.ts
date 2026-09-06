@@ -1,6 +1,7 @@
 export * from './pillars.ts';
 export * from './heroLevel.ts';
 export * from './xpRates.ts';
+export * from './strikeRange.ts';
 export * from './energy.ts';
 export * from './professions.ts';
 export * from './reputation.ts';

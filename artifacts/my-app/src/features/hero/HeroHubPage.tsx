@@ -59,7 +59,7 @@ import { NODE_RANK_CAP } from '@/data/balance/pillars';
 import { xpToNextLevel } from '@/data/balance/xpRates';
 import { commitGearSets, commitHeroAttributes } from '@/lib/heroPersist';
 import { HeroBoard } from '@/features/hero/HeroBoard';
-import { CRIT_CHANCE_STUB, formatStrikeRange } from '@/features/hero/heroReadout';
+import { CRIT_CHANCE_STUB, PATH_REST_SUBSTATS, formatStrikeRange } from '@/features/hero/heroReadout';
 
 type HubModule = 'body' | 'gear' | 'synergies' | 'path';
 type Detail =
@@ -1050,11 +1050,19 @@ function PathModule({
 
   return (
     <div className="hero-sheet">
-      <div className="hero-readout" aria-label="Характеристики тела">
+      <div className="hero-readout" aria-label="Главные числа тела">
         {plaques.map(plaque => (
           <div key={plaque.id} className="hero-plaque">
             <span className="hero-plaque__label">{plaque.label}</span>
             <b className="hero-plaque__value">{plaque.value}</b>
+          </div>
+        ))}
+      </div>
+      <div className="hero-path-more" aria-label="Остальные характеристики">
+        {PATH_REST_SUBSTATS.map(id => (
+          <div key={id} className="hero-path-more__row">
+            <span>{SUBSTATS[id].nameRu}</span>
+            <b>{formatSubstat(d[id])}</b>
           </div>
         ))}
       </div>

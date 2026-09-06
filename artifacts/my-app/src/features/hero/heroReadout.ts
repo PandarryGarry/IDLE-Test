@@ -1,23 +1,20 @@
 /**
- * Каркас листа «Путь»: шесть дощечек.
- * Удар-диапазон и крит — заглушки до боя. Не класть в balance/, пока нет формулы.
+ * Лист «Путь»: какие числа на дощечках, какие в списке снизу.
+ * Диапазон удара — balance/strikeRange.ts. Крит — заглушка до боя.
  */
+import type { BranchId } from '@/domain/attributes/attributes';
 
-/** Пока нет оружия: диапазон вокруг «Удара», ±2. Человек 1 ур. → 12–16. */
-export const STRIKE_RANGE_STUB_SPREAD = 2;
+export { formatStrikeRange, strikeRange, STRIKE_RANGE_FRACTION } from '@/data/balance/strikeRange';
 
 /** Шанс крита, пока нет стата в калькуляторе. */
 export const CRIT_CHANCE_STUB = 5;
 
-export function strikeRangeDisplay(strike: number): { min: number; max: number } {
-  const mid = Math.max(1, Math.round(Number.isFinite(strike) ? strike : 0));
-  return {
-    min: Math.max(1, mid - STRIKE_RANGE_STUB_SPREAD),
-    max: mid + STRIKE_RANGE_STUB_SPREAD,
-  };
-}
+/** На дощечках. Крит — не подхарактеристика. */
+export const PATH_PLAQUE_SUBSTATS: readonly BranchId[] = [
+  'health', 'strike', 'armor', 'evasion', 'luck',
+];
 
-export function formatStrikeRange(strike: number): string {
-  const { min, max } = strikeRangeDisplay(strike);
-  return `${min}–${max}`;
-}
+/** Под дощечками — остальные 7 из 12. */
+export const PATH_REST_SUBSTATS: readonly BranchId[] = [
+  'will', 'onslaught', 'destruction', 'tempo', 'reaction', 'resourcefulness', 'intuition',
+];

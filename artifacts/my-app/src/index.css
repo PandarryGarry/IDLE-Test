@@ -4601,6 +4601,43 @@
   font-variant-numeric: tabular-nums;
 }
 
+.hero-path-more {
+  display: grid;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-slot);
+  box-shadow: var(--shadow-slot);
+  overflow: hidden;
+}
+
+.hero-path-more__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: 8px 10px;
+  border-top: 1px solid var(--border-default);
+}
+
+.hero-path-more__row:first-child {
+  border-top: 0;
+}
+
+.hero-path-more__row span {
+  color: var(--text-light);
+  font-family: var(--app-font-display);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.hero-path-more__row b {
+  color: var(--text-gold);
+  font-family: var(--app-font-mono);
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
 .hero-settings {
   display: grid;
   gap: var(--space-sm);

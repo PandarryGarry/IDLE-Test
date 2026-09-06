@@ -8,7 +8,7 @@
     "build": "vite build --config vite.config.ts",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test:pillars": "node --experimental-strip-types --test src/domain/attributes/characterAttributes.test.ts src/data/balance/xpRates.test.ts"
+    "test:pillars": "node --experimental-strip-types --test src/domain/attributes/characterAttributes.test.ts src/data/balance/xpRates.test.ts src/data/balance/strikeRange.test.ts"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
