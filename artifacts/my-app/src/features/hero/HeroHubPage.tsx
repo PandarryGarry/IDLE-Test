@@ -1038,33 +1038,23 @@ function PathModule({
 }: {
   snapshot: ReturnType<typeof computeAttributeSnapshot>;
 }) {
-  const state = snapshot.state;
-  const spentP = spentPillarRanks(state);
-  const spentB = spentBranchRanks(state);
-  const left = remainingFreeRespecs(state);
+  const d = snapshot.substatDisplays;
+  const plaques = [
+    { id: 'health', label: 'Здоровье', value: formatSubstat(d.health) },
+    { id: 'strike', label: 'Удар', value: formatStrikeRange(snapshot.substats.strike) },
+    { id: 'armor', label: 'Броня', value: formatSubstat(d.armor) },
+    { id: 'evasion', label: 'Уворот', value: formatSubstat(d.evasion) },
+    { id: 'crit', label: 'Крит', value: `${CRIT_CHANCE_STUB}%` },
+    { id: 'luck', label: 'Удача', value: formatSubstat(d.luck) },
+  ] as const;
 
   return (
     <div className="hero-sheet">
-      <div className="hero-path-facts">
-        <div><span>Уровень</span><b>{state.heroLevel}</b></div>
-        <div><span>Столпы</span><b>{spentP} / {snapshot.earnedPillarPoints}</b></div>
-        <div><span>Пассивки</span><b>{spentB} / {snapshot.earnedBranchPoints}</b></div>
-        <div><span>Сброс</span><b>{left} / {FREE_RESPEC_LIMIT}</b></div>
-      </div>
-      <div className="hero-stats">
-        {PILLAR_IDS.map(pillar => (
-          <div key={pillar} className="hero-stats__block">
-            <GInfoRow
-              label={PILLARS[pillar].nameRu}
-              value={String(shownStat(snapshot.finalPillars[pillar]))}
-            />
-            {SUBSTATS_BY_PILLAR[pillar].map(id => (
-              <GInfoRow
-                key={id}
-                label={SUBSTATS[id].nameRu}
-                value={formatSubstat(snapshot.substatDisplays[id])}
-              />
-            ))}
+      <div className="hero-readout" aria-label="Характеристики тела">
+        {plaques.map(plaque => (
+          <div key={plaque.id} className="hero-plaque">
+            <span className="hero-plaque__label">{plaque.label}</span>
+            <b className="hero-plaque__value">{plaque.value}</b>
           </div>
         ))}
       </div>
