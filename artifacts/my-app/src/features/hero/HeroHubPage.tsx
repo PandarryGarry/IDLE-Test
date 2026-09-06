@@ -56,7 +56,7 @@ import {
   type SubstatDisplay,
 } from '@/domain/attributes/characterAttributes';
 import { NODE_RANK_CAP } from '@/data/balance/pillars';
-import { XP_TO_NEXT_LEVEL_STUB } from '@/data/balance/heroLevel';
+import { xpToNextLevel } from '@/data/balance/xpRates';
 import { commitGearSets, commitHeroAttributes } from '@/lib/heroPersist';
 import { HeroBoard } from '@/features/hero/HeroBoard';
 import { CRIT_CHANCE_STUB, formatStrikeRange } from '@/features/hero/heroReadout';
@@ -252,11 +252,15 @@ export function HeroHubPage() {
         <div
           className="hero-hub__xp"
           aria-label="Опыт до следующего уровня"
-          title="Кривая опыта ещё не закрыта"
+          title={xpToNextLevel(state.heroLevel) > 0
+            ? `${Math.floor(state.heroXp)} / ${xpToNextLevel(state.heroLevel)}`
+            : 'Максимум'}
         >
           <span>опыт</span>
           <GProgressBar
-            value={Math.min(1, state.heroXp / XP_TO_NEXT_LEVEL_STUB)}
+            value={xpToNextLevel(state.heroLevel) > 0
+              ? Math.min(1, state.heroXp / xpToNextLevel(state.heroLevel))
+              : 1}
             height={8}
             style={{ flex: 1 }}
           />

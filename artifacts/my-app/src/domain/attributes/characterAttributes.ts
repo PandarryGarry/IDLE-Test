@@ -44,6 +44,8 @@ import {
   earnedBranchPoints,
   earnedPillarPoints,
 } from '../../data/balance/heroLevel.ts';
+import { HERO_LEVEL_CAP } from '../../data/balance/substats.ts';
+import { xpToNextLevel } from '../../data/balance/xpRates.ts';
 import { PROFESSION_FEEDS } from '../../data/balance/professions.ts';
 import {
   REPUTATION_MAX,
@@ -125,7 +127,7 @@ export function migrateSaveAttributes(raw: unknown): CharacterAttributeState {
   if (!raw || typeof raw !== 'object') return fresh;
   const rec = raw as Record<string, unknown>;
 
-  const heroLevel = clampInt(asFiniteNumber(rec.heroLevel, HERO_START_LEVEL), HERO_START_LEVEL, 9999);
+  const heroLevel = clampInt(asFiniteNumber(rec.heroLevel, HERO_START_LEVEL), HERO_START_LEVEL, HERO_LEVEL_CAP);
   const energyRaw = rec.energy && typeof rec.energy === 'object'
     ? rec.energy as Record<string, unknown>
     : null;
@@ -138,7 +140,7 @@ export function migrateSaveAttributes(raw: unknown): CharacterAttributeState {
     unspentPillarPoints: clampInt(asFiniteNumber(rec.unspentPillarPoints, 0), 0, 9999),
     unspentBranchPoints: clampInt(asFiniteNumber(rec.unspentBranchPoints, 0), 0, 9999),
     heroLevel,
-    heroXp: clampInt(asFiniteNumber(rec.heroXp, 0), 0, Number.MAX_SAFE_INTEGER),
+    heroXp: Math.max(0, asFiniteNumber(rec.heroXp, 0)),
     energy: {
       max: clampInt(asFiniteNumber(energyRaw?.max, ENERGY_MAX_STUB), 1, 99999),
       current: clampInt(asFiniteNumber(energyRaw?.current, ENERGY_MAX_STUB), 0, 99999),
@@ -400,6 +402,46 @@ function migrateFreeRespecsUsed(rec: Record<string, unknown>): number {
 
 export function remainingFreeRespecs(state: CharacterAttributeState): number {
   return Math.max(0, FREE_RESPEC_LIMIT - state.freeRespecsUsed);
+}
+
+/**
+ * Кладёт уже посчитанный XP (рейты — в xpRates.heroXpFromAction).
+ * Уровни выдают очки столпов/ветвей тем же законом, что earned*.
+ */
+export function applyHeroXp(state: CharacterAttributeState, amount: number): CharacterAttributeState {
+  if (!Number.isFinite(amount) || amount <= 0) return state;
+  if (state.heroLevel >= HERO_LEVEL_CAP) {
+    return { ...state, heroLevel: HERO_LEVEL_CAP, heroXp: 0 };
+  }
+
+  const fromLevel = state.heroLevel;
+  let level = fromLevel;
+  let xp = state.heroXp + amount;
+
+  while (level < HERO_LEVEL_CAP) {
+    const need = xpToNextLevel(level);
+    if (need <= 0 || xp < need) break;
+    xp -= need;
+    level += 1;
+  }
+
+  if (level >= HERO_LEVEL_CAP) {
+    return {
+      ...state,
+      heroLevel: HERO_LEVEL_CAP,
+      heroXp: 0,
+      unspentPillarPoints: state.unspentPillarPoints + earnedPillarPoints(HERO_LEVEL_CAP) - earnedPillarPoints(fromLevel),
+      unspentBranchPoints: state.unspentBranchPoints + earnedBranchPoints(HERO_LEVEL_CAP) - earnedBranchPoints(fromLevel),
+    };
+  }
+
+  return {
+    ...state,
+    heroLevel: level,
+    heroXp: xp,
+    unspentPillarPoints: state.unspentPillarPoints + earnedPillarPoints(level) - earnedPillarPoints(fromLevel),
+    unspentBranchPoints: state.unspentBranchPoints + earnedBranchPoints(level) - earnedBranchPoints(fromLevel),
+  };
 }
 
 function consumeFreeRespec(state: CharacterAttributeState): CharacterAttributeState | null {

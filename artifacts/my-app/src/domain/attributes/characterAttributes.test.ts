@@ -21,6 +21,7 @@ import { RACE_START_PILLARS, RACE_START_TOTAL, RACE_TIER } from '../../data/bala
 import { THREAD_TIER_THRESHOLDS, TRIPLE_THREAD_THRESHOLD, thresholdsFor } from '../../data/balance/threads.ts';
 import { earnedBranchPoints, earnedPillarPoints } from '../../data/balance/heroLevel.ts';
 import {
+  applyHeroXp,
   attachAttributesToSave,
   computeAttributeSnapshot,
   createDefaultAttributes,
@@ -33,6 +34,7 @@ import {
   isNodeUnlocked,
   nodeRank,
 } from './characterAttributes.ts';
+import { TOTAL_HERO_XP_TO_CAP, xpToNextLevel } from '../../data/balance/xpRates.ts';
 
 test('старт: 0 очков, уровень 1, без specializationId', () => {
   const state = createDefaultAttributes();
@@ -334,6 +336,31 @@ test('пороги нитей совпадают с таблицей balance/thr
       assert.deepEqual(thread.requires, thresholdsFor(thread.tier, major, minor), thread.id);
     }
   }
+});
+
+test('опыт героя: 1→2 даёт очко столпа, 4→5 ещё и ветвь', () => {
+  const start = createDefaultAttributes();
+  const toTwo = applyHeroXp(start, xpToNextLevel(1));
+  assert.equal(toTwo.heroLevel, 2);
+  assert.equal(toTwo.heroXp, 0);
+  assert.equal(toTwo.unspentPillarPoints, 1);
+  assert.equal(toTwo.unspentBranchPoints, 0);
+
+  const atFour = { ...start, heroLevel: 4, unspentPillarPoints: 3 };
+  const toFive = applyHeroXp(atFour, xpToNextLevel(4));
+  assert.equal(toFive.heroLevel, 5);
+  assert.equal(toFive.unspentPillarPoints, 4);
+  assert.equal(toFive.unspentBranchPoints, 1);
+});
+
+test('опыт героя: потолок 100 обнуляет полосу и выдаёт все очки', () => {
+  const start = createDefaultAttributes();
+  const capped = applyHeroXp(start, TOTAL_HERO_XP_TO_CAP);
+  assert.equal(capped.heroLevel, HERO_LEVEL_CAP);
+  assert.equal(capped.heroXp, 0);
+  assert.equal(capped.unspentPillarPoints, earnedPillarPoints(HERO_LEVEL_CAP));
+  assert.equal(capped.unspentBranchPoints, earnedBranchPoints(HERO_LEVEL_CAP));
+  assert.equal(applyHeroXp(capped, 9999).heroXp, 0);
 });
 
 test('каждая нить достижима каждой расой к потолку уровня', () => {
