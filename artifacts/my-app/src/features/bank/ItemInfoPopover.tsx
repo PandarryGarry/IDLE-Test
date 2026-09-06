@@ -1,5 +1,5 @@
 import React from 'react';
-import { getItem } from '@/domain/items/items';
+import { getItem } from '@/domain/items';
 import { formatNumber } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { ItemIcon } from '@/features/bank/ItemIcon';

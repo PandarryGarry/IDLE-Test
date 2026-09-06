@@ -7,7 +7,7 @@ import { useBankStore } from '@/store/bankStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { useAuthStore } from '@/store/authStore';
 import { GUEST_NOTICE } from '@/lib/guestMode';
-import { getItem } from '@/domain/items/items';
+import { getItem } from '@/domain/items';
 
 export interface CombatLogEntry {
   id: string;
