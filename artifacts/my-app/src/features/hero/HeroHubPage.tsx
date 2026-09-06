@@ -41,25 +41,22 @@ import { getItemVisual } from '@/shared/icons/itemIcons';
 import { getLiveGearSets, loadGearSet, saveGearSet } from '@/domain/items/gearSets';
 import { diffCombatStats, EQUIP_STAT_META, sumEquipmentStats, type EquipStatKey } from '@/domain/items/equipmentStats';
 import {
-  FREE_RESPEC_LIMIT,
   computeAttributeSnapshot,
   getLiveAttributes,
   nodeBlockReason,
   nodeRank,
-  remainingFreeRespecs,
   respecBranchRanks,
   respecPillarRanks,
   spendBranchPoint,
   spendPillarPoint,
-  spentBranchRanks,
-  spentPillarRanks,
   type SubstatDisplay,
 } from '@/domain/attributes/characterAttributes';
 import { NODE_RANK_CAP } from '@/data/balance/pillars';
 import { xpToNextLevel } from '@/data/balance/xpRates';
 import { commitGearSets, commitHeroAttributes } from '@/lib/heroPersist';
 import { HeroBoard } from '@/features/hero/HeroBoard';
-import { CRIT_CHANCE_STUB, PATH_REST_SUBSTATS, formatStrikeRange } from '@/features/hero/heroReadout';
+import { CRIT_CHANCE_STUB, PATH_REST_BY_PILLAR, formatStrikeRange } from '@/features/hero/heroReadout';
+import { HeroSettingsModal } from '@/features/hero/HeroSettingsModal';
 
 type HubModule = 'body' | 'gear' | 'synergies' | 'path';
 type Detail =
@@ -1058,65 +1055,27 @@ function PathModule({
           </div>
         ))}
       </div>
-      <div className="hero-path-more" aria-label="Остальные характеристики">
-        {PATH_REST_SUBSTATS.map(id => (
-          <div key={id} className="hero-path-more__row">
-            <span>{SUBSTATS[id].nameRu}</span>
-            <b>{formatSubstat(d[id])}</b>
-          </div>
+      <div className="hero-path-more" aria-label="Остальные характеристики по столпам">
+        {PATH_REST_BY_PILLAR.map(group => (
+          <section
+            key={group.pillar}
+            className="hero-path-pillar"
+            data-pillar={group.pillar}
+          >
+            <header className="hero-path-pillar__head">
+              <img src={PILLAR_ICON[group.pillar]} alt="" decoding="async" />
+              <span>{PILLARS[group.pillar].nameRu}</span>
+            </header>
+            {group.stats.map(id => (
+              <div key={id} className="hero-path-more__row">
+                <span>{SUBSTATS[id].nameRu}</span>
+                <b>{formatSubstat(d[id])}</b>
+              </div>
+            ))}
+          </section>
         ))}
       </div>
     </div>
-  );
-}
-
-function HeroSettingsModal({
-  open, state, onClose, onRespecPillars, onRespecBranches,
-}: {
-  open: boolean;
-  state: ReturnType<typeof getLiveAttributes>;
-  onClose: () => void;
-  onRespecPillars: () => void;
-  onRespecBranches: () => void;
-}) {
-  const left = remainingFreeRespecs(state);
-  const spentP = spentPillarRanks(state);
-  const spentB = spentBranchRanks(state);
-  const canPillars = left > 0 && spentP > 0;
-  const canBranches = left > 0 && spentB > 0;
-
-  return (
-    <GModal open={open} onClose={onClose} title="Настройки персонажа" width={340}>
-      <div className="hero-settings">
-        <GInfoRow label="Бесплатных сбросов" value={`${left} / ${FREE_RESPEC_LIMIT}`} />
-        <GButton
-          size="sm"
-          fullWidth
-          disabled={!canPillars}
-          onClick={onRespecPillars}
-        >
-          {left < 1
-            ? 'Столпы — за золото'
-            : spentP === 0
-              ? 'Столпы: сбрасывать нечего'
-              : 'Сбросить очки столпов'}
-        </GButton>
-        <GButton
-          size="sm"
-          fullWidth
-          variant="secondary"
-          disabled={!canBranches}
-          onClick={onRespecBranches}
-        >
-          {left < 1
-            ? 'Пассивки — за золото'
-            : spentB === 0
-              ? 'Пассивки: сбрасывать нечего'
-              : 'Сбросить очки пассивок'}
-        </GButton>
-        <p className="hero-settings__hint">Дальше — за золото. Цена не назначена.</p>
-      </div>
-    </GModal>
   );
 }
 
