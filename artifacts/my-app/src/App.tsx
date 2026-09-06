@@ -241,6 +241,9 @@ function App() {
   const activeCharacter = useCharacterStore(s => s.activeCharacter);
   const loadedUserId = useCharacterStore(s => s.loadedUserId);
   const loadCharacters = useCharacterStore(s => s.loadCharacters);
+  const bootAvatarIds = useCharacterStore(s =>
+    s.characters.filter(c => !c.isDeleted).map(c => c.avatarId),
+  );
 
   // Вывеска / акт 0 держат кадр, пока сессия не восстановится и
   // (если есть аккаунт) пока не загрузятся персонажи. Гость и
@@ -353,6 +356,7 @@ function App() {
         ) : !splashComplete ? (
           <SplashScreen
             authReady={authReady}
+            avatarIds={bootAvatarIds}
             onLoaded={handleSplashLoaded}
             minDisplayTimeMs={4000}
           />

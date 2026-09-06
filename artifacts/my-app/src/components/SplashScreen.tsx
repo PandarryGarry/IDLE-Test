@@ -17,7 +17,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Sword, Sparkles, ShieldCheck } from 'lucide-react';
 import { AnimatedArt } from '@/components/art/AnimatedArt';
 import { useArtMode } from '@/hooks/useArtMode';
-import { pickSplashArt, ONBOARDING_ART_PRELOAD, ART_TINT } from '@/shared/artRegistry';
+import { pickSplashArt, ART_TINT } from '@/shared/artRegistry';
+import { bootBackgroundUrls, bootGateUrls, waitDecoded, warmImages } from '@/lib/bootPreload';
 import { CURRENT_VERSION } from '@/data/changelog';
 
 const LORE_TIPS = [
@@ -37,15 +38,16 @@ interface SplashScreenProps {
    * с вывески, пока authReady не станет true.
    */
   authReady?: boolean;
+  /** Аватары уже известных героев — греем лицо и манекен до входа в шелл. */
+  avatarIds?: readonly string[];
 }
 
 /** Сколько максимум ждём загрузку арта, чтобы не задерживать вход в игру. */
 const ART_WAIT_CAP_MS = 1500;
 /** Сколько максимум ждём шрифты (Cinzel/Inter/JetBrains с Google Fonts). */
 const FONTS_WAIT_CAP_MS = 2500;
-/** Сколько максимум греем арты дороги онбординга (заставка стала длиннее —
-    пусть это время работает на игру: катсцены откроются без «пустого» фона). */
-const ONBOARDING_ARTS_WAIT_CAP_MS = 4000;
+/** Сколько максимум греем дорогу + первый кадр героя. */
+const BOOT_ARTS_WAIT_CAP_MS = 5000;
 
 /**
  * Вес каждого этапа загрузки в итоговом проценте.
@@ -64,6 +66,7 @@ export function SplashScreen({
   onLoaded,
   minDisplayTimeMs = 4000,
   authReady = false,
+  avatarIds = [],
 }: SplashScreenProps) {
   // Вариант арта выбираем один раз по пропорциям экрана (wide / tall / square).
   const [art] = useState(() =>
@@ -121,37 +124,23 @@ export function SplashScreen({
     return () => clearTimeout(t);
   }, [artSettled]);
 
-  // Прогрев артов «дороги» онбординга: входная/выходная катсцены, таверна,
-  // ложа. Пока заставка на экране, кэш наполняется — сцена начнётся сразу
-  // с готовой картинкой. Ошибки и таймаут не блокируют путь.
+  // Дорога онбординга + иконки тела/аватары: пока шкала на экране.
+  // Нити и глубинные пассивки греем без ожидания — вкладки откроются позже.
+  const avatarKey = avatarIds.join('|');
   useEffect(() => {
     let disposed = false;
-    let settled = 0;
-    const finish = () => {
-      settled += 1;
-      if (settled >= ONBOARDING_ART_PRELOAD.length && !disposed) {
-        setOnboardingArtsReady(true);
-      }
-    };
-    const images = ONBOARDING_ART_PRELOAD.map((src) => {
-      const img = new Image();
-      img.onload = finish;
-      img.onerror = finish;
-      img.src = src;
-      return img;
-    });
-    const cap = setTimeout(() => {
+    setOnboardingArtsReady(false);
+    warmImages(bootBackgroundUrls());
+    // До сессии — только шелл. Аватары ждём, когда authReady уже знает список героев.
+    if (!authReady) {
+      void waitDecoded(bootGateUrls([]), BOOT_ARTS_WAIT_CAP_MS);
+      return () => { disposed = true; };
+    }
+    void waitDecoded(bootGateUrls(avatarIds), BOOT_ARTS_WAIT_CAP_MS).then(() => {
       if (!disposed) setOnboardingArtsReady(true);
-    }, ONBOARDING_ARTS_WAIT_CAP_MS);
-    return () => {
-      disposed = true;
-      clearTimeout(cap);
-      images.forEach((img) => {
-        img.onload = null;
-        img.onerror = null;
-      });
-    };
-  }, []);
+    });
+    return () => { disposed = true; };
+  }, [authReady, avatarKey, avatarIds]);
 
   // ── Плавная анимация процентов к реальной цели ────────────────
   const targetRef = useRef(0);
