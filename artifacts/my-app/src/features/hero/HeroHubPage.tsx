@@ -816,7 +816,17 @@ function HeroEquipSlotCard({
         />
       )}
       <div className="hero-sq-slot__icon-wrap">
-        <EquipSlotSilhouette slot={ghostLeft ? 'weapon' : slot} className="hero-sq-slot__vector-icon hero-sq-slot__vector-icon--filled" />
+        {item?.iconPath ? (
+          <img
+            src={iconUrl(item.iconPath)}
+            alt={item.name ?? ''}
+            decoding="async"
+            loading="lazy"
+            className="hero-sq-slot__icon"
+          />
+        ) : (
+          <EquipSlotSilhouette slot={ghostLeft ? 'weapon' : slot} className="hero-sq-slot__vector-icon hero-sq-slot__vector-icon--filled" />
+        )}
       </div>
     </button>
   );
@@ -866,7 +876,17 @@ function HeroBagSlotCard({
         />
       )}
       <div className="hero-sq-slot__icon-wrap">
-        <EquipSlotSilhouette slot={equipSlot} className="hero-sq-slot__vector-icon hero-sq-slot__vector-icon--filled" />
+        {item.iconPath ? (
+          <img
+            src={iconUrl(item.iconPath)}
+            alt={item.name}
+            decoding="async"
+            loading="lazy"
+            className="hero-sq-slot__icon"
+          />
+        ) : (
+          <EquipSlotSilhouette slot={equipSlot} className="hero-sq-slot__vector-icon hero-sq-slot__vector-icon--filled" />
+        )}
       </div>
       {slot.quantity > 1 && (
         <span className="hero-sq-slot__qty">

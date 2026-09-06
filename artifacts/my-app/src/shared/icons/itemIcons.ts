@@ -1,12 +1,13 @@
 /**
  * Централизованный реестр иконок и ассетов предметов.
- * 
- * Когда мы распакуем ваши архивы в public/assets/items/:
- * здесь будет прописано точное соответствие ID предмета -> путь к вашему файлу.
+ *
+ * Пути предметов теперь живут прямо в данных (`items.ts`, поле `iconPath`,
+ * относительный путь БЕЗ расширения) и отдаются через `iconUrl()`.
+ * `ITEM_IMAGE_URLS` — точечные переопределения поверх данных (если понадобятся).
  */
 
 export const ITEM_IMAGE_URLS: Record<string, string> = {
-  // Будет заполнено вашими распакованными файлами из public/assets/items/
+  // Точечные переопределения поверх item.iconPath (если понадобятся).
 };
 
 // Эмодзи-фоллбэки
@@ -67,17 +68,27 @@ export const MISC_ICONS: Record<string, string> = {
 
 import { getItem } from '@/domain/items/items';
 import { EQUIP_SLOT_ICON } from '@/domain/attributes/attributeIcons';
+import { iconUrl } from '@/lib/assetUrl';
 
 export function getItemVisual(itemId: string): { type: 'image' | 'emoji'; value: string } {
+  const item = getItem(itemId);
+
+  // 1. Своя картинка предмета (данные → iconUrl → WebP).
+  if (item?.iconPath) {
+    return { type: 'image', value: iconUrl(item.iconPath) };
+  }
+
+  // 2. Точечное переопределение реестром.
   if (ITEM_IMAGE_URLS[itemId]) {
     return { type: 'image', value: ITEM_IMAGE_URLS[itemId] };
   }
 
-  const item = getItem(itemId);
+  // 3. Снаряжение без своей картинки — силуэт слота.
   if (item?.equipSlot && EQUIP_SLOT_ICON[item.equipSlot]) {
     return { type: 'image', value: EQUIP_SLOT_ICON[item.equipSlot] };
   }
 
+  // 4. Эмодзи-фоллбек.
   const icon = 
     item?.icon ||
     EQUIPMENT_ICONS[itemId] ||

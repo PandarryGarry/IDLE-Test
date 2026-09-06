@@ -64,10 +64,11 @@ export function SquircleSlot({ itemId, quantity, locked = false, isEmptyPlacehol
       )}
 
       {/* Содержимое — 78% ячейки, строго по центру.
-          Снаряжение рисуем векторным силуэтом (без светлого квадрата-подложки),
+          Снаряжение со своей картинкой рисуем как есть (WebP через iconUrl);
+          снаряжение без неё — векторным силуэтом (без светлого квадрата-подложки),
           прочее — эмодзи/иконка. */}
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16%', color: '#f0d6ab' }}>
-        {item?.equipSlot ? (
+        {item?.equipSlot && !item.iconPath ? (
           <EquipSlotSilhouette slot={item.equipSlot} className="g-slot__vec" />
         ) : visual.type === 'image' ? (
           <img src={visual.value} alt={item?.name ?? ''} loading="lazy"

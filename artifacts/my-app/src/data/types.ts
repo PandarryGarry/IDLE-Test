@@ -51,6 +51,12 @@ export interface Item {
   equipSlot?: EquipSlot;
   combatStats?: CombatStats;
   icon?: string; // emoji fallback
+  /**
+   * Иконка предмета в `public/assets/icons` — путь БЕЗ расширения и без
+   * `assets/icons` (например `weapons/sword_1h/t02`). В `<img>` отдаётся
+   * только через `iconUrl()`, никогда сырым `.png`.
+   */
+  iconPath?: string;
   /** Двуручное: правая рука нормально, левая — то же оружие тусклое. */
   twoHanded?: boolean;
 }
