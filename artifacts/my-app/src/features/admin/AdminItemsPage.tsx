@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import type { ReactNode } from 'react';
-import { CATALOG, CATALOG_SUMMARY } from '@/domain/items';
-import type { CatalogItem } from '@/domain/items';
-import { iconUrl } from '@/lib/assetUrl';
-import { formatNumber } from '@/lib/utils';
+import { CATALOG } from '@/domain/items';
+import { SquircleSlot } from '@/shared/ui/kit/SquircleSlot';
+import { UniversalInfoModal } from '@/components/modals/UniversalInfoModal';
+import { Search, X } from 'lucide-react';
+
+const CATEGORY_ORDER = ['log', 'ore', 'bar', 'raw_fish', 'cooked_fish', 'mineral', 'foraging'];
 
 const CATEGORY_LABELS: Record<string, string> = {
   log: 'Дерево',
@@ -15,149 +16,161 @@ const CATEGORY_LABELS: Record<string, string> = {
   foraging: 'Сбор',
 };
 
-function Cell({ children, label }: { children: ReactNode; label: string }) {
-  return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">{label}</span>
-      <span className="text-xs text-[var(--text-primary)]">{children}</span>
-    </div>
-  );
-}
-
-function ItemCard({ item }: { item: CatalogItem }) {
-  const cat = CATEGORY_LABELS[item.category] ?? item.category;
-  return (
-    <div
-      className="rounded-2xl p-3 flex flex-col gap-2 min-w-0"
-      style={{ background: 'var(--bg-card-dark)', border: '1px solid var(--border-default)' }}
-    >
-      <div className="flex items-start gap-3">
-        <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden"
-          style={{ background: 'var(--bg-slot)', border: '1px solid var(--border-default)' }}
-        >
-          {item.iconPath ? (
-            <img
-              src={iconUrl(item.iconPath)}
-              alt={item.name}
-              loading="lazy"
-              decoding="async"
-              className="w-full h-full object-contain"
-            />
-          ) : (
-            <span className="text-2xl">{item.icon ?? '📦'}</span>
-          )}
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <div className="text-sm font-bold text-[var(--text-primary)] leading-tight truncate">{item.name}</div>
-              <div className="text-[11px] font-mono text-[var(--text-muted)] truncate">{item.id}</div>
-            </div>
-            <span
-              className="shrink-0 text-[11px] font-black font-mono rounded-lg px-2 py-1"
-              style={{ background: 'rgba(220,160,80,0.15)', color: '#e0a868', border: '1px solid rgba(220,160,80,0.25)' }}
-            >
-              T{item.tier}
-            </span>
-          </div>
-          <p className="text-[11px] leading-snug text-[var(--text-secondary)] mt-1 line-clamp-3">{item.description}</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[var(--border-default)]">
-        <Cell label="Категория" children={cat} />
-        <Cell label="Цена" children={`${formatNumber(item.sellValue)} GP`} />
-        <Cell label="Стак" children={item.stackable ? 'Да' : 'Нет'} />
-        <Cell label="Иконка" children={<code className="text-[10px] break-all">{item.iconPath}</code>} />
-      </div>
-    </div>
-  );
-}
+const CATEGORY_ICONS: Record<string, string> = {
+  log: '🪵',
+  ore: '⛏️',
+  bar: '🔨',
+  raw_fish: '🐟',
+  cooked_fish: '🍽️',
+  mineral: '🪨',
+  foraging: '🌿',
+};
 
 export function AdminItemsPage() {
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
-  const [category, setCategory] = useState<string>('all');
-  const [onlyWithImage, setOnlyWithImage] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  const categories = useMemo(
-    () => Array.from(new Set(CATALOG.map(i => i.category))).sort(),
-    [],
-  );
-
-  const filtered = useMemo(() => {
+  const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return CATALOG.filter(item => {
-      if (category !== 'all' && item.category !== category) return false;
-      if (onlyWithImage && !item.iconPath) return false;
-      if (!q) return true;
-      return (
-        item.name.toLowerCase().includes(q) ||
-        item.id.toLowerCase().includes(q) ||
-        item.description.toLowerCase().includes(q)
-      );
-    });
-  }, [query, category, onlyWithImage]);
+    return CATEGORY_ORDER
+      .map(category => ({
+        category,
+        items: CATALOG.filter(item => {
+          if (category !== 'all' && item.category !== category) return false;
+          if (!q) return true;
+          return (
+            item.name.toLowerCase().includes(q) ||
+            item.id.toLowerCase().includes(q) ||
+            item.description.toLowerCase().includes(q)
+          );
+        }),
+      }))
+      .filter(group => group.items.length > 0);
+  }, [query]);
+
+  const total = CATALOG.length;
+
+  const FILTERS = [
+    { key: 'all', label: 'Все', icon: '📦' },
+    ...CATEGORY_ORDER.map(category => ({
+      key: category,
+      label: CATEGORY_LABELS[category],
+      icon: CATEGORY_ICONS[category],
+    })),
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-4 p-4">
-      <div className="rounded-2xl p-4 sm:p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)' }}>
-        <h1 className="text-xl font-display font-black text-[var(--text-primary)]">Админ-панель · Каталог предметов</h1>
-        <p className="text-xs text-[var(--text-secondary)] mt-1">
-          Основа для будущей админки: здесь видны все предметы батча 1. Это не игровой инвентарь — каталог для сверки и последующей доработки.
-        </p>
-        <div className="flex flex-wrap gap-2 mt-3">
-          {[
-            ['Всего', CATALOG.length],
-            ['Брёвна', CATALOG_SUMMARY.logs],
-            ['Руда', CATALOG_SUMMARY.ores],
-            ['Слитки', CATALOG_SUMMARY.bars],
-            ['Рыба raw', CATALOG_SUMMARY.rawFish],
-            ['Рыба cooked', CATALOG_SUMMARY.cookedFish],
-            ['Минералы', CATALOG_SUMMARY.minerals],
-            ['Сбор · дерево', CATALOG_SUMMARY.forageWood],
-            ['Сбор · грибы', CATALOG_SUMMARY.forageFungi],
-            ['Сбор · прочее', CATALOG_SUMMARY.forageBits],
-          ].map(([label, value]) => (
-            <span key={label} className="text-[11px] font-mono rounded-xl px-2.5 py-1.5" style={{ background: 'var(--bg-card-dark)', border: '1px solid var(--border-default)', color: 'var(--text-secondary)' }}>
-              {label}: <b style={{ color: 'var(--text-primary)' }}>{value}</b>
-            </span>
-          ))}
+    <div className="space-y-4 max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="rounded-2xl p-4 sm:p-5" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.25)' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-violet-500/20 to-purple-500/20 rounded-2xl border border-violet-500/30 flex items-center justify-center text-2xl shrink-0">
+            🛡️
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-display font-black text-[var(--text-primary)]">Админ-панель · Каталог предметов</h1>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+              Как в инвентаре: клик по ячейке открывает карточку с описанием и характеристиками.
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="rounded-2xl p-3 flex flex-wrap items-center gap-2" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)' }}>
-        <input
-          type="text"
-          placeholder="Поиск по имени / id / описанию..."
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          className="flex-1 min-w-48 px-3 py-2 rounded-xl text-sm text-[var(--text-primary)] bg-[var(--bg-slot)] border border-[var(--border-default)] focus:outline-none"
-        />
-        <select
-          value={category}
-          onChange={e => setCategory(e.target.value)}
-          className="px-3 py-2 rounded-xl text-sm text-[var(--text-primary)] bg-[var(--bg-slot)] border border-[var(--border-default)] focus:outline-none"
-        >
-          <option value="all">Все категории</option>
-          {categories.map(c => (
-            <option key={c} value={c}>{CATEGORY_LABELS[c] ?? c}</option>
+      {/* Filters + search */}
+      <div className="flex items-center justify-between gap-2 p-1.5 rounded-xl" style={{ background: '#1c1108', border: '1px solid #3a2b1a' }}>
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1">
+          {FILTERS.map(({ key, label, icon }) => (
+            <button
+              key={key}
+              onClick={() => setActiveCategory(key)}
+              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 active:scale-95 ${
+                activeCategory === key
+                  ? 'bg-stone-800 text-violet-300 border border-violet-500/40 shadow-sm'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-dark)]'
+              }`}
+            >
+              <span className="text-base">{icon}</span>
+              <span className="hidden sm:inline text-[11px]">{label}</span>
+            </button>
           ))}
-        </select>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)] px-2 cursor-pointer">
-          <input type="checkbox" checked={onlyWithImage} onChange={e => setOnlyWithImage(e.target.checked)} />
-          Только с картинкой
-        </label>
+        </div>
+
+        <div className="flex items-center pl-1 border-l border-stone-800 shrink-0">
+          {isSearchOpen ? (
+            <div className="relative flex items-center">
+              <input
+                type="text"
+                autoFocus
+                placeholder="Поиск..."
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                className="w-32 sm:w-48 pl-2.5 pr-7 py-1.5 bg-[var(--bg-slot)] border border-[var(--border-default)] rounded-xl text-xs text-[var(--text-primary)] focus:outline-none focus:border-violet-500"
+              />
+              <button
+                type="button"
+                onClick={() => { setQuery(''); setIsSearchOpen(false); }}
+                className="absolute right-2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsSearchOpen(true)}
+              className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-dark)] transition-all active:scale-95"
+              title="Поиск предмета"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-[var(--text-muted)] px-1">
-        <span>Показано: <b style={{ color: 'var(--text-primary)' }}>{filtered.length}</b> из {CATALOG.length}</span>
+      {/* Groups */}
+      {groups.length === 0 && (
+        <div className="text-center py-20 text-slate-500 flex flex-col items-center gap-2">
+          <div className="text-5xl opacity-30">📦</div>
+          <p className="text-xs font-mono">Ничего не найдено</p>
+        </div>
+      )}
+
+      {groups.map(group => (
+        <div key={group.category} className="space-y-2">
+          <div className="flex items-center justify-between px-1 pt-1">
+            <h2 className="text-xs font-extrabold uppercase tracking-widest font-mono flex items-center gap-1.5" style={{ color: '#c084fc', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+              <span>{CATEGORY_ICONS[group.category]}</span> {CATEGORY_LABELS[group.category]}
+            </h2>
+            <span className="text-[11px] font-mono text-[var(--text-muted)]">{group.items.length}</span>
+          </div>
+
+          <div className="rounded-2xl p-3 sm:p-4" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.35)' }}>
+            <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 gap-2.5 sm:gap-3">
+              {group.items.map(item => (
+                <SquircleSlot
+                  key={item.id}
+                  itemId={item.id}
+                  onClick={() => setSelectedItemId(item.id)}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      ))}
+
+      <div className="text-center text-[11px] font-mono text-[var(--text-muted)] pb-2">
+        Всего предметов в каталоге: {total}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {filtered.map(item => <ItemCard key={item.id} item={item} />)}
-      </div>
+      {selectedItemId && (
+        <UniversalInfoModal
+          itemId={selectedItemId}
+          readOnly
+          onClose={() => setSelectedItemId(null)}
+        />
+      )}
     </div>
   );
 }

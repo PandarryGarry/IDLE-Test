@@ -87,10 +87,16 @@ const CATEGORY_NAMES: Record<string, string> = {
 interface UniversalInfoModalProps {
   itemId: string | null;
   onClose: () => void;
+  /**
+   * Режим просмотра из админ-каталога: показываем название/описание/статы,
+   * но прячем игровые действия (запереть/надеть/съесть/продать).
+   */
+  readOnly?: boolean;
 }
 
-export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps) {
+export function UniversalInfoModal({ itemId, onClose, readOnly = false }: UniversalInfoModalProps) {
   const { t } = useTranslation();
+  const isReadOnly = readOnly;
   
   const slot = useInventoryStore(s => itemId ? s.getSlot(itemId) : undefined);
   const lockItem = useInventoryStore(s => s.lockItem);
@@ -112,7 +118,7 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
   const item = getItem(itemId);
   if (!item) return null;
 
-  const quantity = slot?.quantity ?? 1;
+  const quantity = isReadOnly ? 1 : slot?.quantity ?? 1;
   const isLocked = slot?.locked ?? false;
   const tier = getItemTier(itemId, item);
   const rarityKey = getItemRarity(itemId, item.sellValue, item.equipSlot);
@@ -183,18 +189,20 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
           </div>
 
           <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => lockItem(itemId, !isLocked)}
-              className={`p-2 rounded-xl transition-all active:scale-95 ${
-                isLocked 
-                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]' 
-                  : 'text-stone-500 hover:text-stone-200 hover:bg-stone-800 border border-transparent'
-              }`}
-              title={isLocked ? 'Заперто от продажи' : 'Запереть предмет'}
-            >
-              {isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-            </button>
+            {!isReadOnly && (
+              <button
+                type="button"
+                onClick={() => lockItem(itemId, !isLocked)}
+                className={`p-2 rounded-xl transition-all active:scale-95 ${
+                  isLocked 
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]' 
+                    : 'text-stone-500 hover:text-stone-200 hover:bg-stone-800 border border-transparent'
+                }`}
+                title={isLocked ? 'Заперто от продажи' : 'Запереть предмет'}
+              >
+                {isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+              </button>
+            )}
 
             <button
               type="button"
@@ -303,6 +311,7 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
         </p>
 
         {/* Action Controls Section */}
+        {!isReadOnly && (
         <div className="space-y-2 pt-2 border-t border-stone-800/80">
           
           {item.equipSlot && (
@@ -399,6 +408,20 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
           </button>
 
         </div>
+        )}
+
+        {/* Читаем из админки: нет игровых действий, только кнопка закрыть */}
+        {isReadOnly && (
+          <div className="space-y-2 pt-2 border-t border-stone-800/80">
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full py-2.5 rounded-2xl bg-stone-950 hover:bg-stone-800 text-stone-500 hover:text-stone-200 text-xs font-semibold transition-all active:scale-95"
+            >
+              Закрыть
+            </button>
+          </div>
+        )}
 
       </div>
     </div>
