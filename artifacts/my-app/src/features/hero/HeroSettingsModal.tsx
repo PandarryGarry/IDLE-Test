@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import {
   GAvatar, GButton, GCard, GInfoRow, GInput, GModal,
