@@ -3,7 +3,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { manualSave } from '@/lib/saveManager';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Save, Check, Globe, Menu } from 'lucide-react';
+import { Save, Check, Globe, Menu, ShieldCheck } from 'lucide-react';
 
 export function TopNavBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) {
   const { t }         = useTranslation();
@@ -51,8 +51,17 @@ export function TopNavBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void 
           </button>
         </div>
 
-        {/* ── Правая: язык + сохранить ── */}
+        {/* ── Правая: админ + язык + сохранить ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <a href="/admin" style={{
+            ...btn,
+            background: 'linear-gradient(180deg,#5a2a6a,#3a1444)',
+            borderColor: '#2a0e33',
+          }} title="Админ-панель: каталог предметов">
+            <ShieldCheck size={13} color="#d9a6ff" />
+            <span className="hidden sm:inline">Админ</span>
+          </a>
+
           <button onClick={() => updateSetting('language', language === 'ru' ? 'en' : 'ru')}
             style={{ ...btn, padding: '5px 8px' }}>
             <Globe size={12} color="#c8a050" />
