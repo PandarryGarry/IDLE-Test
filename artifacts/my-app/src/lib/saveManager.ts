@@ -303,6 +303,17 @@ export function saveOnLeave(): void {
   }
 }
 
+/** Момент ухода, без сброса. Для карточки выбора героя. */
+export function peekLeaveTime(): number {
+  try {
+    const store = isGuestMode() ? window.sessionStorage : window.localStorage;
+    const leaveTime = Number(store.getItem(leaveTimeKey()) || '0');
+    return Number.isFinite(leaveTime) && leaveTime > 0 ? leaveTime : 0;
+  } catch {
+    return 0;
+  }
+}
+
 /** Читает время ухода и возвращает сколько прошло (ms) */
 export function getOfflineDuration(): number {
   try {

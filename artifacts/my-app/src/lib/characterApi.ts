@@ -73,7 +73,7 @@ function rowToCharacter(row: CharacterRow): Character {
     hasChangedNickname: row.has_changed_nickname ?? false,
     hasChangedAvatar: row.has_changed_avatar ?? false,
     selected: row.selected ?? false,
-    lastSavedAt: toMs(row.last_saved_at),
+    lastSavedAt: row.last_saved_at ? toMs(row.last_saved_at) : 0,
     createdAt: toMs(row.created_at),
     updatedAt: toMs(row.updated_at),
     isDeleted: row.is_deleted ?? false,

@@ -5,6 +5,8 @@ import { useCharacterStore } from '@/store/characterStore';
 import { GPanel, GButton, GAvatar, GBadge } from '@/shared/ui/gameUI';
 import { getAvatarPath, getRaceLabel } from '@/data/characters';
 import { formatDuration } from '@/lib/utils';
+import { awayDurationMs } from '@/lib/offlineAway';
+import { peekLeaveTime } from '@/lib/saveManager';
 import { OnboardingScene } from '@/components/OnboardingScene';
 import { OnboardingAccountBar } from '@/features/auth/OnboardingAccountBar';
 import { queueCinematic } from '@/lib/cinematicState';
@@ -19,12 +21,18 @@ export function SelectCharacterPage() {
   const storeError = useCharacterStore(s => s.error);
   const [selectingId, setSelectingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (user) {
       void loadCharacters(user.id);
     }
   }, [loadCharacters, user]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const liveCharacters = characters.filter(character => !character.isDeleted);
   const hasAny = liveCharacters.length > 0;
@@ -95,8 +103,13 @@ export function SelectCharacterPage() {
                   </div>
 
                   <div className="character-select-card__memory">
-                    <span>Пройдено вместе</span>
-                    <strong>⌛ {formatDuration(character.saveData?.totalPlayTime ?? 0)}</strong>
+                    <span>Вас не было</span>
+                    <strong>⌛ {formatDuration(awayDurationMs(now, [
+                      peekLeaveTime(),
+                      character.saveData?.savedAt ?? 0,
+                      character.lastSavedAt,
+                      character.createdAt,
+                    ]))}</strong>
                   </div>
 
                   <div className="character-select-card__actions">
