@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { getItem } from '@/domain/items';
-import type { Item, EquipSlot } from '@/data/types';
+import React, { useEffect, useState } from 'react';
+import { getItem, getAdminItem } from '@/domain/items';
+import { useAdminConfigStore, type ItemOverride } from '@/store/adminConfigStore';
+import type { Item, EquipSlot, ItemCategory } from '@/data/types';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useCombatStore } from '@/store/combatStore';
@@ -84,6 +85,77 @@ const CATEGORY_NAMES: Record<string, string> = {
   foraging: 'Сбор',
 };
 
+const CATEGORY_OPTIONS: ItemCategory[] = [
+  'weapon', 'helm', 'platebody', 'platelegs', 'boots', 'gloves',
+  'amulet', 'ring', 'bracelet', 'belt', 'shield', 'cape',
+  'food', 'herb', 'seed', 'bar', 'ore', 'log', 'rune',
+  'potion', 'raw_fish', 'cooked_fish', 'gem', 'misc', 'bone', 'ash', 'arrow', 'tablet',
+  'mineral', 'foraging',
+];
+
+const EQUIP_SLOT_OPTIONS: (EquipSlot | '')[] = [
+  '', 'helm', 'platebody', 'platelegs', 'boots', 'gloves',
+  'amulet', 'ring', 'ring2', 'bracelet', 'bracelet2', 'belt',
+  'weapon', 'shield', 'cape', 'quiver', 'passive',
+];
+
+interface AdminEditState {
+  name: string;
+  description: string;
+  category: ItemCategory;
+  tier: string;
+  sellValue: string;
+  buyValue: string;
+  canSell: boolean;
+  stackable: boolean;
+  healAmount: string;
+  equipSlot: string;
+  twoHanded: boolean;
+  icon: string;
+  iconPath: string;
+  attackBonus: string;
+  strengthBonus: string;
+  defenceBonus: string;
+  rangedAttackBonus: string;
+  rangedStrengthBonus: string;
+  magicAttackBonus: string;
+  magicDamageBonus: string;
+  prayerBonus: string;
+}
+
+const toStr = (v: number | undefined): string => (v === undefined || Number.isNaN(v) ? '' : String(v));
+const toOptNum = (v: string): number | undefined => {
+  const n = Number(v);
+  return v.trim() === '' || !Number.isFinite(n) ? undefined : n;
+};
+
+function adminEditInitial(item?: Item): AdminEditState {
+  const cs = item?.combatStats;
+  return {
+    name: item?.name ?? '',
+    description: item?.description ?? '',
+    category: item?.category ?? 'misc',
+    tier: item?.tier ? String(item.tier) : '',
+    sellValue: toStr(item?.sellValue ?? 0),
+    buyValue: toStr(item?.buyValue),
+    canSell: item?.canSell ?? false,
+    stackable: item?.stackable ?? false,
+    healAmount: toStr(item?.healAmount),
+    equipSlot: item?.equipSlot ?? '',
+    twoHanded: item?.twoHanded ?? false,
+    icon: item?.icon ?? '',
+    iconPath: item?.iconPath ?? '',
+    attackBonus: toStr(cs?.attackBonus),
+    strengthBonus: toStr(cs?.strengthBonus),
+    defenceBonus: toStr(cs?.defenceBonus),
+    rangedAttackBonus: toStr(cs?.rangedAttackBonus),
+    rangedStrengthBonus: toStr(cs?.rangedStrengthBonus),
+    magicAttackBonus: toStr(cs?.magicAttackBonus),
+    magicDamageBonus: toStr(cs?.magicDamageBonus),
+    prayerBonus: toStr(cs?.prayerBonus),
+  };
+}
+
 interface UniversalInfoModalProps {
   itemId: string | null;
   onClose: () => void;
@@ -92,12 +164,32 @@ interface UniversalInfoModalProps {
    * но прячем игровые действия (запереть/надеть/съесть/продать).
    */
   readOnly?: boolean;
+  /** Админ-режим: карточка становится редактируемой (имя/описание/цена/статы/тир/…). */
+  adminEditable?: boolean;
 }
 
-export function UniversalInfoModal({ itemId, onClose, readOnly = false }: UniversalInfoModalProps) {
+export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEditable = false }: UniversalInfoModalProps) {
   const { t } = useTranslation();
   const isReadOnly = readOnly;
-  
+
+  const updateItemOverride = useAdminConfigStore(s => s.updateItemOverride);
+  const resetItemOverride = useAdminConfigStore(s => s.resetItemOverride);
+
+  const [editOpen, setEditOpen] = useState(adminEditable);
+  const [editForm, setEditForm] = useState<AdminEditState>(() => adminEditInitial(undefined));
+
+  const item = itemId ? getItem(itemId) : undefined;
+  const editorItem = itemId ? getAdminItem(itemId) : undefined;
+
+  useEffect(() => {
+    if (!itemId) {
+      setEditForm(adminEditInitial(undefined));
+      return;
+    }
+    setEditForm(adminEditInitial(getAdminItem(itemId) ?? getItem(itemId)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemId]);
+
   const slot = useInventoryStore(s => itemId ? s.getSlot(itemId) : undefined);
   const lockItem = useInventoryStore(s => s.lockItem);
   const sellItem = useInventoryStore(s => s.sellItem);
@@ -114,9 +206,7 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false }: Univer
 
   const [sellQty, setSellQty] = useState(1);
 
-  if (!itemId) return null;
-  const item = getItem(itemId);
-  if (!item) return null;
+  if (!itemId || !item) return null;
 
   const quantity = isReadOnly ? 1 : slot?.quantity ?? 1;
   const isLocked = slot?.locked ?? false;
@@ -167,6 +257,74 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false }: Univer
 
   const currentSellPrice = (item.sellValue ?? 0) * Math.min(sellQty, quantity);
   const totalSellPrice = (item.sellValue ?? 0) * quantity;
+
+  const itemOverrides = useAdminConfigStore(s => s.itemOverrides);
+  const hasOverride = Boolean(itemId && itemOverrides[itemId]);
+
+  const setField = <K extends keyof AdminEditState>(key: K, value: AdminEditState[K]) => {
+    setEditForm(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleSave = () => {
+    if (!itemId) return;
+
+    const combatStats: ItemOverride['combatStats'] = {};
+    type AdminNumericField = 'attackBonus' | 'strengthBonus' | 'defenceBonus' | 'rangedAttackBonus' | 'rangedStrengthBonus' | 'magicAttackBonus' | 'magicDamageBonus' | 'prayerBonus';
+    const combatFields: [AdminNumericField, keyof NonNullable<ItemOverride['combatStats']>][] = [
+      ['attackBonus', 'attackBonus'],
+      ['strengthBonus', 'strengthBonus'],
+      ['defenceBonus', 'defenceBonus'],
+      ['rangedAttackBonus', 'rangedAttackBonus'],
+      ['rangedStrengthBonus', 'rangedStrengthBonus'],
+      ['magicAttackBonus', 'magicAttackBonus'],
+      ['magicDamageBonus', 'magicDamageBonus'],
+      ['prayerBonus', 'prayerBonus'],
+    ];
+    for (const [formKey, statKey] of combatFields) {
+      const value = toOptNum(editForm[formKey]);
+      if (value !== undefined) combatStats[statKey] = value;
+    }
+
+    const tier = toOptNum(editForm.tier);
+    const patch: ItemOverride = {
+      name: editForm.name.trim(),
+      description: editForm.description.trim(),
+      category: editForm.category,
+      tier: tier !== undefined && tier >= 1 && tier <= 12 ? Math.round(tier) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 : undefined,
+      sellValue: toOptNum(editForm.sellValue),
+      buyValue: toOptNum(editForm.buyValue),
+      canSell: editForm.canSell,
+      stackable: editForm.stackable,
+      healAmount: toOptNum(editForm.healAmount),
+      equipSlot: editForm.equipSlot ? editForm.equipSlot as EquipSlot : undefined,
+      twoHanded: editForm.twoHanded,
+      icon: editForm.icon.trim(),
+      iconPath: editForm.iconPath.trim(),
+      combatStats: Object.keys(combatStats).length > 0 ? combatStats : undefined,
+    };
+
+    updateItemOverride(itemId, patch);
+    setEditOpen(false);
+  };
+
+  const handleReset = () => {
+    if (!itemId) return;
+    resetItemOverride(itemId);
+    setEditForm(adminEditInitial(editorItem ?? item));
+    setEditOpen(false);
+  };
+
+  const editFieldStyle: React.CSSProperties = {
+    width: '100%',
+    background: 'var(--bg-slot)',
+    border: '1px solid var(--border-default)',
+    borderRadius: 10,
+    padding: '7px 9px',
+    fontSize: 12,
+    color: 'var(--text-primary)',
+    fontFamily: 'var(--app-font-mono)',
+    outline: 'none',
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 select-none animate-in fade-in duration-200">
@@ -309,6 +467,134 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false }: Univer
         <p className="text-xs text-stone-500 italic bg-stone-950/40 p-2.5 rounded-xl border border-stone-800/60 leading-relaxed">
           {item.description ?? 'Классический предмет средневекового мира.'}
         </p>
+
+        {/* ── Админ-редактор предмета ─────────────────────────── */}
+        {adminEditable && (
+          <div className="space-y-2 pt-2 border-t border-amber-500/20">
+            <div className="flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setEditOpen(v => !v)}
+                className="flex-1 py-2.5 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-extrabold text-xs transition-all active:scale-95 flex items-center justify-center gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                {editOpen ? 'Скрыть редактор' : 'Редактировать предмет'}
+              </button>
+              {hasOverride && (
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="shrink-0 py-2.5 px-4 rounded-2xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 font-bold text-xs transition-all active:scale-95"
+                >
+                  Сбросить правки
+                </button>
+              )}
+            </div>
+
+            {editOpen && (
+              <div className="space-y-2 rounded-2xl bg-stone-950/60 border border-stone-800 p-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="col-span-2 text-[10px] font-mono text-stone-500 flex items-center gap-1">
+                    ID: <span className="text-amber-300">{item.id}</span>
+                    <span className="text-stone-600">(не редактируется)</span>
+                  </label>
+
+                  <label className="col-span-2 space-y-1">
+                    <span className="text-[10px] font-mono text-stone-500 uppercase">Название</span>
+                    <input type="text" value={editForm.name} onChange={e => setField('name', e.target.value)} style={editFieldStyle} />
+                  </label>
+
+                  <label className="col-span-2 space-y-1">
+                    <span className="text-[10px] font-mono text-stone-500 uppercase">Описание</span>
+                    <textarea value={editForm.description} onChange={e => setField('description', e.target.value)} rows={3} style={{ ...editFieldStyle, resize: 'vertical' }} />
+                  </label>
+
+                  <label className="space-y-1">
+                    <span className="text-[10px] font-mono text-stone-500 uppercase">Категория</span>
+                    <select value={editForm.category} onChange={e => setField('category', e.target.value as ItemCategory)} style={editFieldStyle}>
+                      {CATEGORY_OPTIONS.map(cat => <option key={cat} value={cat}>{CATEGORY_NAMES[cat] ?? cat}</option>)}
+                    </select>
+                  </label>
+
+                  <label className="space-y-1">
+                    <span className="text-[10px] font-mono text-stone-500 uppercase">Тир (1–12)</span>
+                    <input type="number" min={1} max={12} value={editForm.tier} onChange={e => setField('tier', e.target.value)} style={editFieldStyle} />
+                  </label>
+
+                  <label className="space-y-1">
+                    <span className="text-[10px] font-mono text-stone-500 uppercase">Цена продажи</span>
+                    <input type="number" min={0} value={editForm.sellValue} onChange={e => setField('sellValue', e.target.value)} style={editFieldStyle} />
+                  </label>
+
+                  <label className="space-y-1">
+                    <span className="text-[10px] font-mono text-stone-500 uppercase">Цена покупки</span>
+                    <input type="number" min={0} value={editForm.buyValue} onChange={e => setField('buyValue', e.target.value)} style={editFieldStyle} />
+                  </label>
+
+                  <label className="space-y-1">
+                    <span className="text-[10px] font-mono text-stone-500 uppercase">Лечение (ОЗ)</span>
+                    <input type="number" min={0} value={editForm.healAmount} onChange={e => setField('healAmount', e.target.value)} style={editFieldStyle} />
+                  </label>
+
+                  <label className="space-y-1">
+                    <span className="text-[10px] font-mono text-stone-500 uppercase">Слот</span>
+                    <select value={editForm.equipSlot} onChange={e => setField('equipSlot', e.target.value)} style={editFieldStyle}>
+                      {EQUIP_SLOT_OPTIONS.map(slot => <option key={slot} value={slot}>{slot ? slot : '— не экипируется —'}</option>)}
+                    </select>
+                  </label>
+
+                  <label className="space-y-1">
+                    <span className="text-[10px] font-mono text-stone-500 uppercase">Иконка (эмодзи)</span>
+                    <input type="text" value={editForm.icon} onChange={e => setField('icon', e.target.value)} style={editFieldStyle} />
+                  </label>
+
+                  <label className="space-y-1">
+                    <span className="text-[10px] font-mono text-stone-500 uppercase">Путь иконки</span>
+                    <input type="text" value={editForm.iconPath} onChange={e => setField('iconPath', e.target.value)} style={editFieldStyle} />
+                  </label>
+                </div>
+
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <label className="flex items-center gap-1.5 text-[11px] text-stone-400">
+                    <input type="checkbox" checked={editForm.canSell} onChange={e => setField('canSell', e.target.checked)} className="accent-amber-500" /> продаётся
+                  </label>
+                  <label className="flex items-center gap-1.5 text-[11px] text-stone-400">
+                    <input type="checkbox" checked={editForm.stackable} onChange={e => setField('stackable', e.target.checked)} className="accent-amber-500" /> стакается
+                  </label>
+                  <label className="flex items-center gap-1.5 text-[11px] text-stone-400">
+                    <input type="checkbox" checked={editForm.twoHanded} onChange={e => setField('twoHanded', e.target.checked)} className="accent-amber-500" /> двуручное
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    ['attackBonus', 'Атака'],
+                    ['strengthBonus', 'Сила'],
+                    ['defenceBonus', 'Защита'],
+                    ['rangedAttackBonus', 'Дальний урон'],
+                    ['rangedStrengthBonus', 'Дальн. сила'],
+                    ['magicAttackBonus', 'Маг. урон'],
+                    ['magicDamageBonus', 'Маг. бонус'],
+                    ['prayerBonus', 'Молитва'],
+                  ] as const).map(([key, label]) => (
+                    <label key={key} className="space-y-1">
+                      <span className="text-[10px] font-mono text-stone-500 uppercase">{label}</span>
+                      <input type="number" value={editForm[key]} onChange={e => setField(key, e.target.value)} style={editFieldStyle} />
+                    </label>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  className="w-full py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-slate-950 font-extrabold text-xs transition-all active:scale-95 shadow-[0_0_15px_rgba(245,158,11,0.25)]"
+                >
+                  Сохранить правки
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Action Controls Section */}
         {!isReadOnly && (

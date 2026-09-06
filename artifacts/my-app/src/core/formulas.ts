@@ -98,10 +98,15 @@ export function formatTime(ms: number): string {
 
 // ── Drop simulation ───────────────────────────────────────────
 
-export function rollDrops(monster: Monster, rng: () => number = Math.random): { itemId: string; quantity: number }[] {
+export function rollDrops(
+  monster: Monster,
+  rng: () => number = Math.random,
+  chanceMultiplier = 1,
+): { itemId: string; quantity: number }[] {
   const drops: { itemId: string; quantity: number }[] = [];
   for (const drop of monster.drops) {
-    if (rng() < drop.chance) {
+    const chance = Math.min(1, drop.chance * Math.max(0, chanceMultiplier));
+    if (rng() < chance) {
       const qty = Math.floor(rng() * (drop.quantity[1] - drop.quantity[0] + 1)) + drop.quantity[0];
       drops.push({ itemId: drop.itemId, quantity: qty });
     }
@@ -109,8 +114,13 @@ export function rollDrops(monster: Monster, rng: () => number = Math.random): { 
   return drops;
 }
 
-export function rollGp(gpDrop: [number, number], rng: () => number = Math.random): number {
-  return Math.floor(rng() * (gpDrop[1] - gpDrop[0] + 1)) + gpDrop[0];
+export function rollGp(
+  gpDrop: [number, number],
+  rng: () => number = Math.random,
+  multiplier = 1,
+): number {
+  const base = Math.floor(rng() * (gpDrop[1] - gpDrop[0] + 1)) + gpDrop[0];
+  return Math.max(0, Math.round(base * Math.max(0, multiplier)));
 }
 
 // ── Smithing ──────────────────────────────────────────────────

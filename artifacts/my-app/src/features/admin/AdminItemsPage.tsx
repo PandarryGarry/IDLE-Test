@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
-import { CATALOG } from '@/domain/items';
+import { getCatalogItems } from '@/domain/items';
+import { useAdminConfigStore } from '@/store/adminConfigStore';
 import { SquircleSlot } from '@/shared/ui/kit/SquircleSlot';
 import { UniversalInfoModal } from '@/components/modals/UniversalInfoModal';
 import { Search, X } from 'lucide-react';
+import type { ItemCategory } from '@/data/types';
 
-const CATEGORY_ORDER = ['log', 'ore', 'bar', 'raw_fish', 'cooked_fish', 'mineral', 'foraging'];
+const CATEGORY_ORDER: ItemCategory[] = ['log', 'ore', 'bar', 'raw_fish', 'cooked_fish', 'mineral', 'foraging'];
 
 const CATEGORY_LABELS: Record<string, string> = {
   log: 'Дерево',
@@ -32,25 +34,34 @@ export function AdminItemsPage() {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
+  // Правки предметов из админки обновляют каталог через getItem()/getCatalogItems().
+  const itemOverrides = useAdminConfigStore(s => s.itemOverrides);
+  const catalog = useMemo(() => getCatalogItems(), [itemOverrides]);
+
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return CATEGORY_ORDER
+    const present = Array.from(new Set(catalog.map(item => item.category)));
+    const ordered = [
+      ...CATEGORY_ORDER.filter(category => present.includes(category)),
+      ...present.filter(category => !CATEGORY_ORDER.includes(category)).sort(),
+    ];
+    return ordered
       .map(category => ({
         category,
-        items: CATALOG.filter(item => {
-          if (category !== 'all' && item.category !== category) return false;
+        items: catalog.filter(item => {
+          if (activeCategory !== 'all' && item.category !== activeCategory) return false;
           if (!q) return true;
           return (
             item.name.toLowerCase().includes(q) ||
             item.id.toLowerCase().includes(q) ||
-            item.description.toLowerCase().includes(q)
+            item.description?.toLowerCase().includes(q)
           );
         }),
       }))
       .filter(group => group.items.length > 0);
-  }, [query]);
+  }, [activeCategory, catalog, query]);
 
-  const total = CATALOG.length;
+  const total = catalog.length;
 
   const FILTERS = [
     { key: 'all', label: 'Все', icon: '📦' },
@@ -141,7 +152,7 @@ export function AdminItemsPage() {
         <div key={group.category} className="space-y-2">
           <div className="flex items-center justify-between px-1 pt-1">
             <h2 className="text-xs font-extrabold uppercase tracking-widest font-mono flex items-center gap-1.5" style={{ color: '#c084fc', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
-              <span>{CATEGORY_ICONS[group.category]}</span> {CATEGORY_LABELS[group.category]}
+              <span>{CATEGORY_ICONS[group.category] ?? '📦'}</span> {CATEGORY_LABELS[group.category] ?? group.category}
             </h2>
             <span className="text-[11px] font-mono text-[var(--text-muted)]">{group.items.length}</span>
           </div>
@@ -168,6 +179,7 @@ export function AdminItemsPage() {
         <UniversalInfoModal
           itemId={selectedItemId}
           readOnly
+          adminEditable
           onClose={() => setSelectedItemId(null)}
         />
       )}

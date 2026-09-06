@@ -13,6 +13,11 @@ import { useAuthStore } from '@/store/authStore';
 import { isSkillAllowedForGuest, GUEST_NOTICE } from '@/lib/guestMode';
 import { calcBurnChance, calcXpPerHour } from '@/core/formulas';
 import { getItem } from '@/domain/items';
+import {
+  getAdminRates,
+  isSkillEnabledForAdmin,
+  type AdminSkillToggle,
+} from '@/store/adminConfigStore';
 import { chance, randomRange } from '@/lib/utils';
 
 export interface ActionResult {
@@ -88,8 +93,9 @@ function processMining(actionId: string): ActionResult | null {
   const playerLevel = usePlayerStore.getState().getSkillLevel('mining');
   if (playerLevel < rock.levelRequired) return null;
   const items: { itemId: string; quantity: number }[] = [{ itemId: rock.oreId, quantity: 1 }];
-  // Gem chance
-  if (rock.gemChance && chance(rock.gemChance)) {
+  // Gem chance (админ-множитель дропа действует и на самоцветы).
+  const gemChance = rock.gemChance ? Math.min(1, rock.gemChance * getAdminRates().dropRateMultiplier) : 0;
+  if (gemChance > 0 && chance(gemChance)) {
     const totalWeight = GEM_DROPS.reduce((sum, g) => sum + g.weight, 0);
     let rng = Math.random() * totalWeight;
     for (const gem of GEM_DROPS) {
@@ -165,15 +171,30 @@ function processAction(skillId: SkillId, actionId: string): ActionResult | null 
 }
 
 function getActionInterval(skillId: SkillId, actionId: string): number {
+  let base: number;
   switch (skillId) {
-    case 'woodcutting': return WOODCUTTING_TREES_MAP[actionId]?.interval ?? 3000;
-    case 'mining':      return MINING_ROCKS_MAP[actionId]?.interval ?? 3000;
-    case 'fishing':     return FISHING_SPOTS_MAP[actionId]?.interval ?? 7000;
-    case 'cooking':     return COOKING_RECIPES_MAP[actionId]?.interval ?? 3000;
-    case 'smithing':    return SMITHING_MAP[actionId]?.interval ?? 3000;
-    case 'firemaking':  return FIREMAKING_MAP[actionId]?.interval ?? 3000;
-    default: return 3000;
+    case 'woodcutting': base = WOODCUTTING_TREES_MAP[actionId]?.interval ?? 3000; break;
+    case 'mining':      base = MINING_ROCKS_MAP[actionId]?.interval ?? 3000; break;
+    case 'fishing':     base = FISHING_SPOTS_MAP[actionId]?.interval ?? 7000; break;
+    case 'cooking':     base = COOKING_RECIPES_MAP[actionId]?.interval ?? 3000; break;
+    case 'smithing':    base = SMITHING_MAP[actionId]?.interval ?? 3000; break;
+    case 'firemaking':  base = FIREMAKING_MAP[actionId]?.interval ?? 3000; break;
+    default: base = 3000;
   }
+  // «Рейты игры»: скорость действий. >1 — быстрее, 1 — как было.
+  const speed = getAdminRates().actionSpeedMultiplier;
+  if (speed <= 0) return base;
+  return Math.max(100, Math.round(base / speed));
+}
+
+type AdminGatheringToggle = Exclude<AdminSkillToggle, 'combat'>;
+
+/** Навыки, доступные в тумблерах админки. Для прочих — всегда включён. */
+function isAdminSkill(skillId: SkillId): skillId is AdminGatheringToggle {
+  return (
+    skillId === 'woodcutting' || skillId === 'mining' || skillId === 'fishing' ||
+    skillId === 'cooking' || skillId === 'smithing' || skillId === 'firemaking'
+  );
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -194,6 +215,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
   clearOfflineData: () => set({ offlineData: null }),
 
   startSkillAction: (skillId, actionId) => {
+    // Админ может временно отключить навык («Настройки игры» → доступность).
+    if (isAdminSkill(skillId) && !isSkillEnabledForAdmin(skillId)) {
+      useNotificationsStore.getState().notifyInfo('Этот навык отключён в настройках игры.');
+      return false;
+    }
+
     // Guests may only train woodcutting and fishing; other skills and combat
     // are locked until the player registers and signs in.
     if (useAuthStore.getState().isGuest && !isSkillAllowedForGuest(skillId)) {
@@ -233,6 +260,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const state = get();
     if (!state.isRunning || state.isPaused) return;
     if (!state.activeSkill || !state.activeActionId) return;
+
+    // Если админ выключил навык прямо во время работы — останавливаем.
+    if (isAdminSkill(state.activeSkill) && !isSkillEnabledForAdmin(state.activeSkill)) {
+      set({ isRunning: false, actionProgress: 0 });
+      useNotificationsStore.getState().notifyInfo('Этот навык отключён в настройках игры.');
+      return;
+    }
 
     // Update progress bar
     const elapsed = now - state.actionStartTime;
@@ -275,19 +309,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
       notifs.notifyInfo('⚠️ Inventory full! Some items were lost.');
     }
 
+    // «Рейты игры»: множители XP и мастерства.
+    const rates = getAdminRates();
+    const effectiveXp = Math.max(0, Math.round(result.xpGained * rates.xpMultiplier));
+    const effectiveMasteryXp = Math.max(0, Math.round(result.masteryXpGained * rates.masteryXpMultiplier));
+
     // Add XP
-    if (result.xpGained > 0) {
-      const { leveledUp, newLevel } = usePlayerStore.getState().addXp(state.activeSkill, result.xpGained);
+    if (effectiveXp > 0) {
+      const { leveledUp, newLevel } = usePlayerStore.getState().addXp(state.activeSkill, effectiveXp);
       if (leveledUp) {
         notifs.notifyLevelUp(state.activeSkill, newLevel);
       }
     }
 
     // Add mastery XP
-    if (result.masteryXpGained > 0) {
+    if (effectiveMasteryXp > 0) {
       const playerStore = usePlayerStore.getState();
       const oldMastery = playerStore.getMasteryLevel(state.activeSkill, state.activeActionId);
-      playerStore.addMasteryXp(state.activeSkill, state.activeActionId, result.masteryXpGained);
+      playerStore.addMasteryXp(state.activeSkill, state.activeActionId, effectiveMasteryXp);
       const newMastery = playerStore.getMasteryLevel(state.activeSkill, state.activeActionId);
       if (newMastery > oldMastery) {
         notifs.notifyMasteryLevelUp(state.activeSkill, state.activeActionId, newMastery);
@@ -296,7 +335,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     // Update XP tracker
     const xpGainedThisSession = { ...state.xpGainedThisSession };
-    xpGainedThisSession[state.activeSkill] = (xpGainedThisSession[state.activeSkill] ?? 0) + result.xpGained;
+    xpGainedThisSession[state.activeSkill] = (xpGainedThisSession[state.activeSkill] ?? 0) + effectiveXp;
 
     // Schedule next action
     set({

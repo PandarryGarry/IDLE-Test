@@ -28,7 +28,7 @@ import { SmithingPage } from '@/features/professions/SmithingPage';
 import { FiremakingPage } from '@/features/professions/FiremakingPage';
 import { CombatPage } from '@/features/combat/CombatPage';
 import { InventoryPage } from '@/features/bank/InventoryPage';
-import { AdminItemsPage } from '@/features/admin/AdminItemsPage';
+import { AdminPanelPage } from '@/features/admin/AdminPanelPage';
 import { SettingsPage } from '@/features/system/SettingsPage';
 import { HeroHubPage } from '@/features/hero/HeroHubPage';
 import { AuthPage } from '@/features/auth/AuthPage';
@@ -45,6 +45,7 @@ import {
 import { readLocalRulesAccepted, RULES_VERSION } from '@/data/rules';
 import { isGuestBlockedPath } from '@/lib/guestMode';
 import { resolveLoggedInPath } from '@/lib/accountGate';
+import { isQaMockEnabled } from '@/lib/qaMock';
 
 function NotFound() {
   return (
@@ -87,6 +88,9 @@ function Router() {
   // иначе прямой заход на /admin (обновление/перенаправление извне) уводил бы
   // в «возвращение в игру» (сначала выбор персонажа, потом дашборд).
   const isAdminPath = pathname === '/admin' || pathname.startsWith('/admin/');
+  // Доступ только для роли admin (в QA-моке/превью без облака роль берём как
+  // «админ», чтобы локально можно было проверять панель).
+  const isAdminUser = profile?.role === 'admin' || (isQaMockEnabled() && Boolean(user));
 
   useEffect(() => {
     if (user && loadedUserId !== user.id) {
@@ -129,6 +133,9 @@ function Router() {
   if (hasUser && loadedUserId !== user?.id) {
     return <AuthPage />;
   }
+
+  // Админка — только для админов (и QA-превью). Гостям/обычным игрокам — домой.
+  if (isAdminPath && !isAdminUser) return <Redirect to="/" />;
 
   // ─── Онбординг / выбор персонажа (только для аккаунтов) ───────────
   if (!isGuest) {
@@ -212,8 +219,9 @@ function Router() {
             <Route path="/combat" component={CombatPage} />
             <Route path="/hero" component={HeroHubPage} />
             <Route path="/inventory" component={InventoryPage} />
-            <Route path="/admin" component={AdminItemsPage} />
-            <Route path="/admin/items" component={AdminItemsPage} />
+            <Route path="/admin" component={AdminPanelPage} />
+            <Route path="/admin/items" component={AdminPanelPage} />
+            <Route path="/admin/settings" component={AdminPanelPage} />
             <Route path="/bank">
               <Redirect to="/inventory" />
             </Route>
