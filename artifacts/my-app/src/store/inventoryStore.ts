@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { BankSlot as InventorySlot } from '@/data/types';
-import { getItem } from '@/domain/items/items';
+import { getItem } from '@/domain/items';
 import { useAuthStore } from '@/store/authStore';
 
 const DEFAULT_MAX_SLOTS = 24;
@@ -101,7 +101,7 @@ export const useInventoryStore = create<InventoryStore>((set, get) => ({
             return ['weapon', 'helm', 'platebody', 'platelegs', 'boots', 'gloves',
                     'amulet', 'ring', 'bracelet', 'belt', 'shield', 'cape', 'quiver', 'passive'].includes(category);
           case 'resources':
-            return ['ore', 'log', 'raw_fish', 'bar', 'gem', 'herb', 'seed'].includes(category);
+            return ['ore', 'log', 'raw_fish', 'bar', 'gem', 'herb', 'seed', 'mineral', 'foraging'].includes(category);
           case 'food':
             return ['food', 'cooked_fish', 'potion'].includes(category);
           case 'misc':

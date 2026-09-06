@@ -12,7 +12,7 @@ import { useNotificationsStore } from '@/store/notificationsStore';
 import { useAuthStore } from '@/store/authStore';
 import { isSkillAllowedForGuest, GUEST_NOTICE } from '@/lib/guestMode';
 import { calcBurnChance, calcXpPerHour } from '@/core/formulas';
-import { getItem } from '@/domain/items/items';
+import { getItem } from '@/domain/items';
 import { chance, randomRange } from '@/lib/utils';
 
 export interface ActionResult {

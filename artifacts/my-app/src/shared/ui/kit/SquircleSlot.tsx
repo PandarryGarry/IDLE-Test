@@ -1,5 +1,5 @@
 import React from 'react';
-import { getItem } from '@/domain/items/items';
+import { getItem } from '@/domain/items';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { EquipSlotSilhouette } from '@/shared/icons/EquipSlotIcons';
 import { getItemTier } from '@/components/modals/UniversalInfoModal';

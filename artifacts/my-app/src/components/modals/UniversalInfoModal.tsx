@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { getItem } from '@/domain/items/items';
+import { getItem } from '@/domain/items';
 import type { Item, EquipSlot } from '@/data/types';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { usePlayerStore } from '@/store/playerStore';
@@ -25,6 +25,9 @@ import {
 } from 'lucide-react';
 
 export function getItemTier(itemId: string, item?: Item): string {
+  // Тир — данное поле каталога (1..12). Ниже — эвристика только для легаси
+  // предметов без поля `tier` (исчезнет по мере переноса семейств в каталог).
+  if (item?.tier) return `T${item.tier}`;
   const id = itemId.toLowerCase();
   if (id.includes('dragon') || id.includes('redwood') || id.includes('whale') || id.includes('manta')) return 'T7';
   if (id.includes('runite') || id.includes('magic_logs') || id.includes('shark')) return 'T6';
@@ -77,6 +80,8 @@ const CATEGORY_NAMES: Record<string, string> = {
   ash: 'Зола',
   potion: 'Зелье',
   misc: 'Материал',
+  mineral: 'Минерал',
+  foraging: 'Сбор',
 };
 
 interface UniversalInfoModalProps {

@@ -16,11 +16,14 @@ export const CRAFTING_SKILLS: SkillId[] = ['firemaking', 'cooking', 'smithing', 
 export const OTHER_SKILLS: SkillId[] = ['farming', 'agility', 'summoning', 'astrology', 'township', 'thieving'];
 export const ALL_SKILL_IDS: SkillId[] = [...COMBAT_SKILLS, ...GATHERING_SKILLS, ...CRAFTING_SKILLS, ...OTHER_SKILLS];
 
+export type ItemTier = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+
 export type ItemCategory =
   | 'weapon' | 'helm' | 'platebody' | 'platelegs' | 'boots' | 'gloves'
   | 'amulet' | 'ring' | 'bracelet' | 'belt' | 'shield' | 'cape'
   | 'food' | 'herb' | 'seed' | 'bar' | 'ore' | 'log' | 'rune'
-  | 'potion' | 'raw_fish' | 'cooked_fish' | 'gem' | 'misc' | 'bone' | 'ash' | 'arrow' | 'tablet';
+  | 'potion' | 'raw_fish' | 'cooked_fish' | 'gem' | 'misc' | 'bone' | 'ash' | 'arrow' | 'tablet'
+  | 'mineral' | 'foraging';
 
 export type EquipSlot =
   | 'helm' | 'platebody' | 'platelegs' | 'boots' | 'gloves'
@@ -53,6 +56,18 @@ export interface Item {
   icon?: string; // emoji fallback
   /** Двуручное: правая рука нормально, левая — то же оружие тусклое. */
   twoHanded?: boolean;
+  /**
+   * Тир — качество/«уровень» предмета, 1..12 (данное поле, не вычисление).
+   * У легаси-предметов отсутствует (тир определяется по id) — по мере переноса
+   * семейств в каталог тир становится обязательным (`CatalogItem`).
+   */
+  tier?: ItemTier;
+  /**
+   * Иконка предмета в `public/assets/icons` — путь БЕЗ расширения и без
+   * `assets/icons` (например `weapons/sword_1h/t02`). В `<img>` отдаётся
+   * только через `iconUrl()`, никогда сырым `.png`.
+   */
+  iconPath?: string;
 }
 
 export interface SkillState {
@@ -85,6 +100,20 @@ export interface MiningRock extends SkillAction {
 export interface FishingSpot extends SkillAction {
   fishId: string;
   junkItems?: string[];
+}
+
+/** Одна находка в «Сборе»: предмет + вес + количество. */
+export interface ForagingDrop {
+  itemId: string;
+  weight: number; // относительный вес в таблице находок
+  quantity: [number, number]; // [min, max] за одно действие
+}
+
+/** Действие «Сбора»: персонаж прочёсывает участок и находит случайный лут. */
+export interface ForagingAction extends SkillAction {
+  drops: ForagingDrop[];
+  /** Представительный предмет для карточки действия и оффлайн-добычи. */
+  dropItemId: string;
 }
 
 export interface CookingRecipe extends SkillAction {

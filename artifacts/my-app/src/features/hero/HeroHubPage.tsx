@@ -34,7 +34,7 @@ import {
   SYNERGY_ICON,
 } from '@/domain/attributes/attributeIcons';
 import { SYNERGIES, type SynergyDef, type SynergyId } from '@/domain/attributes/synergies';
-import { getItem } from '@/domain/items/items';
+import { getItem } from '@/domain/items';
 import { formatNumber } from '@/lib/utils';
 import type { EquipSlot, Equipment, Item } from '@/data/types';
 import { getItemVisual } from '@/shared/icons/itemIcons';
