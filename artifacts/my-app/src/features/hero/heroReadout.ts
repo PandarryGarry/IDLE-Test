@@ -19,16 +19,9 @@ export const PATH_PLAQUE_SUBSTATS: readonly BranchId[] = [
   'health', 'strike', 'armor', 'evasion', 'luck',
 ];
 
-/** Под дощечками — остальные 7 из 12. */
-export const PATH_REST_SUBSTATS: readonly BranchId[] = [
-  'will', 'onslaught', 'destruction', 'tempo', 'reaction', 'resourcefulness', 'intuition',
-];
-
-/** Те же 7, но пачками столпа — столп как разделитель на листе. */
-export const PATH_REST_BY_PILLAR: readonly { pillar: PillarId; stats: readonly BranchId[] }[] =
-  PILLAR_IDS
-    .map(pillar => ({
-      pillar,
-      stats: SUBSTATS_BY_PILLAR[pillar].filter(id => PATH_REST_SUBSTATS.includes(id)),
-    }))
-    .filter(group => group.stats.length > 0);
+/** Все 12 тела, пачками столпа — столп как разделитель под дощечками. */
+export const PATH_SHEET_BY_PILLAR: readonly { pillar: PillarId; stats: readonly BranchId[] }[] =
+  PILLAR_IDS.map(pillar => ({
+    pillar,
+    stats: SUBSTATS_BY_PILLAR[pillar],
+  }));

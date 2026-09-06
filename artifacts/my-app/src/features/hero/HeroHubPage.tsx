@@ -55,7 +55,7 @@ import { NODE_RANK_CAP } from '@/data/balance/pillars';
 import { xpToNextLevel } from '@/data/balance/xpRates';
 import { commitGearSets, commitHeroAttributes } from '@/lib/heroPersist';
 import { HeroBoard } from '@/features/hero/HeroBoard';
-import { CRIT_CHANCE_STUB, PATH_REST_BY_PILLAR, formatStrikeRange } from '@/features/hero/heroReadout';
+import { CRIT_CHANCE_STUB, PATH_SHEET_BY_PILLAR, formatStrikeRange } from '@/features/hero/heroReadout';
 import { HeroSettingsModal } from '@/features/hero/HeroSettingsModal';
 
 type HubModule = 'body' | 'gear' | 'synergies' | 'path';
@@ -1055,8 +1055,8 @@ function PathModule({
           </div>
         ))}
       </div>
-      <div className="hero-path-more" aria-label="Остальные характеристики по столпам">
-        {PATH_REST_BY_PILLAR.map(group => (
+      <div className="hero-path-more" aria-label="Характеристики по столпам">
+        {PATH_SHEET_BY_PILLAR.map(group => (
           <section
             key={group.pillar}
             className="hero-path-pillar"
@@ -1065,11 +1065,12 @@ function PathModule({
             <header className="hero-path-pillar__head">
               <img src={PILLAR_ICON[group.pillar]} alt="" decoding="async" />
               <span>{PILLARS[group.pillar].nameRu}</span>
+              <b>ур. {Math.round(snapshot.finalPillars[group.pillar])}</b>
             </header>
             {group.stats.map(id => (
               <div key={id} className="hero-path-more__row">
                 <span>{SUBSTATS[id].nameRu}</span>
-                <b>{formatSubstat(d[id])}</b>
+                <b>{id === 'strike' ? formatStrikeRange(snapshot.substats.strike) : formatSubstat(d[id])}</b>
               </div>
             ))}
           </section>

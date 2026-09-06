@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import {
-  GAvatar, GButton, GCard, GInfoRow, GInput, GModal,
+  GAvatar, GCard, GInfoRow, GInput, GModal,
 } from '@/shared/ui/gameUI';
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
@@ -156,40 +156,32 @@ export function HeroSettingsModal({
                 </div>
               </div>
               <div className="hero-settings__grid">
-                <GButton size="sm" variant="secondary" onClick={openNickname}>Сменить ник</GButton>
-                <GButton size="sm" variant="secondary" onClick={openAvatar}>Сменить аватар</GButton>
+                <button type="button" className="hero-settings__btn" onClick={openNickname}>Сменить ник</button>
+                <button type="button" className="hero-settings__btn" onClick={openAvatar}>Сменить аватар</button>
+                <button type="button" className="hero-settings__btn" onClick={() => { close(); navigate('/select-character'); }}>
+                  Сменить героя
+                </button>
+                <button type="button" className="hero-settings__btn hero-settings__btn--danger" onClick={() => { setError(null); setView('delete'); }}>
+                  Удалить героя
+                </button>
               </div>
               <p className="hero-settings__hint">
                 {!canEditNicknameFree && !canEditAvatarFree
                   ? `Лимит бесплатной смены исчерпан. Далее — ${AVATAR_COST_LABEL}.`
                   : `Бесплатно: ник ${canEditNicknameFree ? 'ещё можно' : 'уже использован'} · аватар ${canEditAvatarFree ? 'ещё можно' : 'уже использован'}.`}
               </p>
-              <div className="hero-settings__grid">
-                <GButton size="sm" variant="secondary" onClick={() => { close(); navigate('/select-character'); }}>
-                  Сменить героя
-                </GButton>
-                <GButton size="sm" variant="danger" onClick={() => { setError(null); setView('delete'); }}>
-                  Удалить героя
-                </GButton>
-              </div>
               <div className="hero-settings__rule" />
             </>
           )}
           <GInfoRow label="Бесплатных сбросов" value={`${left} / ${FREE_RESPEC_LIMIT}`} />
-          <GButton size="sm" fullWidth disabled={!canPillars} onClick={onRespecPillars}>
-            {left < 1
-              ? 'Столпы — за золото'
-              : spentP === 0
-                ? 'Столпы: сбрасывать нечего'
-                : 'Сбросить очки столпов'}
-          </GButton>
-          <GButton size="sm" fullWidth variant="secondary" disabled={!canBranches} onClick={onRespecBranches}>
-            {left < 1
-              ? 'Пассивки — за золото'
-              : spentB === 0
-                ? 'Пассивки: сбрасывать нечего'
-                : 'Сбросить очки пассивок'}
-          </GButton>
+          <div className="hero-settings__grid">
+            <button type="button" className="hero-settings__btn" disabled={!canPillars} onClick={onRespecPillars}>
+              {left < 1 ? 'Столпы — золото' : spentP === 0 ? 'Столпы: пусто' : 'Сброс столпов'}
+            </button>
+            <button type="button" className="hero-settings__btn" disabled={!canBranches} onClick={onRespecBranches}>
+              {left < 1 ? 'Пассивки — золото' : spentB === 0 ? 'Пассивки: пусто' : 'Сброс пассивок'}
+            </button>
+          </div>
           <p className="hero-settings__hint">Дальше сброс — за золото. Цена не назначена.</p>
         </div>
       )}
@@ -218,10 +210,10 @@ export function HeroSettingsModal({
             </>
           )}
           <div className="hero-settings__grid">
-            <GButton variant="secondary" fullWidth onClick={back}>Назад</GButton>
-            <GButton variant="primary" fullWidth disabled={!canEditNicknameFree || busy} onClick={() => void saveNickname()}>
+            <button type="button" className="hero-settings__btn" onClick={back}>Назад</button>
+            <button type="button" className="hero-settings__btn hero-settings__btn--gold" disabled={!canEditNicknameFree || busy} onClick={() => void saveNickname()}>
               {busy ? '...' : 'Сохранить'}
-            </GButton>
+            </button>
           </div>
         </div>
       )}
@@ -253,10 +245,10 @@ export function HeroSettingsModal({
           </div>
           {error && <p className="hero-settings__error">{error}</p>}
           <div className="hero-settings__grid">
-            <GButton variant="secondary" fullWidth onClick={back}>Назад</GButton>
-            <GButton variant="primary" fullWidth disabled={!canEditAvatarFree || busy} onClick={() => void saveAvatar()}>
+            <button type="button" className="hero-settings__btn" onClick={back}>Назад</button>
+            <button type="button" className="hero-settings__btn hero-settings__btn--gold" disabled={!canEditAvatarFree || busy} onClick={() => void saveAvatar()}>
               {busy ? '...' : 'Сохранить'}
-            </GButton>
+            </button>
           </div>
         </div>
       )}
@@ -269,10 +261,10 @@ export function HeroSettingsModal({
           </p>
           {error && <p className="hero-settings__error">{error}</p>}
           <div className="hero-settings__grid">
-            <GButton variant="secondary" fullWidth onClick={back}>Отмена</GButton>
-            <GButton variant="danger" fullWidth disabled={busy} onClick={() => void confirmDelete()}>
-              {busy ? '...' : 'Удалить навсегда'}
-            </GButton>
+            <button type="button" className="hero-settings__btn" onClick={back}>Отмена</button>
+            <button type="button" className="hero-settings__btn hero-settings__btn--danger" disabled={busy} onClick={() => void confirmDelete()}>
+              {busy ? '...' : 'Удалить'}
+            </button>
           </div>
         </div>
       )}
