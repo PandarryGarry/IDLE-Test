@@ -47,6 +47,7 @@ import {
 import { HERO_LEVEL_CAP } from '../../data/balance/substats.ts';
 import { xpToNextLevel } from '../../data/balance/xpRates.ts';
 import { PROFESSION_FEEDS } from '../../data/balance/professions.ts';
+import { getProfessionFeedOverrides } from '../../store/adminConfigStore.ts';
 import {
   REPUTATION_MAX,
   REPUTATION_MIN,
@@ -263,10 +264,24 @@ export function computeSubstatDisplays(substats: BranchRanks): Record<BranchId, 
   return out;
 }
 
-function professionBonusStub(_levels: ProfessionLevels | undefined): PillarRanks {
+/**
+ * Вклад профессии в персонажа (PROFESSION_FEEDS + админ-overrides).
+ *
+ * Дефолтные записи имеют percentCapStub = 0, поэтому в 5A бонус не влияет.
+ * Админка может включить магистраль, задав percentPerLevel/percentCap —
+ * тогда с уровнями профессии столп героя начинает расти.
+ */
+function professionBonusStub(levels: ProfessionLevels | undefined): PillarRanks {
   const bonus = emptyPillarRanks();
-  for (const _feed of PROFESSION_FEEDS) {
-    // percentCapStub = 0 — не выдумываем %.
+  const overrides = getProfessionFeedOverrides();
+  for (const feed of PROFESSION_FEEDS) {
+    const override = overrides[feed.skillId];
+    const lvl = Math.max(0, levels?.[feed.skillId] ?? 0);
+    const pillar = override?.pillar ?? feed.pillar;
+    const cap = override?.percentCap ?? feed.percentCap ?? feed.percentCapStub;
+    const perLevel = override?.percentPerLevel ?? feed.percentPerLevel ?? 0;
+    const pct = Math.min(Math.max(0, cap), Math.max(0, lvl) * Math.max(0, perLevel));
+    bonus[pillar] += pct;
   }
   return bonus;
 }

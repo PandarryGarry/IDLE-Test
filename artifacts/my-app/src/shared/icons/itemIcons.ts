@@ -65,15 +65,24 @@ export const MISC_ICONS: Record<string, string> = {
   gold_coins: '🪙',
 };
 
-import { getItem } from '@/domain/items/items';
+import { getItem } from '@/domain/items';
+import { iconUrl } from '@/lib/assetUrl';
 import { EQUIP_SLOT_ICON } from '@/domain/attributes/attributeIcons';
 
 export function getItemVisual(itemId: string): { type: 'image' | 'emoji'; value: string } {
+  const item = getItem(itemId);
+
+  // 1. Своя картинка предмета (данные → iconUrl → WebP).
+  if (item?.iconPath) {
+    return { type: 'image', value: iconUrl(item.iconPath) };
+  }
+
+  // 2. Точечное переопределение реестром.
   if (ITEM_IMAGE_URLS[itemId]) {
     return { type: 'image', value: ITEM_IMAGE_URLS[itemId] };
   }
 
-  const item = getItem(itemId);
+  // 3. Снаряжение без своей картинки — силуэт слота.
   if (item?.equipSlot && EQUIP_SLOT_ICON[item.equipSlot]) {
     return { type: 'image', value: EQUIP_SLOT_ICON[item.equipSlot] };
   }

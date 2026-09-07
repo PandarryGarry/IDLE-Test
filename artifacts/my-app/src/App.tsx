@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Route, Switch, Router as WouterRouter, Redirect, useLocation } from 'wouter';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -23,11 +23,13 @@ import { DashboardPage } from '@/features/system/DashboardPage';
 import { WoodcuttingPage } from '@/features/professions/WoodcuttingPage';
 import { MiningPage } from '@/features/professions/MiningPage';
 import { FishingPage } from '@/features/professions/FishingPage';
+import { ForagingPage } from '@/features/professions/ForagingPage';
 import { CookingPage } from '@/features/professions/CookingPage';
 import { SmithingPage } from '@/features/professions/SmithingPage';
 import { FiremakingPage } from '@/features/professions/FiremakingPage';
 import { CombatPage } from '@/features/combat/CombatPage';
 import { InventoryPage } from '@/features/bank/InventoryPage';
+import { AdminPanelPage } from '@/features/admin/AdminPanelPage';
 import { SettingsPage } from '@/features/system/SettingsPage';
 import { HeroHubPage } from '@/features/hero/HeroHubPage';
 import { AuthPage } from '@/features/auth/AuthPage';
@@ -44,6 +46,7 @@ import {
 import { readLocalRulesAccepted, RULES_VERSION } from '@/data/rules';
 import { isGuestBlockedPath } from '@/lib/guestMode';
 import { resolveLoggedInPath } from '@/lib/accountGate';
+import { isQaMockEnabled } from '@/lib/qaMock';
 
 function NotFound() {
   return (
@@ -82,6 +85,13 @@ function Router() {
   const isAuthPath = pathname === '/auth' || pathname === '/login' || pathname === '/register';
   const isOnboardingPath =
     pathname === '/rules' || pathname === '/create-character' || pathname === '/select-character';
+  // Админ-панель — служебный раздел. Она не должна требовать выбранного героя:
+  // иначе прямой заход на /admin (обновление/перенаправление извне) уводил бы
+  // в «возвращение в игру» (сначала выбор персонажа, потом дашборд).
+  const isAdminPath = pathname === '/admin' || pathname.startsWith('/admin/');
+  // Доступ только для роли admin (в QA-моке/превью без облака роль берём как
+  // «админ», чтобы локально можно было проверять панель).
+  const isAdminUser = profile?.role === 'admin' || (isQaMockEnabled() && Boolean(user));
 
   useEffect(() => {
     if (user && loadedUserId !== user.id) {
@@ -125,6 +135,9 @@ function Router() {
     return <AuthPage />;
   }
 
+  // Админка — только для админов (и QA-превью). Гостям/обычным игрокам — домой.
+  if (isAdminPath && !isAdminUser) return <Redirect to="/" />;
+
   // ─── Онбординг / выбор персонажа (только для аккаунтов) ───────────
   if (!isGuest) {
     const { acceptedVersion: localRules } = readLocalRulesAccepted(user?.id);
@@ -150,10 +163,13 @@ function Router() {
     }
 
     // Игровой шелл доступен только после правил + выбранного персонажа.
-    if (!rulesAccepted) return <Redirect to="/rules" />;
-    if (!hasAny) return <Redirect to="/create-character" />;
-    // always_select: при логине (без активного персонажа) показываем выбор.
-    if (!activeCharacter) return <Redirect to="/select-character" />;
+    // Админ-панель — исключение: она нужна и без героя (для сверки каталога).
+    if (!isAdminPath) {
+      if (!rulesAccepted) return <Redirect to="/rules" />;
+      if (!hasAny) return <Redirect to="/create-character" />;
+      // always_select: при логине (без активного персонажа) показываем выбор.
+      if (!activeCharacter) return <Redirect to="/select-character" />;
+    }
   }
 
   // Guests can only open the limited game shell.
@@ -198,12 +214,17 @@ function Router() {
             <Route path="/woodcutting" component={WoodcuttingPage} />
             <Route path="/mining" component={MiningPage} />
             <Route path="/fishing" component={FishingPage} />
+            <Route path="/foraging" component={ForagingPage} />
             <Route path="/cooking" component={CookingPage} />
             <Route path="/smithing" component={SmithingPage} />
             <Route path="/firemaking" component={FiremakingPage} />
             <Route path="/combat" component={CombatPage} />
             <Route path="/hero" component={HeroHubPage} />
             <Route path="/inventory" component={InventoryPage} />
+            <Route path="/admin" component={AdminPanelPage} />
+            <Route path="/admin/items" component={AdminPanelPage} />
+            <Route path="/admin/professions" component={AdminPanelPage} />
+            <Route path="/admin/settings" component={AdminPanelPage} />
             <Route path="/bank">
               <Redirect to="/inventory" />
             </Route>
@@ -241,8 +262,14 @@ function App() {
   const activeCharacter = useCharacterStore(s => s.activeCharacter);
   const loadedUserId = useCharacterStore(s => s.loadedUserId);
   const loadCharacters = useCharacterStore(s => s.loadCharacters);
-  const bootAvatarIds = useCharacterStore(s =>
-    s.characters.filter(c => !c.isDeleted).map(c => c.avatarId),
+  // Селектор возвращает стабильную ссылку `s.characters`, а производный
+  // массив считаем через useMemo. Раньше filter().map() жил прямо в
+  // селекторе Zustand и каждый рендер создавал новый массив — React 19
+  // считал это вечно меняющимся snapshot и падал до показа игры.
+  const characters = useCharacterStore(s => s.characters);
+  const bootAvatarIds = useMemo(
+    () => characters.filter(c => !c.isDeleted).map(c => c.avatarId),
+    [characters],
   );
 
   // Вывеска / акт 0 держат кадр, пока сессия не восстановится и

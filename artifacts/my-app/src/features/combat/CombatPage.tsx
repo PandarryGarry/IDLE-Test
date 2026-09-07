@@ -5,7 +5,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { COMBAT_AREAS, MONSTERS_MAP } from '@/domain/combat/monsters';
 import { ItemIcon } from '@/features/bank/ItemIcon';
 import { useInventoryStore } from '@/store/inventoryStore';
-import { getItem } from '@/domain/items/items';
+import { getItem } from '@/domain/items';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { EquipSlot } from '@/data/types';
 import { useTranslation } from '@/hooks/useTranslation';

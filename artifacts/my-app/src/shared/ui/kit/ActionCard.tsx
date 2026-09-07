@@ -1,5 +1,5 @@
 import React from 'react';
-import { getItem } from '@/domain/items/items';
+import { getItem } from '@/domain/items';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { getItemTier } from '@/components/modals/UniversalInfoModal';
 import { formatNumber, xpPerHour } from '@/lib/utils';
@@ -23,7 +23,7 @@ export function ActionCard({ action, isLocked, isActive, masteryXp = 0, outputIt
   const masteryLevel    = getLevelForXp(masteryXp);
   const masteryProgress = getLevelProgress(masteryXp);
 
-  const resolvedItemId = outputItemId || action.logId || action.oreId || action.fishId || action.cookedItemId || action.outputItemId;
+  const resolvedItemId = outputItemId || action.logId || action.oreId || action.fishId || action.cookedItemId || action.outputItemId || action.dropItemId;
   const outputItem = resolvedItemId ? getItem(resolvedItemId) : undefined;
   const visual     = resolvedItemId ? getItemVisual(resolvedItemId) : null;
   const tier       = resolvedItemId && outputItem ? getItemTier(resolvedItemId, outputItem) : 'T1';

@@ -6,6 +6,7 @@ export const GUEST_ALLOWED_SKILLS: SkillId[] = ['woodcutting', 'fishing'];
 
 export const GUEST_BLOCKED_PATHS = [
   '/mining',
+  '/foraging',
   '/combat',
   '/cooking',
   '/smithing',

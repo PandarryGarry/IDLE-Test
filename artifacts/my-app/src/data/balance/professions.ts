@@ -10,6 +10,10 @@ export interface ProfessionFeed {
   branch: BranchId;
   /** Заглушка. Не показывать игроку как закон. */
   percentCapStub: 0;
+  /** % бонуса столпа за 1 уровень профессии. 0 = выключено. */
+  percentPerLevel?: number;
+  /** Потолок бонуса столпа в %. */
+  percentCap?: number;
 }
 
 export const PROFESSION_FEEDS: readonly ProfessionFeed[] = [
@@ -19,4 +23,5 @@ export const PROFESSION_FEEDS: readonly ProfessionFeed[] = [
   { skillId: 'cooking', pillar: 'instinct', branch: 'resourcefulness', percentCapStub: 0 },
   { skillId: 'smithing', pillar: 'might', branch: 'strike', percentCapStub: 0 },
   { skillId: 'firemaking', pillar: 'finesse', branch: 'reaction', percentCapStub: 0 },
+  { skillId: 'foraging', pillar: 'instinct', branch: 'resourcefulness', percentCapStub: 0 },
 ];
