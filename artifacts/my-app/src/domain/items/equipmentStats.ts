@@ -3,7 +3,7 @@
  * Только сложение того, что уже есть в предметах — формул здесь нет
  * (влияние экипа на столпы — отдельная задача по контракту Этапа 5).
  */
-import { getItem } from './items.ts';
+import { getItem } from './index.ts';
 import type { CombatStats, Equipment } from '../../data/types.ts';
 
 export type EquipStatKey = keyof CombatStats;

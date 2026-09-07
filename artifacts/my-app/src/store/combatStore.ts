@@ -7,7 +7,8 @@ import { useBankStore } from '@/store/bankStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { useAuthStore } from '@/store/authStore';
 import { GUEST_NOTICE } from '@/lib/guestMode';
-import { getItem } from '@/domain/items/items';
+import { getItem } from '@/domain/items';
+import { getAdminRates, isSkillEnabledForAdmin } from '@/store/adminConfigStore';
 
 export interface CombatLogEntry {
   id: string;
@@ -83,6 +84,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       return;
     }
 
+    // Админ может временно отключить бой.
+    if (!isSkillEnabledForAdmin('combat')) {
+      useNotificationsStore.getState().notifyInfo('Бой отключён в настройках игры.');
+      return;
+    }
+
     const area = AREAS_MAP[areaId];
     if (!area) return;
 
@@ -119,11 +126,19 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const state = get();
     if (!state.inCombat || !state.currentMonster) return;
 
+    // Если админ выключил бой прямо во время боя — выходим из боя.
+    if (!isSkillEnabledForAdmin('combat')) {
+      set({ inCombat: false, activeMonsterId: null, currentMonster: null, enemyHp: 0 });
+      useNotificationsStore.getState().notifyInfo('Бой отключён в настройках игры.');
+      return;
+    }
+
     let { playerHp, enemyHp, playerAttackTimer, enemyAttackTimer, combatLog, killCount, totalDamageDealt, totalDamageTaken } = state;
     const monster = state.currentMonster;
     const playerStore = usePlayerStore.getState();
     const bankStore = useBankStore.getState();
     const notifs = useNotificationsStore.getState();
+    const rates = getAdminRates();
     const logs: CombatLogEntry[] = [];
 
     // ── Player attack ─────────────────────────────────────────
@@ -152,9 +167,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         logs.push(newLog('player_attack', `You hit ${monster.name} for ${dmg}`, dmg));
 
         // Give XP (melee: attack/strength/defence each get 4 XP per point of damage)
-        const result = playerStore.addXp('attack', dmg * 4);
-        playerStore.addXp('strength', dmg * 4);
-        playerStore.addXp('hitpoints', dmg * 1.3);
+        const xpMult = rates.xpMultiplier;
+        const result = playerStore.addXp('attack', Math.round(dmg * 4 * xpMult));
+        playerStore.addXp('strength', Math.round(dmg * 4 * xpMult));
+        playerStore.addXp('hitpoints', Math.round(dmg * 1.3 * xpMult));
         if (result.leveledUp) notifs.notifyLevelUp('attack', result.newLevel);
       } else {
         logs.push(newLog('player_attack', `You missed ${monster.name}!`, 0));
@@ -168,13 +184,13 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
       // Slayer XP
       if (monster.slayerXp) {
-        const slayerResult = playerStore.addXp('slayer', monster.slayerXp);
+        const slayerResult = playerStore.addXp('slayer', Math.round(monster.slayerXp * rates.xpMultiplier));
         if (slayerResult.leveledUp) notifs.notifyLevelUp('slayer', slayerResult.newLevel);
       }
 
       // Auto-loot drops
       if (state.autoLoot) {
-        const drops = rollDrops(monster);
+        const drops = rollDrops(monster, Math.random, rates.dropRateMultiplier);
         for (const drop of drops) {
           bankStore.addItem(drop.itemId, drop.quantity);
           const item = getItem(drop.itemId);
@@ -183,10 +199,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         // Bones
         if (monster.bones) {
           bankStore.addItem(monster.bones, 1);
-          playerStore.addXp('prayer', monster.bones === 'dragon_bones' ? 72 : monster.bones === 'big_bones' ? 15 : 4.5);
+          playerStore.addXp('prayer', Math.round((monster.bones === 'dragon_bones' ? 72 : monster.bones === 'big_bones' ? 15 : 4.5) * rates.xpMultiplier));
         }
         // GP
-        const gp = rollGp(monster.gpDrop);
+        const gp = rollGp(monster.gpDrop, Math.random, rates.goldMultiplier);
         if (gp > 0) bankStore.addGp(gp);
       }
 
@@ -217,7 +233,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         playerHp = Math.max(0, playerHp - dmg);
         totalDamageTaken += dmg;
         logs.push(newLog('enemy_attack', `${monster.name} hit you for ${dmg}`, dmg));
-        playerStore.addXp('defence', dmg * 1.3);
+        playerStore.addXp('defence', Math.round(dmg * 1.3 * rates.xpMultiplier));
 
         // Auto-eat check
         if (state.autoEat) {

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { SkillId, SkillState, Equipment, EquipSlot } from '@/data/types';
 import { EMPTY_EQUIPMENT, normalizeEquipment } from '@/data/types';
-import { getItem } from '@/domain/items/items';
+import { getItem } from '@/domain/items';
 import { getLevelForXp, getXpForLevel, XP_TABLE, MAX_LEVEL } from '@/core/xpTable';
 import { calcCombatLevel } from '@/core/formulas';
 import { useBankStore } from '@/store/bankStore';
@@ -23,7 +23,7 @@ function bankCanTakeAll(itemIds: string[]): boolean {
 const ALL_SKILL_IDS: SkillId[] = [
   'attack', 'strength', 'defence', 'hitpoints',
   'ranged', 'magic', 'prayer', 'slayer',
-  'woodcutting', 'fishing', 'firemaking', 'cooking',
+  'woodcutting', 'fishing', 'foraging', 'firemaking', 'cooking',
   'mining', 'smithing', 'thieving', 'fletching',
   'crafting', 'runecrafting', 'herblore', 'farming',
   'agility', 'summoning', 'astrology', 'township',

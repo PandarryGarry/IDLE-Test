@@ -36,6 +36,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
     { href: '/woodcutting', name: t('skill.woodcutting'), id: 'woodcutting' },
     { href: '/mining',      name: t('skill.mining'),      id: 'mining' },
     { href: '/fishing',     name: t('skill.fishing'),     id: 'fishing' },
+    { href: '/foraging',    name: t('skill.foraging'),    id: 'foraging' },
     { href: '/firemaking',  name: t('skill.firemaking'),  id: 'firemaking' },
     { href: '/cooking',     name: t('skill.cooking'),     id: 'cooking' },
     { href: '/smithing',    name: t('skill.smithing'),    id: 'smithing' },

@@ -6,13 +6,25 @@ import { FISHING_SPOTS_MAP } from '@/domain/professions/fishing';
 import { COOKING_RECIPES_MAP } from '@/domain/professions/cooking';
 import { SMITHING_MAP } from '@/domain/professions/smithing';
 import { FIREMAKING_MAP } from '@/domain/professions/firemaking';
+import {
+  FORAGING_ZONES_MAP,
+  rollForagingCycle,
+  foragingSpeedMultiplier,
+} from '@/domain/professions/foraging';
+import { useForagingStore } from '@/store/foragingStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useBankStore } from '@/store/bankStore';
+import { useCombatStore } from '@/store/combatStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { useAuthStore } from '@/store/authStore';
 import { isSkillAllowedForGuest, GUEST_NOTICE } from '@/lib/guestMode';
 import { calcBurnChance, calcXpPerHour } from '@/core/formulas';
-import { getItem } from '@/domain/items/items';
+import { getItem } from '@/domain/items';
+import {
+  getAdminRates,
+  isSkillEnabledForAdmin,
+  type AdminSkillToggle,
+} from '@/store/adminConfigStore';
 import { chance, randomRange } from '@/lib/utils';
 
 export interface ActionResult {
@@ -21,6 +33,8 @@ export interface ActionResult {
   masteryXpGained: number;
   bonusXp?: number;
   preserved?: boolean;
+  /** Встреча с мобом во время «Сбора» — запускает бой. */
+  encounter?: { areaId: string; monsterId: string; boss: boolean };
 }
 
 export interface OfflineReward {
@@ -88,8 +102,9 @@ function processMining(actionId: string): ActionResult | null {
   const playerLevel = usePlayerStore.getState().getSkillLevel('mining');
   if (playerLevel < rock.levelRequired) return null;
   const items: { itemId: string; quantity: number }[] = [{ itemId: rock.oreId, quantity: 1 }];
-  // Gem chance
-  if (rock.gemChance && chance(rock.gemChance)) {
+  // Gem chance (админ-множитель дропа действует и на самоцветы).
+  const gemChance = rock.gemChance ? Math.min(1, rock.gemChance * getAdminRates().dropRateMultiplier) : 0;
+  if (gemChance > 0 && chance(gemChance)) {
     const totalWeight = GEM_DROPS.reduce((sum, g) => sum + g.weight, 0);
     let rng = Math.random() * totalWeight;
     for (const gem of GEM_DROPS) {
@@ -106,6 +121,20 @@ function processFishing(actionId: string): ActionResult | null {
   const playerLevel = usePlayerStore.getState().getSkillLevel('fishing');
   if (playerLevel < spot.levelRequired) return null;
   return { items: [{ itemId: spot.fishId, quantity: 1 }], xpGained: spot.xp, masteryXpGained: spot.masteryXp ?? 3 };
+}
+
+function processForaging(actionId: string): ActionResult | null {
+  const zone = FORAGING_ZONES_MAP[actionId];
+  if (!zone) return null;
+  const playerLevel = usePlayerStore.getState().getSkillLevel('foraging');
+  if (playerLevel < zone.levelRequired) return null;
+  const result = rollForagingCycle(actionId, playerLevel);
+  return {
+    items: result.items,
+    xpGained: result.xp,
+    masteryXpGained: result.masteryXp,
+    encounter: result.encounter ?? undefined,
+  };
 }
 
 function processCooking(actionId: string): ActionResult | null {
@@ -157,6 +186,7 @@ function processAction(skillId: SkillId, actionId: string): ActionResult | null 
     case 'woodcutting': return processWoodcutting(actionId);
     case 'mining':      return processMining(actionId);
     case 'fishing':     return processFishing(actionId);
+    case 'foraging':    return processForaging(actionId);
     case 'cooking':     return processCooking(actionId);
     case 'smithing':    return processSmithing(actionId);
     case 'firemaking':  return processFiremaking(actionId);
@@ -165,15 +195,31 @@ function processAction(skillId: SkillId, actionId: string): ActionResult | null 
 }
 
 function getActionInterval(skillId: SkillId, actionId: string): number {
+  let base: number;
   switch (skillId) {
-    case 'woodcutting': return WOODCUTTING_TREES_MAP[actionId]?.interval ?? 3000;
-    case 'mining':      return MINING_ROCKS_MAP[actionId]?.interval ?? 3000;
-    case 'fishing':     return FISHING_SPOTS_MAP[actionId]?.interval ?? 7000;
-    case 'cooking':     return COOKING_RECIPES_MAP[actionId]?.interval ?? 3000;
-    case 'smithing':    return SMITHING_MAP[actionId]?.interval ?? 3000;
-    case 'firemaking':  return FIREMAKING_MAP[actionId]?.interval ?? 3000;
-    default: return 3000;
+    case 'woodcutting': base = WOODCUTTING_TREES_MAP[actionId]?.interval ?? 3000; break;
+    case 'mining':      base = MINING_ROCKS_MAP[actionId]?.interval ?? 3000; break;
+    case 'fishing':     base = FISHING_SPOTS_MAP[actionId]?.interval ?? 7000; break;
+    case 'foraging':    base = Math.round((FORAGING_ZONES_MAP[actionId]?.interval ?? 4000) / Math.max(0.01, foragingSpeedMultiplier(usePlayerStore.getState().getSkillLevel('foraging')))); break;
+    case 'cooking':     base = COOKING_RECIPES_MAP[actionId]?.interval ?? 3000; break;
+    case 'smithing':    base = SMITHING_MAP[actionId]?.interval ?? 3000; break;
+    case 'firemaking':  base = FIREMAKING_MAP[actionId]?.interval ?? 3000; break;
+    default: base = 3000;
   }
+  // «Рейты игры»: скорость действий. >1 — быстрее, 1 — как было.
+  const speed = getAdminRates().actionSpeedMultiplier;
+  if (speed <= 0) return base;
+  return Math.max(100, Math.round(base / speed));
+}
+
+type AdminGatheringToggle = Exclude<AdminSkillToggle, 'combat'>;
+
+/** Навыки, доступные в тумблерах админки. Для прочих — всегда включён. */
+function isAdminSkill(skillId: SkillId): skillId is AdminGatheringToggle {
+  return (
+    skillId === 'woodcutting' || skillId === 'mining' || skillId === 'fishing' || skillId === 'foraging' ||
+    skillId === 'cooking' || skillId === 'smithing' || skillId === 'firemaking'
+  );
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -194,6 +240,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
   clearOfflineData: () => set({ offlineData: null }),
 
   startSkillAction: (skillId, actionId) => {
+    // Админ может временно отключить навык («Настройки игры» → доступность).
+    if (isAdminSkill(skillId) && !isSkillEnabledForAdmin(skillId)) {
+      useNotificationsStore.getState().notifyInfo('Этот навык отключён в настройках игры.');
+      return false;
+    }
+
     // Guests may only train woodcutting and fishing; other skills and combat
     // are locked until the player registers and signs in.
     if (useAuthStore.getState().isGuest && !isSkillAllowedForGuest(skillId)) {
@@ -218,6 +270,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   stopAction: () => {
+    if (get().activeSkill === 'foraging') {
+      useForagingStore.setState({ activeZoneId: null });
+    }
     set({
       activeSkill: null,
       activeActionId: null,
@@ -233,6 +288,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const state = get();
     if (!state.isRunning || state.isPaused) return;
     if (!state.activeSkill || !state.activeActionId) return;
+
+    // Если админ выключил навык прямо во время работы — останавливаем.
+    if (isAdminSkill(state.activeSkill) && !isSkillEnabledForAdmin(state.activeSkill)) {
+      set({ isRunning: false, actionProgress: 0 });
+      useNotificationsStore.getState().notifyInfo('Этот навык отключён в настройках игры.');
+      return;
+    }
 
     // Update progress bar
     const elapsed = now - state.actionStartTime;
@@ -275,19 +337,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
       notifs.notifyInfo('⚠️ Inventory full! Some items were lost.');
     }
 
+    // «Рейты игры»: множители XP и мастерства.
+    const rates = getAdminRates();
+    const effectiveXp = Math.max(0, Math.round(result.xpGained * rates.xpMultiplier));
+    const effectiveMasteryXp = Math.max(0, Math.round(result.masteryXpGained * rates.masteryXpMultiplier));
+
     // Add XP
-    if (result.xpGained > 0) {
-      const { leveledUp, newLevel } = usePlayerStore.getState().addXp(state.activeSkill, result.xpGained);
+    if (effectiveXp > 0) {
+      const { leveledUp, newLevel } = usePlayerStore.getState().addXp(state.activeSkill, effectiveXp);
       if (leveledUp) {
         notifs.notifyLevelUp(state.activeSkill, newLevel);
       }
     }
 
     // Add mastery XP
-    if (result.masteryXpGained > 0) {
+    if (effectiveMasteryXp > 0) {
       const playerStore = usePlayerStore.getState();
       const oldMastery = playerStore.getMasteryLevel(state.activeSkill, state.activeActionId);
-      playerStore.addMasteryXp(state.activeSkill, state.activeActionId, result.masteryXpGained);
+      playerStore.addMasteryXp(state.activeSkill, state.activeActionId, effectiveMasteryXp);
       const newMastery = playerStore.getMasteryLevel(state.activeSkill, state.activeActionId);
       if (newMastery > oldMastery) {
         notifs.notifyMasteryLevelUp(state.activeSkill, state.activeActionId, newMastery);
@@ -296,7 +363,27 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     // Update XP tracker
     const xpGainedThisSession = { ...state.xpGainedThisSession };
-    xpGainedThisSession[state.activeSkill] = (xpGainedThisSession[state.activeSkill] ?? 0) + result.xpGained;
+    xpGainedThisSession[state.activeSkill] = (xpGainedThisSession[state.activeSkill] ?? 0) + effectiveXp;
+
+    // Лента находок «Сбора» для страницы профессии (только рендер-данные).
+    if (state.activeSkill === 'foraging' && state.activeActionId) {
+      useForagingStore.getState().pushCycle(state.activeActionId, result, effectiveXp);
+    }
+
+    // Встреча с мобом во время «Сбора»: добыча и XP уже засчитаны,
+    // выходим из добычи и передаём управление бою.
+    if (result.encounter && isSkillEnabledForAdmin('combat')) {
+      useForagingStore.setState({ activeZoneId: null });
+      useCombatStore.getState().startCombat(result.encounter.areaId, result.encounter.monsterId);
+      set({
+        activeSkill: null,
+        activeActionId: null,
+        actionProgress: 0,
+        isRunning: false,
+        xpGainedThisSession,
+      });
+      return;
+    }
 
     // Schedule next action
     set({

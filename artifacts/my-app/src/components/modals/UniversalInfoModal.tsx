@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { getItem } from '@/domain/items/items';
-import type { Item, EquipSlot } from '@/data/types';
+import { getItem } from '@/domain/items';
+import { AdminItemEditor } from '@/features/admin/AdminItemEditor';
+import type { Item } from '@/data/types';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useCombatStore } from '@/store/combatStore';
@@ -18,13 +19,15 @@ import {
   Sword, 
   Shield, 
   Zap, 
-  Sparkles, 
   Minus, 
   Plus, 
   Utensils 
 } from 'lucide-react';
 
 export function getItemTier(itemId: string, item?: Item): string {
+  // Тир — данное поле каталога (1..12). Ниже — эвристика только для легаси
+  // предметов без поля `tier` (исчезнет по мере переноса семейств в каталог).
+  if (item?.tier) return `T${item.tier}`;
   const id = itemId.toLowerCase();
   if (id.includes('dragon') || id.includes('redwood') || id.includes('whale') || id.includes('manta')) return 'T7';
   if (id.includes('runite') || id.includes('magic_logs') || id.includes('shark')) return 'T6';
@@ -77,16 +80,28 @@ const CATEGORY_NAMES: Record<string, string> = {
   ash: 'Зола',
   potion: 'Зелье',
   misc: 'Материал',
+  mineral: 'Минерал',
+  foraging: 'Сбор',
 };
 
 interface UniversalInfoModalProps {
   itemId: string | null;
   onClose: () => void;
+  /**
+   * Режим просмотра из админ-каталога: показываем название/описание/статы,
+   * но прячем игровые действия (запереть/надеть/съесть/продать).
+   */
+  readOnly?: boolean;
+  /** Админ-режим: карточка становится редактируемой (имя/описание/цена/статы/тир/…). */
+  adminEditable?: boolean;
 }
 
-export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps) {
+export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEditable = false }: UniversalInfoModalProps) {
   const { t } = useTranslation();
-  
+  const isReadOnly = readOnly;
+
+  const item = itemId ? getItem(itemId) : undefined;
+
   const slot = useInventoryStore(s => itemId ? s.getSlot(itemId) : undefined);
   const lockItem = useInventoryStore(s => s.lockItem);
   const sellItem = useInventoryStore(s => s.sellItem);
@@ -103,11 +118,9 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
 
   const [sellQty, setSellQty] = useState(1);
 
-  if (!itemId) return null;
-  const item = getItem(itemId);
-  if (!item) return null;
+  if (!itemId || !item) return null;
 
-  const quantity = slot?.quantity ?? 1;
+  const quantity = isReadOnly ? 1 : slot?.quantity ?? 1;
   const isLocked = slot?.locked ?? false;
   const tier = getItemTier(itemId, item);
   const rarityKey = getItemRarity(itemId, item.sellValue, item.equipSlot);
@@ -164,7 +177,7 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-sm sm:max-w-md bg-stone-900 border border-stone-800 rounded-3xl p-5 shadow-2xl z-10 space-y-4 animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-[360px] sm:max-w-[400px] bg-stone-900 border border-stone-800 rounded-3xl p-4 sm:p-5 shadow-2xl z-10 space-y-4 animate-in zoom-in-95 duration-200 max-h-[86vh] overflow-y-auto">
         
         {/* Header Bar */}
         <div className="flex items-center justify-between pb-2 border-b border-stone-800/80">
@@ -178,18 +191,20 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
           </div>
 
           <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => lockItem(itemId, !isLocked)}
-              className={`p-2 rounded-xl transition-all active:scale-95 ${
-                isLocked 
-                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]' 
-                  : 'text-stone-500 hover:text-stone-200 hover:bg-stone-800 border border-transparent'
-              }`}
-              title={isLocked ? 'Заперто от продажи' : 'Запереть предмет'}
-            >
-              {isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-            </button>
+            {!isReadOnly && (
+              <button
+                type="button"
+                onClick={() => lockItem(itemId, !isLocked)}
+                className={`p-2 rounded-xl transition-all active:scale-95 ${
+                  isLocked 
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]' 
+                    : 'text-stone-500 hover:text-stone-200 hover:bg-stone-800 border border-transparent'
+                }`}
+                title={isLocked ? 'Заперто от продажи' : 'Запереть предмет'}
+              >
+                {isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+              </button>
+            )}
 
             <button
               type="button"
@@ -297,7 +312,15 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
           {item.description ?? 'Классический предмет средневекового мира.'}
         </p>
 
+        {/* ── Админ-редактор предмета ─────────────────────────── */}
+        {adminEditable && (
+          <div style={{ borderTop: '1px solid #3a2b1a', paddingTop: 10 }}>
+            <AdminItemEditor itemId={itemId} />
+          </div>
+        )}
+
         {/* Action Controls Section */}
+        {!isReadOnly && (
         <div className="space-y-2 pt-2 border-t border-stone-800/80">
           
           {item.equipSlot && (
@@ -394,6 +417,20 @@ export function UniversalInfoModal({ itemId, onClose }: UniversalInfoModalProps)
           </button>
 
         </div>
+        )}
+
+        {/* Читаем из админки: нет игровых действий, только кнопка закрыть */}
+        {isReadOnly && (
+          <div className="space-y-2 pt-2 border-t border-stone-800/80">
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full py-2.5 rounded-2xl bg-stone-950 hover:bg-stone-800 text-stone-500 hover:text-stone-200 text-xs font-semibold transition-all active:scale-95"
+            >
+              Закрыть
+            </button>
+          </div>
+        )}
 
       </div>
     </div>

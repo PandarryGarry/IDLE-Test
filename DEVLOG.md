@@ -58,8 +58,15 @@
 **`main`:** Этапы 1–5B в коде (хаб, Пульт, Путь, XP-таблица, `ruleRu`,
 вывеска греет первый кадр). Replit ходит в живую БД. SQL не менялся.
 
-**Следующий чат:** привязать уже лежащие иконки предметов/экипа/UI
-через `iconUrl()`. Тики XP, бой и новые таблицы — не в том же заходе.
+**Текущая работа (НЕ смёржена):** Foraging v2 на ветке
+`arena/01a07841-idle-test` (`d73ba4f`, запушено). Дизайн —
+`artifacts/foraging_v2_design.md`. Готово: 5 зон, статы профессии,
+вкладка админки «Профессии», оффлайн-правила. Ждём теста владельца в Replit;
+мерж только по команде «мержи».
+
+**Следующий чат (после текущей задачи):** привязать уже лежащие
+иконки предметов/экипа/UI через `iconUrl()`. Тики XP, бой и новые таблицы
+— не в том же заходе.
 
 Канон чата: `NEXT_CHAT_HANDOFF.md`.
 
@@ -76,6 +83,62 @@
 ---
 
 ## 📜 ЖУРНАЛ СЕССИЙ (новые записи — СВЕРХУ)
+
+### Сессия 23 — 2026-09-07 — Foraging v2 «Сетка зон» (реализация, НЕ смёржено)
+
+**Ветка/PR:** `arena/01a07841-idle-test` → запушено (`d73ba4f`). **НЕ мержить** до
+слова владельца «мержи» (мерж закрывает доступ сессии).
+
+**Дизайн:** `artifacts/foraging_v2_design.md` — утверждён владельцем («Ок»).
+
+**Сделано (код):**
+- `src/domain/professions/foraging.ts` — новый 5-зонный «Сбор» (Лесные заросли → Тёмная
+  чаща → Пещера → Руины → Тайник): свои lootTable/rareTable/danger-лестница,
+  чистые `rollForagingCycle()` / `rollOfflineForaging()`, формулы от персонажа
+  (Темп/Находчивость/Удача/Интуиция), капы. Джекпота нет.
+- `src/domain/professions/professionStats.ts` — модель `ProfessionStatDef`
+  (tier early/master, unlockLevel, base/perLevel/cap/k) + 6 стат «Сбора»
+  (`forage_speed`, `forage_double_loot`, `forage_rare_find`; `forage_shop_discount`,
+  `forage_attention`, `forage_full_profession`). `forage_sell_bonus` удалён.
+- `src/store/professionStatsStore.ts` — эффективные статы: дефолты + админ-overrides +
+  уровень; `getProfessionStatValue()`, `useProfessionStatsStore`.
+- `src/store/foragingStore.ts` — сессия: activeZoneId, lootFeed (кап 30), sessionXp,
+  start/stop/pushCycle/clearLootFeed/reset.
+- `src/store/adminConfigStore.ts` — `professionStatOverrides`,
+  `professionFeedOverrides` (+actions/getters/export/import/reset).
+- `src/data/balance/professions.ts` — `PROFESSION_FEEDS` + `foraging → instinct/resourcefulness`.
+- `src/domain/attributes/characterAttributes.ts` — оживлён `professionBonus`
+  (дефолт 0 %; включается админ-override `percentPerLevel`/`percentCap`).
+- `src/core/offlineCalc.ts` — оффлайн «Сбора» через `rollOfflineForaging`
+  (только базовый предмет + XP, без мобов/редких/x2), с общими рейтами.
+- `src/features/professions/ForagingPage.tsx` — переписан render-only «Сетка зон»:
+  карточки зон, статы профессии, живая лента находок.
+- `src/features/admin/AdminProfessionsPanel.tsx` — новая вкладка **«Профессии»**
+  (`/admin/professions`): рейты профессий, доступность профессий, характеристики
+  профессий, «Профессия → персонаж». Цены продажи НЕ редактируются здесь.
+- `src/features/admin/AdminSettingsPanel.tsx` — приведено к «Экономика» +
+  «Доступность боя»; профессионные рейты/тумблеры перенесены в «Профессии».
+- `src/App.tsx` — зарегистрирован роут `/admin/professions` (был 404).
+- `src/core/skillRegistry.ts`, `src/components/GlobalActiveBar.tsx`,
+  `src/store/gameStore.ts` — переведены на новый API «Сбора» (старый
+  `FORAGING_ACTIONS_MAP`/`processForagingAction` удалён из использования).
+- Предметный каталог `src/domain/items/catalog/` (foraging: wood/fungi/bits/special)
+  + `getItem()`/`getItemVisual()` — фундамент дропа.
+
+**Проверки:**
+- `pnpm typecheck` — чисто.
+- `pnpm --filter @workspace/my-app build` — успешно.
+- `pnpm test:pillars` — 36/36.
+- Headless Chromium (канон `scripts/qa/setup-browser.mjs`) — `/foraging`,
+  `/admin/professions`, `/admin/settings`, `/admin` открываются; `pageerror: 0`,
+  `failed request: 0`, `console error/warn: 0`. Живой цикл: старт «Лесные заросли» →
+  прогресс, `+18 XP`, в ленту пришёл предмет, уведомление показалось.
+
+**Важно:** удалённая ветка уже содержала старый отклонённый «Сбор» (4 участка);
+новое дерево v2 оставлено через merge-коммит `-s ours` (история сохранена, дерево — v2).
+
+**Следующее:** ждать теста владельца в Replit на `arena/01a07841-idle-test`;
+правки по фидбеку — в ту же ветку. Не мержить без «мержи».
 
 ### Сессия 22 — 2026-09-06 — Тексты героя, вывеска, порядок в репо
 

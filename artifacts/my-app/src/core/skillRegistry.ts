@@ -5,6 +5,11 @@ import { FISHING_SPOTS_MAP } from '../domain/professions/fishing.ts';
 import { COOKING_RECIPES_MAP } from '../domain/professions/cooking.ts';
 import { SMITHING_MAP } from '../domain/professions/smithing.ts';
 import { FIREMAKING_MAP } from '../domain/professions/firemaking.ts';
+import {
+  FORAGING_ZONES_MAP,
+  rollForagingCycle,
+  foragingSpeedMultiplier,
+} from '../domain/professions/foraging.ts';
 import { usePlayerStore } from '../store/playerStore.ts';
 import { useBankStore } from '../store/bankStore.ts';
 import { calcBurnChance } from './formulas.ts';
@@ -16,6 +21,8 @@ export interface ActionResult {
   masteryXpGained: number;
   bonusXp?: number;
   preserved?: boolean;
+  /** Встреча с мобом во время «Сбора» (обрабатывается игровым циклом). */
+  encounter?: { areaId: string; monsterId: string; boss: boolean };
 }
 
 export interface SkillHandler {
@@ -92,6 +99,35 @@ export const skillRegistry: Record<SkillId, SkillHandler | null> = {
     getOutputItem: (actionId) => {
       const spot = FISHING_SPOTS_MAP[actionId];
       return spot ? { itemId: spot.fishId, qty: 1 } : null;
+    },
+  },
+
+  foraging: {
+    isGathering: true,
+    process: (actionId) => {
+      const zone = FORAGING_ZONES_MAP[actionId];
+      if (!zone) return null;
+      const playerLevel = usePlayerStore.getState().getSkillLevel('foraging');
+      if (playerLevel < zone.levelRequired) return null;
+      const result = rollForagingCycle(actionId, playerLevel);
+      return {
+        items: result.items,
+        xpGained: result.xp,
+        masteryXpGained: result.masteryXp,
+        encounter: result.encounter ?? undefined,
+      };
+    },
+    getInterval: (actionId) => {
+      const zone = FORAGING_ZONES_MAP[actionId];
+      const base = zone?.interval ?? 4000;
+      const playerLevel = usePlayerStore.getState().getSkillLevel('foraging');
+      return Math.round(base / Math.max(0.01, foragingSpeedMultiplier(playerLevel)));
+    },
+    getXpPerAction: (actionId) => FORAGING_ZONES_MAP[actionId]?.xp ?? 0,
+    getOutputItem: (actionId) => {
+      const zone = FORAGING_ZONES_MAP[actionId];
+      const first = zone?.lootTable[0];
+      return zone && first ? { itemId: first.itemId, qty: first.quantity[0] } : null;
     },
   },
 
