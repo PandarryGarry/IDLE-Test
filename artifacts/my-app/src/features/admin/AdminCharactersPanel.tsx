@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useCharacterStore } from '@/store/characterStore';
+import { usePlayerStore } from '@/store/playerStore';
 import { useAuthStore } from '@/store/authStore';
 import { updateCharacter } from '@/lib/characterApi';
 import { useNotificationsStore } from '@/store/notificationsStore';
@@ -18,7 +19,7 @@ import { skillNameRu } from '@/lib/skillNames';
 import { createDefaultAttributes } from '@/domain/attributes/characterAttributes';
 import { createEmptyGearSets } from '@/domain/items/gearSets';
 import { applySaveData } from '@/lib/saveManager';
-import { Save, Trash2, Plus, Minus } from 'lucide-react';
+import { Save, Trash2, Plus, Minus, RotateCcw } from 'lucide-react';
 
 const EQUIP_SLOT_LABELS: Record<EquipSlot, string> = {
   helm: 'Шлем',
@@ -40,6 +41,10 @@ const EQUIP_SLOT_LABELS: Record<EquipSlot, string> = {
 };
 
 const EQUIP_SLOTS = Object.keys(EMPTY_EQUIPMENT) as EquipSlot[];
+
+/** Тёмно-коричневый текст для светлых панелей админки (контраст к beige). */
+const DARK_TEXT = '#2f2010';
+const MUTED_DARK = '#4a3520';
 
 function makeEmptySave(): SaveData {
   const skills = {} as Record<SkillId, SkillState>;
@@ -64,9 +69,15 @@ function makeEmptySave(): SaveData {
   };
 }
 
-function normalizeSave(save: SaveData | null | undefined): SaveData {
+function normalizeSave(save: SaveData | null | undefined, fallbackSkills?: Record<SkillId, SkillState>): SaveData {
   const base = makeEmptySave();
-  const skills = { ...base.player.skills, ...(save?.player?.skills ?? {}) } as Record<SkillId, SkillState>;
+  const originalSkills = save?.player?.skills ?? {};
+  const fallback = fallbackSkills && Object.keys(fallbackSkills).length > 0 ? fallbackSkills : undefined;
+  const skills = {
+    ...base.player.skills,
+    ...fallback,
+    ...originalSkills,
+  } as Record<SkillId, SkillState>;
   return {
     ...base,
     ...save,
@@ -106,15 +117,18 @@ export function AdminCharactersPanel() {
   const [draft, setDraft] = useState<SaveData | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Какие секции реально трогали. Если персонажа не меняли — при сохранении
+  // НЕ затираем его сейв дефолтами (это чинило «все скидываются на 1»).
+  const [touched, setTouched] = useState({ skills: false, bank: false, equipment: false });
+  const [touchedSkills, setTouchedSkills] = useState<Set<string>>(new Set());
+
   const [itemId, setItemId] = useState('');
   const [itemQty, setItemQty] = useState(1);
   const [equipSlot, setEquipSlot] = useState<EquipSlot>('weapon');
   const [equipItemId, setEquipItemId] = useState('');
-  const [goldInput, setGoldInput] = useState(1000);
 
   const items = useMemo(() => getAllItems().sort((a, b) => a.name.localeCompare(b.name, 'ru')), []);
 
-  // Персонажей загружает App ещё на вывеске; на всякий случай догружаем.
   useEffect(() => {
     const user = useAuthStore.getState().user;
     if (user && useCharacterStore.getState().characters.length === 0) {
@@ -131,11 +145,17 @@ export function AdminCharactersPanel() {
       return;
     }
     if (selected.id !== selectedId) setSelectedId(selected.id);
-    setDraft(normalizeSave(selected.saveData));
+
+    // fallbackSkills: если сейв старый и не содержит skills, берём текущие навыки
+    // игры (а не дефолтные 1), чтобы сохранение не «обнуляло» персонажа.
+    const liveSkills = usePlayerStore.getState().skills as Record<SkillId, SkillState>;
+    const fallback = selected.saveData?.player?.skills ? undefined : liveSkills;
+    setDraft(normalizeSave(selected.saveData, fallback));
+    setTouched({ skills: false, bank: false, equipment: false });
+    setTouchedSkills(new Set());
     setItemId(items[0]?.id ?? '');
     setItemQty(1);
     setEquipItemId('');
-    setGoldInput(selected.saveData?.bank.gp ?? 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected?.id]);
 
@@ -143,7 +163,7 @@ export function AdminCharactersPanel() {
     return (
       <div className="rounded-2xl p-6 text-center" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a' }}>
         <div className="text-4xl mb-2">👤</div>
-        <p className="text-sm text-[var(--text-muted)]">Персонажи загружаются…</p>
+        <p className="text-sm" style={{ color: DARK_TEXT }}>Персонажи загружаются…</p>
       </div>
     );
   }
@@ -152,8 +172,14 @@ export function AdminCharactersPanel() {
     setDraft(prev => (prev ? fn(prev) : prev));
   };
 
+  const markSkills = (id: SkillId) => {
+    setTouched(prev => ({ ...prev, skills: true }));
+    setTouchedSkills(prev => new Set(prev).add(id));
+  };
+
   const setSkillLevel = (id: SkillId, level: number) => {
     const nextLevel = clampLevel(level);
+    markSkills(id);
     patchDraft(prev => ({
       ...prev,
       player: {
@@ -172,6 +198,7 @@ export function AdminCharactersPanel() {
 
   const setSkillXp = (id: SkillId, xp: number) => {
     const cleanXp = Math.max(0, Math.floor(Number.isFinite(xp) ? xp : 0));
+    markSkills(id);
     patchDraft(prev => ({
       ...prev,
       player: {
@@ -188,9 +215,23 @@ export function AdminCharactersPanel() {
     }));
   };
 
+  const setAllSkillLevels = (level: number) => {
+    const target = clampLevel(level);
+    setTouched(prev => ({ ...prev, skills: true }));
+    setTouchedSkills(new Set(ALL_SKILL_IDS));
+    patchDraft(prev => {
+      const skills = { ...prev.player.skills };
+      for (const id of ALL_SKILL_IDS) {
+        skills[id] = { ...(skills[id] ?? { mastery: {} }), level: target, xp: getXpForLevel(target) };
+      }
+      return { ...prev, player: { ...prev.player, skills } };
+    });
+  };
+
   const addItemToBank = (id: string, qty: number) => {
     const cleanQty = clampQty(qty);
     if (!id || cleanQty <= 0) return;
+    setTouched(prev => ({ ...prev, bank: true }));
     patchDraft(prev => {
       const bank = [...prev.bank.items];
       const idx = bank.findIndex(s => s.itemId === id);
@@ -203,18 +244,26 @@ export function AdminCharactersPanel() {
     });
   };
 
-  const removeItemFromBank = (id: string, qty: number) => {
-    const cleanQty = clampQty(qty);
+  const changeItemQtyBy = (id: string, delta: number) => {
+    if (!id) return;
+    setTouched(prev => ({ ...prev, bank: true }));
     patchDraft(prev => {
       const bank = prev.bank.items
-        .map(s => (s.itemId === id ? { ...s, quantity: s.quantity - cleanQty } : s))
+        .map(s => (s.itemId === id ? { ...s, quantity: Math.max(0, s.quantity + delta) } : s))
         .filter(s => s.quantity > 0);
       return { ...prev, bank: { ...prev.bank, items: bank } };
     });
   };
 
+  const setGold = (amount: number) => {
+    const clean = Math.max(0, Math.floor(Number.isFinite(amount) ? amount : 0));
+    setTouched(prev => ({ ...prev, bank: true }));
+    patchDraft(prev => ({ ...prev, bank: { ...prev.bank, gp: clean } }));
+  };
+
   const addEquipment = (slot: EquipSlot, id: string) => {
     if (!id) return;
+    setTouched(prev => ({ ...prev, equipment: true }));
     patchDraft(prev => ({
       ...prev,
       player: { ...prev.player, equipment: { ...prev.player.equipment, [slot]: id } },
@@ -222,35 +271,40 @@ export function AdminCharactersPanel() {
   };
 
   const removeEquipment = (slot: EquipSlot) => {
+    setTouched(prev => ({ ...prev, equipment: true }));
     patchDraft(prev => ({
       ...prev,
       player: { ...prev.player, equipment: { ...prev.player.equipment, [slot]: null } },
     }));
   };
 
-  const setGold = (amount: number) => {
-    const clean = Math.max(0, Math.floor(Number.isFinite(amount) ? amount : 0));
-    patchDraft(prev => ({ ...prev, bank: { ...prev.bank, gp: clean } }));
-  };
-
-  const addGold = (amount: number) => {
-    const clean = clampQty(amount);
-    patchDraft(prev => ({ ...prev, bank: { ...prev.bank, gp: Math.max(0, prev.bank.gp + clean) } }));
-  };
-
   const save = async () => {
     if (!draft || !selected || saving) return;
     setSaving(true);
     try {
-      const patched = { ...draft, savedAt: Date.now() };
-      const updated = await updateCharacter(selected.id, { saveData: patched });
-      setDraft(normalizeSave(updated.saveData));
+      // Собираем патч из исходного сейва + только те секции, которые менял админ.
+      // Так «персонаж не трогали» никогда не затирается дефолтами.
+      const base = normalizeSave(selected.saveData, selected.saveData?.player?.skills ? undefined : usePlayerStore.getState().skills as Record<SkillId, SkillState>);
+      const next: SaveData = {
+        ...base,
+        savedAt: Date.now(),
+        player: {
+          skills: touched.skills ? draft.player.skills : base.player.skills,
+          equipment: touched.equipment ? draft.player.equipment : base.player.equipment,
+        },
+        bank: touched.bank ? draft.bank : base.bank,
+      };
+
+      const updated = await updateCharacter(selected.id, { saveData: next });
+      setDraft(normalizeSave(updated.saveData, usePlayerStore.getState().skills as Record<SkillId, SkillState>));
+      setTouched({ skills: false, bank: false, equipment: false });
+      setTouchedSkills(new Set());
       useCharacterStore.setState(state => ({
         characters: state.characters.map(c => (c.id === updated.id ? updated : c)),
         activeCharacter: state.activeCharacter?.id === updated.id ? updated : state.activeCharacter,
       }));
       if (activeCharacter?.id === updated.id) {
-        applySaveData(normalizeSave(updated.saveData));
+        applySaveData(normalizeSave(updated.saveData, usePlayerStore.getState().skills as Record<SkillId, SkillState>));
       }
       notify('Персонаж сохранён ✓');
     } catch (e) {
@@ -260,14 +314,15 @@ export function AdminCharactersPanel() {
     }
   };
 
-  const inputStyle = 'w-24 bg-[var(--bg-card-dark)] border border-[var(--border-default)] rounded-xl px-2 py-1.5 text-right font-mono text-xs text-amber-300 focus:outline-none focus:border-amber-500';
+  const inputStyle = 'w-20 bg-[var(--bg-card-dark)] border border-[var(--border-default)] rounded-xl px-2 py-1.5 text-right font-mono text-xs text-amber-300 focus:outline-none focus:border-amber-500';
+  const quickBtn = 'px-2 py-1 rounded-lg text-[11px] font-mono font-bold border transition-all active:scale-95';
 
   return (
     <div className="space-y-4 max-w-6xl mx-auto">
-      {/* Выбор персонажа */}
+      {/* ── Выбор персонажа + сохранение ─────────────────────── */}
       <div className="rounded-2xl p-3 sm:p-4" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.25)' }}>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="text-sm font-display font-black text-[var(--text-primary)]">👤 Персонаж</div>
+          <div className="text-sm font-display font-black" style={{ color: DARK_TEXT }}>👤 Персонаж</div>
           <select
             value={selected.id}
             onChange={e => setSelectedId(e.target.value)}
@@ -288,55 +343,96 @@ export function AdminCharactersPanel() {
             {saving ? 'Сохранение…' : 'Сохранить'}
           </button>
         </div>
-        <div className="text-[11px] text-[var(--text-muted)] mt-2">
-          Уровни и опыт меняются сразу в редактируемой копии. Кнопка «Сохранить» записывает save_data персонажа в облако.
-        </div>
+        <p className="text-[11px] font-semibold mt-2" style={{ color: MUTED_DARK }}>
+          Сохраняются только те блоки, которые ты менял (навыки, сумка или экип). Остальное остаётся как было.
+        </p>
       </div>
 
-      {/* Характеристики персонажа: уровни и опыт */}
+      {/* ── Характеристики: уровни и опыт ───────────────────── */}
       <div className="rounded-2xl p-3 sm:p-4" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.25)' }}>
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-display font-black text-[var(--text-primary)]">📊 Характеристики и уровни</h2>
-          <span className="text-[11px] font-mono text-[var(--text-muted)]">{ALL_SKILL_IDS.length} навыков</span>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <h2 className="text-sm font-display font-black" style={{ color: DARK_TEXT }}>📊 Характеристики и уровни</h2>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-mono" style={{ color: MUTED_DARK }}>Всем:</span>
+            {[1, 10, 50, 99].map(level => (
+              <button
+                key={level}
+                type="button"
+                onClick={() => setAllSkillLevels(level)}
+                className={`${quickBtn} border-amber-500/40 bg-amber-500/10 text-[#5a3a10]`}
+              >
+                {level}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setAllSkillLevels(1)}
+              className={`${quickBtn} border-stone-500/40 bg-stone-500/10 text-[#5a3a10]`}
+              title="Сбросить все уровни к 1"
+            >
+              <RotateCcw className="w-3 h-3 inline" /> База
+            </button>
+          </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
           {ALL_SKILL_IDS.map(id => {
             const skill = draft.player.skills[id];
             if (!skill) return null;
+            const lvl = clampLevel(skill.level);
+            const to99 = MAX_LEVEL - lvl;
+            const xpFieldId = `admin-xp-${id}`;
+            const lvlFieldId = `admin-level-${id}`;
             return (
-              <div key={id} className="flex items-center gap-2 p-2 rounded-xl bg-[var(--bg-slot)] border border-[var(--border-default)]">
-                <span className="flex-1 min-w-0 text-xs font-semibold text-[var(--text-primary)] truncate">{skillNameRu(id)}</span>
-                <label className="flex items-center gap-1 text-[10px] text-[var(--text-muted)]">
-                  Ур.
-                  <input
-                    type="number"
-                    className={inputStyle}
-                    value={skill.level}
-                    min={1}
-                    max={MAX_LEVEL}
-                    onChange={e => setSkillLevel(id, Number(e.target.value))}
-                  />
-                </label>
-                <label className="flex items-center gap-1 text-[10px] text-[var(--text-muted)]">
-                  Оп.
-                  <input
-                    type="number"
-                    className={inputStyle}
-                    value={skill.xp}
-                    min={0}
-                    step={1}
-                    onChange={e => setSkillXp(id, Number(e.target.value))}
-                  />
-                </label>
+              <div key={id} className="rounded-xl bg-[var(--bg-slot)] border border-[var(--border-default)] p-2.5">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="flex-1 min-w-[110px] text-xs font-bold" style={{ color: DARK_TEXT }}>{skillNameRu(id)}</span>
+                  <label htmlFor={lvlFieldId} className="flex items-center gap-1 text-[10px] font-bold" style={{ color: MUTED_DARK }}>
+                    Ур.
+                    <input
+                      id={lvlFieldId}
+                      type="number"
+                      className={`${inputStyle} w-14`}
+                      value={skill.level}
+                      min={1}
+                      max={MAX_LEVEL}
+                      onChange={e => setSkillLevel(id, Number(e.target.value))}
+                    />
+                  </label>
+                  <label htmlFor={xpFieldId} className="flex items-center gap-1 text-[10px] font-bold" style={{ color: MUTED_DARK }}>
+                    Оп.
+                    <input
+                      id={xpFieldId}
+                      type="number"
+                      className={`${inputStyle} w-16`}
+                      value={skill.xp}
+                      min={0}
+                      step={1}
+                      onChange={e => setSkillXp(id, Number(e.target.value))}
+                    />
+                  </label>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[9px] font-mono" style={{ color: MUTED_DARK }}>уровень:</span>
+                  <button type="button" onClick={() => setSkillLevel(id, Math.max(1, lvl - 1))} className={`${quickBtn} border-red-500/40 bg-red-500/10 text-[#7f1d1d]`} title="−1 уровень">−1</button>
+                  <button type="button" onClick={() => setSkillLevel(id, lvl + 1)} className={`${quickBtn} border-emerald-500/40 bg-emerald-500/10 text-[#1d4a1d]`} title="+1 уровень">+1</button>
+                  <button type="button" onClick={() => setSkillLevel(id, lvl + 10)} className={`${quickBtn} border-emerald-500/40 bg-emerald-500/10 text-[#1d4a1d]`} title="+10 уровней">+10</button>
+                  <button type="button" onClick={() => setSkillLevel(id, MAX_LEVEL)} className={`${quickBtn} border-amber-500/40 bg-amber-500/10 text-[#5a3a10]`} title="Максимум">{to99 <= 0 ? 'MAX ✔' : `MAX (+${to99})`}</button>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                  <span className="text-[9px] font-mono" style={{ color: MUTED_DARK }}>опыт:</span>
+                  <button type="button" onClick={() => setSkillXp(id, skill.xp + 1000)} className={`${quickBtn} border-sky-500/40 bg-sky-500/10 text-[#1e3a5f]`} title="+1 000 XP">+1К</button>
+                  <button type="button" onClick={() => setSkillXp(id, skill.xp + 10000)} className={`${quickBtn} border-sky-500/40 bg-sky-500/10 text-[#1e3a5f]`} title="+10 000 XP">+10К</button>
+                  <button type="button" onClick={() => setSkillXp(id, getXpForLevel(MAX_LEVEL))} className={`${quickBtn} border-amber-500/40 bg-amber-500/10 text-[#5a3a10]`} title="XP до 99 уровня">MAX XP</button>
+                </div>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Сумка: предметы и золото */}
+      {/* ── Сумка: предметы и золото ───────────────────────── */}
       <div className="rounded-2xl p-3 sm:p-4" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.25)' }}>
-        <h2 className="text-sm font-display font-black text-[var(--text-primary)] mb-2">🎒 Сумка</h2>
+        <h2 className="text-sm font-display font-black mb-2" style={{ color: DARK_TEXT }}>🎒 Сумка</h2>
 
         {/* Добавить предмет */}
         <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-[var(--bg-slot)] border border-[var(--border-default)] mb-2">
@@ -348,73 +444,47 @@ export function AdminCharactersPanel() {
             <option value="">— предмет —</option>
             {items.map(item => <option key={item.id} value={item.id}>{item.name} ({item.id})</option>)}
           </select>
-          <input
-            type="number"
-            value={itemQty}
-            min={1}
-            step={1}
-            onChange={e => setItemQty(Number(e.target.value))}
-            className={inputStyle}
-          />
-          <button
-            type="button"
-            onClick={() => addItemToBank(itemId, itemQty)}
-            className="px-3 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-bold rounded-xl text-xs transition-all active:scale-95 flex items-center gap-1"
-          >
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => setItemQty(q => Math.max(1, q - 1))} className={`${quickBtn} border-stone-500/40 bg-stone-500/10 text-[#5a3a10]`}><Minus className="w-3 h-3" /></button>
+            <input type="number" value={itemQty} min={1} step={1} onChange={e => setItemQty(Number(e.target.value))} className={`${inputStyle} w-16`} />
+            <button type="button" onClick={() => setItemQty(q => q + 1)} className={`${quickBtn} border-emerald-500/40 bg-emerald-500/10 text-[#1d4a1d]`}><Plus className="w-3 h-3" /></button>
+          </div>
+          <button type="button" onClick={() => addItemToBank(itemId, itemQty)} className="px-3 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-900 font-bold rounded-xl text-xs transition-all active:scale-95 flex items-center gap-1">
             <Plus className="w-3.5 h-3.5" /> Добавить
           </button>
         </div>
 
         {/* Золото */}
         <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-[var(--bg-slot)] border border-[var(--border-default)] mb-2">
-          <span className="text-xs font-semibold text-[var(--text-primary)]">🪙 Золото</span>
+          <span className="text-xs font-bold" style={{ color: DARK_TEXT }}>🪙 Золото</span>
           <input type="number" value={draft.bank.gp} min={0} onChange={e => setGold(Number(e.target.value))} className={inputStyle} />
-          <button
-            type="button"
-            onClick={() => addGold(100)}
-            className="px-3 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-bold rounded-xl text-xs transition-all active:scale-95"
-          >
-            +100
-          </button>
-          <button
-            type="button"
-            onClick={() => setGold(Math.max(0, draft.bank.gp - 100))}
-            className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 font-bold rounded-xl text-xs transition-all active:scale-95"
-          >
-            −100
-          </button>
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => setGold(Math.max(0, draft.bank.gp - 1000))} className={`${quickBtn} border-red-500/40 bg-red-500/10 text-[#7f1d1d]`}>−1К</button>
+            <button type="button" onClick={() => setGold(Math.max(0, draft.bank.gp - 100))} className={`${quickBtn} border-red-500/40 bg-red-500/10 text-[#7f1d1d]`}>−100</button>
+            <button type="button" onClick={() => setGold(0)} className={`${quickBtn} border-stone-500/40 bg-stone-500/10 text-[#5a3a10]`}>0</button>
+            <button type="button" onClick={() => setGold(draft.bank.gp + 100)} className={`${quickBtn} border-emerald-500/40 bg-emerald-500/10 text-[#1d4a1d]`}>+100</button>
+            <button type="button" onClick={() => setGold(draft.bank.gp + 1000)} className={`${quickBtn} border-emerald-500/40 bg-emerald-500/10 text-[#1d4a1d]`}>+1К</button>
+          </div>
         </div>
 
         {/* Список предметов */}
         {draft.bank.items.length === 0 ? (
-          <p className="text-[11px] text-[var(--text-muted)] pb-2">Сумка пуста.</p>
+          <p className="text-[11px] pb-2" style={{ color: MUTED_DARK }}>Сумка пуста.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
             {draft.bank.items.map((slot: BankSlot, i: number) => {
               const item = items.find(x => x.id === slot.itemId);
               return (
-                <div key={`${slot.itemId}-${i}`} className="flex items-center gap-2 p-2 rounded-xl bg-[var(--bg-slot)] border border-[var(--border-default)]">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[11px] font-bold text-[var(--text-primary)] truncate">{item?.name ?? slot.itemId}</div>
-                    <div className="text-[10px] font-mono text-[var(--text-muted)]">×{slot.quantity}</div>
+                <div key={`${slot.itemId}-${i}`} className="flex flex-wrap items-center gap-2 p-2 rounded-xl bg-[var(--bg-slot)] border border-[var(--border-default)]">
+                  <div className="flex-1 min-w-[90px]">
+                    <div className="text-[11px] font-bold" style={{ color: DARK_TEXT }}>{item?.name ?? slot.itemId}</div>
+                    <div className="text-[10px] font-mono" style={{ color: MUTED_DARK }}>×{slot.quantity}</div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => removeItemFromBank(slot.itemId, 1)}
-                      className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 transition-all active:scale-95"
-                      title="Убрать 1"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeItemFromBank(slot.itemId, slot.quantity)}
-                      className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 transition-all active:scale-95"
-                      title="Убрать всё"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
+                    <button type="button" onClick={() => changeItemQtyBy(slot.itemId, -10)} className={`${quickBtn} border-red-500/40 bg-red-500/10 text-[#7f1d1d]`}>−10</button>
+                    <button type="button" onClick={() => changeItemQtyBy(slot.itemId, -1)} className={`${quickBtn} border-red-500/40 bg-red-500/10 text-[#7f1d1d]`} title="Убрать 1"><Minus className="w-3 h-3" /></button>
+                    <button type="button" onClick={() => changeItemQtyBy(slot.itemId, +1)} className={`${quickBtn} border-emerald-500/40 bg-emerald-500/10 text-[#1d4a1d]`} title="Добавить 1"><Plus className="w-3 h-3" /></button>
+                    <button type="button" onClick={() => changeItemQtyBy(slot.itemId, -slot.quantity)} className={`${quickBtn} border-red-500/40 bg-red-500/10 text-[#7f1d1d]`} title="Убрать всё"><Trash2 className="w-3 h-3" /></button>
                   </div>
                 </div>
               );
@@ -423,9 +493,10 @@ export function AdminCharactersPanel() {
         )}
       </div>
 
-      {/* Снаряжение */}
+      {/* ── Снаряжение ─────────────────────────────────────── */}
       <div className="rounded-2xl p-3 sm:p-4" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.25)' }}>
-        <h2 className="text-sm font-display font-black text-[var(--text-primary)] mb-2">⚔️ Снаряжение</h2>
+        <h2 className="text-sm font-display font-black mb-2" style={{ color: DARK_TEXT }}>⚔️ Снаряжение</h2>
+        <p className="text-[11px] font-semibold mb-2" style={{ color: MUTED_DARK }}>Выбери слот, затем предмет из списка и нажми «Надеть».</p>
 
         <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-[var(--bg-slot)] border border-[var(--border-default)] mb-2">
           <select
@@ -443,11 +514,7 @@ export function AdminCharactersPanel() {
             <option value="">— предмет —</option>
             {items.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
           </select>
-          <button
-            type="button"
-            onClick={() => addEquipment(equipSlot, equipItemId)}
-            className="px-3 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-bold rounded-xl text-xs transition-all active:scale-95 flex items-center gap-1"
-          >
+          <button type="button" onClick={() => addEquipment(equipSlot, equipItemId)} className="px-3 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-900 font-bold rounded-xl text-xs transition-all active:scale-95 flex items-center gap-1">
             <Plus className="w-3.5 h-3.5" /> Надеть
           </button>
         </div>
@@ -459,16 +526,11 @@ export function AdminCharactersPanel() {
             return (
               <div key={slot} className="flex items-center gap-2 p-2 rounded-xl bg-[var(--bg-slot)] border border-[var(--border-default)]">
                 <div className="flex-1 min-w-0">
-                  <div className="text-[10px] uppercase font-mono text-[var(--text-muted)]">{EQUIP_SLOT_LABELS[slot]}</div>
-                  <div className="text-[11px] font-bold text-[var(--text-primary)] truncate">{eq?.name ?? (eqId ? eqId : '— пусто —')}</div>
+                  <div className="text-[10px] uppercase font-mono font-bold" style={{ color: MUTED_DARK }}>{EQUIP_SLOT_LABELS[slot]}</div>
+                  <div className="text-[11px] font-bold" style={{ color: DARK_TEXT }}>{eq?.name ?? (eqId ? eqId : '— пусто —')}</div>
                 </div>
                 {eqId && (
-                  <button
-                    type="button"
-                    onClick={() => removeEquipment(slot)}
-                    className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 transition-all active:scale-95"
-                    title="Снять"
-                  >
+                  <button type="button" onClick={() => removeEquipment(slot)} className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-700 transition-all active:scale-95" title="Снять">
                     <Trash2 className="w-3 h-3" />
                   </button>
                 )}

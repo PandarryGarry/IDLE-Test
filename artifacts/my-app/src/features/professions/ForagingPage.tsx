@@ -8,6 +8,7 @@ import {
   FORAGING_ZONES_MAP,
   mobIconUrl,
   getForagingAttributeSnapshot,
+  rareFindChance,
   type ForagingZone,
 } from '@/domain/professions/foraging';
 import { getItem } from '@/domain/items';
@@ -57,6 +58,27 @@ function totalWeight(items: { weight: number }[]): number {
 function weightPercent(weight: number, total: number): string {
   const pct = total > 0 ? (Math.max(0, weight) / total) * 100 : 0;
   return pct.toFixed(pct >= 10 ? 0 : 1).replace('.', ',');
+}
+
+/** Формат шанса за цикл: до 10% — с одним знаком, выше — целое. */
+function chancePercent(value: number): string {
+  const pct = Math.max(0, Math.min(100, value));
+  return pct.toFixed(pct < 10 ? 1 : 0).replace('.', ',');
+}
+
+/** Шанс обычного предмета за цикл = его вес / сумма весов обычного дропа. */
+function normalItemChance(entry: { weight: number }, zone: ForagingZone): number {
+  return (Math.max(0, entry.weight) / Math.max(1, totalWeight(zone.lootTable))) * 100;
+}
+
+/**
+ * Реальный (а не относительный) шанс редкого предмета за цикл:
+ * сначала срабатывает отдельный бросок «редкая находка», потом вес внутри rareTable.
+ * Поэтому обычный камень/ветка почти всегда имеют больший шанс, чем редкий гриб.
+ */
+function rareItemChance(entry: { weight: number }, zone: ForagingZone, rareChance: number): number {
+  const share = Math.max(0, entry.weight) / Math.max(1, totalWeight(zone.rareTable));
+  return (rareChance * share);
 }
 
 function formatStatValue(stat: EffectiveProfessionStat): string {
@@ -189,10 +211,8 @@ function ZoneCard({
 
 /* ── Инфо-карточка отдельной зоны ────────────────────────────── */
 
-function ZoneInfoModal({ zone, onClose }: { zone: ForagingZone | null; onClose: () => void }) {
+function ZoneInfoModal({ zone, rareChance, onClose }: { zone: ForagingZone | null; rareChance: number; onClose: () => void }) {
   if (!zone) return null;
-  const totalLoot = totalWeight(zone.lootTable);
-  const rareTotal = totalWeight(zone.rareTable);
 
   return (
     <GModal open onClose={onClose} title={`${zone.icon} ${zone.name}`} width={460}>
@@ -227,14 +247,17 @@ function ZoneInfoModal({ zone, onClose }: { zone: ForagingZone | null; onClose: 
           <div style={{ marginTop: 6, fontSize: 10, color: '#9a7a50' }}>Мастерство за цикл: <b style={{ color: '#c8a050' }}>+{zone.masteryXp}</b></div>
         </div>
 
-        {/* Добыча */}
+        {/* Добыча: шансы считаются за цикл, а не внутри своей таблицы */}
         <div className="rounded-xl px-3 py-2.5" style={{ background: 'rgba(22,11,3,0.5)', border: '1px solid #4a2c15' }}>
-          <div style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#f0c030', marginBottom: 7, fontFamily: 'var(--app-font-mono)' }}>
-            Добыча ({zone.lootTable.length})
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <div style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#f0c030', fontFamily: 'var(--app-font-mono)' }}>
+              Обычная добыча ({zone.lootTable.length})
+            </div>
+            <span style={{ fontSize: 9, fontFamily: 'var(--app-font-mono)', color: '#9a7a50' }}>шанс за цикл</span>
           </div>
           <div className="space-y-1.5">
             {zone.lootTable.map(entry => {
-              const percent = weightPercent(entry.weight, totalLoot);
+              const percent = chancePercent(normalItemChance(entry, zone));
               const qty = entry.quantity[0] !== entry.quantity[1]
                 ? ` · ${entry.quantity[0]}–${entry.quantity[1]} шт.`
                 : ` · ${entry.quantity[0]} шт.`;
@@ -253,12 +276,18 @@ function ZoneInfoModal({ zone, onClose }: { zone: ForagingZone | null; onClose: 
 
           {zone.rareTable.length > 0 && (
             <>
-              <div style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#c8880a', margin: '10px 0 6px', fontFamily: 'var(--app-font-mono)' }}>
-                ✦ Редкие находки ({zone.rareTable.length})
+              <div className="flex items-center justify-between gap-2 mt-3 mb-1">
+                <div style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#c8880a', fontFamily: 'var(--app-font-mono)' }}>
+                  ✦ Редкие ({zone.rareTable.length})
+                </div>
+                <span style={{ fontSize: 9, fontFamily: 'var(--app-font-mono)', color: '#c8880a' }}>общий шанс {chancePercent(rareChance)}%</span>
               </div>
               <div className="space-y-1.5">
                 {zone.rareTable.map(entry => {
-                  const percent = weightPercent(entry.weight, rareTotal);
+                  const percent = chancePercent(rareItemChance(entry, zone, rareChance));
+                  const qty = entry.quantity[0] !== entry.quantity[1]
+                    ? ` · ${entry.quantity[0]}–${entry.quantity[1]} шт.`
+                    : ` · ${entry.quantity[0]} шт.`;
                   return (
                     <div key={entry.itemId} className="flex items-center gap-2 rounded-lg px-2 py-1.5" style={{ background: 'rgba(46,26,12,0.6)', border: '1px solid rgba(200,136,10,0.3)' }}>
                       <ItemVisual itemId={entry.itemId} size={26} />
@@ -266,6 +295,7 @@ function ZoneInfoModal({ zone, onClose }: { zone: ForagingZone | null; onClose: 
                         {getItem(entry.itemId)?.name ?? entry.itemId}
                       </span>
                       <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 11, fontWeight: 800, color: '#f0c030', flexShrink: 0 }}>{percent}%</span>
+                      <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 9, color: '#9a7a50', flexShrink: 0 }}>{qty}</span>
                     </div>
                   );
                 })}
@@ -417,6 +447,7 @@ export function ForagingPage() {
   const [zoneInfoId, setZoneInfoId] = useState<string | null>(null);
 
   const stats = useMemo(() => getEffectiveProfessionStats('foraging', level), [level, statTouched]);
+  const rareChance = useMemo(() => rareFindChance(level), [level]);
 
   const activeZone = activeZoneId ? FORAGING_ZONES_MAP[activeZoneId] : undefined;
   const isTraining = activeSkill === 'foraging' && !!activeZone;
@@ -481,7 +512,7 @@ export function ForagingPage() {
       )}
 
       <ForagingInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} level={level} stats={stats} />
-      <ZoneInfoModal zone={zoneInfoId ? FORAGING_ZONES_MAP[zoneInfoId] ?? null : null} onClose={() => setZoneInfoId(null)} />
+      <ZoneInfoModal zone={zoneInfoId ? FORAGING_ZONES_MAP[zoneInfoId] ?? null : null} rareChance={rareChance} onClose={() => setZoneInfoId(null)} />
     </div>
   );
 }
