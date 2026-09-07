@@ -86,6 +86,9 @@ const MOB_ICON: Record<string, string> = {
   green_dragon: 'characters/mobs/mob_orc',
 };
 
+// XP на цикл выстроено по хардкорной кривой (RS-таблица, 13M XP до 99 ур.):
+// ранние зоны почти не дают опыта, а верхний «Тайник» резко ускоряет финальный
+// гринд. Ориентир: 10 ур. ≈ 1.6 ч, 50 ур. ≈ 13 ч, 99 ур. ≈ 73 ч активного сбора.
 export const FORAGING_ZONES: ForagingZone[] = [
   {
     id: 'forest_clearing',
@@ -93,9 +96,9 @@ export const FORAGING_ZONES: ForagingZone[] = [
     description: 'Опушечная тропа с ветками, листьями и первыми грибами. Совсем неопасно.',
     icon: '🌿',
     levelRequired: 1,
-    xp: 18,
-    masteryXp: 3,
-    interval: 4000,
+    xp: 1,
+    masteryXp: 2,
+    interval: 5000,
     lootTable: [
       { itemId: 'stone', weight: 22, quantity: [1, 2] },
       { itemId: 'branch_01', weight: 16, quantity: [1, 2] },
@@ -119,9 +122,9 @@ export const FORAGING_ZONES: ForagingZone[] = [
     description: 'Густые заросли: трава, ягоды, лисички. Звери уже чувствуют себя здесь хозяевами.',
     icon: '🌲',
     levelRequired: 12,
-    xp: 26,
-    masteryXp: 4,
-    interval: 5000,
+    xp: 4,
+    masteryXp: 3,
+    interval: 6500,
     lootTable: [
       { itemId: 'branch_03', weight: 14, quantity: [1, 3] },
       { itemId: 'cone_02', weight: 12, quantity: [1, 3] },
@@ -152,9 +155,9 @@ export const FORAGING_ZONES: ForagingZone[] = [
     description: 'Прохладный лабиринт: глина, смола и редкие грибы. Здесь водятся пауки.',
     icon: '🕳️',
     levelRequired: 25,
-    xp: 36,
+    xp: 14,
     masteryXp: 5,
-    interval: 6000,
+    interval: 8000,
     lootTable: [
       { itemId: 'stone', weight: 20, quantity: [1, 3] },
       { itemId: 'quartz_sand', weight: 14, quantity: [1, 3] },
@@ -186,9 +189,9 @@ export const FORAGING_ZONES: ForagingZone[] = [
     description: 'Заросшие развалины: травы, корни и дорогие грибы. Мёртвые не любят гостей.',
     icon: '🏛️',
     levelRequired: 40,
-    xp: 48,
+    xp: 50,
     masteryXp: 6,
-    interval: 7000,
+    interval: 9500,
     lootTable: [
       { itemId: 'stone', weight: 16, quantity: [1, 3] },
       { itemId: 'branch_01', weight: 10, quantity: [1, 3] },
@@ -222,9 +225,9 @@ export const FORAGING_ZONES: ForagingZone[] = [
     description: 'Старый схрон: редчайшие грибы, светящаяся ягода и корень-сердечник. Охрана серьёзная.',
     icon: '🗝️',
     levelRequired: 55,
-    xp: 62,
+    xp: 350,
     masteryXp: 7,
-    interval: 8000,
+    interval: 11000,
     lootTable: [
       { itemId: 'pine_resin', weight: 14, quantity: [1, 3] },
       { itemId: 'clay_lump', weight: 12, quantity: [1, 3] },

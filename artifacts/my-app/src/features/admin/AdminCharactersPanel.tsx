@@ -9,42 +9,67 @@ import {
   EMPTY_EQUIPMENT,
   type BankSlot,
   type EquipSlot,
+  type Item,
   type SaveData,
   type SkillId,
   type SkillState,
 } from '@/data/types';
-import { getAllItems } from '@/domain/items';
+import { getAllItems, getItem } from '@/domain/items';
 import { getLevelForXp, getXpForLevel, MAX_LEVEL } from '@/core/xpTable';
 import { skillNameRu } from '@/lib/skillNames';
 import { createDefaultAttributes } from '@/domain/attributes/characterAttributes';
 import { createEmptyGearSets } from '@/domain/items/gearSets';
 import { applySaveData } from '@/lib/saveManager';
-import { Save, Trash2, Plus, Minus, RotateCcw } from 'lucide-react';
+import { getAvatarPath, getRaceLabel } from '@/data/characters';
+import { getItemVisual } from '@/shared/icons/itemIcons';
+import { formatNumber } from '@/lib/utils';
+import { GModal } from '@/shared/ui/gameUI';
+import {
+  Save, Trash2, Plus, Minus, Search, RotateCcw, User, Boxes, Swords, LayoutDashboard,
+} from 'lucide-react';
 
 const EQUIP_SLOT_LABELS: Record<EquipSlot, string> = {
-  helm: 'Шлем',
-  platebody: 'Нагрудник',
-  platelegs: 'Поножи',
-  boots: 'Ботинки',
-  gloves: 'Перчатки',
-  amulet: 'Амулет',
-  ring: 'Кольцо 1',
-  ring2: 'Кольцо 2',
-  bracelet: 'Браслет 1',
-  bracelet2: 'Браслет 2',
-  belt: 'Пояс',
-  weapon: 'Оружие',
-  shield: 'Щит',
-  cape: 'Плащ',
-  quiver: 'Колчан',
-  passive: 'Пассивное',
+  helm: 'Шлем', platebody: 'Нагрудник', platelegs: 'Поножи', boots: 'Ботинки',
+  gloves: 'Перчатки', amulet: 'Амулет', ring: 'Кольцо 1', ring2: 'Кольцо 2',
+  bracelet: 'Браслет 1', bracelet2: 'Браслет 2', belt: 'Пояс', weapon: 'Оружие',
+  shield: 'Щит', cape: 'Плащ', quiver: 'Колчан', passive: 'Пассивное',
 };
+
+const CATEGORY_RU: Record<string, string> = {
+  weapon: 'Оружие', helm: 'Шлем', platebody: 'Доспех', platelegs: 'Поножи',
+  boots: 'Сапоги', gloves: 'Перчатки', amulet: 'Амулет', ring: 'Кольцо',
+  bracelet: 'Браслет', belt: 'Пояс', shield: 'Щит', cape: 'Плащ', quiver: 'Колчан',
+  food: 'Еда', cooked_fish: 'Готовая рыба', raw_fish: 'Сырая рыба', log: 'Древесина',
+  ore: 'Руда', bar: 'Слиток', gem: 'Самоцвет', ash: 'Зола', potion: 'Зелье',
+  misc: 'Материал', mineral: 'Минерал', foraging: 'Сбор', herb: 'Травы', bone: 'Кости',
+  seed: 'Семена', rune: 'Руны', arrow: 'Стрелы', tablet: 'Скрижали',
+};
+
+function categoryLabel(id: string): string {
+  return CATEGORY_RU[id] ?? id;
+}
 
 const EQUIP_SLOTS = Object.keys(EMPTY_EQUIPMENT) as EquipSlot[];
 
-/** Тёмно-коричневый текст для светлых панелей админки (контраст к beige). */
-const DARK_TEXT = '#2f2010';
-const MUTED_DARK = '#4a3520';
+const C = {
+  surface: '#1c1108',
+  surfaceAlt: '#241408',
+  slot: '#150c04',
+  border: '#3a2b1a',
+  borderLight: '#4a3520',
+  text: '#f5ead0',
+  textSecondary: '#c2a374',
+  textMuted: '#8a6b42',
+  accent: '#f0c030',
+};
+
+const BTN = 'inline-flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-colors focus:outline-none focus:ring-1 focus:ring-amber-500/40 disabled:opacity-40 disabled:cursor-not-allowed';
+const BTN_SECONDARY: React.CSSProperties = { background: C.slot, border: '1px solid ' + C.borderLight, color: C.text };
+const BTN_MUTED: React.CSSProperties = { background: 'rgba(0,0,0,0.18)', border: '1px solid transparent', color: C.textSecondary };
+const BTN_PRIMARY: React.CSSProperties = { background: C.accent, border: '1px solid #7a5610', color: '#241a05' };
+const INPUT: React.CSSProperties = { background: C.slot, border: '1px solid ' + C.border, borderRadius: 10, color: C.text, fontSize: 12, fontFamily: 'var(--app-font-mono)', padding: '7px 10px' };
+const CARD: React.CSSProperties = { background: C.surfaceAlt, border: '1px solid ' + C.border, borderRadius: 16 };
+const LABEL: React.CSSProperties = { fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: C.textMuted, fontFamily: 'var(--app-font-mono)' };
 
 function makeEmptySave(): SaveData {
   const skills = {} as Record<SkillId, SkillState>;
@@ -53,19 +78,11 @@ function makeEmptySave(): SaveData {
     skills[id] = { level, xp: getXpForLevel(level), unlocked: true, mastery: {} };
   }
   return {
-    version: '1.0.0',
-    savedAt: Date.now(),
-    totalPlayTime: 0,
-    gameMode: 'standard',
-    player: {
-      skills,
-      equipment: { ...EMPTY_EQUIPMENT },
-    },
+    version: '1.0.0', savedAt: Date.now(), totalPlayTime: 0, gameMode: 'standard',
+    player: { skills, equipment: { ...EMPTY_EQUIPMENT } },
     bank: { items: [], gp: 0, maxSlots: 24 },
     game: { activeSkill: null, activeActionId: null, activeAreaId: null, activeMonsterId: null },
-    settings: {},
-    attributes: createDefaultAttributes(),
-    gearSets: createEmptyGearSets(),
+    settings: {}, attributes: createDefaultAttributes(), gearSets: createEmptyGearSets(),
   };
 }
 
@@ -73,14 +90,9 @@ function normalizeSave(save: SaveData | null | undefined, fallbackSkills?: Recor
   const base = makeEmptySave();
   const originalSkills = save?.player?.skills ?? {};
   const fallback = fallbackSkills && Object.keys(fallbackSkills).length > 0 ? fallbackSkills : undefined;
-  const skills = {
-    ...base.player.skills,
-    ...fallback,
-    ...originalSkills,
-  } as Record<SkillId, SkillState>;
+  const skills = { ...base.player.skills, ...fallback, ...originalSkills } as Record<SkillId, SkillState>;
   return {
-    ...base,
-    ...save,
+    ...base, ...save,
     player: {
       skills,
       equipment: { ...EMPTY_EQUIPMENT, ...(save?.player?.equipment ?? {}) },
@@ -109,23 +121,158 @@ function clampQty(value: number): number {
   return Math.max(0, Math.floor(value));
 }
 
+function AdminItemIcon({ itemId, size = 34 }: { itemId: string; size?: number }) {
+  const item = getItem(itemId);
+  const visual = getItemVisual(itemId);
+  return (
+    <span style={{ width: size, height: size, borderRadius: 9, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#150c04', border: '1px solid ' + C.borderLight, overflow: 'hidden' }}>
+      {visual.type === 'image' ? (
+        <img src={visual.value} alt={item?.name ?? itemId} style={{ width: '78%', height: '78%', objectFit: 'contain' }} />
+      ) : (
+        <span style={{ fontSize: size * 0.52, lineHeight: 1 }}>{visual.value}</span>
+      )}
+    </span>
+  );
+}
+
+/* ── Выбор предмета из каталога ──────────────────────────────── */
+
+function ItemPickerModal({
+  mode,
+  equipSlot,
+  items,
+  onClose,
+  onAddInventory,
+  onEquip,
+}: {
+  mode: 'inventory' | 'equip';
+  equipSlot?: EquipSlot;
+  items: Item[];
+  onClose: () => void;
+  onAddInventory: (itemId: string, qty: number) => void;
+  onEquip: (itemId: string) => void;
+}) {
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState('all');
+  const [selected, setSelected] = useState<string | null>(null);
+  const [qty, setQty] = useState(1);
+
+  const categories = useMemo(() => {
+    const seen = new Set<string>();
+    for (const it of items) if (it.category) seen.add(it.category);
+    return [...seen].sort();
+  }, [items]);
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return items.filter(it => {
+      if (mode === 'equip' && equipSlot && it.equipSlot !== equipSlot) return false;
+      if (category !== 'all' && it.category !== category) return false;
+      if (!q) return true;
+      return it.name.toLowerCase().includes(q) || it.id.toLowerCase().includes(q);
+    });
+  }, [category, equipSlot, items, mode, query]);
+
+  const selectedItem = selected ? items.find(i => i.id === selected) ?? null : null;
+
+  const add = () => {
+    if (!selectedItem) return;
+    if (mode === 'equip') onEquip(selectedItem.id);
+    else onAddInventory(selectedItem.id, clampQty(qty) || 1);
+    onClose();
+  };
+
+  return (
+    <GModal open onClose={onClose} title={mode === 'equip' ? 'Выбрать предмет для слота' : 'Добавить предмет в сумку'} width={760}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+          <div style={{ flex: 1, minWidth: 180, display: 'flex', alignItems: 'center', gap: 8, background: C.slot, border: '1px solid ' + C.borderLight, borderRadius: 12, padding: '8px 12px' }}>
+            <Search size={15} style={{ color: C.textMuted }} />
+            <input
+              autoFocus
+              placeholder="Поиск по названию или id…"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: C.text, fontSize: 13 }}
+            />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {['all', ...categories].map(cat => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setCategory(cat)}
+              className={BTN}
+              style={{ ...BTN_SECONDARY, ...(category === cat ? { background: 'rgba(255,255,255,0.1)', borderColor: C.accent, color: '#fff' } : {}) }}
+            >
+              {cat === 'all' ? 'Все' : categoryLabel(cat)}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ maxHeight: 360, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))', gap: 8, paddingRight: 4 }}>
+          {visible.map(it => (
+            <button
+              key={it.id}
+              type="button"
+              onClick={() => setSelected(it.id)}
+              title={it.name}
+              style={{
+                ...CARD, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+                padding: '10px 6px 8px', cursor: 'pointer',
+                outline: selected === it.id ? `2px solid ${C.accent}` : 'none',
+                outlineOffset: 1,
+              }}
+            >
+              <AdminItemIcon itemId={it.id} size={32} />
+              <span style={{ width: '100%', textAlign: 'center', fontSize: 10, fontWeight: 600, color: C.textSecondary, lineHeight: 1.25, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                {it.name}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {selectedItem && (
+          <div style={{ ...CARD, padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <AdminItemIcon itemId={selectedItem.id} size={44} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{selectedItem.name}</div>
+              <div style={{ fontSize: 11, fontFamily: 'var(--app-font-mono)', color: C.textMuted }}>{selectedItem.id} · {categoryLabel(selectedItem.category)} · {selectedItem.sellValue} GP</div>
+            </div>
+            {mode === 'inventory' ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <button type="button" onClick={() => setQty(q => Math.max(1, q - 1))} className={BTN} style={BTN_SECONDARY}><Minus size={14} /></button>
+                <input type="number" min={1} value={qty} onChange={e => setQty(Number(e.target.value))} style={{ ...INPUT, width: 70, textAlign: 'center' }} />
+                <button type="button" onClick={() => setQty(q => q + 1)} className={BTN} style={BTN_SECONDARY}><Plus size={14} /></button>
+                <button type="button" onClick={add} className={BTN} style={BTN_PRIMARY}><Plus size={14} /> Добавить</button>
+              </div>
+            ) : (
+              <button type="button" onClick={add} className={BTN} style={BTN_PRIMARY}><Swords size={14} /> Надеть</button>
+            )}
+          </div>
+        )}
+      </div>
+    </GModal>
+  );
+}
+
+/* ── Основная панель ──────────────────────────────────────────── */
+
+type TabKey = 'overview' | 'skills' | 'inventory' | 'equipment';
+
 export function AdminCharactersPanel() {
   const characters = useCharacterStore(s => s.characters);
   const activeCharacter = useCharacterStore(s => s.activeCharacter);
   const notify = useNotificationsStore(s => s.notifyInfo);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState<SaveData | null>(null);
+  const [tab, setTab] = useState<TabKey>('overview');
   const [saving, setSaving] = useState(false);
-
-  // Какие секции реально трогали. Если персонажа не меняли — при сохранении
-  // НЕ затираем его сейв дефолтами (это чинило «все скидываются на 1»).
+  const [skillQuery, setSkillQuery] = useState('');
   const [touched, setTouched] = useState({ skills: false, bank: false, equipment: false });
-  const [touchedSkills, setTouchedSkills] = useState<Set<string>>(new Set());
-
-  const [itemId, setItemId] = useState('');
-  const [itemQty, setItemQty] = useState(1);
-  const [equipSlot, setEquipSlot] = useState<EquipSlot>('weapon');
-  const [equipItemId, setEquipItemId] = useState('');
+  const [picker, setPicker] = useState<{ mode: 'inventory' | 'equip'; equipSlot?: EquipSlot } | null>(null);
 
   const items = useMemo(() => getAllItems().sort((a, b) => a.name.localeCompare(b.name, 'ru')), []);
 
@@ -139,152 +286,101 @@ export function AdminCharactersPanel() {
   const selected = characters.find(c => c.id === selectedId) ?? characters[0] ?? null;
 
   useEffect(() => {
-    if (!selected) {
-      setSelectedId(null);
-      setDraft(null);
-      return;
-    }
+    if (!selected) { setSelectedId(null); setDraft(null); return; }
     if (selected.id !== selectedId) setSelectedId(selected.id);
-
-    // fallbackSkills: если сейв старый и не содержит skills, берём текущие навыки
-    // игры (а не дефолтные 1), чтобы сохранение не «обнуляло» персонажа.
     const liveSkills = usePlayerStore.getState().skills as Record<SkillId, SkillState>;
     const fallback = selected.saveData?.player?.skills ? undefined : liveSkills;
     setDraft(normalizeSave(selected.saveData, fallback));
     setTouched({ skills: false, bank: false, equipment: false });
-    setTouchedSkills(new Set());
-    setItemId(items[0]?.id ?? '');
-    setItemQty(1);
-    setEquipItemId('');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected?.id]);
 
+  const dirty = touched.skills || touched.bank || touched.equipment;
+
   if (!selected || !draft) {
     return (
-      <div className="rounded-2xl p-6 text-center" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a' }}>
-        <div className="text-4xl mb-2">👤</div>
-        <p className="text-sm" style={{ color: DARK_TEXT }}>Персонажи загружаются…</p>
+      <div style={{ ...CARD, padding: 24, textAlign: 'center' }}>
+        <User size={32} style={{ margin: '0 auto 8px', color: C.textMuted }} />
+        <p style={{ fontSize: 13, color: C.textSecondary }}>Персонажи загружаются…</p>
       </div>
     );
   }
 
-  const patchDraft = (fn: (prev: SaveData) => SaveData) => {
-    setDraft(prev => (prev ? fn(prev) : prev));
-  };
-
-  const markSkills = (id: SkillId) => {
-    setTouched(prev => ({ ...prev, skills: true }));
-    setTouchedSkills(prev => new Set(prev).add(id));
-  };
+  const patchDraft = (fn: (prev: SaveData) => SaveData) => setDraft(prev => (prev ? fn(prev) : prev));
 
   const setSkillLevel = (id: SkillId, level: number) => {
     const nextLevel = clampLevel(level);
-    markSkills(id);
+    setTouched(p => ({ ...p, skills: true }));
     patchDraft(prev => ({
       ...prev,
-      player: {
-        ...prev.player,
-        skills: {
-          ...prev.player.skills,
-          [id]: {
-            ...prev.player.skills[id],
-            level: nextLevel,
-            xp: getXpForLevel(nextLevel),
-          },
-        },
-      },
+      player: { ...prev.player, skills: { ...prev.player.skills, [id]: { ...prev.player.skills[id], level: nextLevel, xp: getXpForLevel(nextLevel) } } },
     }));
   };
 
   const setSkillXp = (id: SkillId, xp: number) => {
-    const cleanXp = Math.max(0, Math.floor(Number.isFinite(xp) ? xp : 0));
-    markSkills(id);
+    const clean = Math.max(0, Math.floor(Number.isFinite(xp) ? xp : 0));
+    setTouched(p => ({ ...p, skills: true }));
     patchDraft(prev => ({
       ...prev,
-      player: {
-        ...prev.player,
-        skills: {
-          ...prev.player.skills,
-          [id]: {
-            ...prev.player.skills[id],
-            xp: cleanXp,
-            level: getLevelForXp(cleanXp),
-          },
-        },
-      },
+      player: { ...prev.player, skills: { ...prev.player.skills, [id]: { ...prev.player.skills[id], xp: clean, level: getLevelForXp(clean) } } },
     }));
   };
 
   const setAllSkillLevels = (level: number) => {
     const target = clampLevel(level);
-    setTouched(prev => ({ ...prev, skills: true }));
-    setTouchedSkills(new Set(ALL_SKILL_IDS));
+    setTouched(p => ({ ...p, skills: true }));
     patchDraft(prev => {
       const skills = { ...prev.player.skills };
-      for (const id of ALL_SKILL_IDS) {
-        skills[id] = { ...(skills[id] ?? { mastery: {} }), level: target, xp: getXpForLevel(target) };
-      }
+      for (const id of ALL_SKILL_IDS) skills[id] = { ...(skills[id] ?? { mastery: {} }), level: target, xp: getXpForLevel(target) };
       return { ...prev, player: { ...prev.player, skills } };
-    });
-  };
-
-  const addItemToBank = (id: string, qty: number) => {
-    const cleanQty = clampQty(qty);
-    if (!id || cleanQty <= 0) return;
-    setTouched(prev => ({ ...prev, bank: true }));
-    patchDraft(prev => {
-      const bank = [...prev.bank.items];
-      const idx = bank.findIndex(s => s.itemId === id);
-      if (idx >= 0) {
-        bank[idx] = { ...bank[idx], quantity: bank[idx].quantity + cleanQty };
-      } else {
-        bank.push({ itemId: id, quantity: cleanQty, locked: false, tab: 0 });
-      }
-      return { ...prev, bank: { ...prev.bank, items: bank } };
-    });
-  };
-
-  const changeItemQtyBy = (id: string, delta: number) => {
-    if (!id) return;
-    setTouched(prev => ({ ...prev, bank: true }));
-    patchDraft(prev => {
-      const bank = prev.bank.items
-        .map(s => (s.itemId === id ? { ...s, quantity: Math.max(0, s.quantity + delta) } : s))
-        .filter(s => s.quantity > 0);
-      return { ...prev, bank: { ...prev.bank, items: bank } };
     });
   };
 
   const setGold = (amount: number) => {
     const clean = Math.max(0, Math.floor(Number.isFinite(amount) ? amount : 0));
-    setTouched(prev => ({ ...prev, bank: true }));
+    setTouched(p => ({ ...p, bank: true }));
     patchDraft(prev => ({ ...prev, bank: { ...prev.bank, gp: clean } }));
   };
 
-  const addEquipment = (slot: EquipSlot, id: string) => {
-    if (!id) return;
-    setTouched(prev => ({ ...prev, equipment: true }));
-    patchDraft(prev => ({
-      ...prev,
-      player: { ...prev.player, equipment: { ...prev.player.equipment, [slot]: id } },
-    }));
+  const addItemToBank = (itemId: string, qty: number) => {
+    const clean = clampQty(qty);
+    if (!itemId || clean <= 0) return;
+    setTouched(p => ({ ...p, bank: true }));
+    patchDraft(prev => {
+      const bank = [...prev.bank.items];
+      const idx = bank.findIndex(s => s.itemId === itemId);
+      if (idx >= 0) bank[idx] = { ...bank[idx], quantity: (bank[idx].quantity || 0) + clean };
+      else bank.push({ itemId, quantity: clean, locked: false, tab: 0 });
+      return { ...prev, bank: { ...prev.bank, items: bank } };
+    });
   };
 
-  const removeEquipment = (slot: EquipSlot) => {
-    setTouched(prev => ({ ...prev, equipment: true }));
-    patchDraft(prev => ({
-      ...prev,
-      player: { ...prev.player, equipment: { ...prev.player.equipment, [slot]: null } },
-    }));
+  const changeItemQty = (itemId: string, delta: number) => {
+    if (!itemId) return;
+    setTouched(p => ({ ...p, bank: true }));
+    patchDraft(prev => {
+      const bank = prev.bank.items.map(s => (s.itemId === itemId ? { ...s, quantity: Math.max(0, (s.quantity || 0) + delta) } : s)).filter(s => s.quantity > 0);
+      return { ...prev, bank: { ...prev.bank, items: bank } };
+    });
+  };
+
+  const equipItem = (slot: EquipSlot, itemId: string) => {
+    if (!itemId) return;
+    setTouched(p => ({ ...p, equipment: true }));
+    patchDraft(prev => ({ ...prev, player: { ...prev.player, equipment: { ...prev.player.equipment, [slot]: itemId } } }));
+  };
+
+  const unequipItem = (slot: EquipSlot) => {
+    setTouched(p => ({ ...p, equipment: true }));
+    patchDraft(prev => ({ ...prev, player: { ...prev.player, equipment: { ...prev.player.equipment, [slot]: null } } }));
   };
 
   const save = async () => {
     if (!draft || !selected || saving) return;
     setSaving(true);
     try {
-      // Собираем патч из исходного сейва + только те секции, которые менял админ.
-      // Так «персонаж не трогали» никогда не затирается дефолтами.
-      const base = normalizeSave(selected.saveData, selected.saveData?.player?.skills ? undefined : usePlayerStore.getState().skills as Record<SkillId, SkillState>);
+      const fallback = selected.saveData?.player?.skills ? undefined : (usePlayerStore.getState().skills as Record<SkillId, SkillState>);
+      const base = normalizeSave(selected.saveData, fallback);
       const next: SaveData = {
         ...base,
         savedAt: Date.now(),
@@ -294,19 +390,15 @@ export function AdminCharactersPanel() {
         },
         bank: touched.bank ? draft.bank : base.bank,
       };
-
       const updated = await updateCharacter(selected.id, { saveData: next });
       setDraft(normalizeSave(updated.saveData, usePlayerStore.getState().skills as Record<SkillId, SkillState>));
       setTouched({ skills: false, bank: false, equipment: false });
-      setTouchedSkills(new Set());
       useCharacterStore.setState(state => ({
         characters: state.characters.map(c => (c.id === updated.id ? updated : c)),
         activeCharacter: state.activeCharacter?.id === updated.id ? updated : state.activeCharacter,
       }));
-      if (activeCharacter?.id === updated.id) {
-        applySaveData(normalizeSave(updated.saveData, usePlayerStore.getState().skills as Record<SkillId, SkillState>));
-      }
-      notify('Персонаж сохранён ✓');
+      if (activeCharacter?.id === updated.id) applySaveData(normalizeSave(updated.saveData, usePlayerStore.getState().skills as Record<SkillId, SkillState>));
+      notify('Персонаж сохранён');
     } catch (e) {
       notify(`Ошибка сохранения: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
@@ -314,231 +406,228 @@ export function AdminCharactersPanel() {
     }
   };
 
-  const inputStyle = 'w-20 bg-[var(--bg-card-dark)] border border-[var(--border-default)] rounded-xl px-2 py-1.5 text-right font-mono text-xs text-amber-300 focus:outline-none focus:border-amber-500';
-  const quickBtn = 'px-2 py-1 rounded-lg text-[11px] font-mono font-bold border transition-all active:scale-95';
+  const totalLevel = ALL_SKILL_IDS.reduce((sum, id) => sum + (draft.player.skills[id]?.level ?? 1), 0);
+
+  const visibleSkills = skillQuery.trim()
+    ? ALL_SKILL_IDS.filter(id => skillNameRu(id).toLowerCase().includes(skillQuery.trim().toLowerCase()))
+    : ALL_SKILL_IDS;
+
+  const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
+    { key: 'overview', label: 'Обзор', icon: <LayoutDashboard size={14} /> },
+    { key: 'skills', label: 'Навыки', icon: <Boxes size={14} /> },
+    { key: 'inventory', label: 'Сумка', icon: <Boxes size={14} /> },
+    { key: 'equipment', label: 'Снаряжение', icon: <Swords size={14} /> },
+  ];
 
   return (
-    <div className="space-y-4 max-w-6xl mx-auto">
-      {/* ── Выбор персонажа + сохранение ─────────────────────── */}
-      <div className="rounded-2xl p-3 sm:p-4" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.25)' }}>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="text-sm font-display font-black" style={{ color: DARK_TEXT }}>👤 Персонаж</div>
-          <select
-            value={selected.id}
-            onChange={e => setSelectedId(e.target.value)}
-            className="flex-1 min-w-[180px] bg-[var(--bg-card-dark)] border border-[var(--border-default)] rounded-xl px-3 py-2 text-xs font-bold text-[var(--text-primary)] focus:outline-none focus:border-amber-500"
-          >
-            {characters.map(c => (
-              <option key={c.id} value={c.id}>{c.nickname}{c.id === activeCharacter?.id ? ' · активный' : ''}</option>
-            ))}
-          </select>
+    <div className="space-y-3">
+      {/* Верхняя панель с выбором персонажа и сохранением */}
+      <div style={{ ...CARD, padding: 12, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+          <img
+            src={getAvatarPath(selected.avatarId)}
+            alt=""
+            style={{ width: 38, height: 38, borderRadius: '50%', border: '2px solid ' + C.accent, objectFit: 'cover', flexShrink: 0, background: C.slot }}
+          />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 900, color: C.text }}>{selected.nickname}</div>
+            <div style={{ fontSize: 11, color: C.textMuted }}>{getRaceLabel(selected.raceId, 'ru')}{selected.id === activeCharacter?.id ? ' · активный' : ''}</div>
+          </div>
+        </div>
+
+        <select
+          value={selected.id}
+          onChange={e => setSelectedId(e.target.value)}
+          className="flex-1 min-w-[140px]"
+          style={{ ...INPUT, fontSize: 12, fontWeight: 600 }}
+        >
+          {characters.map(c => <option key={c.id} value={c.id}>{c.nickname}</option>)}
+        </select>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
+          {dirty && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: C.accent, fontFamily: 'var(--app-font-mono)' }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: C.accent, boxShadow: `0 0 6px ${C.accent}` }} />
+              есть изменения
+            </span>
+          )}
+          <button id="admin-character-save" type="button" onClick={() => void save()} disabled={saving} className={BTN} style={BTN_PRIMARY}>
+            <Save size={14} /> {saving ? 'Сохранение…' : 'Сохранить'}
+          </button>
+        </div>
+      </div>
+
+      {/* Вкладки */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        {TABS.map(t => (
           <button
-            id="admin-character-save"
+            key={t.key}
             type="button"
-            onClick={() => void save()}
-            disabled={saving}
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-2xl text-xs transition-all active:scale-95 flex items-center gap-1.5 disabled:opacity-50"
+            onClick={() => setTab(t.key)}
+            className={BTN}
+            style={{
+              ...(tab === t.key ? BTN_PRIMARY : BTN_SECONDARY),
+              padding: '8px 14px',
+              borderRadius: 10,
+            }}
           >
-            <Save className="w-3.5 h-3.5" />
-            {saving ? 'Сохранение…' : 'Сохранить'}
+            {t.icon} {t.label}
           </button>
-        </div>
-        <p className="text-[11px] font-semibold mt-2" style={{ color: MUTED_DARK }}>
-          Сохраняются только те блоки, которые ты менял (навыки, сумка или экип). Остальное остаётся как было.
-        </p>
+        ))}
       </div>
 
-      {/* ── Характеристики: уровни и опыт ───────────────────── */}
-      <div className="rounded-2xl p-3 sm:p-4" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.25)' }}>
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-          <h2 className="text-sm font-display font-black" style={{ color: DARK_TEXT }}>📊 Характеристики и уровни</h2>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-mono" style={{ color: MUTED_DARK }}>Всем:</span>
-            {[1, 10, 50, 99].map(level => (
-              <button
-                key={level}
-                type="button"
-                onClick={() => setAllSkillLevels(level)}
-                className={`${quickBtn} border-amber-500/40 bg-amber-500/10 text-[#5a3a10]`}
-              >
-                {level}
-              </button>
+      {/* ── Обзор ── */}
+      {tab === 'overview' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
+          {[
+            { label: 'Общий уровень', value: totalLevel },
+            { label: 'Золото', value: formatNumber(draft.bank.gp) },
+            { label: 'Слоты сумки', value: `${draft.bank.items.length}/${draft.bank.maxSlots}` },
+            { label: 'Активная профессия', value: draft.game.activeSkill ? skillNameRu(draft.game.activeSkill) : '—' },
+          ].map(cell => (
+            <div key={cell.label} style={{ ...CARD, padding: 14 }}>
+              <div style={LABEL}>{cell.label}</div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: C.text, marginTop: 4, fontFamily: 'var(--app-font-mono)' }}>{cell.value}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Навыки ── */}
+      {tab === 'skills' && (
+        <div style={{ ...CARD, padding: 12 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <div style={{ flex: 1, minWidth: 160, display: 'flex', alignItems: 'center', gap: 8, background: C.slot, border: '1px solid ' + C.borderLight, borderRadius: 10, padding: '7px 10px' }}>
+              <Search size={14} style={{ color: C.textMuted }} />
+              <input placeholder="Поиск навыка…" value={skillQuery} onChange={e => setSkillQuery(e.target.value)} style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: C.text, fontSize: 12 }} />
+            </div>
+            <span style={{ fontSize: 11, color: C.textMuted, fontFamily: 'var(--app-font-mono)' }}>Всем:</span>
+            {[1, 10, 50, 99].map(lv => (
+              <button key={lv} type="button" onClick={() => setAllSkillLevels(lv)} className={BTN} style={BTN_SECONDARY}>{lv}</button>
             ))}
-            <button
-              type="button"
-              onClick={() => setAllSkillLevels(1)}
-              className={`${quickBtn} border-stone-500/40 bg-stone-500/10 text-[#5a3a10]`}
-              title="Сбросить все уровни к 1"
-            >
-              <RotateCcw className="w-3 h-3 inline" /> База
-            </button>
+            <button type="button" onClick={() => setAllSkillLevels(1)} className={BTN} style={BTN_MUTED} title="Сброс к базе"><RotateCcw size={13} /> База</button>
           </div>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-          {ALL_SKILL_IDS.map(id => {
-            const skill = draft.player.skills[id];
-            if (!skill) return null;
-            const lvl = clampLevel(skill.level);
-            const to99 = MAX_LEVEL - lvl;
-            const xpFieldId = `admin-xp-${id}`;
-            const lvlFieldId = `admin-level-${id}`;
-            return (
-              <div key={id} className="rounded-xl bg-[var(--bg-slot)] border border-[var(--border-default)] p-2.5">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="flex-1 min-w-[110px] text-xs font-bold" style={{ color: DARK_TEXT }}>{skillNameRu(id)}</span>
-                  <label htmlFor={lvlFieldId} className="flex items-center gap-1 text-[10px] font-bold" style={{ color: MUTED_DARK }}>
-                    Ур.
-                    <input
-                      id={lvlFieldId}
-                      type="number"
-                      className={`${inputStyle} w-14`}
-                      value={skill.level}
-                      min={1}
-                      max={MAX_LEVEL}
-                      onChange={e => setSkillLevel(id, Number(e.target.value))}
-                    />
-                  </label>
-                  <label htmlFor={xpFieldId} className="flex items-center gap-1 text-[10px] font-bold" style={{ color: MUTED_DARK }}>
-                    Оп.
-                    <input
-                      id={xpFieldId}
-                      type="number"
-                      className={`${inputStyle} w-16`}
-                      value={skill.xp}
-                      min={0}
-                      step={1}
-                      onChange={e => setSkillXp(id, Number(e.target.value))}
-                    />
-                  </label>
-                </div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[9px] font-mono" style={{ color: MUTED_DARK }}>уровень:</span>
-                  <button type="button" onClick={() => setSkillLevel(id, Math.max(1, lvl - 1))} className={`${quickBtn} border-red-500/40 bg-red-500/10 text-[#7f1d1d]`} title="−1 уровень">−1</button>
-                  <button type="button" onClick={() => setSkillLevel(id, lvl + 1)} className={`${quickBtn} border-emerald-500/40 bg-emerald-500/10 text-[#1d4a1d]`} title="+1 уровень">+1</button>
-                  <button type="button" onClick={() => setSkillLevel(id, lvl + 10)} className={`${quickBtn} border-emerald-500/40 bg-emerald-500/10 text-[#1d4a1d]`} title="+10 уровней">+10</button>
-                  <button type="button" onClick={() => setSkillLevel(id, MAX_LEVEL)} className={`${quickBtn} border-amber-500/40 bg-amber-500/10 text-[#5a3a10]`} title="Максимум">{to99 <= 0 ? 'MAX ✔' : `MAX (+${to99})`}</button>
-                </div>
-                <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-                  <span className="text-[9px] font-mono" style={{ color: MUTED_DARK }}>опыт:</span>
-                  <button type="button" onClick={() => setSkillXp(id, skill.xp + 1000)} className={`${quickBtn} border-sky-500/40 bg-sky-500/10 text-[#1e3a5f]`} title="+1 000 XP">+1К</button>
-                  <button type="button" onClick={() => setSkillXp(id, skill.xp + 10000)} className={`${quickBtn} border-sky-500/40 bg-sky-500/10 text-[#1e3a5f]`} title="+10 000 XP">+10К</button>
-                  <button type="button" onClick={() => setSkillXp(id, getXpForLevel(MAX_LEVEL))} className={`${quickBtn} border-amber-500/40 bg-amber-500/10 text-[#5a3a10]`} title="XP до 99 уровня">MAX XP</button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
-      {/* ── Сумка: предметы и золото ───────────────────────── */}
-      <div className="rounded-2xl p-3 sm:p-4" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.25)' }}>
-        <h2 className="text-sm font-display font-black mb-2" style={{ color: DARK_TEXT }}>🎒 Сумка</h2>
-
-        {/* Добавить предмет */}
-        <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-[var(--bg-slot)] border border-[var(--border-default)] mb-2">
-          <select
-            value={itemId}
-            onChange={e => setItemId(e.target.value)}
-            className="flex-1 min-w-[140px] bg-[var(--bg-card-dark)] border border-[var(--border-default)] rounded-xl px-2 py-1.5 text-xs font-bold text-[var(--text-primary)] focus:outline-none focus:border-amber-500"
-          >
-            <option value="">— предмет —</option>
-            {items.map(item => <option key={item.id} value={item.id}>{item.name} ({item.id})</option>)}
-          </select>
-          <div className="flex items-center gap-1">
-            <button type="button" onClick={() => setItemQty(q => Math.max(1, q - 1))} className={`${quickBtn} border-stone-500/40 bg-stone-500/10 text-[#5a3a10]`}><Minus className="w-3 h-3" /></button>
-            <input type="number" value={itemQty} min={1} step={1} onChange={e => setItemQty(Number(e.target.value))} className={`${inputStyle} w-16`} />
-            <button type="button" onClick={() => setItemQty(q => q + 1)} className={`${quickBtn} border-emerald-500/40 bg-emerald-500/10 text-[#1d4a1d]`}><Plus className="w-3 h-3" /></button>
-          </div>
-          <button type="button" onClick={() => addItemToBank(itemId, itemQty)} className="px-3 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-900 font-bold rounded-xl text-xs transition-all active:scale-95 flex items-center gap-1">
-            <Plus className="w-3.5 h-3.5" /> Добавить
-          </button>
-        </div>
-
-        {/* Золото */}
-        <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-[var(--bg-slot)] border border-[var(--border-default)] mb-2">
-          <span className="text-xs font-bold" style={{ color: DARK_TEXT }}>🪙 Золото</span>
-          <input type="number" value={draft.bank.gp} min={0} onChange={e => setGold(Number(e.target.value))} className={inputStyle} />
-          <div className="flex items-center gap-1">
-            <button type="button" onClick={() => setGold(Math.max(0, draft.bank.gp - 1000))} className={`${quickBtn} border-red-500/40 bg-red-500/10 text-[#7f1d1d]`}>−1К</button>
-            <button type="button" onClick={() => setGold(Math.max(0, draft.bank.gp - 100))} className={`${quickBtn} border-red-500/40 bg-red-500/10 text-[#7f1d1d]`}>−100</button>
-            <button type="button" onClick={() => setGold(0)} className={`${quickBtn} border-stone-500/40 bg-stone-500/10 text-[#5a3a10]`}>0</button>
-            <button type="button" onClick={() => setGold(draft.bank.gp + 100)} className={`${quickBtn} border-emerald-500/40 bg-emerald-500/10 text-[#1d4a1d]`}>+100</button>
-            <button type="button" onClick={() => setGold(draft.bank.gp + 1000)} className={`${quickBtn} border-emerald-500/40 bg-emerald-500/10 text-[#1d4a1d]`}>+1К</button>
-          </div>
-        </div>
-
-        {/* Список предметов */}
-        {draft.bank.items.length === 0 ? (
-          <p className="text-[11px] pb-2" style={{ color: MUTED_DARK }}>Сумка пуста.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-            {draft.bank.items.map((slot: BankSlot, i: number) => {
-              const item = items.find(x => x.id === slot.itemId);
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+            {visibleSkills.map(id => {
+              const skill = draft.player.skills[id];
+              if (!skill) return null;
+              const lvl = clampLevel(skill.level);
               return (
-                <div key={`${slot.itemId}-${i}`} className="flex flex-wrap items-center gap-2 p-2 rounded-xl bg-[var(--bg-slot)] border border-[var(--border-default)]">
-                  <div className="flex-1 min-w-[90px]">
-                    <div className="text-[11px] font-bold" style={{ color: DARK_TEXT }}>{item?.name ?? slot.itemId}</div>
-                    <div className="text-[10px] font-mono" style={{ color: MUTED_DARK }}>×{slot.quantity}</div>
+                <div key={id} style={{ ...CARD, background: C.slot, padding: '10px 12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <span style={{ flex: 1, fontSize: 13, fontWeight: 800, color: C.text }}>{skillNameRu(id)}</span>
+                    <span style={{ fontSize: 10, color: C.textMuted, fontFamily: 'var(--app-font-mono)' }}>ур.</span>
+                    <input type="number" min={1} max={MAX_LEVEL} value={skill.level} onChange={e => setSkillLevel(id, Number(e.target.value))} style={{ ...INPUT, width: 54, textAlign: 'center' }} />
+                    <span style={{ fontSize: 10, color: C.textMuted, fontFamily: 'var(--app-font-mono)' }}>xp</span>
+                    <input type="number" min={0} step={1} value={skill.xp} onChange={e => setSkillXp(id, Number(e.target.value))} style={{ ...INPUT, width: 90, textAlign: 'center' }} />
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button type="button" onClick={() => changeItemQtyBy(slot.itemId, -10)} className={`${quickBtn} border-red-500/40 bg-red-500/10 text-[#7f1d1d]`}>−10</button>
-                    <button type="button" onClick={() => changeItemQtyBy(slot.itemId, -1)} className={`${quickBtn} border-red-500/40 bg-red-500/10 text-[#7f1d1d]`} title="Убрать 1"><Minus className="w-3 h-3" /></button>
-                    <button type="button" onClick={() => changeItemQtyBy(slot.itemId, +1)} className={`${quickBtn} border-emerald-500/40 bg-emerald-500/10 text-[#1d4a1d]`} title="Добавить 1"><Plus className="w-3 h-3" /></button>
-                    <button type="button" onClick={() => changeItemQtyBy(slot.itemId, -slot.quantity)} className={`${quickBtn} border-red-500/40 bg-red-500/10 text-[#7f1d1d]`} title="Убрать всё"><Trash2 className="w-3 h-3" /></button>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <button type="button" onClick={() => setSkillLevel(id, Math.max(1, lvl - 1))} className={BTN} style={BTN_SECONDARY}>−1</button>
+                    <button type="button" onClick={() => setSkillLevel(id, lvl + 1)} className={BTN} style={BTN_SECONDARY}>+1</button>
+                    <button type="button" onClick={() => setSkillLevel(id, lvl + 10)} className={BTN} style={BTN_SECONDARY}>+10</button>
+                    <button type="button" onClick={() => setSkillLevel(id, MAX_LEVEL)} className={BTN} style={BTN_SECONDARY}>MAX</button>
+                    <span style={{ width: 8 }} />
+                    <button type="button" onClick={() => setSkillXp(id, skill.xp + 1000)} className={BTN} style={BTN_MUTED}>+1К xp</button>
+                    <button type="button" onClick={() => setSkillXp(id, skill.xp + 10000)} className={BTN} style={BTN_MUTED}>+10К xp</button>
+                    <button type="button" onClick={() => setSkillXp(id, getXpForLevel(MAX_LEVEL))} className={BTN} style={BTN_MUTED}>MAX xp</button>
                   </div>
                 </div>
               );
             })}
           </div>
-        )}
-      </div>
-
-      {/* ── Снаряжение ─────────────────────────────────────── */}
-      <div className="rounded-2xl p-3 sm:p-4" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.25)' }}>
-        <h2 className="text-sm font-display font-black mb-2" style={{ color: DARK_TEXT }}>⚔️ Снаряжение</h2>
-        <p className="text-[11px] font-semibold mb-2" style={{ color: MUTED_DARK }}>Выбери слот, затем предмет из списка и нажми «Надеть».</p>
-
-        <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-[var(--bg-slot)] border border-[var(--border-default)] mb-2">
-          <select
-            value={equipSlot}
-            onChange={e => setEquipSlot(e.target.value as EquipSlot)}
-            className="bg-[var(--bg-card-dark)] border border-[var(--border-default)] rounded-xl px-2 py-1.5 text-xs font-bold text-[var(--text-primary)] focus:outline-none focus:border-amber-500"
-          >
-            {EQUIP_SLOTS.map(slot => <option key={slot} value={slot}>{EQUIP_SLOT_LABELS[slot]}</option>)}
-          </select>
-          <select
-            value={equipItemId}
-            onChange={e => setEquipItemId(e.target.value)}
-            className="flex-1 min-w-[140px] bg-[var(--bg-card-dark)] border border-[var(--border-default)] rounded-xl px-2 py-1.5 text-xs font-bold text-[var(--text-primary)] focus:outline-none focus:border-amber-500"
-          >
-            <option value="">— предмет —</option>
-            {items.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
-          </select>
-          <button type="button" onClick={() => addEquipment(equipSlot, equipItemId)} className="px-3 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-900 font-bold rounded-xl text-xs transition-all active:scale-95 flex items-center gap-1">
-            <Plus className="w-3.5 h-3.5" /> Надеть
-          </button>
         </div>
+      )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-          {EQUIP_SLOTS.map(slot => {
-            const eqId = draft.player.equipment[slot];
-            const eq = eqId ? items.find(x => x.id === eqId) : null;
-            return (
-              <div key={slot} className="flex items-center gap-2 p-2 rounded-xl bg-[var(--bg-slot)] border border-[var(--border-default)]">
-                <div className="flex-1 min-w-0">
-                  <div className="text-[10px] uppercase font-mono font-bold" style={{ color: MUTED_DARK }}>{EQUIP_SLOT_LABELS[slot]}</div>
-                  <div className="text-[11px] font-bold" style={{ color: DARK_TEXT }}>{eq?.name ?? (eqId ? eqId : '— пусто —')}</div>
+      {/* ── Сумка ── */}
+      {tab === 'inventory' && (
+        <div style={{ ...CARD, padding: 12 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={LABEL}>🪙 Золото</span>
+              <input type="number" min={0} value={draft.bank.gp} onChange={e => setGold(Number(e.target.value))} style={{ ...INPUT, width: 120, textAlign: 'right' }} />
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button type="button" onClick={() => setGold(Math.max(0, draft.bank.gp - 1000))} className={BTN} style={BTN_SECONDARY}>−1К</button>
+              <button type="button" onClick={() => setGold(Math.max(0, draft.bank.gp - 100))} className={BTN} style={BTN_SECONDARY}>−100</button>
+              <button type="button" onClick={() => setGold(draft.bank.gp + 100)} className={BTN} style={BTN_SECONDARY}>+100</button>
+              <button type="button" onClick={() => setGold(draft.bank.gp + 1000)} className={BTN} style={BTN_SECONDARY}>+1К</button>
+            </div>
+            <button type="button" onClick={() => setPicker({ mode: 'inventory' })} className={BTN} style={{ ...BTN_PRIMARY, marginLeft: 'auto' }}>
+              <Plus size={14} /> Добавить предмет
+            </button>
+          </div>
+
+          {draft.bank.items.length === 0 ? (
+            <p style={{ fontSize: 12, color: C.textMuted, padding: '12px 0' }}>Сумка пуста. Нажми «Добавить предмет», чтобы выбрать предмет из каталога.</p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+              {draft.bank.items.map((slot: BankSlot, i: number) => {
+                const item = getItem(slot.itemId);
+                return (
+                  <div key={`${slot.itemId}-${i}`} style={{ ...CARD, background: C.slot, padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                      <AdminItemIcon itemId={slot.itemId} size={34} />
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item?.name ?? slot.itemId}</div>
+                        <div style={{ fontSize: 10, fontFamily: 'var(--app-font-mono)', color: C.textMuted }}>×{formatNumber(slot.quantity)}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                      <button type="button" onClick={() => changeItemQty(slot.itemId, -1)} className={BTN} style={BTN_SECONDARY}><Minus size={13} /></button>
+                      <button type="button" onClick={() => changeItemQty(slot.itemId, +1)} className={BTN} style={BTN_SECONDARY}><Plus size={13} /></button>
+                      <button type="button" onClick={() => changeItemQty(slot.itemId, -slot.quantity)} className={BTN} style={BTN_MUTED} title="Убрать всё"><Trash2 size={13} /></button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Снаряжение ── */}
+      {tab === 'equipment' && (
+        <div style={{ ...CARD, padding: 12 }}>
+          <p style={{ fontSize: 12, color: C.textSecondary, marginBottom: 10 }}>Выбери слот, чтобы назначить предмет из каталога. Клик по занятому слоту — сменить, кнопка «снять» — освободить.</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            {EQUIP_SLOTS.map(slot => {
+              const eqId = draft.player.equipment[slot];
+              const eq = eqId ? getItem(eqId) : null;
+              return (
+                <div key={slot} style={{ ...CARD, background: C.slot, padding: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                    <AdminItemIcon itemId={eqId ?? ''} size={34} />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 10, ...LABEL, marginBottom: 2 }}>{EQUIP_SLOT_LABELS[slot]}</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: eq ? C.text : C.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {eq?.name ?? (eqId ? eqId : 'пусто')}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                    <button type="button" onClick={() => setPicker({ mode: 'equip', equipSlot: slot })} className={BTN} style={{ ...BTN_SECONDARY, flex: 1 }}>
+                      {eq ? 'Сменить' : 'Надеть'}
+                    </button>
+                    {eq && <button type="button" onClick={() => unequipItem(slot)} className={BTN} style={BTN_MUTED} title="Снять"><Trash2 size={13} /></button>}
+                  </div>
                 </div>
-                {eqId && (
-                  <button type="button" onClick={() => removeEquipment(slot)} className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-700 transition-all active:scale-95" title="Снять">
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
+
+      {picker && (
+        <ItemPickerModal
+          mode={picker.mode}
+          equipSlot={picker.equipSlot}
+          items={picker.mode === 'equip' && picker.equipSlot ? items.filter(i => i.equipSlot === picker.equipSlot) : items}
+          onClose={() => setPicker(null)}
+          onAddInventory={(id, qty) => addItemToBank(id, qty)}
+          onEquip={(id) => picker.equipSlot ? equipItem(picker.equipSlot, id) : undefined}
+        />
+      )}
     </div>
   );
 }
