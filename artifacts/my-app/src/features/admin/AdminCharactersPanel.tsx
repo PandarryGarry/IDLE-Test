@@ -235,14 +235,14 @@ function ItemPickerModal({
         </div>
 
         {selectedItem && (
-          <div style={{ ...CARD, padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ ...CARD, padding: 12, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <AdminItemIcon itemId={selectedItem.id} size={44} />
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ flex: 1, minWidth: 120 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{selectedItem.name}</div>
               <div style={{ fontSize: 11, fontFamily: 'var(--app-font-mono)', color: C.textMuted }}>{selectedItem.id} · {categoryLabel(selectedItem.category)} · {selectedItem.sellValue} GP</div>
             </div>
             {mode === 'inventory' ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                 <button type="button" onClick={() => setQty(q => Math.max(1, q - 1))} className={BTN} style={BTN_SECONDARY}><Minus size={14} /></button>
                 <input type="number" min={1} value={qty} onChange={e => setQty(Number(e.target.value))} style={{ ...INPUT, width: 70, textAlign: 'center' }} />
                 <button type="button" onClick={() => setQty(q => q + 1)} className={BTN} style={BTN_SECONDARY}><Plus size={14} /></button>
@@ -515,8 +515,8 @@ export function AdminCharactersPanel() {
               const lvl = clampLevel(skill.level);
               return (
                 <div key={id} style={{ ...CARD, background: C.slot, padding: '10px 12px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <span style={{ flex: 1, fontSize: 13, fontWeight: 800, color: C.text }}>{skillNameRu(id)}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                    <span style={{ flex: 1, minWidth: 110, fontSize: 13, fontWeight: 800, color: C.text }}>{skillNameRu(id)}</span>
                     <span style={{ fontSize: 10, color: C.textMuted, fontFamily: 'var(--app-font-mono)' }}>ур.</span>
                     <input type="number" min={1} max={MAX_LEVEL} value={skill.level} onChange={e => setSkillLevel(id, Number(e.target.value))} style={{ ...INPUT, width: 54, textAlign: 'center' }} />
                     <span style={{ fontSize: 10, color: C.textMuted, fontFamily: 'var(--app-font-mono)' }}>xp</span>
