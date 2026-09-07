@@ -26,8 +26,10 @@ const ru = {
   'skill.summoning': 'Призыв',
   'skill.astrology': 'Астрология', 
   'skill.township': 'Поселение',
+  'skill.foraging': 'Сбор',
   'skill.woodcuttingDesc': 'Добывай ценные брёвна для костра, ремесла и торговли.',
   'skill.fishingDesc': 'Лови рыбу для приготовления целебной еды и продажи.',
+  'skill.foragingDesc': 'Собирай дары леса и земли: грибы, ветки, травы и редкие находки.',
   'skill.miningDesc': 'Добывай руду в шахтах и находи редчайшие самоцветы.',
   'skill.firemakingDesc': 'Сжигай древесину, получая ценный опыт и полезную золу.',
   'skill.cookingDesc': 'Превращай сырые продукты в сытную восстанавливающую еду.',
@@ -104,6 +106,20 @@ const ru = {
   'fishing.selectSpot': 'Выберите водоём для рыбной ловли.',
   'fishing.stop': 'Смотать удочку', 
   'fishing.availableSpots': 'Рыболовные места',
+
+  // ── Сбор ─────────────────────────────────────────────────────
+  'foraging.searching': 'Поиск даров леса',
+  'foraging.selectSpot': 'Выберите участок, чтобы начать поиск.',
+  'foraging.stop': 'Остановить поиск',
+  'foraging.start': 'Начать сбор',
+  'foraging.availableSpots': 'Участки поиска',
+  'foraging.info': 'О профессии',
+  'foraging.yields': 'Возможная добыча',
+  'foraging.rare': 'Редкое',
+  'foraging.danger': 'встреча',
+  'foraging.session': 'сессия',
+  'foraging.clear': 'Очистить',
+  'foraging.feed': 'Лента находок',
 
   // ── Кулинария ────────────────────────────────────────────────
   'cooking.cooking': 'Приготовление', 
@@ -225,11 +241,19 @@ const en: Partial<Record<keyof typeof ru, string>> = {
   'skill.attack': 'Attack', 'skill.strength': 'Strength',
   'skill.defence': 'Defence', 'skill.hitpoints': 'Hitpoints',
   'skill.ranged': 'Ranged', 'skill.magic': 'Magic',
-  'skill.woodcutting': 'Woodcutting', 'skill.fishing': 'Fishing',
+  'skill.woodcutting': 'Woodcutting', 'skill.fishing': 'Fishing', 'skill.foraging': 'Foraging',
   'skill.mining': 'Mining', 'skill.firemaking': 'Firemaking',
   'skill.cooking': 'Cooking', 'skill.smithing': 'Smithing',
   'nav.home': 'Home', 'nav.skills': 'Skills', 'nav.combat': 'Combat',
   'nav.inventory': 'Inventory', 'nav.settings': 'Settings', 'nav.save': 'Save Game',
+  'foraging.start': 'Start gathering',
+  'foraging.info': 'About skill',
+  'foraging.yields': 'Possible loot',
+  'foraging.rare': 'Rare',
+  'foraging.danger': 'enemy',
+  'foraging.session': 'session',
+  'foraging.clear': 'Clear',
+  'foraging.feed': 'Loot feed',
 };
 
 export type TranslationKey = keyof typeof ru;
