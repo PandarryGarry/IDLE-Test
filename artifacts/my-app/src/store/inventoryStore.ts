@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { BankSlot as InventorySlot } from '@/data/types';
 import { getItem } from '@/domain/items';
 import { useAuthStore } from '@/store/authStore';
+import { usePlayerStore } from '@/store/playerStore';
 
 const DEFAULT_MAX_SLOTS = 24;
 const SLOTS_PER_UPGRADE = 10;
@@ -201,7 +202,13 @@ export const useInventoryStore = create<InventoryStore>((set, get) => ({
     if (sellQty <= 0) return 0;
     
     get().removeItem(itemId, sellQty);
-    const gpGained = item.sellValue * sellQty;
+    // Находки «Сбора»: уровень 50+ даёт +2% к цене продажи.
+    let unitPrice = item.sellValue;
+    if (item.category === 'foraging') {
+      const forageLevel = usePlayerStore.getState().getSkillLevel('foraging');
+      if (forageLevel >= 50) unitPrice = Math.max(0, Math.round(unitPrice * 1.02));
+    }
+    const gpGained = unitPrice * sellQty;
     get().addGp(gpGained);
     return gpGained;
   },

@@ -6,12 +6,12 @@ export type SkillId =
   | 'attack' | 'strength' | 'defence' | 'hitpoints'
   | 'ranged' | 'magic' | 'prayer' | 'slayer'
   | 'woodcutting' | 'fishing' | 'firemaking' | 'cooking'
-  | 'mining' | 'smithing' | 'thieving' | 'fletching'
+  | 'mining' | 'smithing' | 'thieving' | 'fletching' | 'foraging'
   | 'crafting' | 'runecrafting' | 'herblore' | 'farming'
   | 'agility' | 'summoning' | 'astrology' | 'township';
 
 export const COMBAT_SKILLS: SkillId[] = ['attack', 'strength', 'defence', 'hitpoints', 'ranged', 'magic', 'prayer', 'slayer'];
-export const GATHERING_SKILLS: SkillId[] = ['woodcutting', 'fishing', 'mining'];
+export const GATHERING_SKILLS: SkillId[] = ['woodcutting', 'fishing', 'mining', 'foraging'];
 export const CRAFTING_SKILLS: SkillId[] = ['firemaking', 'cooking', 'smithing', 'fletching', 'crafting', 'runecrafting', 'herblore'];
 export const OTHER_SKILLS: SkillId[] = ['farming', 'agility', 'summoning', 'astrology', 'township', 'thieving'];
 export const ALL_SKILL_IDS: SkillId[] = [...COMBAT_SKILLS, ...GATHERING_SKILLS, ...CRAFTING_SKILLS, ...OTHER_SKILLS];

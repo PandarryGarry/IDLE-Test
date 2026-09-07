@@ -23,6 +23,7 @@ import { DashboardPage } from '@/features/system/DashboardPage';
 import { WoodcuttingPage } from '@/features/professions/WoodcuttingPage';
 import { MiningPage } from '@/features/professions/MiningPage';
 import { FishingPage } from '@/features/professions/FishingPage';
+import { ForagingPage } from '@/features/professions/ForagingPage';
 import { CookingPage } from '@/features/professions/CookingPage';
 import { SmithingPage } from '@/features/professions/SmithingPage';
 import { FiremakingPage } from '@/features/professions/FiremakingPage';
@@ -213,6 +214,7 @@ function Router() {
             <Route path="/woodcutting" component={WoodcuttingPage} />
             <Route path="/mining" component={MiningPage} />
             <Route path="/fishing" component={FishingPage} />
+            <Route path="/foraging" component={ForagingPage} />
             <Route path="/cooking" component={CookingPage} />
             <Route path="/smithing" component={SmithingPage} />
             <Route path="/firemaking" component={FiremakingPage} />

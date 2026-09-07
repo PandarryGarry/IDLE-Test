@@ -8,6 +8,7 @@ import { MINERALS } from './resources/minerals.ts';
 import { FORAGE_WOOD } from './foraging/wood.ts';
 import { FORAGE_FUNGI } from './foraging/fungi.ts';
 import { FORAGE_BITS } from './foraging/bits.ts';
+import { FORAGE_SPECIAL } from './foraging/special.ts';
 
 /** Полный каталог предметов (батч 1: ресурсы + «Сбор»). */
 export const CATALOG: CatalogItem[] = [
@@ -19,6 +20,7 @@ export const CATALOG: CatalogItem[] = [
   ...FORAGE_WOOD,
   ...FORAGE_FUNGI,
   ...FORAGE_BITS,
+  ...FORAGE_SPECIAL,
 ];
 
 /** Версия каталога — фундамент миграции на БД (§8 плана). */
@@ -35,4 +37,5 @@ export const CATALOG_SUMMARY = {
   forageWood: FORAGE_WOOD.length,
   forageFungi: FORAGE_FUNGI.length / 2,
   forageBits: FORAGE_BITS.length,
+  forageSpecial: FORAGE_SPECIAL.length,
 };

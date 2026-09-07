@@ -5,6 +5,11 @@ import { FISHING_SPOTS_MAP } from '../domain/professions/fishing.ts';
 import { COOKING_RECIPES_MAP } from '../domain/professions/cooking.ts';
 import { SMITHING_MAP } from '../domain/professions/smithing.ts';
 import { FIREMAKING_MAP } from '../domain/professions/firemaking.ts';
+import {
+  FORAGING_ACTIONS_MAP,
+  processForagingAction,
+  foragingSpeedMultiplier,
+} from '../domain/professions/foraging.ts';
 import { usePlayerStore } from '../store/playerStore.ts';
 import { useBankStore } from '../store/bankStore.ts';
 import { calcBurnChance } from './formulas.ts';
@@ -16,6 +21,8 @@ export interface ActionResult {
   masteryXpGained: number;
   bonusXp?: number;
   preserved?: boolean;
+  /** Встреча с мобом во время «Сбора» (обрабатывается игровым циклом). */
+  encounter?: { areaId: string; monsterId: string; boss: boolean };
 }
 
 export interface SkillHandler {
@@ -92,6 +99,33 @@ export const skillRegistry: Record<SkillId, SkillHandler | null> = {
     getOutputItem: (actionId) => {
       const spot = FISHING_SPOTS_MAP[actionId];
       return spot ? { itemId: spot.fishId, qty: 1 } : null;
+    },
+  },
+
+  foraging: {
+    isGathering: true,
+    process: (actionId) => {
+      const action = FORAGING_ACTIONS_MAP[actionId];
+      if (!action) return null;
+      const playerLevel = usePlayerStore.getState().getSkillLevel('foraging');
+      if (playerLevel < action.levelRequired) return null;
+      const result = processForagingAction(actionId, playerLevel);
+      if (!result) return null;
+      return {
+        items: result.items,
+        xpGained: result.xp,
+        masteryXpGained: result.masteryXp,
+        encounter: result.encounter,
+      };
+    },
+    getInterval: (actionId) => {
+      const base = FORAGING_ACTIONS_MAP[actionId]?.interval ?? 4000;
+      return Math.round(base / Math.max(0.01, foragingSpeedMultiplier()));
+    },
+    getXpPerAction: (actionId) => FORAGING_ACTIONS_MAP[actionId]?.xp ?? 0,
+    getOutputItem: (actionId) => {
+      const action = FORAGING_ACTIONS_MAP[actionId];
+      return action ? { itemId: action.dropItemId, qty: 1 } : null;
     },
   },
 

@@ -6,8 +6,14 @@ import { FISHING_SPOTS_MAP } from '@/domain/professions/fishing';
 import { COOKING_RECIPES_MAP } from '@/domain/professions/cooking';
 import { SMITHING_MAP } from '@/domain/professions/smithing';
 import { FIREMAKING_MAP } from '@/domain/professions/firemaking';
+import {
+  FORAGING_ACTIONS_MAP,
+  processForagingAction,
+  foragingSpeedMultiplier,
+} from '@/domain/professions/foraging';
 import { usePlayerStore } from '@/store/playerStore';
 import { useBankStore } from '@/store/bankStore';
+import { useCombatStore } from '@/store/combatStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { useAuthStore } from '@/store/authStore';
 import { isSkillAllowedForGuest, GUEST_NOTICE } from '@/lib/guestMode';
@@ -26,6 +32,8 @@ export interface ActionResult {
   masteryXpGained: number;
   bonusXp?: number;
   preserved?: boolean;
+  /** Встреча с мобом во время «Сбора» — запускает бой. */
+  encounter?: { areaId: string; monsterId: string; boss: boolean };
 }
 
 export interface OfflineReward {
@@ -114,6 +122,21 @@ function processFishing(actionId: string): ActionResult | null {
   return { items: [{ itemId: spot.fishId, quantity: 1 }], xpGained: spot.xp, masteryXpGained: spot.masteryXp ?? 3 };
 }
 
+function processForaging(actionId: string): ActionResult | null {
+  const action = FORAGING_ACTIONS_MAP[actionId];
+  if (!action) return null;
+  const playerLevel = usePlayerStore.getState().getSkillLevel('foraging');
+  if (playerLevel < action.levelRequired) return null;
+  const result = processForagingAction(actionId, playerLevel);
+  if (!result) return null;
+  return {
+    items: result.items,
+    xpGained: result.xp,
+    masteryXpGained: result.masteryXp,
+    encounter: result.encounter,
+  };
+}
+
 function processCooking(actionId: string): ActionResult | null {
   const recipe = COOKING_RECIPES_MAP[actionId];
   if (!recipe) return null;
@@ -163,6 +186,7 @@ function processAction(skillId: SkillId, actionId: string): ActionResult | null 
     case 'woodcutting': return processWoodcutting(actionId);
     case 'mining':      return processMining(actionId);
     case 'fishing':     return processFishing(actionId);
+    case 'foraging':    return processForaging(actionId);
     case 'cooking':     return processCooking(actionId);
     case 'smithing':    return processSmithing(actionId);
     case 'firemaking':  return processFiremaking(actionId);
@@ -176,6 +200,7 @@ function getActionInterval(skillId: SkillId, actionId: string): number {
     case 'woodcutting': base = WOODCUTTING_TREES_MAP[actionId]?.interval ?? 3000; break;
     case 'mining':      base = MINING_ROCKS_MAP[actionId]?.interval ?? 3000; break;
     case 'fishing':     base = FISHING_SPOTS_MAP[actionId]?.interval ?? 7000; break;
+    case 'foraging':    base = Math.round((FORAGING_ACTIONS_MAP[actionId]?.interval ?? 4000) / Math.max(0.01, foragingSpeedMultiplier())); break;
     case 'cooking':     base = COOKING_RECIPES_MAP[actionId]?.interval ?? 3000; break;
     case 'smithing':    base = SMITHING_MAP[actionId]?.interval ?? 3000; break;
     case 'firemaking':  base = FIREMAKING_MAP[actionId]?.interval ?? 3000; break;
@@ -192,7 +217,7 @@ type AdminGatheringToggle = Exclude<AdminSkillToggle, 'combat'>;
 /** Навыки, доступные в тумблерах админки. Для прочих — всегда включён. */
 function isAdminSkill(skillId: SkillId): skillId is AdminGatheringToggle {
   return (
-    skillId === 'woodcutting' || skillId === 'mining' || skillId === 'fishing' ||
+    skillId === 'woodcutting' || skillId === 'mining' || skillId === 'fishing' || skillId === 'foraging' ||
     skillId === 'cooking' || skillId === 'smithing' || skillId === 'firemaking'
   );
 }
@@ -336,6 +361,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // Update XP tracker
     const xpGainedThisSession = { ...state.xpGainedThisSession };
     xpGainedThisSession[state.activeSkill] = (xpGainedThisSession[state.activeSkill] ?? 0) + effectiveXp;
+
+    // Встреча с мобом во время «Сбора»: добыча и XP уже засчитаны,
+    // выходим из добычи и передаём управление бою.
+    if (result.encounter && isSkillEnabledForAdmin('combat')) {
+      useCombatStore.getState().startCombat(result.encounter.areaId, result.encounter.monsterId);
+      set({
+        activeSkill: null,
+        activeActionId: null,
+        actionProgress: 0,
+        isRunning: false,
+        xpGainedThisSession,
+      });
+      return;
+    }
 
     // Schedule next action
     set({

@@ -24,12 +24,16 @@ for (const item of CATALOG) {
 
   if (!item.description?.trim()) problems.push(`NO DESC: ${item.id}`);
 
-  const webp = `public/assets/icons/${item.iconPath}.webp`;
-  if (!fs.existsSync(webp)) problems.push(`MISSING: ${item.id} → ${webp}`);
+  if (item.iconPath) {
+    const webp = `public/assets/icons/${item.iconPath}.webp`;
+    if (!fs.existsSync(webp)) problems.push(`MISSING: ${item.id} → ${webp}`);
 
-  const m = item.iconPath.match(/t(\d+)(?!\d)/);
-  if (m && Number(m[1]) !== item.tier) {
-    problems.push(`TIER≠FILE: ${item.id} tier=${item.tier} path=${item.iconPath}`);
+    const m = item.iconPath.match(/t(\d+)(?!\d)/);
+    if (m && Number(m[1]) !== item.tier) {
+      problems.push(`TIER≠FILE: ${item.id} tier=${item.tier} path=${item.iconPath}`);
+    }
+  } else if (!item.icon) {
+    problems.push(`NO ICON FALLBACK: ${item.id} (нужен icon или iconPath)`);
   }
 
   groups[item.category] = (groups[item.category] ?? 0) + 1;

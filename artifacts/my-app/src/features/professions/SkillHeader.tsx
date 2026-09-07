@@ -18,6 +18,7 @@ interface SkillHeaderProps {
 const SKILL_DESCRIPTION_KEYS: Partial<Record<SkillId, TranslationKey>> = {
   woodcutting: 'skill.woodcuttingDesc',
   fishing:     'skill.fishingDesc',
+  foraging:    'skill.foragingDesc',
   mining:      'skill.miningDesc',
   firemaking:  'skill.firemakingDesc',
   cooking:     'skill.cookingDesc',
@@ -28,6 +29,7 @@ const SKILL_THEME: Record<string, { barFrom: string; barTo: string; accent: stri
   woodcutting: { barFrom: '#2e7d32', barTo: '#4caf50', accent: '#4ade80' },
   mining:      { barFrom: '#b45309', barTo: '#f59e0b', accent: '#fbbf24' },
   fishing:     { barFrom: '#0e7490', barTo: '#22d3ee', accent: '#67e8f9' },
+  foraging:    { barFrom: '#3f6212', barTo: '#84cc16', accent: '#bef264' },
   firemaking:  { barFrom: '#c2410c', barTo: '#f97316', accent: '#fb923c' },
   cooking:     { barFrom: '#a16207', barTo: '#eab308', accent: '#fde047' },
   smithing:    { barFrom: '#475569', barTo: '#94a3b8', accent: '#cbd5e1' },

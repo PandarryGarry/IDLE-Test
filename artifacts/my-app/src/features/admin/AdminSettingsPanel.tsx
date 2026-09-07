@@ -23,6 +23,7 @@ const SKILL_TOGGLES: { key: AdminSkillToggle; label: string; icon: string }[] = 
   { key: 'woodcutting', label: 'Лесорубство', icon: '🪓' },
   { key: 'mining', label: 'Горное дело', icon: '⛏️' },
   { key: 'fishing', label: 'Рыбалка', icon: '🎣' },
+  { key: 'foraging', label: 'Сбор', icon: '🌿' },
   { key: 'cooking', label: 'Кулинария', icon: '🍖' },
   { key: 'smithing', label: 'Кузнечество', icon: '🔨' },
   { key: 'firemaking', label: 'Огонь', icon: '🔥' },

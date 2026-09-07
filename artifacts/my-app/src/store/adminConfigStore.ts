@@ -14,7 +14,7 @@ import type {
  */
 
 export type AdminSkillToggle =
-  | 'woodcutting' | 'mining' | 'fishing'
+  | 'woodcutting' | 'mining' | 'fishing' | 'foraging'
   | 'cooking' | 'smithing' | 'firemaking' | 'combat';
 
 export interface ItemOverride {
@@ -94,6 +94,7 @@ const DEFAULT_CONTENT_TOGGLES: Record<AdminSkillToggle, boolean> = {
   woodcutting: true,
   mining: true,
   fishing: true,
+  foraging: true,
   cooking: true,
   smithing: true,
   firemaking: true,

@@ -4,7 +4,7 @@ import { useGameStore } from '@/store/gameStore';
 import { useCombatStore } from '@/store/combatStore';
 import { SkillId } from '@/data/types';
 import { Link, useLocation } from 'wouter';
-import { Settings, Backpack, Home, Sword, Flame, Fish, Pickaxe, Trees, ChefHat, Hammer } from 'lucide-react';
+import { Settings, Backpack, Home, Sword, Flame, Fish, Pickaxe, Trees, ChefHat, Hammer, Leaf } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
@@ -103,12 +103,15 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,134,10,0.08)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
           <img
-            src="/assets/art/emblem_pair.webp"
+            src="/assets/art/emblem_pair_v2.webp"
             alt="Топор и Перо"
             draggable={false}
             style={{
               width: 60, height: 60, flexShrink: 0, display: 'block',
-              filter: 'drop-shadow(0 0 10px rgba(212,134,10,0.38))',
+              borderRadius: 14, overflow: 'hidden',
+              border: '1px solid rgba(212,134,10,0.35)',
+              boxShadow: 'inset 0 0 12px rgba(0,0,0,0.5), 0 0 12px rgba(212,134,10,0.25)',
+              filter: 'drop-shadow(0 0 10px rgba(212,134,10,0.28))',
             }}
           />
           <div>
@@ -183,6 +186,9 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
             <NavItem href="/mining"      icon={<Pickaxe size={15} />} label={t('skill.mining')}      skillId="mining"      dotColor="#d4860a" />
           )}
           <NavItem href="/fishing"     icon={<Fish size={15} />}    label={t('skill.fishing')}     skillId="fishing"     dotColor="#0e8a7a" />
+          {!isGuest && (
+            <NavItem href="/foraging"    icon={<Leaf size={15} />}    label={t('skill.foraging')}    skillId="foraging"    dotColor="#3f7d12" />
+          )}
         </div>
 
         {!isGuest && (

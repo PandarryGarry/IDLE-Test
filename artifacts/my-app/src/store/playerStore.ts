@@ -23,7 +23,7 @@ function bankCanTakeAll(itemIds: string[]): boolean {
 const ALL_SKILL_IDS: SkillId[] = [
   'attack', 'strength', 'defence', 'hitpoints',
   'ranged', 'magic', 'prayer', 'slayer',
-  'woodcutting', 'fishing', 'firemaking', 'cooking',
+  'woodcutting', 'fishing', 'foraging', 'firemaking', 'cooking',
   'mining', 'smithing', 'thieving', 'fletching',
   'crafting', 'runecrafting', 'herblore', 'farming',
   'agility', 'summoning', 'astrology', 'township',
