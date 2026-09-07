@@ -247,6 +247,7 @@ const en: Partial<Record<keyof typeof ru, string>> = {
   'nav.home': 'Home', 'nav.skills': 'Skills', 'nav.combat': 'Combat',
   'nav.inventory': 'Inventory', 'nav.settings': 'Settings', 'nav.save': 'Save Game',
   'foraging.start': 'Start gathering',
+  'foraging.stop': 'Stop gathering',
   'foraging.info': 'About skill',
   'foraging.yields': 'Possible loot',
   'foraging.rare': 'Rare',
