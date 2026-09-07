@@ -6,6 +6,7 @@ import { SkillId } from '@/data/types';
 import { Link, useLocation } from 'wouter';
 import { Settings, Backpack, Home, Sword, Flame, Fish, Pickaxe, Trees, ChefHat, Hammer, Leaf } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { skillNameRu } from '@/lib/skillNames';
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { getAvatarPath, getRaceLabel } from '@/data/characters';
@@ -181,22 +182,22 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
 
         <div>
           <SectionLabel color="rgba(26,158,90,0.9)">◈ {t('group.gathering')}</SectionLabel>
-          <NavItem href="/woodcutting" icon={<Trees size={15} />} label={t('skill.woodcutting')} skillId="woodcutting" dotColor="#1a9e5a" />
+          <NavItem href="/woodcutting" icon={<Trees size={15} />} label={skillNameRu('woodcutting')} skillId="woodcutting" dotColor="#1a9e5a" />
           {!isGuest && (
-            <NavItem href="/mining"      icon={<Pickaxe size={15} />} label={t('skill.mining')}      skillId="mining"      dotColor="#d4860a" />
+            <NavItem href="/mining"      icon={<Pickaxe size={15} />} label={skillNameRu('mining')}      skillId="mining"      dotColor="#d4860a" />
           )}
-          <NavItem href="/fishing"     icon={<Fish size={15} />}    label={t('skill.fishing')}     skillId="fishing"     dotColor="#0e8a7a" />
+          <NavItem href="/fishing"     icon={<Fish size={15} />}    label={skillNameRu('fishing')}     skillId="fishing"     dotColor="#0e8a7a" />
           {!isGuest && (
-            <NavItem href="/foraging"    icon={<Leaf size={15} />}    label={t('skill.foraging')}    skillId="foraging"    dotColor="#3f7d12" />
+            <NavItem href="/foraging"    icon={<Leaf size={15} />}    label={skillNameRu('foraging')}    skillId="foraging"    dotColor="#3f7d12" />
           )}
         </div>
 
         {!isGuest && (
           <div>
             <SectionLabel color="rgba(208,96,16,0.9)">⚒ {t('group.artisan')}</SectionLabel>
-            <NavItem href="/firemaking" icon={<Flame size={15} />}    label={t('skill.firemaking')} skillId="firemaking" dotColor="#d06010" />
-            <NavItem href="/cooking"    icon={<ChefHat size={15} />}  label={t('skill.cooking')}    skillId="cooking"    dotColor="#d4860a" />
-            <NavItem href="/smithing"   icon={<Hammer size={15} />}   label={t('skill.smithing')}   skillId="smithing"   dotColor="#8090a0" />
+            <NavItem href="/firemaking" icon={<Flame size={15} />}    label={skillNameRu('firemaking')} skillId="firemaking" dotColor="#d06010" />
+            <NavItem href="/cooking"    icon={<ChefHat size={15} />}  label={skillNameRu('cooking')}    skillId="cooking"    dotColor="#d4860a" />
+            <NavItem href="/smithing"   icon={<Hammer size={15} />}   label={skillNameRu('smithing')}   skillId="smithing"   dotColor="#8090a0" />
           </div>
         )}
       </div>

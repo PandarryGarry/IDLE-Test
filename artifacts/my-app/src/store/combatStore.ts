@@ -193,8 +193,6 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         const drops = rollDrops(monster, Math.random, rates.dropRateMultiplier);
         for (const drop of drops) {
           bankStore.addItem(drop.itemId, drop.quantity);
-          const item = getItem(drop.itemId);
-          if (item) notifs.notifyItem(item.name, drop.quantity, item.icon);
         }
         // Bones
         if (monster.bones) {

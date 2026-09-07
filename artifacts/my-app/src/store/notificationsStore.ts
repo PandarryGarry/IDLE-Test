@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { GameNotification, NotificationType, SkillId } from '@/data/types';
 import { generateId } from '@/lib/utils';
+import { skillNameRu } from '@/lib/skillNames';
 
 const MAX_NOTIFICATIONS = 20;
 const AUTO_DISMISS_MS = 4000;
@@ -57,8 +58,7 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
 
   notifyLevelUp: (skillId, newLevel) => {
     const icon = SKILL_ICONS[skillId] ?? '⬆️';
-    const skillName = skillId.charAt(0).toUpperCase() + skillId.slice(1);
-    get().addNotification('levelup', `${skillName} level up! → ${newLevel}`, {
+    get().addNotification('levelup', `${skillNameRu(skillId)}: уровень ${newLevel}!`, {
       icon,
       skillId,
       level: newLevel,
@@ -66,12 +66,12 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
   },
 
   notifyItem: (itemName, qty, icon) => {
-    const msg = qty > 1 ? `${itemName} x${qty}` : itemName;
+    const msg = qty > 1 ? `${itemName} ×${qty}` : itemName;
     get().addNotification('item', msg, { icon: icon ?? '📦' });
   },
 
   notifyMasteryLevelUp: (skillId, actionName, newLevel) => {
-    get().addNotification('mastery_levelup', `${actionName} mastery → ${newLevel}`, {
+    get().addNotification('mastery_levelup', `${skillNameRu(skillId)} · мастерство «${actionName}» → ${newLevel}`, {
       icon: '✨',
       skillId,
       level: newLevel,

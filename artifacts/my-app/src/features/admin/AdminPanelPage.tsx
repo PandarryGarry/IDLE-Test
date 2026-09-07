@@ -2,9 +2,11 @@ import { useLocation } from 'wouter';
 import { AdminItemsPage } from '@/features/admin/AdminItemsPage';
 import { AdminSettingsPanel } from '@/features/admin/AdminSettingsPanel';
 import { AdminProfessionsPanel } from '@/features/admin/AdminProfessionsPanel';
+import { AdminCharactersPanel } from '@/features/admin/AdminCharactersPanel';
 
 const TABS = [
   { key: 'items', href: '/admin', label: 'Каталог предметов', icon: '📦' },
+  { key: 'characters', href: '/admin/characters', label: 'Персонажи', icon: '👤' },
   { key: 'professions', href: '/admin/professions', label: 'Профессии', icon: '🌿' },
   { key: 'settings', href: '/admin/settings', label: 'Настройки игры', icon: '⚙️' },
 ];
@@ -12,18 +14,22 @@ const TABS = [
 export function AdminPanelPage() {
   const [location, navigate] = useLocation();
   const path = location.split(/[?#]/)[0];
-  const activeTab = path.startsWith('/admin/professions') || path === '/admin/professions'
-    ? 'professions'
-    : path.startsWith('/admin/settings') || path === '/admin/settings'
-      ? 'settings'
-      : 'items';
+  const activeTab = path.startsWith('/admin/characters') || path === '/admin/characters'
+    ? 'characters'
+    : path.startsWith('/admin/professions') || path === '/admin/professions'
+      ? 'professions'
+      : path.startsWith('/admin/settings') || path === '/admin/settings'
+        ? 'settings'
+        : 'items';
   const active = TABS.find(t => t.key === activeTab) ?? TABS[0];
 
   const renderActive = active.key === 'items'
     ? <AdminItemsPage />
-    : active.key === 'professions'
-      ? <AdminProfessionsPanel />
-      : <AdminSettingsPanel />;
+    : active.key === 'characters'
+      ? <AdminCharactersPanel />
+      : active.key === 'professions'
+        ? <AdminProfessionsPanel />
+        : <AdminSettingsPanel />;
 
   return (
     <div className="space-y-4 max-w-6xl mx-auto">
@@ -36,7 +42,7 @@ export function AdminPanelPage() {
             </div>
             <div className="min-w-0">
               <h1 className="text-base sm:text-lg font-display font-black text-[var(--text-primary)]">Админ-панель</h1>
-              <p className="text-[11px] text-[var(--text-muted)] truncate">предметы · настройки · рейты</p>
+              <p className="text-[11px] text-[var(--text-muted)] truncate">предметы · персонажи · профессии · рейты</p>
             </div>
           </div>
 

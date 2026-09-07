@@ -310,7 +310,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (result === null) {
       // Action failed (insufficient materials, wrong level, etc.) — stop
       set({ isRunning: false, actionProgress: 0 });
-      useNotificationsStore.getState().notifyInfo('Not enough resources or level too low. Action stopped.');
+      useNotificationsStore.getState().notifyInfo('Недостаточно ресурсов или слишком низкий уровень. Действие остановлено.');
       return;
     }
 
@@ -318,23 +318,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const bankStore = useBankStore.getState();
     const notifs = useNotificationsStore.getState();
     let inventoryFull = false;
-    
+
     for (const { itemId, quantity } of result.items) {
       const added = bankStore.addItem(itemId, quantity);
-      
-      if (added && quantity > 0) {
-        // Предмет успешно добавлен — показываем уведомление
-        const item = getItem(itemId);
-        if (item) notifs.notifyItem(item.name, quantity, item.icon);
-      } else if (!added) {
+      if (!added) {
         // Инвентарь полон — предмет не поместился
         inventoryFull = true;
       }
     }
-    
+
     // Уведомление о переполнении (один раз за тик, даже если не поместилось несколько предметов)
+    // Это важная информация — остаётся в тостах. Обычные находки в тосты не попадают.
     if (inventoryFull) {
-      notifs.notifyInfo('⚠️ Inventory full! Some items were lost.');
+      notifs.notifyInfo('⚠️ Сумка заполнена — часть находок потеряна.');
     }
 
     // «Рейты игры»: множители XP и мастерства.

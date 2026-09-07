@@ -12,10 +12,11 @@ import {
 } from '@/domain/professions/foraging';
 import { getItem } from '@/domain/items';
 import { getItemVisual } from '@/shared/icons/itemIcons';
+import { skillNameRu } from '@/lib/skillNames';
 import { SkillHeader } from '@/features/professions/SkillHeader';
 import { useTranslation } from '@/hooks/useTranslation';
 import { GModal } from '@/shared/ui/gameUI';
-import { Info, Leaf, Lock, Play, Square, Swords, X } from 'lucide-react';
+import { Info, Leaf, Lock, Play, Square, X } from 'lucide-react';
 import type { ForagingFeedEntry } from '@/store/foragingStore';
 
 /* ── Утилиты / мелкие компоненты ─────────────────────────────── */
@@ -64,18 +65,6 @@ function formatStatValue(stat: EffectiveProfessionStat): string {
   return `${pct}%`;
 }
 
-function StatChip({ itemId, percent, title }: { itemId: string; percent: string; title: string }) {
-  return (
-    <span
-      title={title}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 7px', borderRadius: 9999, background: 'rgba(22,11,3,0.55)', border: '1px solid #5a3210' }}
-    >
-      <ItemVisual itemId={itemId} size={22} />
-      <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 10, fontWeight: 700, color: '#f0c030' }}>{percent}%</span>
-    </span>
-  );
-}
-
 /* ── Карточка зоны ───────────────────────────────────────────── */
 
 function ZoneCard({
@@ -83,17 +72,16 @@ function ZoneCard({
   level,
   active,
   onToggle,
+  onInfo,
 }: {
   zone: ForagingZone;
   level: number;
   active: boolean;
   onToggle: () => void;
+  onInfo: () => void;
 }) {
   const { t } = useTranslation();
   const locked = level < zone.levelRequired;
-  const totalLoot = totalWeight(zone.lootTable);
-  const hasRare = zone.rareTable.length > 0;
-  const rareEntries = zone.rareTable.slice(0, 3);
 
   const cardStyle: React.CSSProperties = locked
     ? { background: 'linear-gradient(180deg,#1b120a,#160d06)', border: '1px solid #2a1c10', opacity: 0.72, filter: 'grayscale(0.4)', cursor: 'not-allowed' }
@@ -113,104 +101,64 @@ function ZoneCard({
     >
       {active && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg,#c8880a,#f0c030)' }} />}
 
-      <div style={{ padding: '14px 14px 13px', display: 'flex', flexDirection: 'column', gap: 11, flex: 1 }}>
-        {/* Шапка */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
-            <span style={{
-              width: 38, height: 38, borderRadius: 11, flexShrink: 0,
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              background: 'linear-gradient(160deg,#2a1508,#1c0d04)', border: '1px solid #6b3c16',
-            }}>{zone.icon}</span>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 15, fontWeight: 800, color: locked ? '#9a7a50' : '#fff8d0', lineHeight: 1.15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {zone.name}
-              </div>
-              <div style={{ fontSize: 10, color: locked ? '#9a7a50' : '#a97836', fontFamily: 'var(--app-font-mono)', fontWeight: 700, marginTop: 2 }}>
-                {t('skill.foraging')} · {zone.levelRequired} ур.
-              </div>
+      <div style={{ padding: '11px 11px 10px', display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+        {/* Шапка: имя и иконка на всю ширину карточки */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+          <span style={{
+            width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            background: 'linear-gradient(160deg,#2a1508,#1c0d04)', border: '1px solid #6b3c16',
+            fontSize: 17,
+          }}>{zone.icon}</span>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: locked ? '#9a7a50' : '#fff8d0', lineHeight: 1.18, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+              {zone.name}
+            </div>
+            <div style={{ fontSize: 9, color: locked ? '#9a7a50' : '#a97836', fontFamily: 'var(--app-font-mono)', fontWeight: 700, marginTop: 2 }}>
+              {skillNameRu('foraging')} · {zone.levelRequired} ур.
             </div>
           </div>
+        </div>
+
+        {/* Нижняя строка шапки: инфо + статус */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button
+            type="button"
+            title={`${zone.name} — добыча, опасность и описание`}
+            onClick={e => { e.stopPropagation(); onInfo(); }}
+            style={{ width: 26, height: 26, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: 9999, fontSize: 10, fontFamily: 'var(--app-font-mono)', fontWeight: 800, color: '#f0c030', background: 'rgba(15,8,0,0.62)', border: '1px solid #6b4020', cursor: 'pointer', padding: 0 }}
+          >
+            <Info size={12} />
+          </button>
 
           {locked ? (
-            <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 9px', borderRadius: 9999, fontSize: 10, fontFamily: 'var(--app-font-mono)', fontWeight: 800, color: '#ff7060', background: 'rgba(200,40,20,0.14)', border: '1px solid rgba(200,40,20,0.25)' }}>
-              <Lock size={11} /> {zone.levelRequired}
+            <span
+              title={`Нужен уровень Сбора ${zone.levelRequired}`}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 9999, fontSize: 10, fontFamily: 'var(--app-font-mono)', fontWeight: 800, color: '#ff7060', background: 'rgba(200,40,20,0.14)', border: '1px solid rgba(200,40,20,0.25)' }}
+            >
+              <Lock size={11} /> {zone.levelRequired} ур.
             </span>
           ) : active ? (
-            <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 9px', borderRadius: 9999, fontSize: 10, fontFamily: 'var(--app-font-mono)', fontWeight: 800, color: '#4ade80', background: 'rgba(30,160,80,0.12)', border: '1px solid rgba(30,160,80,0.3)' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 8px', borderRadius: 9999, fontSize: 10, fontFamily: 'var(--app-font-mono)', fontWeight: 800, color: '#4ade80', background: 'rgba(30,160,80,0.12)', border: '1px solid rgba(30,160,80,0.3)' }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px rgba(74,222,128,0.8)' }} /> идёт сбор
             </span>
           ) : (
-            <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 9px', borderRadius: 9999, fontSize: 10, fontFamily: 'var(--app-font-mono)', fontWeight: 800, color: '#c8a050', background: 'rgba(200,136,10,0.1)', border: '1px solid rgba(200,136,10,0.22)' }}>
-              {zone.danger.enemyChance}% {t('foraging.danger')}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 9999, fontSize: 10, fontFamily: 'var(--app-font-mono)', fontWeight: 800, color: '#c8a050', background: 'rgba(200,136,10,0.1)', border: '1px solid rgba(200,136,10,0.22)' }}>
+              {zone.danger.enemyChance}% <span className="hidden sm:inline">{t('foraging.danger')}</span>
             </span>
           )}
         </div>
 
-        {/* Описание */}
-        <p style={{ fontSize: 11, color: locked ? '#9a7a50' : '#c8a050', lineHeight: 1.45, margin: 0 }}>
-          {zone.description}
-        </p>
-
-        {/* Возможная добыча */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-          <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#9a7a50', fontFamily: 'var(--app-font-mono)' }}>
-            {t('foraging.yields')}
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {zone.previewItemIds.map(itemId => {
-              const entry = zone.lootTable.find(e => e.itemId === itemId);
-              const pct = entry ? weightPercent(entry.weight, totalLoot) : '';
-              const qty = entry && entry.quantity[0] !== entry.quantity[1] ? `, ${entry.quantity[0]}–${entry.quantity[1]} шт.` : '';
-              return <StatChip key={itemId} itemId={itemId} percent={pct} title={`${getItem(itemId)?.name ?? itemId} — ${pct}%${qty}`} />;
-            })}
-          </div>
-          {hasRare && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-              <span style={{ fontSize: 9, color: '#c8880a', fontFamily: 'var(--app-font-mono)', fontWeight: 800, letterSpacing: '0.08em' }}>✦ {t('foraging.rare')}</span>
-              {rareEntries.map(entry => (
-                <StatChip key={entry.itemId} itemId={entry.itemId} percent={weightPercent(entry.weight, totalWeight(zone.rareTable))} title={`${getItem(entry.itemId)?.name ?? entry.itemId}`} />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Опасность: только иконки мобов, реальный шанс встречи уже в шапке */}
-        {zone.danger.enemies.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <Swords size={13} style={{ color: '#9a7a50', flexShrink: 0 }} />
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-              {zone.danger.enemies.map((enemy, i) => (
-                <span
-                  key={`${enemy.monsterId}-${i}`}
-                  title={enemy.boss ? 'Босс зоны' : 'Моб зоны'}
-                  style={{ display: 'inline-flex', padding: 4, borderRadius: 9999, background: 'rgba(46,26,12,0.85)', border: `1px solid ${enemy.boss ? '#c8880a' : '#6b3d1c'}` }}
-                >
-                  <img src={mobIconUrl(enemy.iconPath)} alt="" style={{ width: 22, height: 22, objectFit: 'contain', filter: enemy.boss ? 'drop-shadow(0 0 4px rgba(240,192,48,0.6))' : 'none' }} />
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Низ: статы + кнопка */}
+        {/* Описание и добыча в карточке скрыты — они изучаются в инфо-окне зоны */}
+        {/* Низ: компактные мета-данные + кнопка */}
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, paddingTop: 10, borderTop: '1px solid rgba(90,50,16,0.35)', fontFamily: 'var(--app-font-mono)', fontSize: 10 }}>
-            <div>
-              <div style={{ fontSize: 9, color: '#9a7a50' }}>Опыт</div>
-              <div style={{ fontWeight: 800, color: '#c8a050' }}>{zone.xp} XP</div>
-            </div>
-            <div>
-              <div style={{ fontSize: 9, color: '#9a7a50' }}>Время</div>
-              <div style={{ fontWeight: 700, color: '#c8a050' }}>{(zone.interval / 1000).toFixed(1)} с</div>
-            </div>
-            <div>
-              <div style={{ fontSize: 9, color: '#9a7a50' }}>Мастер.</div>
-              <div style={{ fontWeight: 700, color: '#c8a050' }}>+{zone.masteryXp}</div>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, paddingTop: 8, borderTop: '1px solid rgba(90,50,16,0.35)', fontFamily: 'var(--app-font-mono)', fontSize: 9 }}>
+            <span style={{ color: '#9a7a50' }}>Опыт <b style={{ color: '#c8a050' }}>+{zone.xp}</b></span>
+            <span style={{ color: '#9a7a50' }}>{(zone.interval / 1000).toFixed(1)} с</span>
+            <span style={{ color: '#9a7a50' }}>Мастер. <b style={{ color: '#c8a050' }}>+{zone.masteryXp}</b></span>
           </div>
 
-          <div style={{ marginTop: 10 }}>
+          <div style={{ marginTop: 7 }}>
             {locked ? (
               <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#9a7a50', background: 'rgba(30,16,6,0.6)', border: '1px solid rgba(90,50,16,0.5)', borderRadius: 12, padding: '9px 0' }}>
                 🔒 Нужен уровень {zone.levelRequired}
@@ -236,6 +184,121 @@ function ZoneCard({
         </div>
       </div>
     </div>
+  );
+}
+
+/* ── Инфо-карточка отдельной зоны ────────────────────────────── */
+
+function ZoneInfoModal({ zone, onClose }: { zone: ForagingZone | null; onClose: () => void }) {
+  if (!zone) return null;
+  const totalLoot = totalWeight(zone.lootTable);
+  const rareTotal = totalWeight(zone.rareTable);
+
+  return (
+    <GModal open onClose={onClose} title={`${zone.icon} ${zone.name}`} width={460}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {/* Описание */}
+        <div className="rounded-xl px-3 py-2.5" style={{ background: 'rgba(22,11,3,0.5)', border: '1px solid #4a2c15' }}>
+          <div style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#f0c030', marginBottom: 4, fontFamily: 'var(--app-font-mono)' }}>
+            Описание
+          </div>
+          <p style={{ margin: 0, fontSize: 12, color: '#e8d0a0', lineHeight: 1.5 }}>{zone.description}</p>
+        </div>
+
+        {/* Характеристики зоны */}
+        <div className="rounded-xl px-3 py-2.5" style={{ background: 'rgba(22,11,3,0.5)', border: '1px solid #4a2c15' }}>
+          <div style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#f0c030', marginBottom: 7, fontFamily: 'var(--app-font-mono)' }}>
+            Параметры
+          </div>
+          <div className="grid grid-cols-3 gap-2" style={{ fontFamily: 'var(--app-font-mono)' }}>
+            <div className="rounded-lg px-2 py-1.5 text-center" style={{ background: 'rgba(30,16,6,0.6)', border: '1px solid rgba(90,50,16,0.5)' }}>
+              <div style={{ fontSize: 9, color: '#9a7a50' }}>Требуется</div>
+              <div style={{ fontSize: 14, fontWeight: 900, color: '#f5d060' }}>{zone.levelRequired} ур.</div>
+            </div>
+            <div className="rounded-lg px-2 py-1.5 text-center" style={{ background: 'rgba(30,16,6,0.6)', border: '1px solid rgba(90,50,16,0.5)' }}>
+              <div style={{ fontSize: 9, color: '#9a7a50' }}>Опыт</div>
+              <div style={{ fontSize: 14, fontWeight: 900, color: '#f5d060' }}>+{zone.xp}</div>
+            </div>
+            <div className="rounded-lg px-2 py-1.5 text-center" style={{ background: 'rgba(30,16,6,0.6)', border: '1px solid rgba(90,50,16,0.5)' }}>
+              <div style={{ fontSize: 9, color: '#9a7a50' }}>Цикл</div>
+              <div style={{ fontSize: 14, fontWeight: 900, color: '#f5d060' }}>{(zone.interval / 1000).toFixed(1)} с</div>
+            </div>
+          </div>
+          <div style={{ marginTop: 6, fontSize: 10, color: '#9a7a50' }}>Мастерство за цикл: <b style={{ color: '#c8a050' }}>+{zone.masteryXp}</b></div>
+        </div>
+
+        {/* Добыча */}
+        <div className="rounded-xl px-3 py-2.5" style={{ background: 'rgba(22,11,3,0.5)', border: '1px solid #4a2c15' }}>
+          <div style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#f0c030', marginBottom: 7, fontFamily: 'var(--app-font-mono)' }}>
+            Добыча ({zone.lootTable.length})
+          </div>
+          <div className="space-y-1.5">
+            {zone.lootTable.map(entry => {
+              const percent = weightPercent(entry.weight, totalLoot);
+              const qty = entry.quantity[0] !== entry.quantity[1]
+                ? ` · ${entry.quantity[0]}–${entry.quantity[1]} шт.`
+                : ` · ${entry.quantity[0]} шт.`;
+              return (
+                <div key={entry.itemId} className="flex items-center gap-2 rounded-lg px-2 py-1.5" style={{ background: 'rgba(30,16,6,0.55)', border: '1px solid rgba(90,50,16,0.35)' }}>
+                  <ItemVisual itemId={entry.itemId} size={26} />
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 11, fontWeight: 600, color: '#fff8d0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {getItem(entry.itemId)?.name ?? entry.itemId}
+                  </span>
+                  <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 11, fontWeight: 800, color: '#f0c030', flexShrink: 0 }}>{percent}%</span>
+                  <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 9, color: '#9a7a50', flexShrink: 0 }}>{qty}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {zone.rareTable.length > 0 && (
+            <>
+              <div style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#c8880a', margin: '10px 0 6px', fontFamily: 'var(--app-font-mono)' }}>
+                ✦ Редкие находки ({zone.rareTable.length})
+              </div>
+              <div className="space-y-1.5">
+                {zone.rareTable.map(entry => {
+                  const percent = weightPercent(entry.weight, rareTotal);
+                  return (
+                    <div key={entry.itemId} className="flex items-center gap-2 rounded-lg px-2 py-1.5" style={{ background: 'rgba(46,26,12,0.6)', border: '1px solid rgba(200,136,10,0.3)' }}>
+                      <ItemVisual itemId={entry.itemId} size={26} />
+                      <span style={{ flex: 1, minWidth: 0, fontSize: 11, fontWeight: 600, color: '#fff8d0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {getItem(entry.itemId)?.name ?? entry.itemId}
+                      </span>
+                      <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 11, fontWeight: 800, color: '#f0c030', flexShrink: 0 }}>{percent}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Опасность */}
+        <div className="rounded-xl px-3 py-2.5" style={{ background: 'rgba(22,11,3,0.5)', border: '1px solid #4a2c15' }}>
+          <div style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#fda4af', marginBottom: 7, fontFamily: 'var(--app-font-mono)' }}>
+            Опасность — встреча {zone.danger.enemyChance}%
+          </div>
+          {zone.danger.enemies.length > 0 ? (
+            <div className="space-y-1.5">
+              {zone.danger.enemies.map((enemy, i) => (
+                <div key={`${enemy.monsterId}-${i}`} className="flex items-center gap-2 rounded-lg px-2 py-1.5" style={{ background: 'rgba(30,16,6,0.55)', border: `1px solid ${enemy.boss ? 'rgba(200,136,10,0.4)' : 'rgba(90,50,16,0.35)'}` }}>
+                  <img src={mobIconUrl(enemy.iconPath)} alt="" style={{ width: 26, height: 26, objectFit: 'contain', flexShrink: 0 }} />
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 11, fontWeight: 600, color: '#fff8d0' }}>
+                    {enemy.boss ? 'Босс зоны' : 'Моб зоны'}
+                  </span>
+                  <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 10, color: enemy.boss ? '#f0c030' : '#c8880a' }}>
+                    вес {enemy.weight}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p style={{ margin: 0, fontSize: 11, color: '#9a7a50' }}>В этой зоне безопасно — монстры не встречаются.</p>
+          )}
+        </div>
+      </div>
+    </GModal>
   );
 }
 
@@ -351,6 +414,7 @@ export function ForagingPage() {
   const stop = useForagingStore(s => s.stop);
   const statTouched = useProfessionStatsStore(s => s.touchedAt);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [zoneInfoId, setZoneInfoId] = useState<string | null>(null);
 
   const stats = useMemo(() => getEffectiveProfessionStats('foraging', level), [level, statTouched]);
 
@@ -367,24 +431,24 @@ export function ForagingPage() {
 
   return (
     <div className="space-y-4">
-      <SkillHeader skillId="foraging" skillName={t('skill.foraging')} skillIcon="🌿" />
+      <SkillHeader skillId="foraging" skillName={t('skill.foraging')} skillIcon="🌿" compact />
 
       {/* Заголовок зон + кнопка «инфо» */}
       <div className="flex items-center justify-between px-1 pt-1">
         <h2 className="text-xs font-extrabold uppercase tracking-widest font-mono flex items-center gap-1.5" style={{ color: '#f0c030', textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
-          <Leaf size={14} /> {t('foraging.availableSpots')}
+          <Leaf size={14} /> Участки поиска
         </h2>
         <button
           type="button"
           onClick={() => setInfoOpen(true)}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 11px', borderRadius: 9999, fontSize: 10, fontWeight: 800, color: '#f0c030', background: 'rgba(15,8,0,0.62)', border: '1px solid #6b4020', cursor: 'pointer', fontFamily: 'var(--app-font-mono)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)' }}
         >
-          <Info size={12} /> {t('foraging.info')}
+          <Info size={12} /> О профессии
         </button>
       </div>
 
-      {/* Сетка зон */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+      {/* Сетка зон — компактная, чтобы страница помещалась на экран */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
         {FORAGING_ZONES.map(zone => (
           <ZoneCard
             key={zone.id}
@@ -392,6 +456,7 @@ export function ForagingPage() {
             level={level}
             active={activeSkill === 'foraging' && activeActionId === zone.id}
             onToggle={() => handleToggle(zone.id)}
+            onInfo={() => setZoneInfoId(zone.id)}
           />
         ))}
       </div>
@@ -409,13 +474,14 @@ export function ForagingPage() {
               <X size={12} /> {t('foraging.clear')}
             </button>
           </div>
-          <div className="space-y-2">
-            {lootFeed.map(entry => <FeedRow key={entry.id} entry={entry} />)}
+          <div className="space-y-1.5 max-h-[150px] overflow-y-auto pr-1">
+            {lootFeed.slice(0, 12).map(entry => <FeedRow key={entry.id} entry={entry} />)}
           </div>
         </div>
       )}
 
       <ForagingInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} level={level} stats={stats} />
+      <ZoneInfoModal zone={zoneInfoId ? FORAGING_ZONES_MAP[zoneInfoId] ?? null : null} onClose={() => setZoneInfoId(null)} />
     </div>
   );
 }

@@ -223,6 +223,7 @@ function Router() {
             <Route path="/inventory" component={InventoryPage} />
             <Route path="/admin" component={AdminPanelPage} />
             <Route path="/admin/items" component={AdminPanelPage} />
+            <Route path="/admin/characters" component={AdminPanelPage} />
             <Route path="/admin/professions" component={AdminPanelPage} />
             <Route path="/admin/settings" component={AdminPanelPage} />
             <Route path="/bank">

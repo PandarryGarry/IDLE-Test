@@ -202,13 +202,9 @@ export const useInventoryStore = create<InventoryStore>((set, get) => ({
     if (sellQty <= 0) return 0;
     
     get().removeItem(itemId, sellQty);
-    // Находки «Сбора»: уровень 50+ даёт +2% к цене продажи.
-    let unitPrice = item.sellValue;
-    if (item.category === 'foraging') {
-      const forageLevel = usePlayerStore.getState().getSkillLevel('foraging');
-      if (forageLevel >= 50) unitPrice = Math.max(0, Math.round(unitPrice * 1.02));
-    }
-    const gpGained = unitPrice * sellQty;
+    // Экономика фиксированная: цена продажи берётся из предмета как есть,
+    // никаких скрытых бонусов от профессии «Сбор».
+    const gpGained = item.sellValue * sellQty;
     get().addGp(gpGained);
     return gpGained;
   },

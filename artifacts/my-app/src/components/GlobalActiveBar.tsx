@@ -4,21 +4,21 @@ import { useCombatStore } from '@/store/combatStore';
 import { WOODCUTTING_TREES_MAP } from '@/domain/professions/woodcutting';
 import { MINING_ROCKS_MAP } from '@/domain/professions/mining';
 import { FISHING_SPOTS_MAP } from '@/domain/professions/fishing';
-import { FORAGING_ZONES_MAP } from '@/domain/professions/foraging';
 import { COOKING_RECIPES_MAP } from '@/domain/professions/cooking';
+import { FORAGING_ZONES_MAP } from '@/domain/professions/foraging';
 import { SMITHING_MAP } from '@/domain/professions/smithing';
 import { FIREMAKING_MAP } from '@/domain/professions/firemaking';
 import { ActionProgressBar } from '@/features/professions/ActionProgressBar';
 import { Link } from 'wouter';
 import { Square, ArrowUpRight, Flame, ShieldAlert } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { skillNameRu } from '@/lib/skillNames';
 import { SkillIcon } from '@/features/professions/SkillIcon';
 
 const SKILL_THEMES: Record<string, { nameKey: string; icon: string; path: string; color: 'green' | 'blue' | 'amber' | 'red'; accent: string }> = {
   woodcutting: { nameKey: 'skill.woodcutting', icon: '🪓', path: '/woodcutting', color: 'green', accent: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' },
   mining:      { nameKey: 'skill.mining',      icon: '⛏️', path: '/mining',      color: 'amber', accent: 'text-amber-400 border-amber-500/30 bg-amber-500/10' },
   fishing:     { nameKey: 'skill.fishing',     icon: '🎣', path: '/fishing',     color: 'blue',  accent: 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10' },
-  foraging:    { nameKey: 'skill.foraging',    icon: '🌿', path: '/foraging',    color: 'green', accent: 'text-lime-400 border-lime-500/30 bg-lime-500/10' },
   cooking:     { nameKey: 'skill.cooking',     icon: '🍳', path: '/cooking',     color: 'amber', accent: 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10' },
   smithing:    { nameKey: 'skill.smithing',    icon: '🔨', path: '/smithing',    color: 'amber', accent: 'text-orange-400 border-orange-500/30 bg-orange-500/10' },
   firemaking:  { nameKey: 'skill.firemaking',  icon: '🔥', path: '/firemaking',  color: 'red',   accent: 'text-red-400 border-red-500/30 bg-red-500/10' },
@@ -29,8 +29,8 @@ function getActionName(skillId: string, actionId: string): string {
     case 'woodcutting': return WOODCUTTING_TREES_MAP[actionId]?.name ?? actionId;
     case 'mining':      return MINING_ROCKS_MAP[actionId]?.name ?? actionId;
     case 'fishing':     return FISHING_SPOTS_MAP[actionId]?.name ?? actionId;
-    case 'foraging':    return FORAGING_ZONES_MAP[actionId]?.name ?? actionId;
     case 'cooking':     return COOKING_RECIPES_MAP[actionId]?.name ?? actionId;
+    case 'foraging':    return FORAGING_ZONES_MAP[actionId]?.name ?? actionId;
     case 'smithing':    return SMITHING_MAP[actionId]?.name ?? actionId;
     case 'firemaking':  return FIREMAKING_MAP[actionId]?.name ?? actionId;
     default: return actionId;
@@ -134,7 +134,7 @@ export function GlobalActiveBar() {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-300 font-mono">
-                {t(theme.nameKey as any) || activeSkill}
+                {skillNameRu(activeSkill)}
               </span>
               <span className="text-stone-500 text-xs">•</span>
               <span className="text-xs font-bold text-stone-100 truncate">
