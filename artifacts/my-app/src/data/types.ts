@@ -115,7 +115,6 @@ export interface Monster {
   attackInterval: number; // ms
   drops: MonsterDrop[];
   gpDrop: [number, number];
-  bones?: string;
   isBoss?: boolean;
   combatLevel: number;
 }

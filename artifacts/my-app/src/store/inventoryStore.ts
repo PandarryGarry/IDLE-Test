@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { BankSlot as InventorySlot } from '@/data/types';
 import { getItem } from '@/domain/items';
+import { migrateBankItems } from '@/domain/items/legacyMigration';
 import { useAuthStore } from '@/store/authStore';
 import { usePlayerStore } from '@/store/playerStore';
 
@@ -237,7 +238,8 @@ export const useInventoryStore = create<InventoryStore>((set, get) => ({
   loadFromSave: (items, gp, maxSlots) => {
     const isGuest = useAuthStore.getState().isGuest;
     set({
-      items,
+      // Старые мелворовские id молча заменяются нашими предметами.
+      items: migrateBankItems(items),
       gp,
       // Guests always stay capped at the base 24 slots.
       maxSlots: isGuest ? DEFAULT_MAX_SLOTS : (maxSlots || DEFAULT_MAX_SLOTS),

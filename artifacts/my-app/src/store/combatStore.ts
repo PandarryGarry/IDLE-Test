@@ -201,7 +201,6 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       if (state.autoLoot) {
         const drops = rollDrops(monster, Math.random, rates.dropRateMultiplier);
         for (const drop of drops) bankStore.addItem(drop.itemId, drop.quantity);
-        if (monster.bones) bankStore.addItem(monster.bones, 1);
         const gp = rollGp(monster.gpDrop, Math.random, rates.goldMultiplier);
         if (gp > 0) bankStore.addGp(gp);
       }

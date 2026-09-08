@@ -15,6 +15,7 @@ import {
   type SkillState,
 } from '@/data/types';
 import { getAllItems, getItem } from '@/domain/items';
+import { migrateBankItems } from '@/domain/items/legacyMigration';
 import { getLevelForXp, getXpForLevel, MAX_LEVEL } from '@/core/xpTable';
 import { skillNameRu } from '@/lib/skillNames';
 import {
@@ -123,7 +124,7 @@ function normalizeSave(
       equipment: { ...EMPTY_EQUIPMENT, ...(save?.player?.equipment ?? {}) },
     },
     bank: {
-      items: Array.isArray(save?.bank?.items) ? save.bank.items : [],
+      items: Array.isArray(save?.bank?.items) ? migrateBankItems(save.bank.items) : [],
       gp: save?.bank?.gp ?? 0,
       maxSlots: save?.bank?.maxSlots ?? 24,
     },
