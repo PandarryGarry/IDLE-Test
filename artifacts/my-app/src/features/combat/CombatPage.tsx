@@ -1,6 +1,8 @@
-import React, { useCallback, useEffect, useRef, useState, memo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
 import { useCombatStore } from '@/store/combatStore';
 import { usePlayerStore } from '@/store/playerStore';
+import { useCharacterStore } from '@/store/characterStore';
+import { getLiveAttributes } from '@/domain/attributes/characterAttributes';
 import { useShallow } from 'zustand/react/shallow';
 import { COMBAT_AREAS, MONSTERS_MAP } from '@/domain/combat/monsters';
 import { ItemIcon } from '@/features/bank/ItemIcon';
@@ -37,7 +39,8 @@ export function CombatPage() {
   const startCombat = useCombatStore(s => s.startCombat);
   const stopCombat = useCombatStore(s => s.stopCombat);
 
-  const combatLevel = usePlayerStore(s => s.combatLevel);
+  const activeCharacter = useCharacterStore(s => s.activeCharacter);
+  const heroLevel = useMemo(() => getLiveAttributes().heroLevel, [activeCharacter]);
 
   const combatLogRef = useRef<HTMLDivElement>(null);
   const shouldStickToBottomRef = useRef(true);
@@ -72,7 +75,7 @@ export function CombatPage() {
   };
 
   const handleAreaClick = (areaId: string, minLevel = 1) => {
-    if (combatLevel < minLevel) return;
+    if (heroLevel < minLevel) return;
     if (inCombat) stopCombat();
     startCombat(areaId);
   };
@@ -93,7 +96,7 @@ export function CombatPage() {
             
             <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-700">
               {COMBAT_AREAS.map(area => {
-                const isLocked = combatLevel < (area.combatLevelRequired ?? 1);
+                const isLocked = heroLevel < (area.combatLevelRequired ?? 1);
                 const isActive = activeAreaId === area.id;
                 return (
                   <button
@@ -269,7 +272,8 @@ const CombatScreen = memo(function CombatScreen() {
     setAutoLoot: s.setAutoLoot,
   })));
 
-  const combatLevel = usePlayerStore(s => s.combatLevel);
+  const activeCharacter = useCharacterStore(s => s.activeCharacter);
+  const heroLevel = useMemo(() => getLiveAttributes().heroLevel, [activeCharacter]);
 
   const playerHpPct = Math.max(0, Math.min(100, (playerHp / playerMaxHp) * 100));
   const enemyHpPct = enemyMaxHp > 0 ? Math.max(0, Math.min(100, (enemyHp / enemyMaxHp) * 100)) : 0;
@@ -320,7 +324,7 @@ const CombatScreen = memo(function CombatScreen() {
               <div className="flex items-center justify-between text-xs font-mono text-[var(--text-secondary)]">
                 <span className="font-bold text-[var(--text-primary)]">{t('combat.you')}</span>
                 <span className="bg-[var(--bg-card-dark)] border border-[var(--border-default)] px-2 py-0.5 rounded-md font-bold text-amber-300">
-                  Ур. {combatLevel}
+                  Ур. {heroLevel}
                 </span>
               </div>
 

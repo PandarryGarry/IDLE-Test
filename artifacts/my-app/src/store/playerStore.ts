@@ -3,7 +3,6 @@ import type { SkillId, SkillState, Equipment, EquipSlot } from '@/data/types';
 import { EMPTY_EQUIPMENT, normalizeEquipment } from '@/data/types';
 import { getItem } from '@/domain/items';
 import { getLevelForXp, getXpForLevel, XP_TABLE, MAX_LEVEL } from '@/core/xpTable';
-import { calcCombatLevel } from '@/core/formulas';
 import { useBankStore } from '@/store/bankStore';
 
 function bankCanTakeAll(itemIds: string[]): boolean {
@@ -20,22 +19,14 @@ function bankCanTakeAll(itemIds: string[]): boolean {
   return true;
 }
 
-const ALL_SKILL_IDS: SkillId[] = [
-  'attack', 'strength', 'defence', 'hitpoints',
-  'ranged', 'magic', 'prayer', 'slayer',
-  'woodcutting', 'fishing', 'foraging', 'firemaking', 'cooking',
-  'mining', 'smithing', 'thieving', 'fletching',
-  'crafting', 'runecrafting', 'herblore', 'farming',
-  'agility', 'summoning', 'astrology', 'township',
-];
+const ALL_SKILL_IDS: SkillId[] = ['foraging'];
 
 function createInitialSkills(): Record<SkillId, SkillState> {
   const skills = {} as Record<SkillId, SkillState>;
   for (const id of ALL_SKILL_IDS) {
-    const isHp = id === 'hitpoints';
     skills[id] = {
-      level: isHp ? 10 : 1,
-      xp: isHp ? XP_TABLE[10] : 0,
+      level: 1,
+      xp: 0,
       unlocked: true,
       mastery: {},
     };
@@ -48,9 +39,6 @@ const INITIAL_EQUIPMENT: Equipment = { ...EMPTY_EQUIPMENT };
 export interface PlayerStore {
   skills: Record<SkillId, SkillState>;
   equipment: Equipment;
-  prayerPoints: number;
-  maxPrayerPoints: number;
-  combatLevel: number;
 
   addXp: (skillId: SkillId, amount: number) => { leveledUp: boolean; newLevel: number };
   addMasteryXp: (skillId: SkillId, actionId: string, amount: number) => void;
@@ -58,8 +46,6 @@ export interface PlayerStore {
   unequipItem: (slot: EquipSlot) => string | null;
   /** Влезут ли эти предметы в сумку (без изменений) — для предпроверок. */
   canBankTake: (itemIds: string[]) => boolean;
-  drainPrayerPoints: (amount: number) => void;
-  restorePrayerPoints: (amount: number) => void;
   setSkillXp: (skillId: SkillId, xp: number) => void;
   getSkillLevel: (skillId: SkillId) => number;
   getMasteryLevel: (skillId: SkillId, actionId: string) => number;
@@ -67,24 +53,9 @@ export interface PlayerStore {
   reset: () => void;
 }
 
-function computeMaxPrayerPoints(prayerLevel: number): number {
-  return prayerLevel;
-}
-
-function computeCombatLevel(skills: Record<SkillId, SkillState>): number {
-  return calcCombatLevel(
-    skills.attack.level, skills.strength.level, skills.defence.level,
-    skills.hitpoints.level, skills.ranged.level, skills.magic.level,
-    skills.prayer.level,
-  );
-}
-
 export const usePlayerStore = create<PlayerStore>((set, get) => ({
   skills: createInitialSkills(),
   equipment: { ...INITIAL_EQUIPMENT },
-  prayerPoints: 1,
-  maxPrayerPoints: 1,
-  combatLevel: 3,
 
   addXp: (skillId, amount) => {
     const { skills } = get();
@@ -97,15 +68,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     const updatedSkill: SkillState = { ...skill, xp: newXp, level: newLevel };
     const newSkills = { ...skills, [skillId]: updatedSkill };
 
-    const updates: Partial<PlayerStore> = { skills: newSkills };
-    if (skillId === 'prayer' && leveledUp) {
-      updates.maxPrayerPoints = computeMaxPrayerPoints(newLevel);
-    }
-    if (['attack', 'strength', 'defence', 'hitpoints', 'ranged', 'magic', 'prayer'].includes(skillId)) {
-      updates.combatLevel = computeCombatLevel(newSkills);
-    }
-
-    set(updates as PlayerStore);
+    set({ skills: newSkills });
     return { leveledUp, newLevel };
   },
 
@@ -190,16 +153,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     return previous;
   },
 
-  drainPrayerPoints: (amount) => {
-    const { prayerPoints } = get();
-    set({ prayerPoints: Math.max(0, prayerPoints - amount) });
-  },
-
-  restorePrayerPoints: (amount) => {
-    const { prayerPoints, maxPrayerPoints } = get();
-    set({ prayerPoints: Math.min(maxPrayerPoints, prayerPoints + amount) });
-  },
-
   setSkillXp: (skillId, xp) => {
     const { skills } = get();
     const newLevel = Math.min(getLevelForXp(xp), MAX_LEVEL);
@@ -226,14 +179,9 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         mergedSkills[id] = initial[id];
       }
     }
-    const combatLevel = computeCombatLevel(mergedSkills);
-    const maxPrayerPoints = computeMaxPrayerPoints(mergedSkills.prayer?.level ?? 1);
     set({
       skills: mergedSkills,
       equipment: normalizeEquipment(equipment),
-      combatLevel,
-      maxPrayerPoints,
-      prayerPoints: maxPrayerPoints,
     });
   },
 
@@ -242,9 +190,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     set({
       skills,
       equipment: { ...INITIAL_EQUIPMENT },
-      prayerPoints: 1,
-      maxPrayerPoints: 1,
-      combatLevel: 3,
     });
   },
 }));
+
+export { XP_TABLE };

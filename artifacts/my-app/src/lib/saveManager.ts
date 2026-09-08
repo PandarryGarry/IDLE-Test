@@ -8,7 +8,8 @@ import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useAuthStore } from '@/store/authStore';
 import { GUEST_NOTICE } from '@/lib/guestMode';
-import { calculateOfflineProgress } from '@/core/offlineCalc';
+import { calculateOfflineProgress } from '@/core/offlineProgress';
+import { skillNameRu } from '@/lib/skillNames';
 import { getLiveAttributes, setLiveAttributes, createDefaultAttributes, migrateSaveAttributes } from '@/domain/attributes/characterAttributes';
 import {
   createEmptyGearSets,
@@ -112,20 +113,12 @@ export function applySaveData(data: SaveData): void {
   if (data.game?.activeSkill && data.game?.activeActionId) {
     const offlineResult = calculateOfflineProgress(data.game.activeSkill, data.game.activeActionId, leaveTime);
     if (offlineResult && offlineResult.xpGained > 0) {
-      const skillNames: Record<string, string> = {
-        woodcutting: 'Лесорубство', mining: 'Горное дело', fishing: 'Рыбалка',
-        cooking: 'Кулинария', smithing: 'Кузнечество', firemaking: 'Огонь', combat: 'Бой',
-      };
-      const skillIcons: Record<string, string> = {
-        woodcutting: '🪓', mining: '⛏️', fishing: '🎣',
-        cooking: '🍖', smithing: '🔨', firemaking: '🔥', combat: '⚔️',
-      };
       useGameStore.setState({
         offlineData: {
           totalMinutes: Math.floor(offlineResult.offlineMs / 60_000),
           rewards: [{
-            icon: skillIcons[data.game.activeSkill] || '⚡',
-            skill: skillNames[data.game.activeSkill] || data.game.activeSkill,
+            icon: '🌿',
+            skill: skillNameRu(data.game.activeSkill),
             xp: Math.floor(offlineResult.xpGained),
             items: offlineResult.itemsGained.map(i => {
               const name = i.itemId.replace(/_/g,' ').replace(/\b\w/g, (c: string) => c.toUpperCase());

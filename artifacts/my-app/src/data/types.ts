@@ -2,19 +2,17 @@
 // Core game types for Aethelia Idle RPG
 // ============================================================
 
-export type SkillId =
-  | 'attack' | 'strength' | 'defence' | 'hitpoints'
-  | 'ranged' | 'magic' | 'prayer' | 'slayer'
-  | 'woodcutting' | 'fishing' | 'firemaking' | 'cooking'
-  | 'mining' | 'smithing' | 'thieving' | 'fletching' | 'foraging'
-  | 'crafting' | 'runecrafting' | 'herblore' | 'farming'
-  | 'agility' | 'summoning' | 'astrology' | 'township';
+/**
+ * Единственный навык/профессия текущей игры — «Сбор».
+ * Все RuneScape-пережитки (Атака/Сила/Защита/Дальний/Магия/Молитва,
+ * Лесорубство, Горное дело, Рыбалка, Кулинария, Кузнечество, Огонь и т.д.)
+ * удалены из модели. У персонажа остаются только четыре Столпа
+ * (см. domain/attributes) и этот навык.
+ */
+export type SkillId = 'foraging';
 
-export const COMBAT_SKILLS: SkillId[] = ['attack', 'strength', 'defence', 'hitpoints', 'ranged', 'magic', 'prayer', 'slayer'];
-export const GATHERING_SKILLS: SkillId[] = ['woodcutting', 'fishing', 'mining', 'foraging'];
-export const CRAFTING_SKILLS: SkillId[] = ['firemaking', 'cooking', 'smithing', 'fletching', 'crafting', 'runecrafting', 'herblore'];
-export const OTHER_SKILLS: SkillId[] = ['farming', 'agility', 'summoning', 'astrology', 'township', 'thieving'];
-export const ALL_SKILL_IDS: SkillId[] = [...COMBAT_SKILLS, ...GATHERING_SKILLS, ...CRAFTING_SKILLS, ...OTHER_SKILLS];
+export const ALL_SKILL_IDS: SkillId[] = ['foraging'];
+export { ALL_SKILL_IDS as GATHERING_SKILLS, ALL_SKILL_IDS as ACTIVE_SKILLS };
 
 export type ItemTier = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
@@ -34,11 +32,6 @@ export interface CombatStats {
   attackBonus?: number;
   strengthBonus?: number;
   defenceBonus?: number;
-  rangedAttackBonus?: number;
-  rangedStrengthBonus?: number;
-  magicAttackBonus?: number;
-  magicDamageBonus?: number;
-  prayerBonus?: number;
 }
 
 export interface Item {
@@ -87,21 +80,6 @@ export interface SkillAction {
   interval: number; // ms per action
 }
 
-export interface WoodcuttingTree extends SkillAction {
-  logId: string;
-  quantity: [number, number]; // [min, max] logs per chop
-}
-
-export interface MiningRock extends SkillAction {
-  oreId: string;
-  gemChance?: number; // 0-1 chance of gem
-}
-
-export interface FishingSpot extends SkillAction {
-  fishId: string;
-  junkItems?: string[];
-}
-
 /** Одна находка в «Сборе»: предмет + вес + количество. */
 export interface ForagingDrop {
   itemId: string;
@@ -114,31 +92,6 @@ export interface ForagingAction extends SkillAction {
   drops: ForagingDrop[];
   /** Представительный предмет для карточки действия и оффлайн-добычи. */
   dropItemId: string;
-}
-
-export interface CookingRecipe extends SkillAction {
-  rawItemId: string;
-  cookedItemId: string;
-  burntItemId?: string;
-  burnChanceBase?: number; // 0-1
-}
-
-export interface SmithingRecipe extends SkillAction {
-  outputItemId: string;
-  outputQuantity?: number;
-  ingredients: { itemId: string; quantity: number }[];
-  category?: 'bars' | 'equipment';
-}
-
-export interface FiremakingLog extends SkillAction {
-  logId: string;
-  ashId?: string;
-}
-
-export interface ThievingTarget extends SkillAction {
-  maxGp: number;
-  successChanceBase: number; // 0-1
-  items?: { itemId: string; chance: number; quantity: [number, number] }[];
 }
 
 export interface MonsterDrop {
@@ -160,12 +113,10 @@ export interface Monster {
   defenceBonus: number;
   maxHit: number;
   attackInterval: number; // ms
-  combatStyle: 'melee' | 'ranged' | 'magic';
   drops: MonsterDrop[];
   gpDrop: [number, number];
   bones?: string;
   isBoss?: boolean;
-  slayerXp?: number;
   combatLevel: number;
 }
 
@@ -176,29 +127,6 @@ export interface CombatArea {
   combatLevelRequired?: number;
   isDungeon?: boolean;
   description?: string;
-}
-
-export interface Prayer {
-  id: string;
-  name: string;
-  description: string;
-  levelRequired: number;
-  prayerPointsPerTick: number; // drain rate
-  effects: {
-    type: 'attackBonus' | 'strengthBonus' | 'defenceBonus' | 'rangedBonus' | 'magicBonus'
-      | 'xpBonus' | 'protectMelee' | 'protectRanged' | 'protectMagic';
-    value: number; // multiplier (e.g. 0.05 for +5%) or 1 for protection
-  }[];
-}
-
-export interface Spell {
-  id: string;
-  name: string;
-  levelRequired: number;
-  runes: { runeId: string; qty: number }[];
-  baseMaxHit: number;
-  xpPerCast: number;
-  element?: 'fire' | 'water' | 'earth' | 'air' | 'none';
 }
 
 export interface Equipment {

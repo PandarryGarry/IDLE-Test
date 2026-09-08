@@ -1,7 +1,7 @@
 /**
  * Суммы и сравнение боевых характеристик по надетому экипу.
- * Только сложение того, что уже есть в предметах — формул здесь нет
- * (влияние экипа на столпы — отдельная задача по контракту Этапа 5).
+ * Остались только три настоящие характеристики: Атака, Сила, Защита.
+ * Дальний бой, магия и молитва — пережитки прошлой модели — удалены.
  */
 import { getItem } from './index.ts';
 import type { CombatStats, Equipment } from '../../data/types.ts';
@@ -13,11 +13,6 @@ export const EQUIP_STAT_META: { key: EquipStatKey; label: string }[] = [
   { key: 'attackBonus', label: 'Атака' },
   { key: 'strengthBonus', label: 'Сила' },
   { key: 'defenceBonus', label: 'Защита' },
-  { key: 'rangedAttackBonus', label: 'Стрельба · атака' },
-  { key: 'rangedStrengthBonus', label: 'Стрельба · сила' },
-  { key: 'magicAttackBonus', label: 'Магия · атака' },
-  { key: 'magicDamageBonus', label: 'Магия · урон' },
-  { key: 'prayerBonus', label: 'Молитва' },
 ];
 
 export function itemCombatStats(itemId: string | null): CombatStats {
@@ -39,9 +34,7 @@ export function sumEquipmentStats(equipment: Equipment): Record<EquipStatKey, nu
 export interface StatDelta {
   key: EquipStatKey;
   label: string;
-  /** У предмета в сумке. */
   to: number;
-  /** У надетого. */
   from: number;
   delta: number;
 }

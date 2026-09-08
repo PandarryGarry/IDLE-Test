@@ -15,9 +15,7 @@ import type { ProfessionFeed } from '@/data/balance/professions';
  * Позже те же структуры можно положить в облако/репозиторий без переделки.
  */
 
-export type AdminSkillToggle =
-  | 'woodcutting' | 'mining' | 'fishing' | 'foraging'
-  | 'cooking' | 'smithing' | 'firemaking' | 'combat';
+export type AdminSkillToggle = 'foraging' | 'combat';
 
 export interface ItemOverride {
   name?: string;
@@ -105,13 +103,7 @@ const DEFAULT_GAME_RATES: AdminGameRates = {
 };
 
 const DEFAULT_CONTENT_TOGGLES: Record<AdminSkillToggle, boolean> = {
-  woodcutting: true,
-  mining: true,
-  fishing: true,
   foraging: true,
-  cooking: true,
-  smithing: true,
-  firemaking: true,
   combat: true,
 };
 

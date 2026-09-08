@@ -22,12 +22,7 @@ export interface NotificationsStore {
 }
 
 const SKILL_ICONS: Partial<Record<SkillId, string>> = {
-  woodcutting: '🪓', fishing: '🎣', firemaking: '🔥', cooking: '🍳',
-  mining: '⛏️', smithing: '🔨', attack: '⚔️', strength: '💪',
-  defence: '🛡️', hitpoints: '❤️', ranged: '🏹', magic: '🧙',
-  prayer: '🙏', slayer: '💀', thieving: '🤫', crafting: '✂️',
-  herblore: '🌿', farming: '🌱', agility: '🏃', fletching: '🏹',
-  runecrafting: '📿', summoning: '📜', astrology: '⭐', township: '🏘️',
+  foraging: '🌿',
 };
 
 export const useNotificationsStore = create<NotificationsStore>((set, get) => ({

@@ -95,7 +95,7 @@ const LABEL: React.CSSProperties = { fontSize: 10, fontWeight: 800, textTransfor
 function makeEmptySave(): SaveData {
   const skills = {} as Record<SkillId, SkillState>;
   for (const id of ALL_SKILL_IDS) {
-    const level = id === 'hitpoints' ? 10 : 1;
+    const level = 1;
     skills[id] = { level, xp: getXpForLevel(level), unlocked: true, mastery: {} };
   }
   return {
@@ -765,7 +765,7 @@ export function AdminCharactersPanel() {
         <div style={{ ...CARD, padding: 12 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10 }}>
             <div style={{ ...LABEL }}>Профессии · навыки и ремёсла</div>
-            <p style={{ fontSize: 11, color: C.textSecondary }}>Сбор, Лесорубство, Кузнечное дело и т.д. — это профессии. Столпы/ветви/нити редактируются на вкладке «Характеристики».</p>
+            <p style={{ fontSize: 11, color: C.textSecondary }}>Сейчас доступна одна профессия — «Сбор». Столпы/ветви/нити редактируются на вкладке «Характеристики».</p>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <div style={{ flex: 1, minWidth: 160, display: 'flex', alignItems: 'center', gap: 8, background: C.slot, border: '1px solid ' + C.borderLight, borderRadius: 10, padding: '7px 10px' }}>

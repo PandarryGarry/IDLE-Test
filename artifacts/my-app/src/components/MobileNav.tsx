@@ -34,18 +34,10 @@ export function MobileNav({ className = '' }: MobileNavProps) {
   const isGuest = useAuthStore(s => s.isGuest);
 
   const allSkillsList = [
-    { href: '/woodcutting', name: skillNameRu('woodcutting'), id: 'woodcutting' },
-    { href: '/mining',      name: skillNameRu('mining'),      id: 'mining' },
-    { href: '/fishing',     name: skillNameRu('fishing'),     id: 'fishing' },
-    { href: '/foraging',    name: skillNameRu('foraging'),    id: 'foraging' },
-    { href: '/firemaking',  name: skillNameRu('firemaking'),  id: 'firemaking' },
-    { href: '/cooking',     name: skillNameRu('cooking'),     id: 'cooking' },
-    { href: '/smithing',    name: skillNameRu('smithing'),    id: 'smithing' },
+    { href: '/foraging', name: skillNameRu('foraging'), id: 'foraging' },
   ];
 
-  const skillsList = isGuest
-    ? allSkillsList.filter(s => s.id === 'woodcutting' || s.id === 'fishing')
-    : allSkillsList;
+  const skillsList = allSkillsList;
 
   const isSkillsPage = skillsList.some(s => s.href === location);
 

@@ -19,28 +19,16 @@ interface SkillHeaderProps {
 }
 
 const SKILL_DESCRIPTION_KEYS: Partial<Record<SkillId, TranslationKey>> = {
-  woodcutting: 'skill.woodcuttingDesc',
-  fishing:     'skill.fishingDesc',
-  foraging:    'skill.foragingDesc',
-  mining:      'skill.miningDesc',
-  firemaking:  'skill.firemakingDesc',
-  cooking:     'skill.cookingDesc',
-  smithing:    'skill.smithingDesc',
+  foraging: 'skill.foragingDesc',
 };
 
 const SKILL_THEME: Record<string, { barFrom: string; barTo: string; accent: string }> = {
-  woodcutting: { barFrom: '#2e7d32', barTo: '#4caf50', accent: '#4ade80' },
-  mining:      { barFrom: '#b45309', barTo: '#f59e0b', accent: '#fbbf24' },
-  fishing:     { barFrom: '#0e7490', barTo: '#22d3ee', accent: '#67e8f9' },
-  foraging:    { barFrom: '#3f6212', barTo: '#84cc16', accent: '#bef264' },
-  firemaking:  { barFrom: '#c2410c', barTo: '#f97316', accent: '#fb923c' },
-  cooking:     { barFrom: '#a16207', barTo: '#eab308', accent: '#fde047' },
-  smithing:    { barFrom: '#475569', barTo: '#94a3b8', accent: '#cbd5e1' },
+  foraging: { barFrom: '#3f6212', barTo: '#84cc16', accent: '#bef264' },
 };
 
 export function SkillHeader({ skillId, skillIcon, compact = false }: SkillHeaderProps) {
   // Всегда показываем каноническое русское название — так пользователь не
-  // увидит английское «Foraging»/«Mining», даже если локаль временно сбилась.
+  // увидит английское «Foraging», даже если локаль временно сбилась.
   const displayName = skillNameRu(skillId);
   const { t } = useTranslation();
   const xp               = usePlayerStore(s => s.skills[skillId]?.xp ?? 0);
@@ -58,7 +46,7 @@ export function SkillHeader({ skillId, skillIcon, compact = false }: SkillHeader
   const elapsedMs = Date.now() - sessionStartTime;
   const xpPerHour = elapsedMs > 0 ? (xpGainedSession / elapsedMs) * 3_600_000 : 0;
 
-  const theme       = SKILL_THEME[skillId] ?? SKILL_THEME.mining;
+  const theme       = SKILL_THEME[skillId] ?? SKILL_THEME.foraging;
   const skillVisual = getSkillVisual(skillId);
 
   const iconSize = compact ? 44 : 56;

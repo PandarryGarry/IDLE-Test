@@ -20,13 +20,7 @@ import { getQueuedCinematic, hasSeenFullPrologue, queueCinematic } from '@/lib/c
 import { FULL_PROLOGUE_READY } from '@/data/onboardingStory';
 
 import { DashboardPage } from '@/features/system/DashboardPage';
-import { WoodcuttingPage } from '@/features/professions/WoodcuttingPage';
-import { MiningPage } from '@/features/professions/MiningPage';
-import { FishingPage } from '@/features/professions/FishingPage';
 import { ForagingPage } from '@/features/professions/ForagingPage';
-import { CookingPage } from '@/features/professions/CookingPage';
-import { SmithingPage } from '@/features/professions/SmithingPage';
-import { FiremakingPage } from '@/features/professions/FiremakingPage';
 import { CombatPage } from '@/features/combat/CombatPage';
 import { InventoryPage } from '@/features/bank/InventoryPage';
 import { AdminPanelPage } from '@/features/admin/AdminPanelPage';
@@ -211,13 +205,7 @@ function Router() {
         <main className="flex-1 w-full max-w-[1400px] mx-auto px-3 py-4 pb-24 sm:px-4 md:pb-10 md:px-6 lg:px-8">
           <Switch>
             <Route path="/" component={DashboardPage} />
-            <Route path="/woodcutting" component={WoodcuttingPage} />
-            <Route path="/mining" component={MiningPage} />
-            <Route path="/fishing" component={FishingPage} />
             <Route path="/foraging" component={ForagingPage} />
-            <Route path="/cooking" component={CookingPage} />
-            <Route path="/smithing" component={SmithingPage} />
-            <Route path="/firemaking" component={FiremakingPage} />
             <Route path="/combat" component={CombatPage} />
             <Route path="/hero" component={HeroHubPage} />
             <Route path="/inventory" component={InventoryPage} />

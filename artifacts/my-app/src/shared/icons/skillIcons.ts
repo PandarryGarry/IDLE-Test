@@ -1,75 +1,28 @@
 /**
  * Централизованный реестр иконок для всех профессий и навыков.
- * Сюда будут привязаны распакованные арты из ваших архивов.
+ * После раунда 6 в игре один реализованный навык — «Сбор»; легаси-навыки
+ * (атака/сила/лесорубство/кузница и т.д.) удалены и сюда не возвращаются.
  */
 
 export const SKILL_IMAGES: Record<string, string> = {
-  // Будет заполнено вашими готовыми файлами из public/assets/skills/
+  // Будет заполнено готовыми файлами из public/assets/skills/
 };
 
 export const SKILL_ICONS: Record<string, string> = {
-  combat: '⚔️',
-  attack: '⚔️',
-  strength: '💪',
-  defence: '🛡️',
-  hitpoints: '❤️',
-  ranged: '🏹',
-  magic: '🧙',
-  prayer: '🙏',
-  slayer: '💀',
-  woodcutting: '🪓',
-  fishing: '🎣',
+  gathering: '🌿',
   foraging: '🌿',
-  mining: '⛏️',
-  firemaking: '🔥',
-  cooking: '🍳',
-  smithing: '🔨',
-  fletching: '🏹',
-  crafting: '✂️',
-  runecrafting: '📿',
-  herblore: '🌿',
-  farming: '🌱',
-  agility: '🏃',
-  thieving: '🤫',
-  summoning: '📜',
-  astrology: '⭐',
-  township: '🏘️',
 };
 
 export const SKILL_SHORT_NAMES: Record<string, string> = {
-  combat: 'Бой',
-  attack: 'Атака',
-  strength: 'Сила',
-  defence: 'Защита',
-  hitpoints: 'Здоровье',
-  ranged: 'Стрельба',
-  magic: 'Магия',
-  prayer: 'Молитва',
-  slayer: 'Слэйер',
-  woodcutting: 'Лесоруб',
-  mining: 'Горное дело',
-  fishing: 'Рыбалка',
+  gathering: 'Сбор',
   foraging: 'Сбор',
-  firemaking: 'Огонь',
-  cooking: 'Кулинария',
-  smithing: 'Кузница',
-  fletching: 'Стрелы',
-  crafting: 'Ремесло',
-  runecrafting: 'Руны',
-  herblore: 'Травы',
-  farming: 'Ферма',
-  agility: 'Ловкость',
-  thieving: 'Воровство',
-  summoning: 'Призыв',
-  astrology: 'Звезды',
-  township: 'Город',
 };
 
 export function getSkillVisual(skillId: string): { type: 'image' | 'emoji'; value: string } {
   if (SKILL_IMAGES[skillId]) {
     return { type: 'image', value: SKILL_IMAGES[skillId] };
   }
-  return { type: 'emoji', value: SKILL_ICONS[skillId] || '⚔️' };
+  return { type: 'emoji', value: SKILL_ICONS[skillId] || '🌿' };
 }
 
 export function getSkillShortName(skillId: string): string {

@@ -56,11 +56,6 @@ interface AdminEditState {
   attackBonus: string;
   strengthBonus: string;
   defenceBonus: string;
-  rangedAttackBonus: string;
-  rangedStrengthBonus: string;
-  magicAttackBonus: string;
-  magicDamageBonus: string;
-  prayerBonus: string;
 }
 
 const toStr = (v: number | undefined): string => (v === undefined || Number.isNaN(v) ? '' : String(v));
@@ -88,11 +83,6 @@ function initialForm(item?: Item): AdminEditState {
     attackBonus: toStr(cs?.attackBonus),
     strengthBonus: toStr(cs?.strengthBonus),
     defenceBonus: toStr(cs?.defenceBonus),
-    rangedAttackBonus: toStr(cs?.rangedAttackBonus),
-    rangedStrengthBonus: toStr(cs?.rangedStrengthBonus),
-    magicAttackBonus: toStr(cs?.magicAttackBonus),
-    magicDamageBonus: toStr(cs?.magicDamageBonus),
-    prayerBonus: toStr(cs?.prayerBonus),
   };
 }
 
@@ -169,11 +159,6 @@ export function AdminItemEditor({ itemId, onChanged }: { itemId: string; onChang
       ['attackBonus', 'attackBonus'],
       ['strengthBonus', 'strengthBonus'],
       ['defenceBonus', 'defenceBonus'],
-      ['rangedAttackBonus', 'rangedAttackBonus'],
-      ['rangedStrengthBonus', 'rangedStrengthBonus'],
-      ['magicAttackBonus', 'magicAttackBonus'],
-      ['magicDamageBonus', 'magicDamageBonus'],
-      ['prayerBonus', 'prayerBonus'],
     ] as const;
     for (const [formKey, statKey] of combatFields) {
       const value = toOptNum(form[formKey]);
@@ -326,11 +311,6 @@ export function AdminItemEditor({ itemId, onChanged }: { itemId: string; onChang
                 ['attackBonus', 'Атака'],
                 ['strengthBonus', 'Сила'],
                 ['defenceBonus', 'Защита'],
-                ['rangedAttackBonus', 'Дальний урон'],
-                ['rangedStrengthBonus', 'Дальн. сила'],
-                ['magicAttackBonus', 'Маг. урон'],
-                ['magicDamageBonus', 'Маг. бонус'],
-                ['prayerBonus', 'Молитва'],
               ] as const).map(([key, label]) => (
                 <LabeledInput key={key} label={label} type="number" value={form[key]} onChange={v => setField(key, v)} />
               ))}

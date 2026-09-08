@@ -26,23 +26,11 @@ import {
 import { RotateCcw, Download, Upload, Trash2 } from 'lucide-react';
 
 const SKILL_LABELS: Record<string, string> = {
-  woodcutting: 'Лесорубство',
-  mining: 'Горное дело',
-  fishing: 'Рыбалка',
   foraging: 'Сбор',
-  cooking: 'Кулинария',
-  smithing: 'Кузнечество',
-  firemaking: 'Огонь',
 };
 
 const PROFESSION_TOGGLES: { key: AdminSkillToggle; label: string; icon: string }[] = [
-  { key: 'woodcutting', label: 'Лесорубство', icon: '🪓' },
-  { key: 'mining', label: 'Горное дело', icon: '⛏️' },
-  { key: 'fishing', label: 'Рыбалка', icon: '🎣' },
   { key: 'foraging', label: 'Сбор', icon: '🌿' },
-  { key: 'cooking', label: 'Кулинария', icon: '🍖' },
-  { key: 'smithing', label: 'Кузнечество', icon: '🔨' },
-  { key: 'firemaking', label: 'Огонь', icon: '🔥' },
 ];
 
 const PROFESSION_RATE_FIELDS: {
@@ -351,7 +339,7 @@ export function AdminProfessionsPanel() {
           </button>
         </div>
         <div className="grid sm:grid-cols-2 gap-2.5">
-          {PROFESSION_FEEDS.map(feed => <FeedCard key={feed.skillId} feed={feed} />)}
+          {PROFESSION_FEEDS.filter(feed => feed.skillId === 'foraging').map(feed => <FeedCard key={feed.skillId} feed={feed} />)}
         </div>
       </section>
 

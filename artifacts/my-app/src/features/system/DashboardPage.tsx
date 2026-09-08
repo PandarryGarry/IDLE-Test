@@ -1,9 +1,9 @@
-import React from 'react';
-import { usePlayerStore } from '@/store/playerStore';
+import React, { useMemo } from 'react';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { useGameStore } from '@/store/gameStore';
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
+import { getLiveAttributes } from '@/domain/attributes/characterAttributes';
 import { getAvatarPath, getRaceLabel } from '@/data/characters';
 import { GUEST_NOTICE } from '@/lib/guestMode';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -107,14 +107,14 @@ function OfflineSummary({ data, onClaim }: { data: OfflineData; onClaim: () => v
 /* ── DASHBOARD ── */
 export function DashboardPage() {
   const { t }        = useTranslation();
-  const combatLevel  = usePlayerStore(s => s.combatLevel);
+  const activeCharacter = useCharacterStore(s => s.activeCharacter);
+  const heroLevel = useMemo(() => getLiveAttributes().heroLevel, [activeCharacter]);
   const gp           = useInventoryStore(s => s.gp);
   const items        = useInventoryStore(s => s.items);
   const maxSlots     = useInventoryStore(s => s.maxSlots);
   const offlineData   = useGameStore(s => s.offlineData);
   const clearOffline  = useGameStore(s => s.clearOfflineData);
   const isGuest       = useAuthStore(s => s.isGuest);
-  const activeCharacter = useCharacterStore(s => s.activeCharacter);
   const usedSlots    = items ? items.filter(s => s.quantity > 0).length : 0;
 
   const handleClaim = () => { clearOffline(); };
@@ -160,7 +160,7 @@ export function DashboardPage() {
 
         {/* 3 метрики */}
         <div style={{ display: 'flex', gap: 6 }}>
-          <StatCell label="⚔ Боевой Lvl" value={combatLevel} />
+          <StatCell label="Ур. героя" value={heroLevel} />
           <StatCell label="💰 Кошелёк"   value={<span style={{display:"flex",alignItems:"center",height:"100%"}}><CoinsDisplay amount={gp} size="xs" /></span>} />
           <StatCell label="🎒 Сумка"     value={`${usedSlots}/${maxSlots}`} />
         </div>

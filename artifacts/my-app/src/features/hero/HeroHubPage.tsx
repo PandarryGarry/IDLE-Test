@@ -113,9 +113,6 @@ const STAT_BADGES: { key: EquipStatKey; label: string; icon: React.ComponentType
   { key: 'attackBonus', label: 'Атака', icon: Swords },
   { key: 'strengthBonus', label: 'Сила', icon: Zap },
   { key: 'defenceBonus', label: 'Защита', icon: Shield },
-  { key: 'rangedAttackBonus', label: 'Стрельба', icon: Swords },
-  { key: 'magicAttackBonus', label: 'Магия', icon: Sparkles },
-  { key: 'prayerBonus', label: 'Молитва', icon: Sparkles },
 ];
 
 type BagFilter = 'all' | 'weapon' | 'armor' | 'jewel';

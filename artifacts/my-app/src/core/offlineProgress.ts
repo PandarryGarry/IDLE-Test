@@ -1,150 +1,77 @@
-/**
- * offlineProgress.ts
- * Считает прогресс персонажа за время отсутствия игрока.
- * Использует последнее активное действие и время последнего сохранения.
- */
+// Offline progression calculator
+// Активный навык только один — «Сбор». Оффлайн считаем упрощённо:
+// базовый предмет зоны + XP, без мобов, редких и x2.
+// Следующие навыки (если появятся) добавят свои ветки здесь.
 
-import { useGameStore } from '../store/gameStore.ts';
+import type { SkillId } from '../data/types.ts';
 import { usePlayerStore } from '../store/playerStore.ts';
-import { useInventoryStore } from '../store/inventoryStore.ts';
-import { TREES } from '../domain/professions/woodcutting.ts';
-import { ROCKS } from '../domain/professions/mining.ts';
-import { FISHING_SPOTS } from '../domain/professions/fishing.ts';
+import { useBankStore } from '../store/bankStore.ts';
+import {
+  FORAGING_ZONES_MAP,
+  rollOfflineForaging,
+  foragingSpeedMultiplier,
+} from '../domain/professions/foraging.ts';
+import { getAdminRates } from '../store/adminConfigStore.ts';
 
-export interface OfflineItem {
-  id: string;
-  name: string;
-  quantity: number;
-}
+const MAX_OFFLINE_MS = 24 * 60 * 60 * 1000; // 24 hours cap
 
-export interface OfflineSkillResult {
-  skillId: string;
-  skillName: string;
-  icon: string;
+interface OfflineResult {
+  offlineMs: number;
+  actions: number;
   xpGained: number;
-  items: OfflineItem[];
-  actionsCount: number;
+  itemsGained: { itemId: string; quantity: number }[];
+  levelUps: { skillId: SkillId; newLevel: number }[];
 }
 
-export interface OfflineResult {
-  durationMs: number;
-  durationMinutes: number;
-  skills: OfflineSkillResult[];
-  goldEarned: number;
+/** Оффлайн «Сбора»: только базовая добыча зоны + XP, мобов нет. */
+function calcForagingOffline(actionId: string, offlineMs: number): OfflineResult {
+  const zone = FORAGING_ZONES_MAP[actionId];
+  if (!zone) return { offlineMs: 0, actions: 0, xpGained: 0, itemsGained: [], levelUps: [] };
+
+  const rates = getAdminRates();
+  const level = usePlayerStore.getState().getSkillLevel('foraging');
+  const interval = Math.max(
+    100,
+    Math.round(zone.interval / Math.max(0.01, rates.actionSpeedMultiplier * foragingSpeedMultiplier(level))),
+  );
+  const totalActions = Math.floor(offlineMs / interval);
+  const playerStore = usePlayerStore.getState();
+  const bankStore = useBankStore.getState();
+
+  const totalXp = Math.round(zone.xp * rates.xpMultiplier * totalActions);
+  const levelUps: { skillId: SkillId; newLevel: number }[] = [];
+  if (totalXp > 0) {
+    const { leveledUp, newLevel } = playerStore.addXp('foraging', totalXp);
+    if (leveledUp) levelUps.push({ skillId: 'foraging', newLevel });
+  }
+
+  const itemsGained: { itemId: string; quantity: number }[] = [];
+  if (totalActions > 0) {
+    const perAction = rollOfflineForaging(actionId, level);
+    const totalQty = perAction.quantity * totalActions;
+    const added = bankStore.addItem(perAction.itemId, totalQty);
+    if (added) itemsGained.push({ itemId: perAction.itemId, quantity: totalQty });
+  }
+
+  return { offlineMs, actions: totalActions, xpGained: totalXp, itemsGained, levelUps };
 }
 
-const SKILL_ICONS: Record<string, string> = {
-  woodcutting: '🪓',
-  mining:      '⛏️',
-  fishing:     '🎣',
-  cooking:     '🍖',
-  smithing:    '🔨',
-  firemaking:  '🔥',
-  combat:      '⚔️',
-};
+export function calculateOfflineProgress(
+  skillId: SkillId,
+  actionId: string,
+  lastSaveTime: number,
+): OfflineResult {
+  const now = Date.now();
+  const rawOfflineMs = now - lastSaveTime;
+  const offlineMs = Math.min(rawOfflineMs, MAX_OFFLINE_MS);
 
-const SKILL_NAMES: Record<string, string> = {
-  woodcutting: 'Лесорубство',
-  mining:      'Горное дело',
-  fishing:     'Рыбалка',
-  cooking:     'Кулинария',
-  smithing:    'Кузнечество',
-  firemaking:  'Огонь',
-  combat:      'Бой',
-};
-
-/** Максимальное время оффлайна — 8 часов */
-const MAX_OFFLINE_MS = 8 * 60 * 60 * 1000;
-/** Эффективность оффлайна — 50% от онлайна */
-const OFFLINE_EFFICIENCY = 0.5;
-
-export function calculateOfflineProgress(lastSaveTime: number): OfflineResult | null {
-  const now     = Date.now();
-  const elapsed = Math.min(now - lastSaveTime, MAX_OFFLINE_MS);
-
-  // Меньше минуты — не показываем
-  if (elapsed < 60_000) return null;
-
-  const gameState  = useGameStore.getState();
-  const { activeSkill, activeActionId } = gameState;
-
-  if (!activeSkill || !activeActionId) return null;
-
-  const effectiveMs = elapsed * OFFLINE_EFFICIENCY;
-  const skills: OfflineSkillResult[] = [];
-  let goldEarned = 0;
-
-  // ── Вычисляем XP и предметы ──────────────────────────────────
-  if (activeSkill === 'woodcutting') {
-    const tree = TREES.find(t => t.id === activeActionId);
-    if (tree) {
-      const actions = Math.floor(effectiveMs / tree.interval);
-      const xpGained = actions * tree.xp;
-      const qty = actions * tree.quantity[0];
-      skills.push({
-        skillId: 'woodcutting',
-        skillName: SKILL_NAMES.woodcutting,
-        icon: SKILL_ICONS.woodcutting,
-        xpGained: Math.floor(xpGained),
-        actionsCount: actions,
-        items: qty > 0 ? [{ id: tree.logId, name: tree.logId.replace('_', ' '), quantity: qty }] : [],
-      });
-    }
+  if (offlineMs < 1000 || !skillId || !actionId) {
+    return { offlineMs: 0, actions: 0, xpGained: 0, itemsGained: [], levelUps: [] };
   }
 
-  if (activeSkill === 'mining') {
-    const rock = ROCKS?.find((r: any) => r.id === activeActionId);
-    if (rock) {
-      const actions = Math.floor(effectiveMs / rock.interval);
-      const xpGained = actions * rock.xp;
-      skills.push({
-        skillId: 'mining',
-        skillName: SKILL_NAMES.mining,
-        icon: SKILL_ICONS.mining,
-        xpGained: Math.floor(xpGained),
-        actionsCount: actions,
-        items: actions > 0 ? [{ id: rock.oreId, name: rock.oreId.replace('_ore',''), quantity: actions }] : [],
-      });
-    }
+  if (skillId === 'foraging') {
+    return calcForagingOffline(actionId, offlineMs);
   }
 
-  if (activeSkill === 'fishing') {
-    const spot = FISHING_SPOTS?.find((s: any) => s.id === activeActionId);
-    if (spot) {
-      const actions = Math.floor(effectiveMs / spot.interval);
-      const xpGained = actions * spot.xp;
-      skills.push({
-        skillId: 'fishing',
-        skillName: SKILL_NAMES.fishing,
-        icon: SKILL_ICONS.fishing,
-        xpGained: Math.floor(xpGained),
-        actionsCount: actions,
-        items: actions > 0 ? [{ id: spot.fishId, name: spot.fishId.replace('raw_',''), quantity: actions }] : [],
-      });
-    }
-  }
-
-  if (skills.length === 0) return null;
-
-  return {
-    durationMs:      elapsed,
-    durationMinutes: Math.floor(elapsed / 60_000),
-    skills,
-    goldEarned,
-  };
-}
-
-/** Применяет оффлайн-прогресс к стейту */
-export function applyOfflineProgress(result: OfflineResult): void {
-  const addXp   = usePlayerStore.getState().addXp;
-  const addItem = useInventoryStore.getState().addItem;
-
-  for (const skill of result.skills) {
-    if (skill.xpGained > 0) {
-      addXp(skill.skillId as any, skill.xpGained);
-    }
-    for (const item of skill.items) {
-      addItem(item.id, item.quantity);
-    }
-  }
+  return { offlineMs: 0, actions: 0, xpGained: 0, itemsGained: [], levelUps: [] };
 }

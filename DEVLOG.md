@@ -58,17 +58,19 @@
 **`main`:** Этапы 1–5B в коде (хаб, Пульт, Путь, XP-таблица, `ruleRu`,
 вывеска греет первый кадр). Replit ходит в живую БД. SQL не менялся.
 
-**Текущая работа (НЕ смёржена):** Foraging v2 на ветке
-`arena/01a07841-idle-test` (`d73ba4f`, запушено). Дизайн —
-`artifacts/foraging_v2_design.md`. Готово: 5 зон, статы профессии,
-вкладка админки «Профессии», оффлайн-правила. Ждём теста владельца в Replit;
-мерж только по команде «мержи».
+**Текущая работа (НЕ смёржена):** весь раунд 5–6 на ветке
+`arena/01a07841-idle-test`; дерево: текущий diff на верхнем
+`2a731a0`. Готово: админ-каталог с снаряжением + перечитывание
+характеристик после сейва, а затем большая чистка легаси.
+Осталась одна профессия — «Сбор»; бой на четырёх столпах.
+Все проверки (tsc/build/validate:catalog/test:pillars) зелёные.
+Мерж — только по команде «мержи».
 
-**Следующий чат (после текущей задачи):** привязать уже лежащие
-иконки предметов/экипа/UI через `iconUrl()`. Тики XP, бой и новые таблицы
-— не в том же заходе.
+**Следующий чат (после мержа):** контентный слой поверх чистой модели:
+привязка иконок через `iconUrl()`, новые профессии/боевые механики
+добавляются уже на столпах, а не на старых «атака/сила/лесорубство».
 
-Канон чата: `NEXT_CHAT_HANDOFF.md`.
+Канон чата: `NEXT_CHAT_HANDOFF.md` (в этой же ветке обновлён).
 
 **Манекены (арт 5B):** все 30 собраны и апскейлены до 1024; люди
 утверждены, эльфы/гномы/орки/зверолюди прошли полировку. Рост у всех
@@ -83,6 +85,68 @@
 ---
 
 ## 📜 ЖУРНАЛ СЕССИЙ (новые записи — СВЕРХУ)
+
+### Сессия 27 — 2026-09-08 — Раунды 5–6: фидбек по админке + большая чистка легаси-навыков
+
+**Ветка:** `arena/01a07841-idle-test`, всё в той же НЕ смёрженной ветке.
+`main` не трогали. Мерж — только по слову владельца «мержи».
+
+**Раунд 5 — фидбек владельца (закрыт в `2a731a0`):**
+- В админ «Предметы» не попадало **снаряжение/оружие**.
+  `AdminItemsPage` подключён к `getAllItems()` (каталог + легаси-семейства,
+  включая оружие/шлемы/нагрудники/щиты), категории и подписи добавлены,
+  дубли по `id` не показываются.
+- После сохранения характеристик персонажа **отображаемые цифры не обновлялись**.
+  В `AdminCharactersPanel` после `save()` сделан повторный
+  `normalizeSave(updated.saveData, …)` → `setDraft(...)`, а для активного персонажа
+  ещё и `applySaveData(...)`. Числовые поля «Уровень героя / Столпы / Опыт /
+  Очки / Репутация / Энергия» теперь перечитываются после сейва.
+
+**Раунд 6 — «брак» удалён. Осталась одна профессия (Сбор) и столпы.**
+Всё легаси-боевое/профессиональное убрано, чтобы не путало будущие сессии:
+
+- **Типы** (`data/types.ts`): `SkillId = 'foraging'`, `ALL_SKILL_IDS`,
+  `GATHERING_SKILLS`, `ACTIVE_SKILLS` — только `foraging`; `CombatStats`
+  только attack/strength/defence. Удалены интерфейсы `WoodcuttingTree`,
+  `MiningRock`, `FishingSpot`, `CookingRecipe`, `SmithingRecipe`,
+  `FiremakingLog`, `ThievingTarget`, `Prayer`, `Spell`.
+- **Домены/модели**: удалены `domain/professions/{woodcutting,mining,fishing,
+  cooking,smithing,firemaking}.ts`, `domain/combat/{prayers,spells}.ts`.
+  `Monster` больше не содержит `combatStyle`/`slayerXp`; `slayer_coin` удалён
+  из предметов. `domain/professions/foraging` + `professionStats` +
+  `attributes` остались каноном.
+- **UI**: удалены страницы Woodcutting/Mining/Fishing/Cooking/Smithing/
+  Firemaking и `ActionGrid.tsx`, `shared/ui/kit/SkillCard.tsx`,
+  `ActionCard.tsx`. `SkillHeader` — только «Сбор»; `SkillIcon`,
+  `GlobalActiveBar`, `MobileNav`, `Sidebar`, `App`, `Dashboard`,
+  `HeroHub`, `CombatPage` приведены к столпам+«Сбору».
+- **Оффлайн**: `core/offlineCalc.ts` удалён; `core/offlineProgress.ts`
+  переписан foraging-only (кап 24 ч, `rollOfflineForaging`, XP+лут,
+  levelUps). `saveManager` теперь берёт его + `skillNameRu` + иконку 🌿.
+- **Реестры/формулы/иконки**: `skillRegistry` только foraging;
+  `formulas.ts` вычищен (мастерство/preservation/doubling/XP-per-hour/
+  time-to-level/formatTime/smithing/cooking/junk) — остались боевые формулы
+  и drop-sim; `skillIcons.ts` только foraging/gathering; `uiIcons.tsx`
+  убраны изображения attack/magic/ranged; `tokens.ts` — только палитра
+  4 столпов/боя и зелёная «Сбор», без wood/mining/fishing/...
+- **Данные**: `data/balance/professions.ts` -> `PROFESSION_FEEDS` только
+  foraging; `data/balance/professions` остальные (переработка/экномика) не
+  трогали. `i18n.ts` — удалены все legacy `skill.*`, группы/дашборд/
+  подписи старых профессий; остались «Сбор», группа «Бой/Профессии»,
+  навигация и уведомления.
+- **Прочее**: `notificationsStore` иконка только 🌿; `AdminCharactersPanel`
+  старт `hitpoints`=10 убран (все навыки 1); `guestMode`, `playerStore`,
+  `gameStore`, `adminConfigStore`, `AdminItemEditor`, `ItemInfoPopover`,
+  `equipmentStats` — вычищены до актуальной модели.
+
+**Проверки (все зелёные):**
+- `corepack pnpm exec tsc -p tsconfig.json --noEmit` — 0 ошибок.
+- `corepack pnpm build` — vite 7.10s, dist собран.
+- `corepack pnpm validate:catalog` — 120 предметов, ошибок нет.
+- `corepack pnpm test:pillars` — 36/36.
+
+**Что осталось (не код):** закоммитить, запушить ветку, открыть PR,
+обновить `NEXT_CHAT_HANDOFF.md`, ждать «мержи» от владельца.
 
 ### Сессия 26 — 2026-09-08 — Админ «Персонаж»: разделил характеристики и профессии, починил выдачу предметов (раунд 4)
 

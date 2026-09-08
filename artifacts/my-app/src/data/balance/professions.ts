@@ -2,6 +2,7 @@ import type { BranchId, PillarId } from '../../domain/attributes/attributes.ts';
 
 /**
  * Профессия = ремесло. Ярлыка «Охотник» нет.
+ * После раунда 6 в игре одна профессия — «Сбор»; легаси-профессии удалены.
  * Точные % НЕ закрыты — в 5A только карта «кого кормит», бонус 0.
  */
 export interface ProfessionFeed {
@@ -17,11 +18,5 @@ export interface ProfessionFeed {
 }
 
 export const PROFESSION_FEEDS: readonly ProfessionFeed[] = [
-  { skillId: 'woodcutting', pillar: 'fortitude', branch: 'will', percentCapStub: 0 },
-  { skillId: 'mining', pillar: 'fortitude', branch: 'armor', percentCapStub: 0 },
-  { skillId: 'fishing', pillar: 'instinct', branch: 'luck', percentCapStub: 0 },
-  { skillId: 'cooking', pillar: 'instinct', branch: 'resourcefulness', percentCapStub: 0 },
-  { skillId: 'smithing', pillar: 'might', branch: 'strike', percentCapStub: 0 },
-  { skillId: 'firemaking', pillar: 'finesse', branch: 'reaction', percentCapStub: 0 },
   { skillId: 'foraging', pillar: 'instinct', branch: 'resourcefulness', percentCapStub: 0 },
 ];
