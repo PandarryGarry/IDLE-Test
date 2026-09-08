@@ -1,12 +1,16 @@
 import { useMemo, useState } from 'react';
-import { getCatalogItems } from '@/domain/items';
+import { getAllItems } from '@/domain/items';
 import { useAdminConfigStore } from '@/store/adminConfigStore';
 import { SquircleSlot } from '@/shared/ui/kit/SquircleSlot';
 import { UniversalInfoModal } from '@/components/modals/UniversalInfoModal';
 import { Search, X } from 'lucide-react';
 import type { ItemCategory } from '@/data/types';
 
-const CATEGORY_ORDER: ItemCategory[] = ['log', 'ore', 'bar', 'raw_fish', 'cooked_fish', 'mineral', 'foraging'];
+const CATEGORY_ORDER: ItemCategory[] = [
+  'log', 'ore', 'bar', 'raw_fish', 'cooked_fish', 'mineral', 'foraging',
+  'weapon', 'helm', 'platebody', 'shield',
+  'ash', 'bone', 'rune', 'gem', 'herb', 'misc',
+];
 const CATEGORY_INDEX = new Map<ItemCategory, number>(CATEGORY_ORDER.map((category, index) => [category, index]));
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -17,6 +21,16 @@ const CATEGORY_LABELS: Record<string, string> = {
   cooked_fish: 'Жареная рыба',
   mineral: 'Минерал',
   foraging: 'Сбор',
+  weapon: 'Оружие',
+  helm: 'Шлемы',
+  platebody: 'Нагрудники',
+  shield: 'Щиты',
+  ash: 'Зола',
+  bone: 'Кости',
+  rune: 'Руны',
+  gem: 'Самоцветы',
+  herb: 'Травы',
+  misc: 'Прочее',
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -27,6 +41,16 @@ const CATEGORY_ICONS: Record<string, string> = {
   cooked_fish: '🍽️',
   mineral: '🪨',
   foraging: '🌿',
+  weapon: '⚔️',
+  helm: '⛑️',
+  platebody: '🛡️',
+  shield: '🛡️',
+  ash: '⚪',
+  bone: '🦴',
+  rune: '✨',
+  gem: '💎',
+  herb: '🌿',
+  misc: '📦',
 };
 
 export function AdminItemsPage() {
@@ -35,9 +59,18 @@ export function AdminItemsPage() {
   const [activeCategory, setActiveCategory] = useState<ItemCategory | 'all'>('all');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // Правки предметов из админки обновляют каталог через getItem()/getCatalogItems().
+  // Правки предметов из админки обновляют каталог через getItem()/getAllItems().
+  // getAllItems() объединяет каталог (ресурсы/сбор) с легаси-семействами,
+  // включая снаряжение: оружие, шлемы, нагрудники и щиты. Дубли по id не показываем.
   const itemOverrides = useAdminConfigStore(s => s.itemOverrides);
-  const catalog = useMemo(() => getCatalogItems(), [itemOverrides]);
+  const catalog = useMemo(() => {
+    const seen = new Set<string>();
+    return getAllItems().filter(item => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    });
+  }, [itemOverrides]);
 
   // Единый порядок: категория (из CATEGORY_ORDER, неизвестные — в конец),
   // затем тир, затем id. Никаких дублирующих подкатегорий-заголовков.

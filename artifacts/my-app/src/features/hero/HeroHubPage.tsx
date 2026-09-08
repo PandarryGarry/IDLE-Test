@@ -208,7 +208,10 @@ export function HeroHubPage() {
   const [tick, setTick] = useState(0);
 
   const raceId: RaceId = active?.raceId ?? 'human';
-  const state = useMemo(() => getLiveAttributes(), [active?.id, tick]);
+  // Зависим от объекта active, а не только active.id: админ-сохранение
+  // заменяет activeCharacter в characterStore, и после этого числа на экране
+  // должны перечитаться из getLiveAttributes() (например, сохранённые из админки).
+  const state = useMemo(() => getLiveAttributes(), [active, tick]);
   const snapshot = useMemo(
     () => computeAttributeSnapshot({ state, raceId }),
     [state, raceId],
