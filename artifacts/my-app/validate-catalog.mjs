@@ -47,6 +47,8 @@ const byFamily = {
   cookedFish: groups['cooked_fish'] ?? 0,
   minerals: groups['mineral'] ?? 0,
   foraging: groups['foraging'] ?? 0,
+  food: groups['food'] ?? 0,
+  misc: groups['misc'] ?? 0,
 };
 
 console.log(`✔ итого предметов: ${CATALOG.length}`);

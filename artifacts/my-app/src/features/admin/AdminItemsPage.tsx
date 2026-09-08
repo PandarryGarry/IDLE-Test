@@ -8,8 +8,8 @@ import type { ItemCategory } from '@/data/types';
 
 const CATEGORY_ORDER: ItemCategory[] = [
   'log', 'ore', 'bar', 'raw_fish', 'cooked_fish', 'mineral', 'foraging',
+  'food', 'misc',
   'weapon', 'helm', 'platebody', 'shield',
-  'ash', 'bone', 'rune', 'gem', 'herb', 'misc',
 ];
 const CATEGORY_INDEX = new Map<ItemCategory, number>(CATEGORY_ORDER.map((category, index) => [category, index]));
 
@@ -21,16 +21,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   cooked_fish: 'Жареная рыба',
   mineral: 'Минерал',
   foraging: 'Сбор',
+  food: 'Еда',
+  misc: 'Трофеи',
   weapon: 'Оружие',
   helm: 'Шлемы',
   platebody: 'Нагрудники',
   shield: 'Щиты',
-  ash: 'Зола',
-  bone: 'Кости',
-  rune: 'Руны',
-  gem: 'Самоцветы',
-  herb: 'Травы',
-  misc: 'Прочее',
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -41,16 +37,12 @@ const CATEGORY_ICONS: Record<string, string> = {
   cooked_fish: '🍽️',
   mineral: '🪨',
   foraging: '🌿',
+  food: '🍖',
+  misc: '🏆',
   weapon: '⚔️',
   helm: '⛑️',
   platebody: '🛡️',
   shield: '🛡️',
-  ash: '⚪',
-  bone: '🦴',
-  rune: '✨',
-  gem: '💎',
-  herb: '🌿',
-  misc: '📦',
 };
 
 export function AdminItemsPage() {
