@@ -5,9 +5,14 @@ description: Key architectural decisions for artifacts/my-app
 
 ## Layout
 
-See `artifacts/my-app/src/ARCHITECTURE.md`. Screens live in `features/`,
+See `artifacts/my-app/src/ARCHITECTURE.md` and
+`.agents/memory/aethelia-arch.md`. Screens live in `features/`,
 numbers in `data/balance/`, pillars in `domain/attributes/`. There is no
 `src/pages/` and no `gameEngine/` — those names are historical.
+
+After round 6 the only profession is **«Сбор»** (`foraging`); combat is
+built on the four pillars. Legacy skills/domains were removed and must not
+be reintroduced.
 
 ## Splash / first frame
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { getItem } from '@/domain/items/items';
+import { getItem } from '@/domain/items';
 import { formatNumber } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { ItemIcon } from '@/features/bank/ItemIcon';
@@ -20,14 +20,9 @@ interface ItemInfoPopoverProps {
 }
 
 const STAT_LABELS: Record<string, string> = {
-  attackBonus: 'Attack',
-  strengthBonus: 'Strength',
-  defenceBonus: 'Defence',
-  rangedAttackBonus: 'Ranged attack',
-  rangedStrengthBonus: 'Ranged strength',
-  magicAttackBonus: 'Magic attack',
-  magicDamageBonus: 'Magic damage',
-  prayerBonus: 'Prayer',
+  attackBonus: 'Атака',
+  strengthBonus: 'Сила',
+  defenceBonus: 'Защита',
 };
 
 export function ItemInfoPopover({

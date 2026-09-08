@@ -2,25 +2,26 @@
 // Core game types for Aethelia Idle RPG
 // ============================================================
 
-export type SkillId =
-  | 'attack' | 'strength' | 'defence' | 'hitpoints'
-  | 'ranged' | 'magic' | 'prayer' | 'slayer'
-  | 'woodcutting' | 'fishing' | 'firemaking' | 'cooking'
-  | 'mining' | 'smithing' | 'thieving' | 'fletching'
-  | 'crafting' | 'runecrafting' | 'herblore' | 'farming'
-  | 'agility' | 'summoning' | 'astrology' | 'township';
+/**
+ * Единственный навык/профессия текущей игры — «Сбор».
+ * Все RuneScape-пережитки (Атака/Сила/Защита/Дальний/Магия/Молитва,
+ * Лесорубство, Горное дело, Рыбалка, Кулинария, Кузнечество, Огонь и т.д.)
+ * удалены из модели. У персонажа остаются только четыре Столпа
+ * (см. domain/attributes) и этот навык.
+ */
+export type SkillId = 'foraging';
 
-export const COMBAT_SKILLS: SkillId[] = ['attack', 'strength', 'defence', 'hitpoints', 'ranged', 'magic', 'prayer', 'slayer'];
-export const GATHERING_SKILLS: SkillId[] = ['woodcutting', 'fishing', 'mining'];
-export const CRAFTING_SKILLS: SkillId[] = ['firemaking', 'cooking', 'smithing', 'fletching', 'crafting', 'runecrafting', 'herblore'];
-export const OTHER_SKILLS: SkillId[] = ['farming', 'agility', 'summoning', 'astrology', 'township', 'thieving'];
-export const ALL_SKILL_IDS: SkillId[] = [...COMBAT_SKILLS, ...GATHERING_SKILLS, ...CRAFTING_SKILLS, ...OTHER_SKILLS];
+export const ALL_SKILL_IDS: SkillId[] = ['foraging'];
+export { ALL_SKILL_IDS as GATHERING_SKILLS, ALL_SKILL_IDS as ACTIVE_SKILLS };
+
+export type ItemTier = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
 export type ItemCategory =
   | 'weapon' | 'helm' | 'platebody' | 'platelegs' | 'boots' | 'gloves'
   | 'amulet' | 'ring' | 'bracelet' | 'belt' | 'shield' | 'cape'
   | 'food' | 'herb' | 'seed' | 'bar' | 'ore' | 'log' | 'rune'
-  | 'potion' | 'raw_fish' | 'cooked_fish' | 'gem' | 'misc' | 'bone' | 'ash' | 'arrow' | 'tablet';
+  | 'potion' | 'raw_fish' | 'cooked_fish' | 'gem' | 'misc' | 'bone' | 'ash' | 'arrow' | 'tablet'
+  | 'mineral' | 'foraging';
 
 export type EquipSlot =
   | 'helm' | 'platebody' | 'platelegs' | 'boots' | 'gloves'
@@ -31,11 +32,6 @@ export interface CombatStats {
   attackBonus?: number;
   strengthBonus?: number;
   defenceBonus?: number;
-  rangedAttackBonus?: number;
-  rangedStrengthBonus?: number;
-  magicAttackBonus?: number;
-  magicDamageBonus?: number;
-  prayerBonus?: number;
 }
 
 export interface Item {
@@ -53,6 +49,18 @@ export interface Item {
   icon?: string; // emoji fallback
   /** Двуручное: правая рука нормально, левая — то же оружие тусклое. */
   twoHanded?: boolean;
+  /**
+   * Тир — качество/«уровень» предмета, 1..12 (данное поле, не вычисление).
+   * У легаси-предметов отсутствует (тир определяется по id) — по мере переноса
+   * семейств в каталог тир становится обязательным (`CatalogItem`).
+   */
+  tier?: ItemTier;
+  /**
+   * Иконка предмета в `public/assets/icons` — путь БЕЗ расширения и без
+   * `assets/icons` (например `weapons/sword_1h/t02`). В `<img>` отдаётся
+   * только через `iconUrl()`, никогда сырым `.png`.
+   */
+  iconPath?: string;
 }
 
 export interface SkillState {
@@ -72,44 +80,18 @@ export interface SkillAction {
   interval: number; // ms per action
 }
 
-export interface WoodcuttingTree extends SkillAction {
-  logId: string;
-  quantity: [number, number]; // [min, max] logs per chop
+/** Одна находка в «Сборе»: предмет + вес + количество. */
+export interface ForagingDrop {
+  itemId: string;
+  weight: number; // относительный вес в таблице находок
+  quantity: [number, number]; // [min, max] за одно действие
 }
 
-export interface MiningRock extends SkillAction {
-  oreId: string;
-  gemChance?: number; // 0-1 chance of gem
-}
-
-export interface FishingSpot extends SkillAction {
-  fishId: string;
-  junkItems?: string[];
-}
-
-export interface CookingRecipe extends SkillAction {
-  rawItemId: string;
-  cookedItemId: string;
-  burntItemId?: string;
-  burnChanceBase?: number; // 0-1
-}
-
-export interface SmithingRecipe extends SkillAction {
-  outputItemId: string;
-  outputQuantity?: number;
-  ingredients: { itemId: string; quantity: number }[];
-  category?: 'bars' | 'equipment';
-}
-
-export interface FiremakingLog extends SkillAction {
-  logId: string;
-  ashId?: string;
-}
-
-export interface ThievingTarget extends SkillAction {
-  maxGp: number;
-  successChanceBase: number; // 0-1
-  items?: { itemId: string; chance: number; quantity: [number, number] }[];
+/** Действие «Сбора»: персонаж прочёсывает участок и находит случайный лут. */
+export interface ForagingAction extends SkillAction {
+  drops: ForagingDrop[];
+  /** Представительный предмет для карточки действия и оффлайн-добычи. */
+  dropItemId: string;
 }
 
 export interface MonsterDrop {
@@ -131,12 +113,10 @@ export interface Monster {
   defenceBonus: number;
   maxHit: number;
   attackInterval: number; // ms
-  combatStyle: 'melee' | 'ranged' | 'magic';
   drops: MonsterDrop[];
   gpDrop: [number, number];
   bones?: string;
   isBoss?: boolean;
-  slayerXp?: number;
   combatLevel: number;
 }
 
@@ -147,29 +127,6 @@ export interface CombatArea {
   combatLevelRequired?: number;
   isDungeon?: boolean;
   description?: string;
-}
-
-export interface Prayer {
-  id: string;
-  name: string;
-  description: string;
-  levelRequired: number;
-  prayerPointsPerTick: number; // drain rate
-  effects: {
-    type: 'attackBonus' | 'strengthBonus' | 'defenceBonus' | 'rangedBonus' | 'magicBonus'
-      | 'xpBonus' | 'protectMelee' | 'protectRanged' | 'protectMagic';
-    value: number; // multiplier (e.g. 0.05 for +5%) or 1 for protection
-  }[];
-}
-
-export interface Spell {
-  id: string;
-  name: string;
-  levelRequired: number;
-  runes: { runeId: string; qty: number }[];
-  baseMaxHit: number;
-  xpPerCast: number;
-  element?: 'fire' | 'water' | 'earth' | 'air' | 'none';
 }
 
 export interface Equipment {

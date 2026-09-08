@@ -3,11 +3,19 @@ import type { Monster } from '@/data/types';
 import { MONSTERS_MAP, AREAS_MAP } from '@/domain/combat/monsters';
 import { calcMaxHitMelee, calcAttackRating, calcDefenceRating, calcHitChance, calcAutoEatThreshold, rollDrops, rollGp } from '@/core/formulas';
 import { usePlayerStore } from '@/store/playerStore';
+import { useCharacterStore } from '@/store/characterStore';
 import { useBankStore } from '@/store/bankStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { useAuthStore } from '@/store/authStore';
 import { GUEST_NOTICE } from '@/lib/guestMode';
-import { getItem } from '@/domain/items/items';
+import { getItem } from '@/domain/items';
+import {
+  computeAttributeSnapshot,
+  getLiveAttributes,
+  applyHeroXp,
+} from '@/domain/attributes/characterAttributes';
+import { commitHeroAttributes } from '@/lib/heroPersist';
+import { getAdminRates, isSkillEnabledForAdmin } from '@/store/adminConfigStore';
 
 export interface CombatLogEntry {
   id: string;
@@ -35,15 +43,13 @@ export interface CombatStore {
 
   autoEat: boolean;
   autoLoot: boolean;
-  selectedPrayers: string[];
 
-  playerAttackTimer: number; // ms until next player attack
-  enemyAttackTimer: number;  // ms until next enemy attack
+  playerAttackTimer: number;
+  enemyAttackTimer: number;
 
   startCombat: (areaId: string, monsterId?: string) => void;
   stopCombat: () => void;
   tickCombat: (deltaMs: number) => void;
-  togglePrayer: (prayerId: string) => void;
   setAutoEat: (enabled: boolean) => void;
   setAutoLoot: (enabled: boolean) => void;
   eatFood: (itemId: string) => void;
@@ -55,6 +61,30 @@ export interface CombatStore {
 let _logId = 0;
 function newLog(type: CombatLogEntry['type'], message: string, damage?: number): CombatLogEntry {
   return { id: String(++_logId), timestamp: Date.now(), type, message, damage };
+}
+
+function currentRaceId(): 'human' | 'elf' | 'dwarf' | 'orc' | 'beastfolk' {
+  return (useCharacterStore.getState().activeCharacter?.raceId ?? 'human') as 'human' | 'elf' | 'dwarf' | 'orc' | 'beastfolk';
+}
+
+function liveSnapshot() {
+  const state = getLiveAttributes();
+  return computeAttributeSnapshot({ state, raceId: currentRaceId() });
+}
+
+function addHeroXp(amount: number): void {
+  if (!Number.isFinite(amount) || amount <= 0) return;
+  commitHeroAttributes(applyHeroXp(getLiveAttributes(), amount));
+}
+
+/** Итоговые очки столпа (раса + вложения + профессия-заглушка). */
+function finalPillar(id: 'fortitude' | 'might' | 'finesse' | 'instinct'): number {
+  return liveSnapshot().finalPillars[id] ?? 0;
+}
+
+/** Здоровье героя из Столпа Стойкости. */
+function liveMaxHp(): number {
+  return Math.max(120, Math.round(liveSnapshot().substats.health));
 }
 
 export const useCombatStore = create<CombatStore>((set, get) => ({
@@ -72,14 +102,17 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   totalDamageTaken: 0,
   autoEat: true,
   autoLoot: true,
-  selectedPrayers: [],
   playerAttackTimer: 0,
   enemyAttackTimer: 0,
 
   startCombat: (areaId, monsterId) => {
-    // Combat is locked for guests until they register.
     if (useAuthStore.getState().isGuest) {
       useNotificationsStore.getState().notifyInfo(GUEST_NOTICE);
+      return;
+    }
+
+    if (!isSkillEnabledForAdmin('combat')) {
+      useNotificationsStore.getState().notifyInfo('Бой отключён в настройках игры.');
       return;
     }
 
@@ -90,8 +123,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const monster = MONSTERS_MAP[targetId];
     if (!monster) return;
 
-    const playerSkills = usePlayerStore.getState().skills;
-    const playerMaxHp = playerSkills.hitpoints.level * 10;
+    const playerMaxHp = liveMaxHp();
     const playerCurrentHp = Math.min(get().playerHp > 0 ? get().playerHp : playerMaxHp, playerMaxHp);
 
     set({
@@ -103,15 +135,13 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       playerMaxHp,
       enemyHp: monster.maxHp,
       enemyMaxHp: monster.maxHp,
-      playerAttackTimer: 2400, // default player attack speed
+      playerAttackTimer: 2400,
       enemyAttackTimer: monster.attackInterval,
-      combatLog: [newLog('info', `Fighting ${monster.name}...`)],
+      combatLog: [newLog('info', `Бой: ${monster.name}`)],
     });
   },
 
   stopCombat: () => {
-    // Keep the finished log visible so the player can inspect hits, misses,
-    // damage and the final result after stopping the encounter.
     set({ inCombat: false, activeMonsterId: null, currentMonster: null, enemyHp: 0 });
   },
 
@@ -119,96 +149,81 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const state = get();
     if (!state.inCombat || !state.currentMonster) return;
 
+    if (!isSkillEnabledForAdmin('combat')) {
+      set({ inCombat: false, activeMonsterId: null, currentMonster: null, enemyHp: 0 });
+      useNotificationsStore.getState().notifyInfo('Бой отключён в настройках игры.');
+      return;
+    }
+
     let { playerHp, enemyHp, playerAttackTimer, enemyAttackTimer, combatLog, killCount, totalDamageDealt, totalDamageTaken } = state;
     const monster = state.currentMonster;
     const playerStore = usePlayerStore.getState();
     const bankStore = useBankStore.getState();
     const notifs = useNotificationsStore.getState();
+    const rates = getAdminRates();
     const logs: CombatLogEntry[] = [];
 
-    // ── Player attack ─────────────────────────────────────────
+    // ── Атака героя (столпы, а не навыки) ──────────────────────
     playerAttackTimer -= deltaMs;
     if (playerAttackTimer <= 0) {
       playerAttackTimer += 2400;
 
-      const atkLevel = playerStore.skills.attack.level;
-      const strLevel = playerStore.skills.strength.level;
-      const defLevel = monster.defenceLevel;
-
+      const might = finalPillar('might');
       const eq = playerStore.equipment;
       const weaponItem = eq.weapon ? getItem(eq.weapon) : null;
-      const atkBonus = (weaponItem?.combatStats?.attackBonus ?? 0);
-      const strBonus = (weaponItem?.combatStats?.strengthBonus ?? 0);
+      const atkBonus = weaponItem?.combatStats?.attackBonus ?? 0;
+      const strBonus = weaponItem?.combatStats?.strengthBonus ?? 0;
 
-      const attackRating = calcAttackRating(atkLevel, atkBonus);
-      const defenceRating = calcDefenceRating(defLevel, monster.defenceBonus);
+      const attackRating = calcAttackRating(might, atkBonus);
+      const defenceRating = calcDefenceRating(monster.defenceLevel, monster.defenceBonus);
       const hitChance = calcHitChance(attackRating, defenceRating);
-      const maxHit = calcMaxHitMelee(strLevel, strBonus);
+      const maxHit = calcMaxHitMelee(might, strBonus);
 
       if (Math.random() * 100 < hitChance) {
         const dmg = Math.floor(Math.random() * (maxHit + 1));
         enemyHp = Math.max(0, enemyHp - dmg);
         totalDamageDealt += dmg;
-        logs.push(newLog('player_attack', `You hit ${monster.name} for ${dmg}`, dmg));
-
-        // Give XP (melee: attack/strength/defence each get 4 XP per point of damage)
-        const result = playerStore.addXp('attack', dmg * 4);
-        playerStore.addXp('strength', dmg * 4);
-        playerStore.addXp('hitpoints', dmg * 1.3);
-        if (result.leveledUp) notifs.notifyLevelUp('attack', result.newLevel);
+        logs.push(newLog('player_attack', `Вы бьёте ${monster.name}: ${dmg}`, dmg));
       } else {
-        logs.push(newLog('player_attack', `You missed ${monster.name}!`, 0));
+        logs.push(newLog('player_attack', `Мимо ${monster.name}!`, 0));
       }
     }
 
-    // ── Enemy death ───────────────────────────────────────────
+    // ── Смерть монстра ────────────────────────────────────────
     if (enemyHp <= 0) {
       killCount += 1;
-      logs.push(newLog('enemy_death', `${monster.name} defeated! (Kill #${killCount})`));
+      logs.push(newLog('enemy_death', `${monster.name} повержен! (убийство #${killCount})`));
 
-      // Slayer XP
-      if (monster.slayerXp) {
-        const slayerResult = playerStore.addXp('slayer', monster.slayerXp);
-        if (slayerResult.leveledUp) notifs.notifyLevelUp('slayer', slayerResult.newLevel);
-      }
+      // Опыт героя — единственный «боевой» прогресс. Он кормит столпы.
+      const heroXp = Math.round(monster.combatLevel * 5 * rates.xpMultiplier);
+      if (heroXp > 0) addHeroXp(heroXp);
 
-      // Auto-loot drops
       if (state.autoLoot) {
-        const drops = rollDrops(monster);
-        for (const drop of drops) {
-          bankStore.addItem(drop.itemId, drop.quantity);
-          const item = getItem(drop.itemId);
-          if (item) notifs.notifyItem(item.name, drop.quantity, item.icon);
-        }
-        // Bones
-        if (monster.bones) {
-          bankStore.addItem(monster.bones, 1);
-          playerStore.addXp('prayer', monster.bones === 'dragon_bones' ? 72 : monster.bones === 'big_bones' ? 15 : 4.5);
-        }
-        // GP
-        const gp = rollGp(monster.gpDrop);
+        const drops = rollDrops(monster, Math.random, rates.dropRateMultiplier);
+        for (const drop of drops) bankStore.addItem(drop.itemId, drop.quantity);
+        if (monster.bones) bankStore.addItem(monster.bones, 1);
+        const gp = rollGp(monster.gpDrop, Math.random, rates.goldMultiplier);
         if (gp > 0) bankStore.addGp(gp);
       }
 
-      // Respawn next monster in area
       set({ enemyHp: monster.maxHp, enemyMaxHp: monster.maxHp, killCount, totalDamageDealt });
       set(s => ({ combatLog: [...logs, ...s.combatLog].slice(0, 100) }));
       return;
     }
 
-    // ── Enemy attack ──────────────────────────────────────────
+    // ── Атака монстра ─────────────────────────────────────────
     enemyAttackTimer -= deltaMs;
     if (enemyAttackTimer <= 0) {
       enemyAttackTimer += monster.attackInterval;
 
-      const defLevel = playerStore.skills.defence.level;
+      const fortitude = finalPillar('fortitude');
       const eq = playerStore.equipment;
       const defBonus = (getItem(eq.helm ?? '')?.combatStats?.defenceBonus ?? 0)
         + (getItem(eq.platebody ?? '')?.combatStats?.defenceBonus ?? 0)
         + (getItem(eq.platelegs ?? '')?.combatStats?.defenceBonus ?? 0)
         + (getItem(eq.shield ?? '')?.combatStats?.defenceBonus ?? 0);
 
-      const defRating = calcDefenceRating(defLevel, defBonus);
+      const defRating = calcDefenceRating(fortitude, defBonus);
       const atkRating = calcAttackRating(monster.attackLevel, monster.attackBonus);
       const hitChance = calcHitChance(atkRating, defRating);
 
@@ -216,14 +231,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         const dmg = Math.floor(Math.random() * (monster.maxHit + 1));
         playerHp = Math.max(0, playerHp - dmg);
         totalDamageTaken += dmg;
-        logs.push(newLog('enemy_attack', `${monster.name} hit you for ${dmg}`, dmg));
-        playerStore.addXp('defence', dmg * 1.3);
+        logs.push(newLog('enemy_attack', `${monster.name} бьёт вас: ${dmg}`, dmg));
 
-        // Auto-eat check
         if (state.autoEat) {
           const threshold = calcAutoEatThreshold(state.playerMaxHp);
           if (playerHp <= threshold) {
-            // Find best food in bank
             const bankItems = bankStore.items;
             const foods = bankItems
               .map(s => ({ slot: s, item: getItem(s.itemId) }))
@@ -234,22 +246,21 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
               const best = foods[0];
               bankStore.removeItem(best.slot.itemId, 1);
               playerHp = Math.min(state.playerMaxHp, playerHp + (best.item?.healAmount ?? 0));
-              logs.push(newLog('eat', `Auto-ate ${best.item?.name} (restored ${best.item?.healAmount} HP)`));
+              logs.push(newLog('eat', `Авто-еда: ${best.item?.name} (+${best.item?.healAmount} ОЗ)`));
             }
           }
         }
       } else {
-        logs.push(newLog('enemy_attack', `${monster.name} missed you!`, 0));
+        logs.push(newLog('enemy_attack', `${monster.name} промахивается!`, 0));
       }
     }
 
-    // ── Player death ──────────────────────────────────────────
+    // ── Смерть героя ──────────────────────────────────────────
     if (playerHp <= 0) {
-      logs.push(newLog('player_death', 'You have died! Respawning...'));
+      logs.push(newLog('player_death', 'Вы пали! Возврат к точке...'));
       playerHp = Math.floor(state.playerMaxHp * 0.5);
-      // Stop combat on death
       set({ inCombat: false, playerHp, enemyHp: monster.maxHp, playerAttackTimer, enemyAttackTimer, totalDamageTaken, combatLog: [...logs, ...state.combatLog].slice(0, 100) });
-      notifs.notifyCombat('💀 You have died!');
+      notifs.notifyCombat('💀 Вы пали!');
       return;
     }
 
@@ -259,15 +270,6 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       totalDamageDealt, totalDamageTaken,
       combatLog: [...logs, ...s.combatLog].slice(0, 100),
     }));
-  },
-
-  togglePrayer: (prayerId) => {
-    const { selectedPrayers } = get();
-    if (selectedPrayers.includes(prayerId)) {
-      set({ selectedPrayers: selectedPrayers.filter(p => p !== prayerId) });
-    } else {
-      set({ selectedPrayers: [...selectedPrayers, prayerId] });
-    }
   },
 
   setAutoEat: (enabled) => set({ autoEat: enabled }),
@@ -305,7 +307,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     inCombat: false, activeAreaId: null, activeMonsterId: null, currentMonster: null,
     playerHp: 100, playerMaxHp: 100, enemyHp: 0, enemyMaxHp: 0,
     combatLog: [], killCount: 0, totalDamageDealt: 0, totalDamageTaken: 0,
-    autoEat: true, autoLoot: true, selectedPrayers: [],
+    autoEat: true, autoLoot: true,
     playerAttackTimer: 0, enemyAttackTimer: 0,
   }),
 }));

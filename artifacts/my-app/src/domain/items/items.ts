@@ -128,7 +128,6 @@ const ITEMS: Record<string, Item> = {
   // ── Misc ────────────────────────────────────────────────────
   mark_of_mastery: { id: 'mark_of_mastery', name: 'Mark of Mastery', category: 'misc', sellValue: 0,    canSell: false, stackable: true,  icon: '✨' },
   ancient_key:     { id: 'ancient_key',     name: 'Ancient Key',     category: 'misc', sellValue: 100,  canSell: true,  stackable: true,  icon: '🗝️' },
-  slayer_coin:     { id: 'slayer_coin',     name: 'Slayer Coin',     category: 'misc', sellValue: 0,    canSell: false, stackable: true,  icon: '🪙' },
 };
 
 export default ITEMS;

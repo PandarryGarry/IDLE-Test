@@ -17,6 +17,7 @@ import { useAuthStore } from '@/store/authStore';
 import { GUEST_NOTICE } from '@/lib/guestMode';
 import { getSkillVisual } from '@/shared/icons/skillIcons';
 import { IconFrame } from '@/shared/ui/kit/IconFrame';
+import { skillNameRu } from '@/lib/skillNames';
 import type { SkillId } from '@/data/types';
 
 interface MobileNavProps {
@@ -33,17 +34,10 @@ export function MobileNav({ className = '' }: MobileNavProps) {
   const isGuest = useAuthStore(s => s.isGuest);
 
   const allSkillsList = [
-    { href: '/woodcutting', name: t('skill.woodcutting'), id: 'woodcutting' },
-    { href: '/mining',      name: t('skill.mining'),      id: 'mining' },
-    { href: '/fishing',     name: t('skill.fishing'),     id: 'fishing' },
-    { href: '/firemaking',  name: t('skill.firemaking'),  id: 'firemaking' },
-    { href: '/cooking',     name: t('skill.cooking'),     id: 'cooking' },
-    { href: '/smithing',    name: t('skill.smithing'),    id: 'smithing' },
+    { href: '/foraging', name: skillNameRu('foraging'), id: 'foraging' },
   ];
 
-  const skillsList = isGuest
-    ? allSkillsList.filter(s => s.id === 'woodcutting' || s.id === 'fishing')
-    : allSkillsList;
+  const skillsList = allSkillsList;
 
   const isSkillsPage = skillsList.some(s => s.href === location);
 

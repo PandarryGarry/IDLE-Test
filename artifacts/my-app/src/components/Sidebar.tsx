@@ -4,8 +4,9 @@ import { useGameStore } from '@/store/gameStore';
 import { useCombatStore } from '@/store/combatStore';
 import { SkillId } from '@/data/types';
 import { Link, useLocation } from 'wouter';
-import { Settings, Backpack, Home, Sword, Flame, Fish, Pickaxe, Trees, ChefHat, Hammer } from 'lucide-react';
+import { Settings, Backpack, Home, Sword, Leaf } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { skillNameRu } from '@/lib/skillNames';
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { getAvatarPath, getRaceLabel } from '@/data/characters';
@@ -66,7 +67,6 @@ function SectionLabel({ children, color = 'var(--text-muted)' }: { children: Rea
 
 export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
   const { t }       = useTranslation();
-  const combatLevel = usePlayerStore(s => s.combatLevel);
   const inCombat    = useCombatStore(s => s.inCombat);
   const isGuest     = useAuthStore(s => s.isGuest);
   const activeCharacter = useCharacterStore(s => s.activeCharacter);
@@ -103,12 +103,15 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,134,10,0.08)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
           <img
-            src="/assets/art/emblem_pair.webp"
+            src="/assets/art/emblem_pair_v2.webp"
             alt="Топор и Перо"
             draggable={false}
             style={{
               width: 60, height: 60, flexShrink: 0, display: 'block',
-              filter: 'drop-shadow(0 0 10px rgba(212,134,10,0.38))',
+              borderRadius: 14, overflow: 'hidden',
+              border: '1px solid rgba(212,134,10,0.35)',
+              boxShadow: 'inset 0 0 12px rgba(0,0,0,0.5), 0 0 12px rgba(212,134,10,0.25)',
+              filter: 'drop-shadow(0 0 10px rgba(212,134,10,0.28))',
             }}
           />
           <div>
@@ -178,44 +181,14 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
 
         <div>
           <SectionLabel color="rgba(26,158,90,0.9)">◈ {t('group.gathering')}</SectionLabel>
-          <NavItem href="/woodcutting" icon={<Trees size={15} />} label={t('skill.woodcutting')} skillId="woodcutting" dotColor="#1a9e5a" />
-          {!isGuest && (
-            <NavItem href="/mining"      icon={<Pickaxe size={15} />} label={t('skill.mining')}      skillId="mining"      dotColor="#d4860a" />
-          )}
-          <NavItem href="/fishing"     icon={<Fish size={15} />}    label={t('skill.fishing')}     skillId="fishing"     dotColor="#0e8a7a" />
+          <NavItem href="/foraging" icon={<Leaf size={15} />} label={skillNameRu('foraging')} skillId="foraging" dotColor="#3f7d12" />
         </div>
-
-        {!isGuest && (
-          <div>
-            <SectionLabel color="rgba(208,96,16,0.9)">⚒ {t('group.artisan')}</SectionLabel>
-            <NavItem href="/firemaking" icon={<Flame size={15} />}    label={t('skill.firemaking')} skillId="firemaking" dotColor="#d06010" />
-            <NavItem href="/cooking"    icon={<ChefHat size={15} />}  label={t('skill.cooking')}    skillId="cooking"    dotColor="#d4860a" />
-            <NavItem href="/smithing"   icon={<Hammer size={15} />}   label={t('skill.smithing')}   skillId="smithing"   dotColor="#8090a0" />
-          </div>
-        )}
       </div>
 
       {/* ── Футер ── */}
       <div style={{ padding: '8px', borderTop: '1px solid var(--border-sidebar)' }}>
         <NavItem href="/inventory" icon={<Backpack size={15} />} label={t('nav.inventory')} />
         <NavItem href="/settings"  icon={<Settings size={15} />} label={t('nav.settings')} />
-
-        {/* Уровень боя */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '8px 12px', marginTop: 4, borderRadius: 10,
-          background: 'rgba(100,20,10,0.4)', border: '1px solid rgba(192,40,30,0.4)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-sidebar)' }}>
-            <Sword size={14} color="#e04040" />
-            <span style={{ fontWeight: 600 }}>{t('combat.combatLevel')}</span>
-          </div>
-          <span style={{
-            fontFamily: 'var(--app-font-mono)', fontSize: 13, fontWeight: 900, color: '#f0a820',
-            background: 'rgba(212,134,10,0.15)', border: '1px solid rgba(212,134,10,0.3)',
-            padding: '1px 8px', borderRadius: 6,
-          }}>{combatLevel}</span>
-        </div>
 
         {isGuest && (
           <div style={{

@@ -34,7 +34,7 @@ import {
   SYNERGY_ICON,
 } from '@/domain/attributes/attributeIcons';
 import { SYNERGIES, type SynergyDef, type SynergyId } from '@/domain/attributes/synergies';
-import { getItem } from '@/domain/items/items';
+import { getItem } from '@/domain/items';
 import { formatNumber } from '@/lib/utils';
 import type { EquipSlot, Equipment, Item } from '@/data/types';
 import { getItemVisual } from '@/shared/icons/itemIcons';
@@ -113,9 +113,6 @@ const STAT_BADGES: { key: EquipStatKey; label: string; icon: React.ComponentType
   { key: 'attackBonus', label: 'Атака', icon: Swords },
   { key: 'strengthBonus', label: 'Сила', icon: Zap },
   { key: 'defenceBonus', label: 'Защита', icon: Shield },
-  { key: 'rangedAttackBonus', label: 'Стрельба', icon: Swords },
-  { key: 'magicAttackBonus', label: 'Магия', icon: Sparkles },
-  { key: 'prayerBonus', label: 'Молитва', icon: Sparkles },
 ];
 
 type BagFilter = 'all' | 'weapon' | 'armor' | 'jewel';
@@ -208,7 +205,10 @@ export function HeroHubPage() {
   const [tick, setTick] = useState(0);
 
   const raceId: RaceId = active?.raceId ?? 'human';
-  const state = useMemo(() => getLiveAttributes(), [active?.id, tick]);
+  // Зависим от объекта active, а не только active.id: админ-сохранение
+  // заменяет activeCharacter в characterStore, и после этого числа на экране
+  // должны перечитаться из getLiveAttributes() (например, сохранённые из админки).
+  const state = useMemo(() => getLiveAttributes(), [active, tick]);
   const snapshot = useMemo(
     () => computeAttributeSnapshot({ state, raceId }),
     [state, raceId],

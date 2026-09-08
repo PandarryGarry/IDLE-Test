@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import type { BankSlot as InventorySlot } from '@/data/types';
-import { getItem } from '@/domain/items/items';
+import { getItem } from '@/domain/items';
 import { useAuthStore } from '@/store/authStore';
+import { usePlayerStore } from '@/store/playerStore';
 
 const DEFAULT_MAX_SLOTS = 24;
 const SLOTS_PER_UPGRADE = 10;
@@ -101,7 +102,7 @@ export const useInventoryStore = create<InventoryStore>((set, get) => ({
             return ['weapon', 'helm', 'platebody', 'platelegs', 'boots', 'gloves',
                     'amulet', 'ring', 'bracelet', 'belt', 'shield', 'cape', 'quiver', 'passive'].includes(category);
           case 'resources':
-            return ['ore', 'log', 'raw_fish', 'bar', 'gem', 'herb', 'seed'].includes(category);
+            return ['ore', 'log', 'raw_fish', 'bar', 'gem', 'herb', 'seed', 'mineral', 'foraging'].includes(category);
           case 'food':
             return ['food', 'cooked_fish', 'potion'].includes(category);
           case 'misc':
@@ -201,6 +202,8 @@ export const useInventoryStore = create<InventoryStore>((set, get) => ({
     if (sellQty <= 0) return 0;
     
     get().removeItem(itemId, sellQty);
+    // Экономика фиксированная: цена продажи берётся из предмета как есть,
+    // никаких скрытых бонусов от профессии «Сбор».
     const gpGained = item.sellValue * sellQty;
     get().addGp(gpGained);
     return gpGained;

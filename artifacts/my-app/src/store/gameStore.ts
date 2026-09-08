@@ -1,19 +1,22 @@
 import { create } from 'zustand';
 import type { SkillId, GameMode } from '@/data/types';
-import { WOODCUTTING_TREES_MAP } from '@/domain/professions/woodcutting';
-import { MINING_ROCKS_MAP, GEM_DROPS } from '@/domain/professions/mining';
-import { FISHING_SPOTS_MAP } from '@/domain/professions/fishing';
-import { COOKING_RECIPES_MAP } from '@/domain/professions/cooking';
-import { SMITHING_MAP } from '@/domain/professions/smithing';
-import { FIREMAKING_MAP } from '@/domain/professions/firemaking';
+import {
+  FORAGING_ZONES_MAP,
+  rollForagingCycle,
+  foragingSpeedMultiplier,
+} from '@/domain/professions/foraging';
+import { useForagingStore } from '@/store/foragingStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useBankStore } from '@/store/bankStore';
+import { useCombatStore } from '@/store/combatStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { useAuthStore } from '@/store/authStore';
 import { isSkillAllowedForGuest, GUEST_NOTICE } from '@/lib/guestMode';
-import { calcBurnChance, calcXpPerHour } from '@/core/formulas';
-import { getItem } from '@/domain/items/items';
-import { chance, randomRange } from '@/lib/utils';
+import {
+  getAdminRates,
+  isSkillEnabledForAdmin,
+  type AdminSkillToggle,
+} from '@/store/adminConfigStore';
 
 export interface ActionResult {
   items: { itemId: string; quantity: number }[];
@@ -21,6 +24,8 @@ export interface ActionResult {
   masteryXpGained: number;
   bonusXp?: number;
   preserved?: boolean;
+  /** Встреча с мобом во время «Сбора» — запускает бой. */
+  encounter?: { areaId: string; monsterId: string; boss: boolean };
 }
 
 export interface OfflineReward {
@@ -37,15 +42,13 @@ export interface OfflineData {
 }
 
 export interface GameStore {
-  // Gameplay state
   activeSkill: SkillId | null;
   activeActionId: string | null;
-  actionProgress: number; // 0-1 for progress bar
+  actionProgress: number;
   actionStartTime: number;
   nextActionTime: number;
-  currentActionInterval: number; // ms
+  currentActionInterval: number;
 
-  // Meta
   gameMode: GameMode;
   totalPlayTime: number;
   sessionStartTime: number;
@@ -53,127 +56,57 @@ export interface GameStore {
   isRunning: boolean;
   isPaused: boolean;
 
-  // XP trackers for current session
   xpGainedThisSession: Partial<Record<SkillId, number>>;
 
-  // Оффлайн данные
   offlineData: OfflineData | null;
   clearOfflineData: () => void;
 
-  // Actions
   startSkillAction: (skillId: SkillId, actionId: string) => boolean;
   stopAction: () => void;
   pauseGame: () => void;
   resumeGame: () => void;
-  tick: (now: number) => void; // called by tickManager
+  tick: (now: number) => void;
   setGameMode: (mode: GameMode) => void;
   reset: () => void;
   loadFromSave: (data: Partial<GameStore>) => void;
 }
 
-// ── Skill action processors ───────────────────────────────────
+// ── Processors ────────────────────────────────────────────────
 
-function processWoodcutting(actionId: string): ActionResult | null {
-  const tree = WOODCUTTING_TREES_MAP[actionId];
-  if (!tree) return null;
-  const playerLevel = usePlayerStore.getState().getSkillLevel('woodcutting');
-  if (playerLevel < tree.levelRequired) return null;
-  const qty = randomRange(tree.quantity[0], tree.quantity[1]);
-  return { items: [{ itemId: tree.logId, quantity: qty }], xpGained: tree.xp, masteryXpGained: tree.masteryXp ?? 3 };
-}
-
-function processMining(actionId: string): ActionResult | null {
-  const rock = MINING_ROCKS_MAP[actionId];
-  if (!rock) return null;
-  const playerLevel = usePlayerStore.getState().getSkillLevel('mining');
-  if (playerLevel < rock.levelRequired) return null;
-  const items: { itemId: string; quantity: number }[] = [{ itemId: rock.oreId, quantity: 1 }];
-  // Gem chance
-  if (rock.gemChance && chance(rock.gemChance)) {
-    const totalWeight = GEM_DROPS.reduce((sum, g) => sum + g.weight, 0);
-    let rng = Math.random() * totalWeight;
-    for (const gem of GEM_DROPS) {
-      rng -= gem.weight;
-      if (rng <= 0) { items.push({ itemId: gem.itemId, quantity: 1 }); break; }
-    }
-  }
-  return { items, xpGained: rock.xp, masteryXpGained: rock.masteryXp ?? 3 };
-}
-
-function processFishing(actionId: string): ActionResult | null {
-  const spot = FISHING_SPOTS_MAP[actionId];
-  if (!spot) return null;
-  const playerLevel = usePlayerStore.getState().getSkillLevel('fishing');
-  if (playerLevel < spot.levelRequired) return null;
-  return { items: [{ itemId: spot.fishId, quantity: 1 }], xpGained: spot.xp, masteryXpGained: spot.masteryXp ?? 3 };
-}
-
-function processCooking(actionId: string): ActionResult | null {
-  const recipe = COOKING_RECIPES_MAP[actionId];
-  if (!recipe) return null;
-  const bankStore = useBankStore.getState();
-  if (!bankStore.hasItem(recipe.rawItemId, 1)) return null;
-  const playerLevel = usePlayerStore.getState().getSkillLevel('cooking');
-  if (playerLevel < recipe.levelRequired) return null;
-  bankStore.removeItem(recipe.rawItemId, 1);
-  const burnChance = calcBurnChance(playerLevel, recipe.levelRequired, recipe.burnChanceBase ?? 0.3);
-  const burnt = chance(burnChance);
-  const outputId = burnt ? (recipe.burntItemId ?? 'burnt_fish') : recipe.cookedItemId;
-  return { items: [{ itemId: outputId, quantity: 1 }], xpGained: burnt ? 0 : recipe.xp, masteryXpGained: burnt ? 0 : (recipe.masteryXp ?? 3) };
-}
-
-function processSmithing(actionId: string): ActionResult | null {
-  const recipe = SMITHING_MAP[actionId];
-  if (!recipe) return null;
-  const bankStore = useBankStore.getState();
-  const playerLevel = usePlayerStore.getState().getSkillLevel('smithing');
-  if (playerLevel < recipe.levelRequired) return null;
-  // Check ingredients
-  for (const ing of recipe.ingredients) {
-    if (!bankStore.hasItem(ing.itemId, ing.quantity)) return null;
-  }
-  // Consume ingredients
-  for (const ing of recipe.ingredients) {
-    bankStore.removeItem(ing.itemId, ing.quantity);
-  }
-  return { items: [{ itemId: recipe.outputItemId, quantity: recipe.outputQuantity ?? 1 }], xpGained: recipe.xp, masteryXpGained: recipe.masteryXp ?? 3 };
-}
-
-function processFiremaking(actionId: string): ActionResult | null {
-  const log = FIREMAKING_MAP[actionId];
-  if (!log) return null;
-  const bankStore = useBankStore.getState();
-  const playerLevel = usePlayerStore.getState().getSkillLevel('firemaking');
-  if (playerLevel < log.levelRequired) return null;
-  if (!bankStore.hasItem(log.logId, 1)) return null;
-  bankStore.removeItem(log.logId, 1);
-  const items: { itemId: string; quantity: number }[] = [];
-  if (log.ashId) items.push({ itemId: log.ashId, quantity: 1 });
-  return { items, xpGained: log.xp, masteryXpGained: log.masteryXp ?? 3 };
+function processForaging(actionId: string): ActionResult | null {
+  const zone = FORAGING_ZONES_MAP[actionId];
+  if (!zone) return null;
+  const playerLevel = usePlayerStore.getState().getSkillLevel('foraging');
+  if (playerLevel < zone.levelRequired) return null;
+  const result = rollForagingCycle(actionId, playerLevel);
+  return {
+    items: result.items,
+    xpGained: result.xp,
+    masteryXpGained: result.masteryXp,
+    encounter: result.encounter ?? undefined,
+  };
 }
 
 function processAction(skillId: SkillId, actionId: string): ActionResult | null {
-  switch (skillId) {
-    case 'woodcutting': return processWoodcutting(actionId);
-    case 'mining':      return processMining(actionId);
-    case 'fishing':     return processFishing(actionId);
-    case 'cooking':     return processCooking(actionId);
-    case 'smithing':    return processSmithing(actionId);
-    case 'firemaking':  return processFiremaking(actionId);
-    default: return null;
-  }
+  if (skillId === 'foraging') return processForaging(actionId);
+  return null;
 }
 
 function getActionInterval(skillId: SkillId, actionId: string): number {
-  switch (skillId) {
-    case 'woodcutting': return WOODCUTTING_TREES_MAP[actionId]?.interval ?? 3000;
-    case 'mining':      return MINING_ROCKS_MAP[actionId]?.interval ?? 3000;
-    case 'fishing':     return FISHING_SPOTS_MAP[actionId]?.interval ?? 7000;
-    case 'cooking':     return COOKING_RECIPES_MAP[actionId]?.interval ?? 3000;
-    case 'smithing':    return SMITHING_MAP[actionId]?.interval ?? 3000;
-    case 'firemaking':  return FIREMAKING_MAP[actionId]?.interval ?? 3000;
-    default: return 3000;
+  let base = 3000;
+  if (skillId === 'foraging') {
+    base = Math.round((FORAGING_ZONES_MAP[actionId]?.interval ?? 4000) / Math.max(0.01, foragingSpeedMultiplier(usePlayerStore.getState().getSkillLevel('foraging'))));
   }
+  const speed = getAdminRates().actionSpeedMultiplier;
+  if (speed <= 0) return base;
+  return Math.max(100, Math.round(base / speed));
+}
+
+type AdminGatheringToggle = Exclude<AdminSkillToggle, 'combat'>;
+
+/** Навыки, доступные в тумблерах админки. */
+function isAdminSkill(skillId: SkillId): skillId is AdminGatheringToggle {
+  return skillId === 'foraging';
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -194,15 +127,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
   clearOfflineData: () => set({ offlineData: null }),
 
   startSkillAction: (skillId, actionId) => {
-    // Guests may only train woodcutting and fishing; other skills and combat
-    // are locked until the player registers and signs in.
+    if (isAdminSkill(skillId) && !isSkillEnabledForAdmin(skillId)) {
+      useNotificationsStore.getState().notifyInfo('Этот навык отключён в настройках игры.');
+      return false;
+    }
+
     if (useAuthStore.getState().isGuest && !isSkillAllowedForGuest(skillId)) {
       useNotificationsStore.getState().notifyInfo(GUEST_NOTICE);
       return false;
     }
 
     const interval = getActionInterval(skillId, actionId);
-    // Use performance.now() (monotonic) — same clock the tick manager passes to tick().
     const now = performance.now();
     set({
       activeSkill: skillId,
@@ -218,6 +153,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   stopAction: () => {
+    if (get().activeSkill === 'foraging') {
+      useForagingStore.setState({ activeZoneId: null });
+    }
     set({
       activeSkill: null,
       activeActionId: null,
@@ -234,71 +172,78 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!state.isRunning || state.isPaused) return;
     if (!state.activeSkill || !state.activeActionId) return;
 
-    // Update progress bar
+    if (isAdminSkill(state.activeSkill) && !isSkillEnabledForAdmin(state.activeSkill)) {
+      set({ isRunning: false, actionProgress: 0 });
+      useNotificationsStore.getState().notifyInfo('Этот навык отключён в настройках игры.');
+      return;
+    }
+
     const elapsed = now - state.actionStartTime;
     const progress = Math.min(elapsed / state.currentActionInterval, 1);
     set({ actionProgress: progress });
 
-    // Check if action completes
     if (now < state.nextActionTime) return;
 
-    // Process action
     const result = processAction(state.activeSkill, state.activeActionId);
 
     if (result === null) {
-      // Action failed (insufficient materials, wrong level, etc.) — stop
       set({ isRunning: false, actionProgress: 0 });
-      useNotificationsStore.getState().notifyInfo('Not enough resources or level too low. Action stopped.');
+      useNotificationsStore.getState().notifyInfo('Недостаточно ресурсов или слишком низкий уровень. Действие остановлено.');
       return;
     }
 
-    // Add items to bank — проверяем результат addItem и уведомляем о переполнении
     const bankStore = useBankStore.getState();
     const notifs = useNotificationsStore.getState();
     let inventoryFull = false;
-    
+
     for (const { itemId, quantity } of result.items) {
       const added = bankStore.addItem(itemId, quantity);
-      
-      if (added && quantity > 0) {
-        // Предмет успешно добавлен — показываем уведомление
-        const item = getItem(itemId);
-        if (item) notifs.notifyItem(item.name, quantity, item.icon);
-      } else if (!added) {
-        // Инвентарь полон — предмет не поместился
-        inventoryFull = true;
-      }
+      if (!added) inventoryFull = true;
     }
-    
-    // Уведомление о переполнении (один раз за тик, даже если не поместилось несколько предметов)
+
     if (inventoryFull) {
-      notifs.notifyInfo('⚠️ Inventory full! Some items were lost.');
+      notifs.notifyInfo('⚠️ Сумка заполнена — часть находок потеряна.');
     }
 
-    // Add XP
-    if (result.xpGained > 0) {
-      const { leveledUp, newLevel } = usePlayerStore.getState().addXp(state.activeSkill, result.xpGained);
-      if (leveledUp) {
-        notifs.notifyLevelUp(state.activeSkill, newLevel);
-      }
+    const rates = getAdminRates();
+    const effectiveXp = Math.max(0, Math.round(result.xpGained * rates.xpMultiplier));
+    const effectiveMasteryXp = Math.max(0, Math.round(result.masteryXpGained * rates.masteryXpMultiplier));
+
+    if (effectiveXp > 0) {
+      const { leveledUp, newLevel } = usePlayerStore.getState().addXp(state.activeSkill, effectiveXp);
+      if (leveledUp) notifs.notifyLevelUp(state.activeSkill, newLevel);
     }
 
-    // Add mastery XP
-    if (result.masteryXpGained > 0) {
+    if (effectiveMasteryXp > 0) {
       const playerStore = usePlayerStore.getState();
       const oldMastery = playerStore.getMasteryLevel(state.activeSkill, state.activeActionId);
-      playerStore.addMasteryXp(state.activeSkill, state.activeActionId, result.masteryXpGained);
+      playerStore.addMasteryXp(state.activeSkill, state.activeActionId, effectiveMasteryXp);
       const newMastery = playerStore.getMasteryLevel(state.activeSkill, state.activeActionId);
       if (newMastery > oldMastery) {
         notifs.notifyMasteryLevelUp(state.activeSkill, state.activeActionId, newMastery);
       }
     }
 
-    // Update XP tracker
     const xpGainedThisSession = { ...state.xpGainedThisSession };
-    xpGainedThisSession[state.activeSkill] = (xpGainedThisSession[state.activeSkill] ?? 0) + result.xpGained;
+    xpGainedThisSession[state.activeSkill] = (xpGainedThisSession[state.activeSkill] ?? 0) + effectiveXp;
 
-    // Schedule next action
+    if (state.activeSkill === 'foraging' && state.activeActionId) {
+      useForagingStore.getState().pushCycle(state.activeActionId, result, effectiveXp);
+    }
+
+    if (result.encounter && isSkillEnabledForAdmin('combat')) {
+      useForagingStore.setState({ activeZoneId: null });
+      useCombatStore.getState().startCombat(result.encounter.areaId, result.encounter.monsterId);
+      set({
+        activeSkill: null,
+        activeActionId: null,
+        actionProgress: 0,
+        isRunning: false,
+        xpGainedThisSession,
+      });
+      return;
+    }
+
     set({
       actionProgress: 0,
       actionStartTime: now,
@@ -318,4 +263,3 @@ export const useGameStore = create<GameStore>((set, get) => ({
     isRunning: false, isPaused: false, xpGainedThisSession: {},
   }),
 }));
-

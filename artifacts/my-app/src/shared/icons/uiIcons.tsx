@@ -1,17 +1,11 @@
 import React from 'react';
-import { 
-  Sword, 
-  Shield, 
-  Coins, 
-  Backpack, 
-  Settings, 
-  Save, 
-  Flame, 
-  Pickaxe, 
-  Fish, 
-  ChefHat, 
-  Hammer,
-  Trees,
+import {
+  Sword,
+  Shield,
+  Coins,
+  Backpack,
+  Settings,
+  Save,
   Skull,
   Heart,
   Zap,
@@ -28,9 +22,6 @@ import {
   Package,
   Layers,
   Home,
-  Crosshair,
-  Wand2,
-  BookOpen
 } from 'lucide-react';
 
 /**
@@ -54,9 +45,6 @@ export const UIIcons = {
   // Характеристики и бой
   combatLevel: () => <Shield className="w-4 h-4 text-red-400" />,
   hp: () => <Heart className="w-3.5 h-3.5 fill-current text-emerald-400" />,
-  attack: () => <Sword className="w-4 h-4 text-rose-400" />,
-  magic: () => <Wand2 className="w-4 h-4 text-purple-400" />,
-  ranged: () => <Crosshair className="w-4 h-4 text-emerald-400" />,
   xp: () => <Zap className="w-3.5 h-3.5 text-amber-400" />,
   killCount: () => <Skull className="w-4 h-4 text-red-400" />,
   

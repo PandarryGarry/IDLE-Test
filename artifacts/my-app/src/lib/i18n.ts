@@ -2,42 +2,12 @@ export type Lang = 'ru' | 'en';
 
 const ru = {
   // ── Названия навыков и профессий ─────────────────────────────
-  'skill.attack': 'Атака', 
-  'skill.strength': 'Сила',
-  'skill.defence': 'Защита', 
-  'skill.hitpoints': 'Очки здоровья',
-  'skill.ranged': 'Стрельба', 
-  'skill.magic': 'Магия',
-  'skill.prayer': 'Молитва', 
-  'skill.slayer': 'Истребитель',
-  'skill.woodcutting': 'Лесорубство', 
-  'skill.fishing': 'Рыбалка',
-  'skill.mining': 'Горное дело', 
-  'skill.firemaking': 'Разжигание огня',
-  'skill.cooking': 'Кулинария', 
-  'skill.smithing': 'Кузнечное дело',
-  'skill.fletching': 'Стрелочное дело', 
-  'skill.crafting': 'Ремесло',
-  'skill.runecrafting': 'Создание рун', 
-  'skill.herblore': 'Травоведение',
-  'skill.farming': 'Фермерство', 
-  'skill.agility': 'Ловкость',
-  'skill.thieving': 'Воровство', 
-  'skill.summoning': 'Призыв',
-  'skill.astrology': 'Астрология', 
-  'skill.township': 'Поселение',
-  'skill.woodcuttingDesc': 'Добывай ценные брёвна для костра, ремесла и торговли.',
-  'skill.fishingDesc': 'Лови рыбу для приготовления целебной еды и продажи.',
-  'skill.miningDesc': 'Добывай руду в шахтах и находи редчайшие самоцветы.',
-  'skill.firemakingDesc': 'Сжигай древесину, получая ценный опыт и полезную золу.',
-  'skill.cookingDesc': 'Превращай сырые продукты в сытную восстанавливающую еду.',
-  'skill.smithingDesc': 'Выплавляй слитки и куй мощное оружие и броню.',
+  'skill.foraging': 'Сбор',
+  'skill.foragingDesc': 'Собирай дары леса и земли: грибы, ветки, травы и редкие находки.',
 
   // ── Группы навыков ───────────────────────────────────────────
-  'group.combat': 'Боевые искусства', 
-  'group.gathering': 'Добыча ресурсов',
-  'group.artisan': 'Ремесло и ковка', 
-  'group.support': 'Поддержка и магия',
+  'group.combat': 'Боевая арена',
+  'group.gathering': 'Профессии',
 
   // ── Навигация ────────────────────────────────────────────────
   'nav.home': 'Главная', 
@@ -79,54 +49,25 @@ const ru = {
   // ── Дашборд ──────────────────────────────────────────────────
   'dashboard.welcome': 'Командный центр героя', 
   'dashboard.subtitle': 'Текущий прогресс и развитие персонажа в реальном времени.',
-  'dashboard.combatLevel': 'Боевой уровень', 
   'dashboard.playTime': 'Время в игре',
-  'dashboard.totalLevel': 'Общий уровень (Total)',
   'dashboard.netWorth': 'Оценка богатства',
   'dashboard.recentGains': 'Прогресс текущей сессии',
   'dashboard.noActive': 'Герой отдыхает. Выберите занятие для старта!',
   'dashboard.quickActions': 'Быстрый переход к профессиям',
 
-  // ── Лесорубство ──────────────────────────────────────────────
-  'woodcutting.chopping': 'Рубка дерева', 
-  'woodcutting.selectTree': 'Выберите дерево в списке ниже, чтобы начать рубку.',
-  'woodcutting.stop': 'Прекратить рубку', 
-  'woodcutting.availableTrees': 'Доступные деревья',
-
-  // ── Горное дело ──────────────────────────────────────────────
-  'mining.mining': 'Добыча породы', 
-  'mining.selectRock': 'Выберите рудную жилу для начала добычи.',
-  'mining.stop': 'Прекратить добычу', 
-  'mining.availableRocks': 'Месторождения руды',
-
-  // ── Рыбалка ──────────────────────────────────────────────────
-  'fishing.fishing': 'Ловля рыбы', 
-  'fishing.selectSpot': 'Выберите водоём для рыбной ловли.',
-  'fishing.stop': 'Смотать удочку', 
-  'fishing.availableSpots': 'Рыболовные места',
-
-  // ── Кулинария ────────────────────────────────────────────────
-  'cooking.cooking': 'Приготовление', 
-  'cooking.selectRecipe': 'Выберите блюдо для готовки у очага.',
-  'cooking.stop': 'Потушить очаг', 
-  'cooking.availableRecipes': 'Книга рецептов',
-  'cooking.requires': 'Требуется сырье', 
-  'cooking.burns': 'Риск сжечь',
-  'cooking.inInventory': 'В наличии',
-
-  // ── Кузнечное дело ───────────────────────────────────────────
-  'smithing.smithing': 'Ковка в кузнице', 
-  'smithing.selectRecipe': 'Выберите слиток или снаряжение для создания.',
-  'smithing.stop': 'Остудить наковальню', 
-  'smithing.smelting': 'Плавка руды',
-  'smithing.equipment': 'Ковка снаряжения', 
-  'smithing.ingredients': 'Требуемые слитки',
-
-  // ── Разжигание огня ──────────────────────────────────────────
-  'firemaking.burning': 'Сжигание брёвен', 
-  'firemaking.selectLog': 'Выберите бревна для костра.',
-  'firemaking.stop': 'Потушить костер', 
-  'firemaking.availableLogs': 'Запас древесины',
+  // ── Сбор ─────────────────────────────────────────────────────
+  'foraging.searching': 'Поиск даров леса',
+  'foraging.selectSpot': 'Выберите участок, чтобы начать поиск.',
+  'foraging.stop': 'Остановить поиск',
+  'foraging.start': 'Начать сбор',
+  'foraging.availableSpots': 'Участки поиска',
+  'foraging.info': 'О профессии',
+  'foraging.yields': 'Возможная добыча',
+  'foraging.rare': 'Редкое',
+  'foraging.danger': 'встреча',
+  'foraging.session': 'сессия',
+  'foraging.clear': 'Очистить',
+  'foraging.feed': 'Лента находок',
 
   // ── Боевая арена ─────────────────────────────────────────────
   'combat.areas': 'Зоны сражений', 
@@ -222,14 +163,18 @@ const ru = {
 } as const;
 
 const en: Partial<Record<keyof typeof ru, string>> = {
-  'skill.attack': 'Attack', 'skill.strength': 'Strength',
-  'skill.defence': 'Defence', 'skill.hitpoints': 'Hitpoints',
-  'skill.ranged': 'Ranged', 'skill.magic': 'Magic',
-  'skill.woodcutting': 'Woodcutting', 'skill.fishing': 'Fishing',
-  'skill.mining': 'Mining', 'skill.firemaking': 'Firemaking',
-  'skill.cooking': 'Cooking', 'skill.smithing': 'Smithing',
+  'skill.foraging': 'Foraging',
   'nav.home': 'Home', 'nav.skills': 'Skills', 'nav.combat': 'Combat',
   'nav.inventory': 'Inventory', 'nav.settings': 'Settings', 'nav.save': 'Save Game',
+  'foraging.start': 'Start gathering',
+  'foraging.stop': 'Stop gathering',
+  'foraging.info': 'About skill',
+  'foraging.yields': 'Possible loot',
+  'foraging.rare': 'Rare',
+  'foraging.danger': 'enemy',
+  'foraging.session': 'session',
+  'foraging.clear': 'Clear',
+  'foraging.feed': 'Loot feed',
 };
 
 export type TranslationKey = keyof typeof ru;
