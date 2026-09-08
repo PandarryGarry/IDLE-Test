@@ -13,7 +13,7 @@ import {
   saveToSlot,
   AUTO_SAVE_SLOT,
 } from '@/lib/saveManager';
-import { saveCharacterToCloud, loadCharacterFromCloud } from '@/lib/characterApi';
+import { saveCharacterToCloud } from '@/lib/characterApi';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import type { SaveData } from '@/data/types';
 import type { Character } from '@/lib/characterApi';
@@ -48,42 +48,65 @@ export async function pushCharacterCloud(force = false): Promise<void> {
 }
 
 /**
- * При активации персонажа: сравнить локальный и облачный сейв,
- * применить более свежий, синхронизировать остальные.
+ * Единственная точка восстановления состояния при активации персонажа.
+ *
+ * Решает, какой сейв авторитетный: локальный автосейв (частый — «рабочая
+ * копия») или облачный слепок `character.save_data` (редкий бэкап).
+ *
+ * Гарантии:
+ *   1. Кандидатом считается только ПОЛНЫЙ сейв (есть и `player`, и `bank`).
+ *      Частичный/«голый» облачный сейв (только `attributes` — то, что
+ *      `createCharacter` пишет новому герою до первого пуша) НЕ конкурент
+ *      и не может затереть свежий локальный прогресс.
+ *   2. Авторитетный — самый свежий из валидных локального и облачного.
+ *   3. Память ВСЕГДА приводится к выбранному сейву. Раньше, когда локальный
+ *      был новее, его лишь заливали в облако, а в сторах оставался старый
+ *      облачный слепок — свежая сумка и XP «пропадали» при возврате.
+ *   4. Автосейв и облако синхронизируются с выбранным состоянием.
  */
 export async function reconcileCharacterSave(character: Character): Promise<void> {
-  if (!isSupabaseConfigured) {
-    if (isValidSave(character.saveData)) {
-      applySaveData(character.saveData);
-    }
-    return;
-  }
-
   const localRaw = loadFromSlot(AUTO_SAVE_SLOT);
   const local = isValidSave(localRaw) ? localRaw : null;
-
-  let cloud: SaveData | null = null;
-  try {
-    const raw = await loadCharacterFromCloud(character.id);
-    cloud = isValidSave(raw) ? raw : null;
-  } catch (e) {
-    console.warn('loadCharacterFromCloud failed:', e);
-  }
+  const cloud = isValidSave(character.saveData) ? character.saveData : null;
 
   const localTime = local?.savedAt ?? 0;
   const cloudTime = cloud?.savedAt ?? 0;
 
-  if (cloud && cloudTime > localTime) {
-    // Облако новее — применяем его.
-    applySaveData(cloud);
+  // Авторитетный: свежайший из валидных. Ничего валидного нет — не трогаем
+  // сторы (свежий герой / первый вход уже держит корректные дефолты).
+  const chosen: SaveData | null =
+    local && cloud ? (cloudTime > localTime ? cloud : local)
+      : (cloud || local);
+
+  if (!chosen) return;
+
+  if (chosen === cloud) {
+    // Облако свежее (или единственное) — применяем его и фиксируем локально.
+    applySaveData(chosen);
     saveToSlot(AUTO_SAVE_SLOT);
-    lastCloudPush = Date.now();
-  } else if (local) {
-    // Локальный не старше (или нет облака) — заливаем локальный в облако.
-    await saveCharacterToCloud(character.id, local);
-    lastCloudPush = Date.now();
+  } else {
+    // Локальный новее (или облако «голое»/пустое) — ВОЗВРАЩАЕМ его в память
+    // и поднимаем облако до него, чтобы бэкап не оставался позади.
+    applySaveData(chosen);
+    try {
+      await saveCharacterToCloud(character.id, chosen);
+    } catch (e) {
+      console.warn('reconcileCharacterSave → cloud backup failed:', e);
+    }
   }
-  // Если ничего нет — оставляем свежее состояние в сторах.
+  lastCloudPush = Date.now();
+
+  // Держим активного героя в сторе согласованным с применённым сейвом,
+  // чтобы последующие точечные правки (heroPersist) наследовали свежую базу.
+  const store = useCharacterStore.getState();
+  const active = store.activeCharacter;
+  if (active && active.id === character.id) {
+    const patched = { ...active, saveData: chosen };
+    useCharacterStore.setState({
+      activeCharacter: patched,
+      characters: store.characters.map(row => (row.id === character.id ? patched : row)),
+    });
+  }
 }
 
 function handleVisibility(): void {

@@ -10,7 +10,7 @@ import {
 } from '@/lib/characterApi';
 import { isAuthConfigured } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
-import { resetGameToFresh, applySaveData } from '@/lib/saveManager';
+import { resetGameToFresh } from '@/lib/saveManager';
 import { describeCharacterError } from '@/lib/characterErrors';
 import {
   attributesFromSave,
@@ -133,10 +133,14 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
         lastActiveCharacterId: character.id,
       }));
       writeLastCharacterId(character.id);
-      setLiveAttributes(attributesFromSave(character.saveData));
-      if (character.saveData) {
-        applySaveData(character.saveData);
-      }
+      // Состояние не перезаписываем слепком `character.saveData` из строки БД
+      // напрямую: этот облачный снимок может быть СТАРЕЕ локального автосейва
+      // (вкладку убили до облачного пуша, либо строка нового героя содержит
+      // только `attributes`) — и слепо применив его, мы потеряли бы свежую
+      // сумку/XP и остановили сбор. Восстановление приводит единственная точка
+      // reconcileCharacterSave (Router-эффект), которая выбирает самый свежий
+      // ПОЛНЫЙ сейв из локального и облачного и синхронизирует оба.
+      // К этому моменту сторы уже держат локальный автосейв (initGame на загрузке).
     } catch (e) {
       const message = describeCharacterError(e, 'Не удалось выбрать персонажа.');
       set({ error: message });
