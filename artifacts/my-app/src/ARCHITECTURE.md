@@ -8,11 +8,12 @@ src/
   core/            движок: формулы, тики, offline, реестр навыков, таблица XP
   domain/          чистая логика, без React
     attributes/    столпы, 12 подхарактеристик, нити, расчёт, иконки столпов
-    combat/        монстры, молитвы, заклинания
+    combat/        монстры + боевые формулы
     items/         предметы, статы экипировки, наборы
-    professions/   6 ремёсел
+    professions/   единственное ремесло — «Сбор» (foraging) и его статы
   data/            данные и числа
     balance/       ВСЕ числа баланса — единственный источник
+                  (professions.ts теперь только foraging)
     characters.ts  расы, аватары, манекены
   features/        экраны
     hero/ combat/ professions/ auth/ bank/ system/
