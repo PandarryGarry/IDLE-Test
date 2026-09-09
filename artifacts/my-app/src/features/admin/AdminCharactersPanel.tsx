@@ -39,7 +39,7 @@ import { REPUTATION_MAX, REPUTATION_MIN } from '@/data/balance/reputation';
 import { applySaveData } from '@/lib/saveManager';
 import { getAvatarPath, getRaceLabel } from '@/data/characters';
 import { grantItemsToCharacter, normalizeSave } from '@/features/admin/adminCharacterSave';
-import { useAdminSession } from '@/features/admin/AdminSessionContext';
+import { AdminCharacterPickerModal, useAdminSession } from '@/features/admin/AdminSessionContext';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { formatNumber } from '@/lib/utils';
 import { GModal } from '@/shared/ui/gameUI';
@@ -249,8 +249,8 @@ type TabKey = 'overview' | 'attributes' | 'professions' | 'inventory' | 'equipme
 const TIER_RU: Record<number, string> = { 1: 'I', 2: 'II', 3: 'III' };
 
 export function AdminCharactersPanel() {
-  const { living, target, setTargetId } = useAdminSession();
-  const activeCharacter = useCharacterStore(s => s.activeCharacter);
+  const { living, target } = useAdminSession();
+  const activeCharacterId = useCharacterStore(s => s.activeCharacter?.id ?? null);
   const notify = useNotificationsStore(s => s.notifyInfo);
   const [draft, setDraft] = useState<SaveData | null>(null);
   const [tab, setTab] = useState<TabKey>('overview');
@@ -258,6 +258,7 @@ export function AdminCharactersPanel() {
   const [skillQuery, setSkillQuery] = useState('');
   const [touched, setTouched] = useState({ attributes: false, skills: false, inventory: false, equipment: false });
   const [picker, setPicker] = useState<{ mode: 'inventory' | 'equip'; equipSlot?: EquipSlot } | null>(null);
+  const [heroOpen, setHeroOpen] = useState(false);
 
   const items = useMemo(() => getAllItems().sort((a, b) => a.name.localeCompare(b.name, 'ru')), []);
 
@@ -265,11 +266,13 @@ export function AdminCharactersPanel() {
 
   useEffect(() => {
     if (!selected) { setDraft(null); return; }
+    const row = useCharacterStore.getState().characters.find(c => c.id === selected.id && !c.isDeleted);
+    if (!row) { setDraft(null); return; }
     const liveSkills = usePlayerStore.getState().skills as Record<SkillId, SkillState>;
-    const fallback = selected.saveData?.player?.skills ? undefined : liveSkills;
-    setDraft(normalizeSave(selected.saveData, fallback, getLiveAttributes()));
+    const fallback = row.saveData?.player?.skills ? undefined : liveSkills;
+    setDraft(normalizeSave(row.saveData, fallback, getLiveAttributes()));
     setTouched({ attributes: false, skills: false, inventory: false, equipment: false });
-  }, [selected?.id, selected?.updatedAt]);
+  }, [selected?.id]);
 
   const attrs: CharacterAttributeState = draft?.attributes ?? createDefaultAttributes();
 
@@ -430,8 +433,10 @@ export function AdminCharactersPanel() {
     if (!draft || !selected || saving) return;
     setSaving(true);
     try {
-      const fallbackSkills = selected.saveData?.player?.skills ? undefined : (usePlayerStore.getState().skills as Record<SkillId, SkillState>);
-      const base = normalizeSave(selected.saveData, fallbackSkills, getLiveAttributes());
+      const row = useCharacterStore.getState().characters.find(c => c.id === selected.id && !c.isDeleted);
+      if (!row) throw new Error('Персонаж не найден');
+      const fallbackSkills = row.saveData?.player?.skills ? undefined : (usePlayerStore.getState().skills as Record<SkillId, SkillState>);
+      const base = normalizeSave(row.saveData, fallbackSkills, getLiveAttributes());
       const next: SaveData = {
         ...base,
         savedAt: Date.now(),
@@ -449,7 +454,7 @@ export function AdminCharactersPanel() {
         characters: state.characters.map(c => (c.id === updated.id ? updated : c)),
         activeCharacter: state.activeCharacter?.id === updated.id ? updated : state.activeCharacter,
       }));
-      if (activeCharacter?.id === updated.id) applySaveData(normalizeSave(updated.saveData, usePlayerStore.getState().skills as Record<SkillId, SkillState>, getLiveAttributes()));
+      if (activeCharacterId === updated.id) applySaveData(normalizeSave(updated.saveData, usePlayerStore.getState().skills as Record<SkillId, SkillState>, getLiveAttributes()));
       notify('Персонаж сохранён');
     } catch (e) {
       notify(`Ошибка сохранения: ${e instanceof Error ? e.message : String(e)}`);
@@ -482,18 +487,19 @@ export function AdminCharactersPanel() {
           />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 900, color: C.text }}>{selected.nickname}</div>
-            <div style={{ fontSize: 11, color: C.textMuted }}>{getRaceLabel(selected.raceId, 'ru')}{selected.id === activeCharacter?.id ? ' · активный' : ''}</div>
+            <div style={{ fontSize: 11, color: C.textMuted }}>{getRaceLabel(selected.raceId, 'ru')}{selected.id === activeCharacterId ? ' · активный' : ''}</div>
           </div>
         </div>
 
-        <select
-          value={selected.id}
-          onChange={e => setTargetId(e.target.value)}
+        <button
+          type="button"
+          onClick={() => setHeroOpen(true)}
           className="flex-1 min-w-[140px]"
-          style={{ ...INPUT, fontSize: 12, fontWeight: 600 }}
+          style={{ ...INPUT, fontSize: 12, fontWeight: 600, textAlign: 'left', cursor: 'pointer' }}
         >
-          {living.map(c => <option key={c.id} value={c.id}>{c.nickname}</option>)}
-        </select>
+          Сменить героя · {living.length}
+        </button>
+        <AdminCharacterPickerModal open={heroOpen} onClose={() => setHeroOpen(false)} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
           {dirty && (

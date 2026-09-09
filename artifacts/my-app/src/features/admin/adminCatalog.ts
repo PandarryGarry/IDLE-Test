@@ -4,13 +4,14 @@ import { GEAR_FAMILY_LABEL_RU } from '../../domain/items/catalog/gear/gearItems.
 import { RESOURCE_CATEGORY_LABEL_RU } from '../../domain/items/catalog/gear/gearBrowse.ts';
 
 /** Разделы каталога в боковом подменю «Предметы». */
-export type AdminItemBag = 'all' | 'weapons' | 'armor' | 'jewelry' | 'craft' | 'other';
+export type AdminItemBag = 'all' | 'weapons' | 'armor' | 'jewelry' | 'uniques' | 'craft' | 'other';
 
 export const ADMIN_ITEM_BAGS: readonly { id: AdminItemBag; label: string; href: string }[] = [
   { id: 'all', label: 'Все', href: '/admin' },
   { id: 'weapons', label: 'Оружие', href: '/admin/items/weapons' },
   { id: 'armor', label: 'Экипировка', href: '/admin/items/armor' },
   { id: 'jewelry', label: 'Бижутерия', href: '/admin/items/jewelry' },
+  { id: 'uniques', label: 'Уники', href: '/admin/items/uniques' },
   { id: 'craft', label: 'Крафт / фарм', href: '/admin/items/craft' },
   { id: 'other', label: 'Прочее', href: '/admin/items/other' },
 ];
@@ -29,7 +30,16 @@ export function parseAdminItemBag(path: string): AdminItemBag {
   return 'all';
 }
 
+/** Уник-оружие и уник-бижутерия — не смешиваем с тировой лестницей. */
+export function isUniqueItem(item: Item): boolean {
+  if (item.id.startsWith('gear_unique_')) return true;
+  if (item.gearFamily?.startsWith('unique_')) return true;
+  if (item.iconPath?.includes('/unique/')) return true;
+  return false;
+}
+
 export function itemBag(item: Item): AdminItemBag {
+  if (isUniqueItem(item)) return 'uniques';
   const slot = item.equipSlot;
   if (slot === 'weapon') return 'weapons';
   if (slot && (ARMOR_SLOTS as readonly string[]).includes(slot)) return 'armor';
@@ -77,7 +87,7 @@ export function filterAdminItems(items: readonly Item[], bag: AdminItemBag, f: A
     if (f.weight !== 'all' && it.gearWeight !== f.weight) return false;
     if (f.slot !== 'all' && it.equipSlot !== f.slot) return false;
     if (f.type !== 'all') {
-      if (bag === 'weapons' || bag === 'jewelry' || bag === 'other') {
+      if (bag === 'weapons' || bag === 'jewelry' || bag === 'uniques' || bag === 'other') {
         if ((it.gearFamily ?? it.category) !== f.type) return false;
       }
       if (bag === 'craft' && it.category !== f.type) return false;

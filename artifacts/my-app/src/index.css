@@ -5115,6 +5115,16 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
+  max-width: 240px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-header);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.admin-target__pick:hover {
+  border-color: var(--border-accent);
 }
 .admin-target__avatar {
   width: 28px;
@@ -5124,16 +5134,67 @@
   object-fit: cover;
   background: var(--bg-header);
 }
-.admin-target select {
-  min-width: 140px;
-  max-width: 220px;
-  padding: 4px 8px;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
-  background: var(--bg-header);
-  color: var(--text-primary);
+.admin-target__nick {
+  overflow: hidden;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-char-pick__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 10px;
+}
+.admin-char-pick__empty {
+  margin: 8px 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+.admin-char-pick__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 8px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-slot);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.admin-char-pick__card:hover,
+.admin-char-pick__card.is-on {
+  border-color: var(--border-accent);
+  color: var(--text-gold);
+  box-shadow: var(--shadow-gold);
+}
+.admin-char-pick__avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--border-accent);
+  object-fit: cover;
+  background: var(--bg-header);
+}
+.admin-char-pick__name {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-char-pick__race {
+  color: var(--text-muted);
+  font-family: var(--app-font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .admin-grant {

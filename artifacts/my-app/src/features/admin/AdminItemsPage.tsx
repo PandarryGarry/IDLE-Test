@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
 import { getAllItems, getItem } from '@/domain/items';
 import { useAdminConfigStore } from '@/store/adminConfigStore';
@@ -21,6 +21,24 @@ import {
   parseAdminItemBag,
 } from '@/features/admin/adminCatalog';
 
+const AdminCatalogCell = memo(function AdminCatalogCell({
+  itemId,
+  selected,
+  onPick,
+}: {
+  itemId: string;
+  selected: boolean;
+  onPick: (id: string) => void;
+}) {
+  return (
+    <SquircleSlot
+      itemId={itemId}
+      selected={selected}
+      onClick={() => onPick(itemId)}
+    />
+  );
+});
+
 export function AdminItemsPage() {
   const [location] = useLocation();
   const bag = parseAdminItemBag(location.split(/[?#]/)[0]);
@@ -40,6 +58,7 @@ export function AdminItemsPage() {
   const { target } = useAdminSession();
   const notify = useNotificationsStore((s) => s.notifyInfo);
   const [filters, setFilters] = useState(EMPTY_ADMIN_ITEM_FILTERS);
+  const [queryDraft, setQueryDraft] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [inspectId, setInspectId] = useState<string | null>(null);
@@ -48,13 +67,31 @@ export function AdminItemsPage() {
 
   useEffect(() => {
     setFilters(EMPTY_ADMIN_ITEM_FILTERS);
+    setQueryDraft('');
     setSearchOpen(false);
     setSelectedId(null);
   }, [bag]);
 
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      setFilters((prev) => (prev.query === queryDraft ? prev : { ...prev, query: queryDraft }));
+    }, 120);
+    return () => window.clearTimeout(t);
+  }, [queryDraft]);
+
   const visible = useMemo(() => filterAdminItems(pool, bag, filters), [pool, bag, filters]);
-  const selected = selectedId ? getItem(selectedId) ?? catalog.find((i) => i.id === selectedId) ?? null : null;
+  const selected = selectedId ? catalog.find((i) => i.id === selectedId) ?? getItem(selectedId) ?? null : null;
   const visual = selected ? getItemVisual(selected.id) : null;
+
+  const onPick = useCallback((id: string) => {
+    setSelectedId((prev) => {
+      if (prev === id) {
+        setInspectId(id);
+        return prev;
+      }
+      return id;
+    });
+  }, []);
 
   const grant = async () => {
     if (!selected) return;
@@ -94,12 +131,13 @@ export function AdminItemsPage() {
                   type="text"
                   autoFocus
                   placeholder="Поиск…"
-                  value={filters.query}
-                  onChange={(e) => setFilters((prev) => ({ ...prev, query: e.target.value }))}
+                  value={queryDraft}
+                  onChange={(e) => setQueryDraft(e.target.value)}
                 />
                 <button
                   type="button"
                   onClick={() => {
+                    setQueryDraft('');
                     setFilters((prev) => ({ ...prev, query: '' }));
                     setSearchOpen(false);
                   }}
@@ -127,14 +165,11 @@ export function AdminItemsPage() {
         ) : (
           <div className="admin-items__grid">
             {visible.map((it) => (
-              <SquircleSlot
+              <AdminCatalogCell
                 key={it.id}
                 itemId={it.id}
                 selected={selectedId === it.id}
-                onClick={() => {
-                  if (selectedId === it.id) setInspectId(it.id);
-                  else setSelectedId(it.id);
-                }}
+                onPick={onPick}
               />
             ))}
           </div>
