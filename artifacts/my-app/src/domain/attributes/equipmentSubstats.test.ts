@@ -44,7 +44,9 @@ test('профили: у каждого слота есть канон, оси �
   const slots = Object.keys(EQUIP_SLOT_SUBSTAT_AXES) as EquipSlot[];
   assert.equal(slots.length, 16, 'все слоты экипа покрыты профилем');
   assert.ok(EQUIP_SUBSTAT_SLOTS.includes('helm'));
-  assert.deepEqual(EQUIP_SLOT_SUBSTAT_AXES.weapon, [], 'оружие пока не даёт подхарактеристик');
+  assert.ok(EQUIP_SLOT_SUBSTAT_AXES.weapon.includes('strike'), 'оружие несёт плоский Удар (база урона)');
+  assert.ok(EQUIP_SLOT_SUBSTAT_AXES.weapon.includes('tempo'));
+  assert.ok(EQUIP_SLOT_SUBSTAT_AXES.weapon.includes('luck'));
   assert.deepEqual(EQUIP_SLOT_SUBSTAT_AXES.passive, []);
   // armour-слоты не могут врать про урон/интуицию.
   for (const slot of ['helm', 'platebody', 'boots'] as EquipSlot[]) {
@@ -123,16 +125,19 @@ test('суммирование по нескольким слотам (брон�
   assert.deepEqual(sum.bySlot.helm, { armor: 20, health: 30 });
 });
 
-test('бонус оружия (пустая ось) всегда отбрасывается — не «врём» про статы тела', () => {
+test('оружие ложится в свои оси (Удар/Темп/Удача), чужое для него — dropped', () => {
   const eq = { ...EMPTY_EQUIP, weapon: 'sword', helm: 'helm_a' };
   const sum = sumEquipmentBonuses(eq, lookup({
-    sword: gear('sword', 'weapon', { strike: 999, tempo: 99 }),
+    sword: gear('sword', 'weapon', { strike: 6, tempo: 2, luck: 1, health: 999 }),
     helm_a: gear('helm_a', 'helm', { armor: 10 }),
   }));
-  assert.equal(sum.totals.strike, 0, 'оружие не ложится в Удар сейчас');
-  assert.equal(sum.totals.tempo, 0);
+  assert.equal(sum.totals.strike, 6, 'Удар — база урона оружия');
+  assert.equal(sum.totals.tempo, 2);
+  assert.equal(sum.totals.luck, 1);
+  assert.equal(sum.totals.health, 0, 'HP не ось оружия');
   assert.equal(sum.totals.armor, 10);
-  assert.equal(sum.dropped.length, 2, 'обе оси оружия помечены как неразрешённые');
+  assert.equal(sum.dropped.length, 1);
+  assert.equal(sum.dropped[0].substat, 'health');
 });
 
 test('foldBonusesIntoRaw прибавляет добавку к сырому значению (перед показом)', () => {

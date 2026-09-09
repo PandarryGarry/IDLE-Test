@@ -11,8 +11,9 @@ import { FORAGE_BITS } from './foraging/bits.ts';
 import { FORAGE_SPECIAL } from './foraging/special.ts';
 import { HUNT_TROPHIES } from './hunt/trophies.ts';
 import { HUNT_MEAT } from './hunt/meat.ts';
+import { GEAR_ITEMS, gearSummary } from './gear/gearItems.ts';
 
-/** Полный каталог предметов (батч 1: ресурсы + «Сбор» + охота). */
+/** Полный каталог предметов (ресурсы + «Сбор» + охота + снаряжение). */
 export const CATALOG: CatalogItem[] = [
   ...LOGS,
   ...ORES,
@@ -25,6 +26,7 @@ export const CATALOG: CatalogItem[] = [
   ...FORAGE_SPECIAL,
   ...HUNT_TROPHIES,
   ...HUNT_MEAT,
+  ...GEAR_ITEMS,
 ];
 
 /** Версия каталога — фундамент миграции на БД (§8 плана). */
@@ -44,4 +46,5 @@ export const CATALOG_SUMMARY = {
   forageSpecial: FORAGE_SPECIAL.length,
   huntTrophies: HUNT_TROPHIES.length,
   huntMeat: HUNT_MEAT.length,
+  ...gearSummary(),
 };

@@ -22,8 +22,9 @@ export const EQUIP_SLOT_SUBSTAT_AXES: Record<EquipSlot, EquipSlotSubstatProfile>
   helm: ['armor', 'health', 'will'],
   platebody: ['armor', 'health'],
   platelegs: ['armor', 'health'],
-  boots: ['armor', 'health'],
-  gloves: ['armor', 'health'],
+  // Обувь/перчатки лёгкого веса дополнительно дают Темп/Уворот (GEAR §4).
+  boots: ['armor', 'health', 'tempo'],
+  gloves: ['armor', 'health', 'evasion'],
   shield: ['armor', 'health', 'will'],
 
   // ── Бижутерия и пояса: узкие линии. §6.2 ─────────────────────
@@ -35,11 +36,13 @@ export const EQUIP_SLOT_SUBSTAT_AXES: Record<EquipSlot, EquipSlotSubstatProfile>
   belt: ['tempo', 'reaction', 'health'],
   cape: ['tempo', 'evasion', 'will'],
 
-  // ── Руки и скрытые слоты: пока БЕЗ оси подхарактеристик ─────
-  // Оружие/колчан/пассив несут то, что уходит в БОЕВОЕ разрешение (база урона,
-  // меткость), а не в лист 12 статов тела. Пусто = честно «на тело не влияет»;
-  // бой на готовых статах добавит свою ось отдельным шагом.
-  weapon: [],
+  // ── Оружие (правая рука) ────────────────────────────────────
+  // Базовый урон оружия смоделирован сейчас плоским Ударом (strike) —
+  // «промежуточный урон» на тире 1 ≈ 5–7, чтобы была готовая база под бой
+  // (COMBAT §6.3). Роли дают точечно: темп (быстрое), Удача/крит, пробой/натиск.
+  weapon: ['strike', 'onslaught', 'destruction', 'tempo', 'luck'],
+
+  // ── Скрытые слоты без тировой линейки на диске ──────────────
   quiver: [],
   passive: [],
 };
