@@ -38,18 +38,8 @@ import {
 import { SYNERGIES, type SynergyDef, type SynergyId } from '@/domain/attributes/synergies';
 import { getItem } from '@/domain/items';
 import { formatNumber } from '@/lib/utils';
-import type { EquipSlot, Equipment, GearWeight, Item, ItemTier } from '@/data/types';
-import { EQUIP_SLOT_LABELS_RU, formatTierLabel, GEAR_WEIGHT_NAME_RU } from '@/data/balance/gear';
-import {
-  EMPTY_GEAR_BROWSE,
-  GEAR_BROWSE_TIERS,
-  GEAR_BROWSE_UNIQUE_SCOPES,
-  GEAR_BROWSE_WEIGHTS,
-  itemMatchesGearBrowse,
-  slotsPresent,
-  type GearBrowseFilters,
-  type GearUniqueScope,
-} from '@/domain/items/catalog/gear/gearBrowse';
+import type { EquipSlot, Equipment, Item } from '@/data/types';
+import { isGearUnique } from '@/data/balance/gear';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { getLiveGearSets, loadGearSet, saveGearSet } from '@/domain/items/gearSets';
 import { diffCombatStats, EQUIP_STAT_META } from '@/domain/items/equipmentStats';
@@ -450,7 +440,6 @@ function GearModule({
   const inventoryItems = useInventoryStore(s => s.items);
   const notifyInfo = useNotificationsStore(s => s.notifyInfo);
   const [filter, setFilter] = useState<BagFilter>('all');
-  const [browse, setBrowse] = useState<GearBrowseFilters>(EMPTY_GEAR_BROWSE);
   const [page, setPage] = useState(0);
   const [saveOpen, setSaveOpen] = useState(false);
   const [activeSetIndex, setActiveSetIndex] = useState<number | null>(null);
@@ -504,11 +493,6 @@ function GearModule({
     setPage(0);
   };
 
-  const patchBrowse = (patch: Partial<GearBrowseFilters>) => {
-    setBrowse(prev => ({ ...prev, ...patch }));
-    setPage(0);
-  };
-
   const handleEquipSlotClick = (slot: EquipSlot | 'locked') => {
     if (slot === 'locked') return;
     setSelectedSlot(slot);
@@ -549,7 +533,6 @@ function GearModule({
       if (!item || !equipSlot) continue;
       const itemFilter = bagFilterOf(item);
       if (filter !== 'all' && itemFilter !== filter) continue;
-      if (!itemMatchesGearBrowse(item, browse)) continue;
       out.push({ slot: { itemId: s.itemId, quantity: s.quantity }, item, equipSlot });
     }
     return out;
@@ -661,64 +644,6 @@ function GearModule({
             </div>
           )}
         </div>
-      </div>
-
-      <div className="hero-gear2__browse" aria-label="Фильтры сумки">
-        <input
-          className="hero-gear2__browse-search"
-          placeholder="Поиск…"
-          value={browse.query}
-          onChange={e => patchBrowse({ query: e.target.value })}
-        />
-        <select
-          className="hero-gear2__browse-select"
-          value={browse.slot}
-          onChange={e => patchBrowse({ slot: e.target.value as EquipSlot | 'all' })}
-          aria-label="Слот"
-        >
-          <option value="all">Слот</option>
-          {slotsPresent(inventoryItems.map(s => getItem(s.itemId)).filter((it): it is Item => Boolean(it))).map(s => (
-            <option key={s} value={s}>{EQUIP_SLOT_LABELS_RU[s]}</option>
-          ))}
-        </select>
-        <select
-          className="hero-gear2__browse-select"
-          value={browse.unique}
-          onChange={e => {
-            const unique = e.target.value as GearUniqueScope;
-            patchBrowse({ unique, tier: unique === 'unique' ? 'all' : browse.tier });
-          }}
-          aria-label="Уникальное"
-        >
-          <option value="all">Вид</option>
-          {GEAR_BROWSE_UNIQUE_SCOPES.filter(s => s.id !== 'all').map(s => (
-            <option key={s.id} value={s.id}>{s.label}</option>
-          ))}
-        </select>
-        {browse.unique !== 'unique' && (
-          <select
-            className="hero-gear2__browse-select"
-            value={browse.tier === 'all' ? 'all' : String(browse.tier)}
-            onChange={e => patchBrowse({ tier: e.target.value === 'all' ? 'all' : Number(e.target.value) as ItemTier })}
-            aria-label="Тир"
-          >
-            <option value="all">Тир</option>
-            {GEAR_BROWSE_TIERS.map(t => (
-              <option key={t} value={t}>{formatTierLabel(t)}</option>
-            ))}
-          </select>
-        )}
-        <select
-          className="hero-gear2__browse-select"
-          value={browse.weight}
-          onChange={e => patchBrowse({ weight: e.target.value as GearWeight | 'all' })}
-          aria-label="Вес"
-        >
-          <option value="all">Вес</option>
-          {GEAR_BROWSE_WEIGHTS.map(w => (
-            <option key={w} value={w}>{GEAR_WEIGHT_NAME_RU[w]}</option>
-          ))}
-        </select>
       </div>
 
       {/* 2. Основной блок: Слева (2×7 надетых) | Центр (Манекен) | Справа (2×7 мини-сумка) */}
@@ -917,8 +842,8 @@ function HeroEquipSlotCard({
       title={ghostLeft ? `${slotDef.label} · двуручное` : `${item?.name ?? ''} (${slotDef.label})`}
     >
       {tier && (
-        <span className="hero-sq-slot__tier">
-          {tier}
+        <span style={{ position: 'absolute', top: 3, left: 4, zIndex: 10 }}>
+          <TierBadge tier={tier} size="sm" unique={isGearUnique(item)} />
         </span>
       )}
       {rarity !== 'common' && (
@@ -979,8 +904,8 @@ function HeroBagSlotCard({
       title={`${item.name} · ${GEAR_LABEL[equipSlot] ?? equipSlot}`}
     >
       {tier && (
-        <span className="hero-sq-slot__tier">
-          {tier}
+        <span style={{ position: 'absolute', top: 3, left: 4, zIndex: 10 }}>
+          <TierBadge tier={tier} size="sm" unique={isGearUnique(item)} />
         </span>
       )}
       {rarity !== 'common' && (
