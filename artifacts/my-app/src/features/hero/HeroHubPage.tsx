@@ -99,15 +99,15 @@ const GEAR_LEFT_COL1: EquipSlotDef[] = [
   { slot: 'shield', label: 'Щит' },
 ];
 
-/** Слева 2-я колонка: аксессуары и украшения (7 слотов, 14-й — будущий контент) */
+/** Слева 2-я колонка: аксессуары и украшения (7 слотов) */
 const GEAR_LEFT_COL2: EquipSlotDef[] = [
-  { slot: 'cape', label: 'Плащ' },
+  { slot: 'amulet', label: 'Ожерелье' },
   { slot: 'belt', label: 'Пояс' },
-  { slot: 'amulet', label: 'Амулет' },
+  { slot: 'cape', label: 'Плащ' },
   { slot: 'ring', label: 'Кольцо 1' },
   { slot: 'ring2', label: 'Кольцо 2' },
-  { slot: 'bracelet', label: 'Браслет' },
-  { slot: 'locked', label: 'Скоро', locked: true },
+  { slot: 'bracelet', label: 'Браслет 1' },
+  { slot: 'bracelet2', label: 'Браслет 2' },
 ];
 
 import { Swords, Shield, Sparkles, Package, Save, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -848,7 +848,16 @@ function HeroEquipSlotCard({
         />
       )}
       <div className="hero-sq-slot__icon-wrap">
-        <EquipSlotSilhouette slot={ghostLeft ? 'weapon' : slot} className="hero-sq-slot__vector-icon hero-sq-slot__vector-icon--filled" />
+        {(() => {
+          const v = slotVisual(itemId, ghostLeft ? 'weapon' : slot);
+          if (v.src) {
+            return <img src={v.src} alt={item?.name ?? ''} className="hero-sq-slot__icon" decoding="async" />;
+          }
+          if (v.emoji) {
+            return <span className="hero-sq-slot__emoji">{v.emoji}</span>;
+          }
+          return <EquipSlotSilhouette slot={ghostLeft ? 'weapon' : slot} className="hero-sq-slot__vector-icon hero-sq-slot__vector-icon--filled" />;
+        })()}
       </div>
     </button>
   );
@@ -898,7 +907,16 @@ function HeroBagSlotCard({
         />
       )}
       <div className="hero-sq-slot__icon-wrap">
-        <EquipSlotSilhouette slot={equipSlot} className="hero-sq-slot__vector-icon hero-sq-slot__vector-icon--filled" />
+        {(() => {
+          const v = slotVisual(item.id, equipSlot);
+          if (v.src) {
+            return <img src={v.src} alt={item.name} className="hero-sq-slot__icon" decoding="async" />;
+          }
+          if (v.emoji) {
+            return <span className="hero-sq-slot__emoji">{v.emoji}</span>;
+          }
+          return <EquipSlotSilhouette slot={equipSlot} className="hero-sq-slot__vector-icon hero-sq-slot__vector-icon--filled" />;
+        })()}
       </div>
       {slot.quantity > 1 && (
         <span className="hero-sq-slot__qty">
