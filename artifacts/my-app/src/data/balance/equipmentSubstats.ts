@@ -42,8 +42,10 @@ export const EQUIP_SLOT_SUBSTAT_AXES: Record<EquipSlot, EquipSlotSubstatProfile>
   // (COMBAT §6.3). Роли дают точечно: темп (быстрое), Удача/крит, пробой/натиск.
   weapon: ['strike', 'onslaught', 'destruction', 'tempo', 'luck'],
 
-  // ── Скрытые слоты без тировой линейки на диске ──────────────
-  quiver: [],
+  // Колчан: расходники (стрелы/болты) дают узкий удар и удачу.
+  quiver: ['strike', 'luck'],
+
+  // Скрытый слот без картинок на диске.
   passive: [],
 };
 

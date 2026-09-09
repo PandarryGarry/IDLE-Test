@@ -40,7 +40,7 @@ export function SquircleSlot({ itemId, quantity, locked = false, isEmptyPlacehol
 
   const item   = getItem(itemId);
   const tier   = item ? getItemTier(itemId, item) : 'T1';
-  const rarity = item ? getItemRarity(itemId, item.sellValue, item.equipSlot) : 'common';
+  const rarity = item ? getItemRarity(itemId, item.sellValue, item.equipSlot, item.tier) : 'common';
   const visual = getItemVisual(itemId);
   const dotColor = RARITY_DOT[rarity] ?? RARITY_DOT.common;
 
@@ -77,6 +77,12 @@ export function SquircleSlot({ itemId, quantity, locked = false, isEmptyPlacehol
       </div>
 
       {/* Количество */}
+      {typeof item?.maxDurability === 'number' && item.maxDurability > 0 && (
+        <span className="hero-sq-slot__dur" title="Прочность">
+          {item.maxDurability}
+        </span>
+      )}
+
       {quantity !== undefined && quantity > 1 && (
         <span style={{
           position: 'absolute', bottom: 3, right: 4, zIndex: 10,

@@ -8,6 +8,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useTranslation } from '@/hooks/useTranslation';
+import { rarityFromTier, type GearRarity } from '@/data/balance/gear';
+import type { ItemTier } from '@/data/types';
 
 interface ItemIconProps {
   itemId: string;
@@ -17,7 +19,16 @@ interface ItemIconProps {
   showTooltip?: boolean;
 }
 
-export function getItemRarity(itemId: string, sellValue: number = 0, equipSlot?: string): 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic' {
+export function getItemRarity(
+  itemId: string,
+  sellValue: number = 0,
+  equipSlot?: string,
+  tier?: number,
+): GearRarity {
+  if (typeof tier === 'number' && tier >= 1 && tier <= 12) {
+    return rarityFromTier(tier as ItemTier);
+  }
+  void equipSlot;
   if (itemId.includes('dragon') || itemId.includes('diamond') || itemId.includes('onyx') || sellValue >= 5000) {
     return 'legendary';
   }
@@ -48,7 +59,7 @@ export function ItemIcon({ itemId, size = 'md', quantity, className = '', showTo
   
   if (!item) return <div className={`bg-stone-900/80 border border-stone-800 rounded-xl ${className}`} style={{ width: 36, height: 36 }} />;
 
-  const rarity = getItemRarity(item.id, item.sellValue, item.equipSlot);
+  const rarity = getItemRarity(item.id, item.sellValue, item.equipSlot, item.tier);
   const rarityStyle = RARITY_STYLES[rarity];
   const visual = getItemVisual(itemId);
 

@@ -17,6 +17,9 @@ export { ALL_SKILL_IDS as GATHERING_SKILLS, ALL_SKILL_IDS as ACTIVE_SKILLS };
 
 export type ItemTier = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
+/** Вес брони: три семейства на диске (`armor/plate|leather|cloth`). */
+export type GearWeight = 'plate' | 'leather' | 'cloth';
+
 export type ItemCategory =
   | 'weapon' | 'helm' | 'platebody' | 'platelegs' | 'boots' | 'gloves'
   | 'amulet' | 'ring' | 'bracelet' | 'belt' | 'shield' | 'cape'
@@ -77,6 +80,18 @@ export interface Item {
    * только через `iconUrl()`, никогда сырым `.png`.
    */
   iconPath?: string;
+  /**
+   * Максимальная прочность (материал). Чем выше тир, тем больше.
+   * Бой пока не тратит прочность — поле для показа и будущего износа.
+   */
+  maxDurability?: number;
+  /**
+   * Семья для фасовки «слот → тир → семья»:
+   * папка оружия (`sword_1h`), вес брони (`leather`) или стихия украшения (`fire`).
+   */
+  gearFamily?: string;
+  /** Вес брони (только куски тела cloth/leather/plate). */
+  gearWeight?: GearWeight;
 }
 
 export interface SkillState {
