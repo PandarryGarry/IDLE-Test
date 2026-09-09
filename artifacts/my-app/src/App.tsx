@@ -22,7 +22,7 @@ import { FULL_PROLOGUE_READY } from '@/data/onboardingStory';
 import { DashboardPage } from '@/features/system/DashboardPage';
 import { ForagingPage } from '@/features/professions/ForagingPage';
 import { CombatPage } from '@/features/combat/CombatPage';
-import { InventoryPage } from '@/features/bank/InventoryPage';
+import { InventoryPage } from '@/features/inventory/InventoryPage';
 import { AdminPanelPage } from '@/features/admin/AdminPanelPage';
 import { SettingsPage } from '@/features/system/SettingsPage';
 import { HeroHubPage } from '@/features/hero/HeroHubPage';
@@ -214,7 +214,7 @@ function Router() {
             <Route path="/admin/characters" component={AdminPanelPage} />
             <Route path="/admin/professions" component={AdminPanelPage} />
             <Route path="/admin/settings" component={AdminPanelPage} />
-            <Route path="/bank">
+            <Route path="/inventory">
               <Redirect to="/inventory" />
             </Route>
             <Route path="/settings" component={SettingsPage} />

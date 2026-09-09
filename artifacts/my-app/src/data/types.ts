@@ -188,7 +188,7 @@ export function normalizeEquipment(raw?: Partial<Equipment> | null): Equipment {
   return { ...EMPTY_EQUIPMENT, ...raw };
 }
 
-export interface BankSlot {
+export interface InventorySlot {
   itemId: string;
   quantity: number;
   locked: boolean;
@@ -218,8 +218,8 @@ export interface SaveData {
     skills: Record<SkillId, SkillState>;
     equipment: Equipment;
   };
-  bank: {
-    items: BankSlot[];
+  inventory: {
+    items: InventorySlot[];
     gp: number;
     maxSlots: number;
   };

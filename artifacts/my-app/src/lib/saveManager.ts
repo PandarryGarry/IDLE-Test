@@ -3,7 +3,7 @@
 
 import type { SaveData } from '@/data/types';
 import { usePlayerStore } from '@/store/playerStore';
-import { useBankStore } from '@/store/bankStore';
+import { useInventoryStore } from '@/store/inventoryStore';
 import { useGameStore } from '@/store/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useAuthStore } from '@/store/authStore';
@@ -49,7 +49,7 @@ function leaveTimeKey(): string {
 
 export function collectSaveData(): SaveData {
   const player = usePlayerStore.getState();
-  const bank = useBankStore.getState();
+  const inventory = useInventoryStore.getState();
   const game = useGameStore.getState();
 
   return {
@@ -61,10 +61,10 @@ export function collectSaveData(): SaveData {
       skills: player.skills,
       equipment: player.equipment,
     },
-    bank: {
-      items: bank.items,
-      gp: bank.gp,
-      maxSlots: bank.maxSlots,
+    inventory: {
+      items: inventory.items,
+      gp: inventory.gp,
+      maxSlots: inventory.maxSlots,
     },
     game: {
       activeSkill: game.activeSkill,
@@ -80,13 +80,22 @@ export function collectSaveData(): SaveData {
 
 export function applySaveData(data: SaveData): void {
   const playerStore = usePlayerStore.getState();
-  const bankStore = useBankStore.getState();
+  const inventory = useInventoryStore.getState();
   const gameStore = useGameStore.getState();
 
   setLiveAttributes(migrateSaveAttributes(data.attributes));
   setLiveGearSets(migrateGearSets(data.gearSets));
   playerStore.loadFromSave(data.player?.skills ?? ({} as any), data.player?.equipment);
-  bankStore.loadFromSave(data.bank?.items ?? [], data.bank?.gp ?? 0, data.bank?.maxSlots ?? 40);
+  // Совместимость со старыми сейвами, где блок инвентаря хранился как `bank`.
+  const invRaw = (data as unknown as { inventory?: unknown; bank?: unknown }).inventory
+    ?? (data as unknown as { bank?: unknown }).bank
+    ?? {};
+  const inv = invRaw as { items?: unknown; gp?: unknown; maxSlots?: unknown };
+  inventory.loadFromSave(
+    Array.isArray(inv.items) ? (inv.items as never[]) : [],
+    typeof inv.gp === 'number' ? inv.gp : 0,
+    typeof inv.maxSlots === 'number' ? inv.maxSlots : 40,
+  );
   gameStore.loadFromSave({
     gameMode: data.gameMode ?? 'normal',
     totalPlayTime: data.totalPlayTime ?? 0,
@@ -243,7 +252,10 @@ export function initGame(): void {
   try {
     // Try to load auto-save
     const autoSave = loadFromSlot(AUTO_SAVE_SLOT);
-    if (autoSave && autoSave.player && autoSave.bank) {
+    const hasInv = Boolean(autoSave
+      && ((autoSave as { inventory?: unknown }).inventory
+        || (autoSave as unknown as { bank?: unknown }).bank));
+    if (autoSave && autoSave.player && hasInv) {
       applySaveData(autoSave);
     }
   } catch (e) {
@@ -271,7 +283,7 @@ export function resetGameToFresh(): void {
   try {
     deleteSaveSlot(AUTO_SAVE_SLOT);
     usePlayerStore.getState().reset();
-    useBankStore.getState().reset();
+    useInventoryStore.getState().reset();
     useGameStore.getState().reset();
     setLiveAttributes(createDefaultAttributes());
     setLiveGearSets(createEmptyGearSets());

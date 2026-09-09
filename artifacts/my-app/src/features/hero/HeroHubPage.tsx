@@ -7,11 +7,11 @@ import { TierBadge } from '@/shared/ui/kit/TierBadge';
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { usePlayerStore } from '@/store/playerStore';
-import { useBankStore } from '@/store/bankStore';
+import { useInventoryStore } from '@/store/inventoryStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { getAvatarPath, getDollPath, getDollPath2x, getRaceLabel, type RaceId } from '@/data/characters';
 import { iconUrl } from '@/lib/assetUrl';
-import { getItemRarity } from '@/features/bank/ItemIcon';
+import { getItemRarity } from '@/features/inventory/ItemIcon';
 import { getItemTier, UniversalInfoModal } from '@/components/modals/UniversalInfoModal';
 import { EquipSlotSilhouette } from '@/shared/icons/EquipSlotIcons';
 import {
@@ -432,7 +432,7 @@ function GearModule({
   snapshot: ReturnType<typeof computeAttributeSnapshot>;
   onGearSetsChanged: () => void;
 }) {
-  const bankItems = useBankStore(s => s.items);
+  const inventoryItems = useInventoryStore(s => s.items);
   const notifyInfo = useNotificationsStore(s => s.notifyInfo);
   const [filter, setFilter] = useState<BagFilter>('all');
   const [page, setPage] = useState(0);
@@ -521,7 +521,7 @@ function GearModule({
       item: Item;
       equipSlot: EquipSlot;
     }[] = [];
-    for (const s of bankItems) {
+    for (const s of inventoryItems) {
       if (s.quantity <= 0) continue;
       const item = getItem(s.itemId);
       const equipSlot = item?.equipSlot;
@@ -531,7 +531,7 @@ function GearModule({
       out.push({ slot: { itemId: s.itemId, quantity: s.quantity }, item, equipSlot });
     }
     return out;
-  }, [bankItems, filter]);
+  }, [inventoryItems, filter]);
 
   const BAG_PAGE_SIZE = 14;
   const totalPages = Math.max(1, Math.ceil(bagItems.length / BAG_PAGE_SIZE));
@@ -1357,9 +1357,9 @@ function HeroDetailModal({
         const handleEquip = () => {
           if (!item.equipSlot) return;
           const oldItem = usePlayerStore.getState().equipItem(item.id, item.equipSlot);
-          const bank = useBankStore.getState();
-          bank.removeItem(item.id, 1);
-          if (oldItem) bank.addItem(oldItem, 1);
+          const inventory = useInventoryStore.getState();
+          inventory.removeItem(item.id, 1);
+          if (oldItem) inventory.addItem(oldItem, 1);
           useNotificationsStore.getState().notifyInfo(`Экипировано: ${item.name}`);
           onClose();
         };

@@ -26,7 +26,9 @@ let lastCloudPush = 0;
 let currentCharacterId: string | null = null;
 
 function isValidSave(data: SaveData | null | undefined): data is SaveData {
-  return Boolean(data && typeof data === 'object' && data.player && data.bank);
+  return Boolean(data && typeof data === 'object' && data.player
+    && ((data as { inventory?: unknown }).inventory
+      || (data as unknown as { bank?: unknown }).bank));
 }
 
 /** Отправить текущее состояние в облако (throttle ~3 мин, force обходит). */
@@ -54,7 +56,7 @@ export async function pushCharacterCloud(force = false): Promise<void> {
  * копия») или облачный слепок `character.save_data` (редкий бэкап).
  *
  * Гарантии:
- *   1. Кандидатом считается только ПОЛНЫЙ сейв (есть и `player`, и `bank`).
+ *   1. Кандидатом считается только ПОЛНЫЙ сейв (есть и `player`, и `inventory`).
  *      Частичный/«голый» облачный сейв (только `attributes` — то, что
  *      `createCharacter` пишет новому герою до первого пуша) НЕ конкурент
  *      и не может затереть свежий локальный прогресс.

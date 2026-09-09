@@ -3,16 +3,16 @@ import type { SkillId, SkillState, Equipment, EquipSlot } from '@/data/types';
 import { EMPTY_EQUIPMENT, normalizeEquipment } from '@/data/types';
 import { getItem } from '@/domain/items';
 import { getLevelForXp, getXpForLevel, XP_TABLE, MAX_LEVEL } from '@/core/xpTable';
-import { useBankStore } from '@/store/bankStore';
+import { useInventoryStore } from '@/store/inventoryStore';
 
-function bankCanTakeAll(itemIds: string[]): boolean {
-  const bank = useBankStore.getState();
-  let free = bank.maxSlots - bank.items.filter(s => s.quantity > 0).length;
+function inventoryCanTakeAll(itemIds: string[]): boolean {
+  const inventory = useInventoryStore.getState();
+  let free = inventory.maxSlots - inventory.items.filter(s => s.quantity > 0).length;
   const seen = new Set<string>();
   for (const id of itemIds) {
     if (!id || seen.has(id)) continue;
     seen.add(id);
-    if (bank.getItemQty(id) > 0) continue;
+    if (inventory.getItemQty(id) > 0) continue;
     free -= 1;
     if (free < 0) return false;
   }
@@ -45,7 +45,7 @@ export interface PlayerStore {
   equipItem: (itemId: string, slot: EquipSlot) => string | null;
   unequipItem: (slot: EquipSlot) => string | null;
   /** Влезут ли эти предметы в сумку (без изменений) — для предпроверок. */
-  canBankTake: (itemIds: string[]) => boolean;
+  canEquipFit: (itemIds: string[]) => boolean;
   setSkillXp: (skillId: SkillId, xp: number) => void;
   getSkillLevel: (skillId: SkillId) => number;
   getMasteryLevel: (skillId: SkillId, actionId: string) => number;
@@ -123,29 +123,29 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       next = { ...next, [target]: itemId };
     }
 
-    if (!bankCanTakeAll(displaced)) return previous;
+    if (!inventoryCanTakeAll(displaced)) return previous;
 
-    const bank = useBankStore.getState();
+    const inventory = useInventoryStore.getState();
     for (const id of displaced) {
-      if (id !== previous) bank.addItem(id, 1);
+      if (id !== previous) inventory.addItem(id, 1);
     }
 
     set({ equipment: next });
     return previous;
   },
 
-  canBankTake: (itemIds) => bankCanTakeAll(itemIds),
+  canEquipFit: (itemIds) => inventoryCanTakeAll(itemIds),
 
   unequipItem: (slot) => {
-    const bankStore = useBankStore.getState();
+    const inventory = useInventoryStore.getState();
     const { equipment } = get();
     const previous = equipment[slot];
     if (!previous) return null;
 
-    // Attempt to add item to bank BEFORE removing from equipment
-    const added = bankStore.addItem(previous, 1);
+    // Attempt to add item to inventory BEFORE removing from equipment
+    const added = inventory.addItem(previous, 1);
     if (!added) {
-      // Bank is full — do not unequip; item would be lost
+      // Inventory is full — do not unequip; item would be lost
       return null;
     }
 

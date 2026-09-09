@@ -18,7 +18,7 @@ import {
   type GearSetPreset,
   type GearSetsState,
 } from '../../data/types.ts';
-import { useBankStore } from '../../store/bankStore.ts';
+import { useInventoryStore } from '../../store/inventoryStore.ts';
 import { usePlayerStore } from '../../store/playerStore.ts';
 
 let liveGearSets: GearSetsState | null = null;
@@ -104,7 +104,7 @@ export function loadGearSet(index: number): GearSetLoadResult {
   const presets = getLiveGearSets().presets;
   const preset = presets[index];
   const player = usePlayerStore.getState();
-  const bank = useBankStore.getState();
+  const inventory = useInventoryStore.getState();
   const current = player.equipment;
 
   const hasAnySaved = presets.some(p => p !== null);
@@ -122,7 +122,7 @@ export function loadGearSet(index: number): GearSetLoadResult {
         displacedIds.push(id);
       }
     }
-    if (displacedIds.length > 0 && !player.canBankTake(displacedIds)) {
+    if (displacedIds.length > 0 && !player.canEquipFit(displacedIds)) {
       return { ok: false, reason: 'bag-full' };
     }
     for (const slot of SLOT_ORDER) {
@@ -143,7 +143,7 @@ export function loadGearSet(index: number): GearSetLoadResult {
       displacedIds.push(id);
     }
   }
-  if (displacedIds.length > 0 && !player.canBankTake(displacedIds)) {
+  if (displacedIds.length > 0 && !player.canEquipFit(displacedIds)) {
     return { ok: false, reason: 'bag-full' };
   }
 
@@ -151,7 +151,7 @@ export function loadGearSet(index: number): GearSetLoadResult {
   let partial = false;
   for (const slot of SLOT_ORDER) {
     const want = target[slot];
-    if (want && want !== current[slot] && bank.getItemQty(want) <= 0) {
+    if (want && want !== current[slot] && inventory.getItemQty(want) <= 0) {
       partial = true;
     }
   }
@@ -170,10 +170,10 @@ export function loadGearSet(index: number): GearSetLoadResult {
     if (!want) continue;
     const now = usePlayerStore.getState().equipment[slot];
     if (now === want) continue;
-    if (bank.getItemQty(want) <= 0) continue; // пропал из мира — не трогаем
+    if (inventory.getItemQty(want) <= 0) continue; // пропал из мира — не трогаем
     const oldItem = player.equipItem(want, slot);
-    bank.removeItem(want, 1);
-    if (oldItem) bank.addItem(oldItem, 1);
+    inventory.removeItem(want, 1);
+    if (oldItem) inventory.addItem(oldItem, 1);
   }
 
   return { ok: true, partial };

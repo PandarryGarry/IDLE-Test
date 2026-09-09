@@ -16,7 +16,7 @@ src/
                   (professions.ts теперь только foraging)
     characters.ts  расы, аватары, манекены
   features/        экраны
-    hero/ combat/ professions/ auth/ bank/ system/
+    hero/ combat/ professions/ auth/ inventory/ system/
   components/      навигация, сцены, модалки, SplashScreen, FirstLaunchIntro
     ui/            примитивы shadcn (только используемые)
     art/ modals/

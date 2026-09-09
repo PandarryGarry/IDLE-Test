@@ -3,7 +3,7 @@ import { getItem } from '@/domain/items';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { EquipSlotSilhouette } from '@/shared/icons/EquipSlotIcons';
 import { getItemTier } from '@/components/modals/UniversalInfoModal';
-import { getItemRarity } from '@/features/bank/ItemIcon';
+import { getItemRarity } from '@/features/inventory/ItemIcon';
 import { formatNumber } from '@/lib/utils';
 import { TierBadge } from '@/shared/ui/kit/TierBadge';
 

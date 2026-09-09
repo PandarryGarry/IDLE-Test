@@ -1,4 +1,4 @@
-import type { BankSlot } from '../../data/types.ts';
+import type { InventorySlot } from '../../data/types.ts';
 
 /**
  * Миграция мелворовских id → наши предметы каталога.
@@ -117,9 +117,9 @@ export function migrateItemId(itemId: string): string {
  * Сумка со старыми id → сумка с нашими. Стопы, сошедшиеся в один id,
  * складываются; `locked`/`tab` берутся от первого вхождения.
  */
-export function migrateBankItems(items: BankSlot[]): BankSlot[] {
+export function migrateInventoryItems(items: InventorySlot[]): InventorySlot[] {
   let touched = false;
-  const merged = new Map<string, BankSlot>();
+  const merged = new Map<string, InventorySlot>();
   for (const slot of items) {
     const itemId = migrateItemId(slot.itemId);
     if (itemId !== slot.itemId) touched = true;

@@ -4,7 +4,7 @@ import { MONSTERS_MAP, AREAS_MAP } from '@/domain/combat/monsters';
 import { calcMaxHitMelee, calcAttackRating, calcDefenceRating, calcHitChance, calcAutoEatThreshold, rollDrops, rollGp } from '@/core/formulas';
 import { usePlayerStore } from '@/store/playerStore';
 import { useCharacterStore } from '@/store/characterStore';
-import { useBankStore } from '@/store/bankStore';
+import { useInventoryStore } from '@/store/inventoryStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { useAuthStore } from '@/store/authStore';
 import { GUEST_NOTICE } from '@/lib/guestMode';
@@ -158,7 +158,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     let { playerHp, enemyHp, playerAttackTimer, enemyAttackTimer, combatLog, killCount, totalDamageDealt, totalDamageTaken } = state;
     const monster = state.currentMonster;
     const playerStore = usePlayerStore.getState();
-    const bankStore = useBankStore.getState();
+    const inventory = useInventoryStore.getState();
     const notifs = useNotificationsStore.getState();
     const rates = getAdminRates();
     const logs: CombatLogEntry[] = [];
@@ -200,9 +200,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
       if (state.autoLoot) {
         const drops = rollDrops(monster, Math.random, rates.dropRateMultiplier);
-        for (const drop of drops) bankStore.addItem(drop.itemId, drop.quantity);
+        for (const drop of drops) inventory.addItem(drop.itemId, drop.quantity);
         const gp = rollGp(monster.gpDrop, Math.random, rates.goldMultiplier);
-        if (gp > 0) bankStore.addGp(gp);
+        if (gp > 0) inventory.addGp(gp);
       }
 
       set({ enemyHp: monster.maxHp, enemyMaxHp: monster.maxHp, killCount, totalDamageDealt });
@@ -235,15 +235,15 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         if (state.autoEat) {
           const threshold = calcAutoEatThreshold(state.playerMaxHp);
           if (playerHp <= threshold) {
-            const bankItems = bankStore.items;
-            const foods = bankItems
+            const inventoryItems = inventory.items;
+            const foods = inventoryItems
               .map(s => ({ slot: s, item: getItem(s.itemId) }))
               .filter(({ item }) => item?.healAmount && (item.healAmount > 0))
               .sort((a, b) => (b.item?.healAmount ?? 0) - (a.item?.healAmount ?? 0));
 
             if (foods.length > 0) {
               const best = foods[0];
-              bankStore.removeItem(best.slot.itemId, 1);
+              inventory.removeItem(best.slot.itemId, 1);
               playerHp = Math.min(state.playerMaxHp, playerHp + (best.item?.healAmount ?? 0));
               logs.push(newLog('eat', `Авто-еда: ${best.item?.name} (+${best.item?.healAmount} ОЗ)`));
             }
@@ -278,9 +278,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const { playerHp, playerMaxHp } = get();
     const item = getItem(itemId);
     if (!item?.healAmount) return;
-    const bankStore = useBankStore.getState();
-    if (!bankStore.hasItem(itemId, 1)) return;
-    bankStore.removeItem(itemId, 1);
+    const inventory = useInventoryStore.getState();
+    if (!inventory.hasItem(itemId, 1)) return;
+    inventory.removeItem(itemId, 1);
     set({ playerHp: Math.min(playerMaxHp, playerHp + item.healAmount) });
   },
 

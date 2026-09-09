@@ -7,7 +7,7 @@ import { useNotificationsStore } from '@/store/notificationsStore';
 import {
   ALL_SKILL_IDS,
   EMPTY_EQUIPMENT,
-  type BankSlot,
+  type InventorySlot,
   type EquipSlot,
   type Item,
   type SaveData,
@@ -15,7 +15,7 @@ import {
   type SkillState,
 } from '@/data/types';
 import { getAllItems, getItem } from '@/domain/items';
-import { migrateBankItems } from '@/domain/items/legacyMigration';
+import { migrateInventoryItems } from '@/domain/items/legacyMigration';
 import { getLevelForXp, getXpForLevel, MAX_LEVEL } from '@/core/xpTable';
 import { skillNameRu } from '@/lib/skillNames';
 import {
@@ -119,7 +119,7 @@ function makeEmptySave(): SaveData {
   return {
     version: '1.0.0', savedAt: Date.now(), totalPlayTime: 0, gameMode: 'standard',
     player: { skills, equipment: { ...EMPTY_EQUIPMENT } },
-    bank: { items: [], gp: 0, maxSlots: 24 },
+    inventory: { items: [], gp: 0, maxSlots: 24 },
     game: { activeSkill: null, activeActionId: null, activeAreaId: null, activeMonsterId: null },
     settings: {}, attributes: createDefaultAttributes(), gearSets: createEmptyGearSets(),
   };
@@ -140,11 +140,16 @@ function normalizeSave(
       skills,
       equipment: { ...EMPTY_EQUIPMENT, ...(save?.player?.equipment ?? {}) },
     },
-    bank: {
-      items: Array.isArray(save?.bank?.items) ? migrateBankItems(save.bank.items) : [],
-      gp: save?.bank?.gp ?? 0,
-      maxSlots: save?.bank?.maxSlots ?? 24,
-    },
+    inventory: (() => {
+      const src = save as unknown as { inventory?: unknown; bank?: unknown };
+      const raw = src?.inventory ?? src?.bank;
+      const rec = raw as { items?: unknown; gp?: unknown; maxSlots?: unknown } | undefined;
+      return {
+        items: Array.isArray(rec?.items) ? migrateInventoryItems(rec.items as never[]) : [],
+        gp: typeof rec?.gp === 'number' ? rec.gp : 0,
+        maxSlots: typeof rec?.maxSlots === 'number' ? rec.maxSlots : 24,
+      };
+    })(),
     game: {
       activeSkill: save?.game?.activeSkill ?? null,
       activeActionId: save?.game?.activeActionId ?? null,
@@ -350,7 +355,7 @@ export function AdminCharactersPanel() {
   const [tab, setTab] = useState<TabKey>('overview');
   const [saving, setSaving] = useState(false);
   const [skillQuery, setSkillQuery] = useState('');
-  const [touched, setTouched] = useState({ attributes: false, skills: false, bank: false, equipment: false });
+  const [touched, setTouched] = useState({ attributes: false, skills: false, inventory: false, equipment: false });
   const [picker, setPicker] = useState<{ mode: 'inventory' | 'equip'; equipSlot?: EquipSlot } | null>(null);
 
   const items = useMemo(() => getAllItems().sort((a, b) => a.name.localeCompare(b.name, 'ru')), []);
@@ -370,7 +375,7 @@ export function AdminCharactersPanel() {
     const liveSkills = usePlayerStore.getState().skills as Record<SkillId, SkillState>;
     const fallback = selected.saveData?.player?.skills ? undefined : liveSkills;
     setDraft(normalizeSave(selected.saveData, fallback, getLiveAttributes()));
-    setTouched({ attributes: false, skills: false, bank: false, equipment: false });
+    setTouched({ attributes: false, skills: false, inventory: false, equipment: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected?.id]);
 
@@ -392,7 +397,7 @@ export function AdminCharactersPanel() {
     return { ...syn, entries, progress, active };
   }), [attrs.pillarRanks]);
 
-  const dirty = touched.attributes || touched.skills || touched.bank || touched.equipment;
+  const dirty = touched.attributes || touched.skills || touched.inventory || touched.equipment;
 
   if (!selected || !draft) {
     return (
@@ -488,29 +493,29 @@ export function AdminCharactersPanel() {
   // ── Сумка / золото ────────────────────────────────────────────
   const setGold = (amount: number) => {
     const clean = Math.max(0, Math.floor(Number.isFinite(amount) ? amount : 0));
-    setTouched(p => ({ ...p, bank: true }));
-    patchDraft(prev => ({ ...prev, bank: { ...prev.bank, gp: clean } }));
+    setTouched(p => ({ ...p, inventory: true }));
+    patchDraft(prev => ({ ...prev, inventory: { ...prev.inventory, gp: clean } }));
   };
 
-  const addItemToBank = (itemId: string, qty: number) => {
+  const addItemToInventory = (itemId: string, qty: number) => {
     const clean = clampQty(qty);
     if (!itemId || clean <= 0) return;
-    setTouched(p => ({ ...p, bank: true }));
+    setTouched(p => ({ ...p, inventory: true }));
     patchDraft(prev => {
-      const bank = [...prev.bank.items];
-      const idx = bank.findIndex(s => s.itemId === itemId);
-      if (idx >= 0) bank[idx] = { ...bank[idx], quantity: (bank[idx].quantity || 0) + clean };
-      else bank.push({ itemId, quantity: clean, locked: false, tab: 0 });
-      return { ...prev, bank: { ...prev.bank, items: bank } };
+      const inventory = [...prev.inventory.items];
+      const idx = inventory.findIndex(s => s.itemId === itemId);
+      if (idx >= 0) inventory[idx] = { ...inventory[idx], quantity: (inventory[idx].quantity || 0) + clean };
+      else inventory.push({ itemId, quantity: clean, locked: false, tab: 0 });
+      return { ...prev, inventory: { ...prev.inventory, items: inventory } };
     });
   };
 
   const changeItemQty = (itemId: string, delta: number) => {
     if (!itemId) return;
-    setTouched(p => ({ ...p, bank: true }));
+    setTouched(p => ({ ...p, inventory: true }));
     patchDraft(prev => {
-      const bank = prev.bank.items.map(s => (s.itemId === itemId ? { ...s, quantity: Math.max(0, (s.quantity || 0) + delta) } : s)).filter(s => s.quantity > 0);
-      return { ...prev, bank: { ...prev.bank, items: bank } };
+      const inventory = prev.inventory.items.map(s => (s.itemId === itemId ? { ...s, quantity: Math.max(0, (s.quantity || 0) + delta) } : s)).filter(s => s.quantity > 0);
+      return { ...prev, inventory: { ...prev.inventory, items: inventory } };
     });
   };
 
@@ -539,12 +544,12 @@ export function AdminCharactersPanel() {
           skills: touched.skills ? draft.player.skills : base.player.skills,
           equipment: touched.equipment ? draft.player.equipment : base.player.equipment,
         },
-        bank: touched.bank ? draft.bank : base.bank,
+        inventory: touched.inventory ? draft.inventory : base.inventory,
         attributes: touched.attributes ? attrs : base.attributes,
       };
       const updated = await updateCharacter(selected.id, { saveData: next });
       setDraft(normalizeSave(updated.saveData, usePlayerStore.getState().skills as Record<SkillId, SkillState>, getLiveAttributes()));
-      setTouched({ attributes: false, skills: false, bank: false, equipment: false });
+      setTouched({ attributes: false, skills: false, inventory: false, equipment: false });
       useCharacterStore.setState(state => ({
         characters: state.characters.map(c => (c.id === updated.id ? updated : c)),
         activeCharacter: state.activeCharacter?.id === updated.id ? updated : state.activeCharacter,
@@ -633,8 +638,8 @@ export function AdminCharactersPanel() {
           {[
             { label: 'Уровень героя', value: String(attrs.heroLevel) },
             { label: 'Столпы', value: PILLAR_IDS.map(id => `${PILLARS[id].nameRu} ${attrs.pillarRanks[id] ?? 0}`).join(' · ') },
-            { label: 'Золото', value: formatNumber(draft.bank.gp) },
-            { label: 'Слоты сумки', value: `${draft.bank.items.length}/${draft.bank.maxSlots}` },
+            { label: 'Золото', value: formatNumber(draft.inventory.gp) },
+            { label: 'Слоты сумки', value: `${draft.inventory.items.length}/${draft.inventory.maxSlots}` },
             { label: 'Активная профессия', value: draft.game.activeSkill ? skillNameRu(draft.game.activeSkill) : '—' },
           ].map(cell => (
             <div key={cell.label} style={{ ...CARD, padding: 14 }}>
@@ -834,13 +839,13 @@ export function AdminCharactersPanel() {
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={LABEL}>🪙 Золото</span>
-              <input type="number" min={0} value={draft.bank.gp} onChange={e => setGold(Number(e.target.value))} style={{ ...INPUT, width: 120, textAlign: 'right' }} />
+              <input type="number" min={0} value={draft.inventory.gp} onChange={e => setGold(Number(e.target.value))} style={{ ...INPUT, width: 120, textAlign: 'right' }} />
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
-              <button type="button" onClick={() => setGold(Math.max(0, draft.bank.gp - 1000))} className={BTN} style={BTN_SECONDARY}>−1К</button>
-              <button type="button" onClick={() => setGold(Math.max(0, draft.bank.gp - 100))} className={BTN} style={BTN_SECONDARY}>−100</button>
-              <button type="button" onClick={() => setGold(draft.bank.gp + 100)} className={BTN} style={BTN_SECONDARY}>+100</button>
-              <button type="button" onClick={() => setGold(draft.bank.gp + 1000)} className={BTN} style={BTN_SECONDARY}>+1К</button>
+              <button type="button" onClick={() => setGold(Math.max(0, draft.inventory.gp - 1000))} className={BTN} style={BTN_SECONDARY}>−1К</button>
+              <button type="button" onClick={() => setGold(Math.max(0, draft.inventory.gp - 100))} className={BTN} style={BTN_SECONDARY}>−100</button>
+              <button type="button" onClick={() => setGold(draft.inventory.gp + 100)} className={BTN} style={BTN_SECONDARY}>+100</button>
+              <button type="button" onClick={() => setGold(draft.inventory.gp + 1000)} className={BTN} style={BTN_SECONDARY}>+1К</button>
             </div>
             <button type="button" onClick={() => setPicker({ mode: 'inventory' })} className={BTN} style={{ ...BTN_PRIMARY }}>
               <Plus size={14} /> Выдать предмет
@@ -848,7 +853,7 @@ export function AdminCharactersPanel() {
             <button
               type="button"
               onClick={() => {
-                for (const k of TIER1_STARTER_KIT) addItemToBank(k.id, k.qty);
+                for (const k of TIER1_STARTER_KIT) addItemToInventory(k.id, k.qty);
                 notify('Выдан тир-1 стартовый комплект (13 предметов)');
               }}
               className={BTN}
@@ -859,11 +864,11 @@ export function AdminCharactersPanel() {
             </button>
           </div>
 
-          {draft.bank.items.length === 0 ? (
+          {draft.inventory.items.length === 0 ? (
             <p style={{ fontSize: 12, color: C.textMuted, padding: '12px 0' }}>Сумка пуста. Нажми «Выдать предмет», чтобы выбрать предмет из каталога.</p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-              {draft.bank.items.map((slot: BankSlot, i: number) => {
+              {draft.inventory.items.map((slot: InventorySlot, i: number) => {
                 const item = getItem(slot.itemId);
                 return (
                   <div key={`${slot.itemId}-${i}`} style={{ ...CARD, background: C.slot, padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -925,7 +930,7 @@ export function AdminCharactersPanel() {
           equipSlot={picker.equipSlot}
           items={picker.mode === 'equip' && picker.equipSlot ? items.filter(i => i.equipSlot === picker.equipSlot) : items}
           onClose={() => setPicker(null)}
-          onAddInventory={(id, qty) => addItemToBank(id, qty)}
+          onAddInventory={(id, qty) => addItemToInventory(id, qty)}
           onEquip={(id) => picker.equipSlot ? equipItem(picker.equipSlot, id) : undefined}
         />
       )}
