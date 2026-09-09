@@ -220,6 +220,21 @@ export function HeroHubPage() {
     [state, raceId],
   );
 
+  // Складываем экип с телом: финальный блок 12 статов = столпы/ветви + экип.
+  const gearTotals = useMemo(
+    () => sumEquipmentBonuses(equipment, getItem).totals,
+    [equipment],
+  );
+  const displaySnapshot = useMemo(() => {
+    if (!snapshot) return snapshot;
+    const substats = foldBonusesIntoRaw(snapshot.substats, gearTotals);
+    return {
+      ...snapshot,
+      substats,
+      substatDisplays: computeSubstatDisplays(substats),
+    };
+  }, [snapshot, gearTotals]);
+
   const applyState = (next: typeof state | null) => {
     if (!next) return;
     commitHeroAttributes(next);
@@ -325,7 +340,7 @@ export function HeroHubPage() {
         </button>
         {moduleId === 'body' && (
           <BodyModule
-            snapshot={snapshot}
+            snapshot={displaySnapshot}
             canSpendBranch={state.unspentBranchPoints > 0}
             onOpenPillar={id => setDetail({ kind: 'pillar', id })}
             onOpenNode={ref => setDetail(

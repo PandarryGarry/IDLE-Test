@@ -73,6 +73,23 @@ function categoryLabel(id: string): string {
 
 const EQUIP_SLOTS = Object.keys(EMPTY_EQUIPMENT) as EquipSlot[];
 
+/** Стартовый тир-1 комплект для быстрой проверки «Экип» (оружие+броня+бижа). */
+const TIER1_STARTER_KIT: { id: string; qty: number }[] = [
+  { id: 'gear_sword_1h_t01', qty: 1 },
+  { id: 'gear_shield_t01', qty: 1 },
+  { id: 'gear_leather_helmet_t01', qty: 1 },
+  { id: 'gear_leather_chest_t01', qty: 1 },
+  { id: 'gear_leather_pants_t01', qty: 1 },
+  { id: 'gear_leather_boots_t01', qty: 1 },
+  { id: 'gear_leather_gloves_t01', qty: 1 },
+  { id: 'gear_necklaces_v01', qty: 1 },
+  { id: 'gear_belts_v01', qty: 1 },
+  { id: 'gear_rings_l_v01', qty: 1 },
+  { id: 'gear_rings_r_v01', qty: 1 },
+  { id: 'gear_bracelets_l_v01', qty: 1 },
+  { id: 'gear_bracelets_r_v01', qty: 1 },
+];
+
 const C = {
   surface: '#1c1108',
   surfaceAlt: '#241408',
@@ -825,8 +842,20 @@ export function AdminCharactersPanel() {
               <button type="button" onClick={() => setGold(draft.bank.gp + 100)} className={BTN} style={BTN_SECONDARY}>+100</button>
               <button type="button" onClick={() => setGold(draft.bank.gp + 1000)} className={BTN} style={BTN_SECONDARY}>+1К</button>
             </div>
-            <button type="button" onClick={() => setPicker({ mode: 'inventory' })} className={BTN} style={{ ...BTN_PRIMARY, marginLeft: 'auto' }}>
+            <button type="button" onClick={() => setPicker({ mode: 'inventory' })} className={BTN} style={{ ...BTN_PRIMARY }}>
               <Plus size={14} /> Выдать предмет
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                for (const k of TIER1_STARTER_KIT) addItemToBank(k.id, k.qty);
+                notify('Выдан тир-1 стартовый комплект (13 предметов)');
+              }}
+              className={BTN}
+              style={{ ...BTN_SECONDARY, borderColor: C.accent, color: C.accent }}
+              title="Добавить в сумку стартовый тир-1 комплект: меч, щит, кожаная броня (5 слотов) и украшения"
+            >
+              <Sparkles size={14} /> Тир-1 комплект
             </button>
           </div>
 
