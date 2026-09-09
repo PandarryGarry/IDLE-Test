@@ -16,6 +16,7 @@ import { getItemTier, UniversalInfoModal } from '@/components/modals/UniversalIn
 import { EquipSlotSilhouette } from '@/shared/icons/EquipSlotIcons';
 import {
   BRANCHES,
+  BRANCH_IDS,
   DEEP_PASSIVES,
   HERO_HELP,
   PILLAR_IDS,
@@ -27,6 +28,7 @@ import {
   type PassiveId,
   type PillarId,
 } from '@/domain/attributes/attributes';
+import { foldBonusesIntoRaw, sumEquipmentBonuses } from '@/domain/attributes/equipmentSubstats';
 import {
   EQUIP_SLOT_ICON,
   HUB_NAV_ICON,
@@ -39,9 +41,10 @@ import { formatNumber } from '@/lib/utils';
 import type { EquipSlot, Equipment, Item } from '@/data/types';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { getLiveGearSets, loadGearSet, saveGearSet } from '@/domain/items/gearSets';
-import { diffCombatStats, EQUIP_STAT_META, sumEquipmentStats, type EquipStatKey } from '@/domain/items/equipmentStats';
+import { diffCombatStats, EQUIP_STAT_META } from '@/domain/items/equipmentStats';
 import {
   computeAttributeSnapshot,
+  computeSubstatDisplays,
   getLiveAttributes,
   nodeBlockReason,
   nodeRank,
@@ -107,13 +110,7 @@ const GEAR_LEFT_COL2: EquipSlotDef[] = [
   { slot: 'locked', label: 'Скоро', locked: true },
 ];
 
-import { Swords, Zap, Shield, Sparkles, Package, Save, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
-
-const STAT_BADGES: { key: EquipStatKey; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { key: 'attackBonus', label: 'Атака', icon: Swords },
-  { key: 'strengthBonus', label: 'Сила', icon: Zap },
-  { key: 'defenceBonus', label: 'Защита', icon: Shield },
-];
+import { Swords, Shield, Sparkles, Package, Save, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 
 type BagFilter = 'all' | 'weapon' | 'armor' | 'jewel';
 
@@ -179,6 +176,15 @@ function formatSubstat(d: SubstatDisplay): string {
   const rounded = Math.round(d.value * 10) / 10;
   const num = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
   return d.unit === 'percent' ? `${num}%` : num;
+}
+
+/** Подпись прибавки от экипа к подхарактеристике (уже разница в единице показа). */
+function gearBonusText(value: number, unit: string): string {
+  const sign = value > 0 ? '+' : value < 0 ? '−' : '';
+  const n = Math.abs(value);
+  const rounded = Math.round(n * 10) / 10;
+  const num = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  return unit === 'percent' ? `${sign}${num}%` : `${sign}${num}`;
 }
 
 function isTwoHanded(itemId: string | null): boolean {
@@ -333,6 +339,7 @@ export function HeroHubPage() {
           <GearModule
             equipment={equipment}
             avatarId={active.avatarId}
+            snapshot={snapshot}
             onGearSetsChanged={() => setTick(n => n + 1)}
           />
         )}
@@ -403,10 +410,11 @@ const RARITY_DOT: Record<string, string> = {
 };
 
 function GearModule({
-  equipment, avatarId, onGearSetsChanged,
+  equipment, avatarId, snapshot, onGearSetsChanged,
 }: {
   equipment: Equipment;
   avatarId: string;
+  snapshot: ReturnType<typeof computeAttributeSnapshot>;
   onGearSetsChanged: () => void;
 }) {
   const bankItems = useBankStore(s => s.items);
@@ -420,8 +428,24 @@ function GearModule({
   const [selectedSlot, setSelectedSlot] = useState<EquipSlot | 'locked' | null>(null);
 
   const presets = getLiveGearSets().presets;
-  const totals = useMemo(() => sumEquipmentStats(equipment), [equipment]);
   const twoHand = isTwoHanded(equipment.weapon);
+
+  // Реальный вклад экипа в 12 подхарактеристик (мост domain/attributes/equipmentSubstats).
+  const gearTotals = useMemo(() => sumEquipmentBonuses(equipment, getItem).totals, [equipment]);
+  const equipBonusLines = useMemo(() => {
+    const combRaw = foldBonusesIntoRaw(snapshot.substats, gearTotals);
+    const combDisplays = computeSubstatDisplays(combRaw);
+    const lines: { id: BranchId; label: string; text: string; unit: string }[] = [];
+    for (const id of BRANCH_IDS) {
+      const added = gearTotals[id];
+      if (!added) continue;
+      const comb = combDisplays[id];
+      const base = snapshot.substatDisplays[id];
+      const delta = comb.value - base.value;
+      lines.push({ id, label: BRANCHES[id].nameRu, text: gearBonusText(delta, comb.unit), unit: comb.unit });
+    }
+    return lines;
+  }, [snapshot, gearTotals]);
 
   const saveSet = (index: number) => {
     const next = saveGearSet(index);
@@ -503,10 +527,6 @@ function GearModule({
   const handleEmptyBagSlotClick = () => {
     setSelectedBagItemId(null);
   };
-
-  const activeStats = STAT_BADGES.filter(
-    s => ['attackBonus', 'strengthBonus', 'defenceBonus'].includes(s.key) || (totals[s.key] ?? 0) > 0
-  );
 
   return (
     <div className="hero-sheet hero-gear2">
@@ -721,23 +741,20 @@ function GearModule({
           </div>
         </div>
         <div className="hero-gear2__stats-grid">
-          {activeStats.map(s => {
-            const val = totals[s.key] ?? 0;
-            const IconComp = s.icon;
-            return (
-              <div key={s.key} className="hero-gear2__stat-card">
+          {equipBonusLines.length === 0 ? (
+            <div className="hero-gear2__stats-note">
+              Экип не даёт бонусов — надень предмет с характеристиками.
+            </div>
+          ) : (
+            equipBonusLines.map(s => (
+              <div key={s.id} className="hero-gear2__stat-card">
                 <div className="hero-gear2__stat-meta">
-                  <span className="hero-gear2__stat-icon">
-                    <IconComp className="w-3.5 h-3.5 text-amber-400/90" />
-                  </span>
                   <span className="hero-gear2__stat-label">{s.label}</span>
                 </div>
-                <span className={`hero-gear2__stat-val ${val === 0 ? 'is-zero' : ''}`}>
-                  {val > 0 ? `+${val}` : val < 0 ? val : '0'}
-                </span>
+                <span className="hero-gear2__stat-val">{s.text}</span>
               </div>
-            );
-          })}
+            ))
+          )}
         </div>
       </div>
 
