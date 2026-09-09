@@ -9,7 +9,7 @@ import { getProfessionStatValue } from '../../store/professionStatsStore.ts';
 /**
  * ДАННЫЕ И ЧИСТЫЕ ПРАВИЛА профессии «Сбор».
  *
- * Этот файл НЕ хранит состояние и НЕ трогает банк/страницы.
+ * Этот файл НЕ хранит состояние и НЕ трогает инвентарь/страницы.
  * Вся механика цикла — в src/store/foragingStore.ts.
  * UI — только в src/features/professions/ForagingPage.tsx.
  */
@@ -342,7 +342,7 @@ export interface ForagingCycleResult {
 }
 
 /**
- * Один чистый цикл «Сбора» (без state, без банка).
+ * Один чистый цикл «Сбора» (без state, без инвентаря).
  * Используется и online, и в оффлайн-симуляции по упрощённым правилам.
  */
 export function rollForagingCycle(zoneId: string, level: number, rng: () => number = Math.random): ForagingCycleResult {

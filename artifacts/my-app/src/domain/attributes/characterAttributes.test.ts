@@ -54,11 +54,11 @@ test('мигратор: старый save без attributes не трогает 
     savedAt: 1,
     totalPlayTime: 999,
     player: { skills: { woodcutting: { level: 40 } }, equipment: { helm: 'bronze_helm' } },
-    bank: { items: [{ itemId: 'oak_logs', quantity: 12 }], gp: 50, maxSlots: 30 },
+    inventory: { items: [{ itemId: 'oak_logs', quantity: 12 }], gp: 50, maxSlots: 30 },
   };
   const hydrated = attachAttributesToSave(oldSave);
   assert.equal(hydrated.totalPlayTime, 999);
-  assert.equal(hydrated.bank.gp, 50);
+  assert.equal(hydrated.inventory.gp, 50);
   assert.equal(hydrated.player.equipment.helm, 'bronze_helm');
   assert.equal(hydrated.player.skills.woodcutting.level, 40);
   assert.equal(hydrated.attributes.unspentPillarPoints, 0);

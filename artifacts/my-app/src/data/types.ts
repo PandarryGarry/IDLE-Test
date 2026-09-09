@@ -1,6 +1,7 @@
 // ============================================================
 // Core game types for Aethelia Idle RPG
 // ============================================================
+import type { BranchId } from '../domain/attributes/attributes.ts';
 
 /**
  * Единственный навык/профессия текущей игры — «Сбор».
@@ -46,6 +47,21 @@ export interface Item {
   healAmount?: number; // HP restored when eaten
   equipSlot?: EquipSlot;
   combatStats?: CombatStats;
+  /**
+   * Точечные бонусы к РЕАЛЬНЫМ подхарактеристикам (12, см. `attributes`).
+   * Новая ось: старый `combatStats` (attack/strength/defence) не используется
+   * и не переносится в расчёт персонажа (COMBAT_MODEL_PILLARS.md §6).
+   *
+   * Число — в «сырой» единице самой подхарактеристики, той же, что даёт
+   * столп через `computeSubstats`:
+   *   health — очки HP; strike — очки урона;
+   *   armor/will/evasion/luck/onslaught/destruction — очки рейтинга (rating);
+   *   tempo/reaction/resourcefulness/intuition — проценты (percent).
+   * Значения кладутся в `data/balance/` рядом с профилем слота и прибавляются
+   * к сырому значению подхарактеристики ДО показа (кап/асимптота — в показе).
+   * Отсутствие поля = предмет не влияет на тело (честный ноль).
+   */
+  substatBonuses?: Partial<Record<BranchId, number>>;
   icon?: string; // emoji fallback
   /** Двуручное: правая рука нормально, левая — то же оружие тусклое. */
   twoHanded?: boolean;
@@ -115,7 +131,6 @@ export interface Monster {
   attackInterval: number; // ms
   drops: MonsterDrop[];
   gpDrop: [number, number];
-  bones?: string;
   isBoss?: boolean;
   combatLevel: number;
 }
@@ -173,7 +188,7 @@ export function normalizeEquipment(raw?: Partial<Equipment> | null): Equipment {
   return { ...EMPTY_EQUIPMENT, ...raw };
 }
 
-export interface BankSlot {
+export interface InventorySlot {
   itemId: string;
   quantity: number;
   locked: boolean;
@@ -203,8 +218,8 @@ export interface SaveData {
     skills: Record<SkillId, SkillState>;
     equipment: Equipment;
   };
-  bank: {
-    items: BankSlot[];
+  inventory: {
+    items: InventorySlot[];
     gp: number;
     maxSlots: number;
   };

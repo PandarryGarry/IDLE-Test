@@ -7,7 +7,7 @@ import { useNotificationsStore } from '@/store/notificationsStore';
 import {
   ALL_SKILL_IDS,
   EMPTY_EQUIPMENT,
-  type BankSlot,
+  type InventorySlot,
   type EquipSlot,
   type Item,
   type SaveData,
@@ -15,6 +15,7 @@ import {
   type SkillState,
 } from '@/data/types';
 import { getAllItems, getItem } from '@/domain/items';
+import { migrateInventoryItems } from '@/domain/items/legacyMigration';
 import { getLevelForXp, getXpForLevel, MAX_LEVEL } from '@/core/xpTable';
 import { skillNameRu } from '@/lib/skillNames';
 import {
@@ -70,7 +71,31 @@ function categoryLabel(id: string): string {
   return CATEGORY_RU[id] ?? id;
 }
 
+/** Римский номер тира для метки «Тир N» (1–12). */
+const ROMAN: string[] = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+function tierLabel(t?: number): string {
+  if (!t || t < 1 || t > ROMAN.length - 1) return '';
+  return ROMAN[t];
+}
+
 const EQUIP_SLOTS = Object.keys(EMPTY_EQUIPMENT) as EquipSlot[];
+
+/** Стартовый тир-1 комплект для быстрой проверки «Экип» (оружие+броня+бижа). */
+const TIER1_STARTER_KIT: { id: string; qty: number }[] = [
+  { id: 'gear_sword_1h_t01', qty: 1 },
+  { id: 'gear_shield_t01', qty: 1 },
+  { id: 'gear_leather_helmet_t01', qty: 1 },
+  { id: 'gear_leather_chest_t01', qty: 1 },
+  { id: 'gear_leather_pants_t01', qty: 1 },
+  { id: 'gear_leather_boots_t01', qty: 1 },
+  { id: 'gear_leather_gloves_t01', qty: 1 },
+  { id: 'gear_necklaces_v01', qty: 1 },
+  { id: 'gear_belts_v01', qty: 1 },
+  { id: 'gear_rings_l_v01', qty: 1 },
+  { id: 'gear_rings_r_v01', qty: 1 },
+  { id: 'gear_bracelets_l_v01', qty: 1 },
+  { id: 'gear_bracelets_r_v01', qty: 1 },
+];
 
 const C = {
   surface: '#1c1108',
@@ -101,7 +126,7 @@ function makeEmptySave(): SaveData {
   return {
     version: '1.0.0', savedAt: Date.now(), totalPlayTime: 0, gameMode: 'standard',
     player: { skills, equipment: { ...EMPTY_EQUIPMENT } },
-    bank: { items: [], gp: 0, maxSlots: 24 },
+    inventory: { items: [], gp: 0, maxSlots: 24 },
     game: { activeSkill: null, activeActionId: null, activeAreaId: null, activeMonsterId: null },
     settings: {}, attributes: createDefaultAttributes(), gearSets: createEmptyGearSets(),
   };
@@ -122,11 +147,16 @@ function normalizeSave(
       skills,
       equipment: { ...EMPTY_EQUIPMENT, ...(save?.player?.equipment ?? {}) },
     },
-    bank: {
-      items: Array.isArray(save?.bank?.items) ? save.bank.items : [],
-      gp: save?.bank?.gp ?? 0,
-      maxSlots: save?.bank?.maxSlots ?? 24,
-    },
+    inventory: (() => {
+      const src = save as unknown as { inventory?: unknown; bank?: unknown };
+      const raw = src?.inventory ?? src?.bank;
+      const rec = raw as { items?: unknown; gp?: unknown; maxSlots?: unknown } | undefined;
+      return {
+        items: Array.isArray(rec?.items) ? migrateInventoryItems(rec.items as never[]) : [],
+        gp: typeof rec?.gp === 'number' ? rec.gp : 0,
+        maxSlots: typeof rec?.maxSlots === 'number' ? rec.maxSlots : 24,
+      };
+    })(),
     game: {
       activeSkill: save?.game?.activeSkill ?? null,
       activeActionId: save?.game?.activeActionId ?? null,
@@ -262,15 +292,24 @@ function ItemPickerModal({
               title={it.name}
               style={{
                 ...CARD, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
-                padding: '10px 6px 8px', cursor: 'pointer',
-                outline: selected === it.id ? `2px solid ${C.accent}` : 'none',
-                outlineOffset: 1,
+                padding: '9px 6px 8px', cursor: 'pointer',
+                // Выделение рисуем ВНУТРИ округлой карточки (inset-кольцо), а не
+                // `outline` — иначе рамка вылезает за скругление и уходит в бок.
+                boxShadow: selected === it.id
+                  ? `inset 0 0 0 2px ${C.accent}, inset 0 0 8px rgba(240,192,48,0.25)`
+                  : undefined,
+                borderColor: selected === it.id ? C.accent : undefined,
               }}
             >
               <AdminItemIcon itemId={it.id} size={32} />
               <span style={{ width: '100%', textAlign: 'center', fontSize: 10, fontWeight: 600, color: C.textSecondary, lineHeight: 1.25, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                 {it.name}
               </span>
+              {(it.tier || it.equipSlot) && (
+                <span style={{ width: '100%', textAlign: 'center', fontSize: 9, fontWeight: 800, fontFamily: 'var(--app-font-mono)', color: it.tier ? '#f0c030' : C.textMuted, lineHeight: 1.2 }}>
+                  {it.tier ? `Тир ${tierLabel(it.tier)}` : ''}{it.tier && it.equipSlot ? ' · ' : ''}{it.equipSlot ? EQUIP_SLOT_LABELS[it.equipSlot] : ''}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -287,7 +326,9 @@ function ItemPickerModal({
               <AdminItemIcon itemId={selectedItem.id} size={44} />
               <div style={{ flex: 1, minWidth: 120 }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{selectedItem.name}</div>
-                <div style={{ fontSize: 11, fontFamily: 'var(--app-font-mono)', color: C.textMuted }}>{selectedItem.id} · {categoryLabel(selectedItem.category)} · {selectedItem.sellValue} GP</div>
+                <div style={{ fontSize: 11, fontFamily: 'var(--app-font-mono)', color: C.textMuted }}>
+                  {selectedItem.id}{selectedItem.tier ? ` · Тир ${tierLabel(selectedItem.tier)}` : ''} · {categoryLabel(selectedItem.category)} · {selectedItem.sellValue} GP
+                </div>
               </div>
             </>
           ) : (
@@ -332,7 +373,7 @@ export function AdminCharactersPanel() {
   const [tab, setTab] = useState<TabKey>('overview');
   const [saving, setSaving] = useState(false);
   const [skillQuery, setSkillQuery] = useState('');
-  const [touched, setTouched] = useState({ attributes: false, skills: false, bank: false, equipment: false });
+  const [touched, setTouched] = useState({ attributes: false, skills: false, inventory: false, equipment: false });
   const [picker, setPicker] = useState<{ mode: 'inventory' | 'equip'; equipSlot?: EquipSlot } | null>(null);
 
   const items = useMemo(() => getAllItems().sort((a, b) => a.name.localeCompare(b.name, 'ru')), []);
@@ -352,7 +393,7 @@ export function AdminCharactersPanel() {
     const liveSkills = usePlayerStore.getState().skills as Record<SkillId, SkillState>;
     const fallback = selected.saveData?.player?.skills ? undefined : liveSkills;
     setDraft(normalizeSave(selected.saveData, fallback, getLiveAttributes()));
-    setTouched({ attributes: false, skills: false, bank: false, equipment: false });
+    setTouched({ attributes: false, skills: false, inventory: false, equipment: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected?.id]);
 
@@ -374,7 +415,7 @@ export function AdminCharactersPanel() {
     return { ...syn, entries, progress, active };
   }), [attrs.pillarRanks]);
 
-  const dirty = touched.attributes || touched.skills || touched.bank || touched.equipment;
+  const dirty = touched.attributes || touched.skills || touched.inventory || touched.equipment;
 
   if (!selected || !draft) {
     return (
@@ -470,29 +511,29 @@ export function AdminCharactersPanel() {
   // ── Сумка / золото ────────────────────────────────────────────
   const setGold = (amount: number) => {
     const clean = Math.max(0, Math.floor(Number.isFinite(amount) ? amount : 0));
-    setTouched(p => ({ ...p, bank: true }));
-    patchDraft(prev => ({ ...prev, bank: { ...prev.bank, gp: clean } }));
+    setTouched(p => ({ ...p, inventory: true }));
+    patchDraft(prev => ({ ...prev, inventory: { ...prev.inventory, gp: clean } }));
   };
 
-  const addItemToBank = (itemId: string, qty: number) => {
+  const addItemToInventory = (itemId: string, qty: number) => {
     const clean = clampQty(qty);
     if (!itemId || clean <= 0) return;
-    setTouched(p => ({ ...p, bank: true }));
+    setTouched(p => ({ ...p, inventory: true }));
     patchDraft(prev => {
-      const bank = [...prev.bank.items];
-      const idx = bank.findIndex(s => s.itemId === itemId);
-      if (idx >= 0) bank[idx] = { ...bank[idx], quantity: (bank[idx].quantity || 0) + clean };
-      else bank.push({ itemId, quantity: clean, locked: false, tab: 0 });
-      return { ...prev, bank: { ...prev.bank, items: bank } };
+      const inventory = [...prev.inventory.items];
+      const idx = inventory.findIndex(s => s.itemId === itemId);
+      if (idx >= 0) inventory[idx] = { ...inventory[idx], quantity: (inventory[idx].quantity || 0) + clean };
+      else inventory.push({ itemId, quantity: clean, locked: false, tab: 0 });
+      return { ...prev, inventory: { ...prev.inventory, items: inventory } };
     });
   };
 
   const changeItemQty = (itemId: string, delta: number) => {
     if (!itemId) return;
-    setTouched(p => ({ ...p, bank: true }));
+    setTouched(p => ({ ...p, inventory: true }));
     patchDraft(prev => {
-      const bank = prev.bank.items.map(s => (s.itemId === itemId ? { ...s, quantity: Math.max(0, (s.quantity || 0) + delta) } : s)).filter(s => s.quantity > 0);
-      return { ...prev, bank: { ...prev.bank, items: bank } };
+      const inventory = prev.inventory.items.map(s => (s.itemId === itemId ? { ...s, quantity: Math.max(0, (s.quantity || 0) + delta) } : s)).filter(s => s.quantity > 0);
+      return { ...prev, inventory: { ...prev.inventory, items: inventory } };
     });
   };
 
@@ -521,12 +562,12 @@ export function AdminCharactersPanel() {
           skills: touched.skills ? draft.player.skills : base.player.skills,
           equipment: touched.equipment ? draft.player.equipment : base.player.equipment,
         },
-        bank: touched.bank ? draft.bank : base.bank,
+        inventory: touched.inventory ? draft.inventory : base.inventory,
         attributes: touched.attributes ? attrs : base.attributes,
       };
       const updated = await updateCharacter(selected.id, { saveData: next });
       setDraft(normalizeSave(updated.saveData, usePlayerStore.getState().skills as Record<SkillId, SkillState>, getLiveAttributes()));
-      setTouched({ attributes: false, skills: false, bank: false, equipment: false });
+      setTouched({ attributes: false, skills: false, inventory: false, equipment: false });
       useCharacterStore.setState(state => ({
         characters: state.characters.map(c => (c.id === updated.id ? updated : c)),
         activeCharacter: state.activeCharacter?.id === updated.id ? updated : state.activeCharacter,
@@ -615,8 +656,8 @@ export function AdminCharactersPanel() {
           {[
             { label: 'Уровень героя', value: String(attrs.heroLevel) },
             { label: 'Столпы', value: PILLAR_IDS.map(id => `${PILLARS[id].nameRu} ${attrs.pillarRanks[id] ?? 0}`).join(' · ') },
-            { label: 'Золото', value: formatNumber(draft.bank.gp) },
-            { label: 'Слоты сумки', value: `${draft.bank.items.length}/${draft.bank.maxSlots}` },
+            { label: 'Золото', value: formatNumber(draft.inventory.gp) },
+            { label: 'Слоты сумки', value: `${draft.inventory.items.length}/${draft.inventory.maxSlots}` },
             { label: 'Активная профессия', value: draft.game.activeSkill ? skillNameRu(draft.game.activeSkill) : '—' },
           ].map(cell => (
             <div key={cell.label} style={{ ...CARD, padding: 14 }}>
@@ -816,24 +857,36 @@ export function AdminCharactersPanel() {
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={LABEL}>🪙 Золото</span>
-              <input type="number" min={0} value={draft.bank.gp} onChange={e => setGold(Number(e.target.value))} style={{ ...INPUT, width: 120, textAlign: 'right' }} />
+              <input type="number" min={0} value={draft.inventory.gp} onChange={e => setGold(Number(e.target.value))} style={{ ...INPUT, width: 120, textAlign: 'right' }} />
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
-              <button type="button" onClick={() => setGold(Math.max(0, draft.bank.gp - 1000))} className={BTN} style={BTN_SECONDARY}>−1К</button>
-              <button type="button" onClick={() => setGold(Math.max(0, draft.bank.gp - 100))} className={BTN} style={BTN_SECONDARY}>−100</button>
-              <button type="button" onClick={() => setGold(draft.bank.gp + 100)} className={BTN} style={BTN_SECONDARY}>+100</button>
-              <button type="button" onClick={() => setGold(draft.bank.gp + 1000)} className={BTN} style={BTN_SECONDARY}>+1К</button>
+              <button type="button" onClick={() => setGold(Math.max(0, draft.inventory.gp - 1000))} className={BTN} style={BTN_SECONDARY}>−1К</button>
+              <button type="button" onClick={() => setGold(Math.max(0, draft.inventory.gp - 100))} className={BTN} style={BTN_SECONDARY}>−100</button>
+              <button type="button" onClick={() => setGold(draft.inventory.gp + 100)} className={BTN} style={BTN_SECONDARY}>+100</button>
+              <button type="button" onClick={() => setGold(draft.inventory.gp + 1000)} className={BTN} style={BTN_SECONDARY}>+1К</button>
             </div>
-            <button type="button" onClick={() => setPicker({ mode: 'inventory' })} className={BTN} style={{ ...BTN_PRIMARY, marginLeft: 'auto' }}>
+            <button type="button" onClick={() => setPicker({ mode: 'inventory' })} className={BTN} style={{ ...BTN_PRIMARY }}>
               <Plus size={14} /> Выдать предмет
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                for (const k of TIER1_STARTER_KIT) addItemToInventory(k.id, k.qty);
+                notify('Выдан тир-1 стартовый комплект (13 предметов)');
+              }}
+              className={BTN}
+              style={{ ...BTN_SECONDARY, borderColor: C.accent, color: C.accent }}
+              title="Добавить в сумку стартовый тир-1 комплект: меч, щит, кожаная броня (5 слотов) и украшения"
+            >
+              <Sparkles size={14} /> Тир-1 комплект
             </button>
           </div>
 
-          {draft.bank.items.length === 0 ? (
+          {draft.inventory.items.length === 0 ? (
             <p style={{ fontSize: 12, color: C.textMuted, padding: '12px 0' }}>Сумка пуста. Нажми «Выдать предмет», чтобы выбрать предмет из каталога.</p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-              {draft.bank.items.map((slot: BankSlot, i: number) => {
+              {draft.inventory.items.map((slot: InventorySlot, i: number) => {
                 const item = getItem(slot.itemId);
                 return (
                   <div key={`${slot.itemId}-${i}`} style={{ ...CARD, background: C.slot, padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -860,28 +913,31 @@ export function AdminCharactersPanel() {
       {/* ── Снаряжение ── */}
       {tab === 'equipment' && (
         <div style={{ ...CARD, padding: 12 }}>
-          <p style={{ fontSize: 12, color: C.textSecondary, marginBottom: 10 }}>Выбери слот, чтобы назначить предмет из каталога. Клик по занятому слоту — сменить, кнопка «снять» — освободить.</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+          <p style={{ fontSize: 12, color: C.textSecondary, marginBottom: 10 }}>Клик по слоту — выбрать/сменить предмет из каталога. Крестик на занятом слоте — снять.</p>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-2">
             {EQUIP_SLOTS.map(slot => {
               const eqId = draft.player.equipment[slot];
               const eq = eqId ? getItem(eqId) : null;
               return (
-                <div key={slot} style={{ ...CARD, background: C.slot, padding: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                    <AdminItemIcon itemId={eqId ?? ''} size={34} />
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: 10, ...LABEL, marginBottom: 2 }}>{EQUIP_SLOT_LABELS[slot]}</div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: eq ? C.text : C.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {eq?.name ?? (eqId ? eqId : 'пусто')}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                    <button type="button" onClick={() => setPicker({ mode: 'equip', equipSlot: slot })} className={BTN} style={{ ...BTN_SECONDARY, flex: 1 }}>
-                      {eq ? 'Сменить' : 'Надеть'}
+                <div key={slot} style={{ ...CARD, background: C.slot, padding: 8, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center' }}>
+                  {eq && (
+                    <button type="button" onClick={() => unequipItem(slot)} className={BTN} style={{ ...BTN_MUTED, position: 'absolute', top: 4, right: 4, padding: 3, borderRadius: 6 }} title={`Снять: ${eq.name ?? eqId}`} aria-label={`Снять ${EQUIP_SLOT_LABELS[slot]}`}>
+                      <Trash2 size={11} />
                     </button>
-                    {eq && <button type="button" onClick={() => unequipItem(slot)} className={BTN} style={BTN_MUTED} title="Снять"><Trash2 size={13} /></button>}
-                  </div>
+                  )}
+                  <button type="button" onClick={() => setPicker({ mode: 'equip', equipSlot: slot })} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}>
+                    <AdminItemIcon itemId={eqId ?? ''} size={34} />
+                    <span style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: C.textMuted, fontFamily: 'var(--app-font-mono)' }}>{EQUIP_SLOT_LABELS[slot]}</span>
+                    <span style={{ maxWidth: '100%', fontSize: 10, fontWeight: 700, color: eq ? C.text : '#6b5a3d', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
+                      {eq?.name ?? 'пусто'}
+                    </span>
+                    {eq?.tier && (
+                      <span style={{ fontSize: 9, fontWeight: 900, fontFamily: 'var(--app-font-mono)', color: '#f0c030' }}>Тир {tierLabel(eq.tier)}</span>
+                    )}
+                    {!eq && (
+                      <span className={BTN} style={{ ...BTN_SECONDARY, padding: '3px 8px', fontSize: 10 }}>Надеть</span>
+                    )}
+                  </button>
                 </div>
               );
             })}
@@ -895,7 +951,7 @@ export function AdminCharactersPanel() {
           equipSlot={picker.equipSlot}
           items={picker.mode === 'equip' && picker.equipSlot ? items.filter(i => i.equipSlot === picker.equipSlot) : items}
           onClose={() => setPicker(null)}
-          onAddInventory={(id, qty) => addItemToBank(id, qty)}
+          onAddInventory={(id, qty) => addItemToInventory(id, qty)}
           onEquip={(id) => picker.equipSlot ? equipItem(picker.equipSlot, id) : undefined}
         />
       )}

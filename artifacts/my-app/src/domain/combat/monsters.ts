@@ -1,5 +1,9 @@
 import type { Monster, CombatArea } from '../../data/types.ts';
 
+/**
+ * Дроп — только наши предметы каталога (трофеи/шкуры/мясо охоты,
+ * наши руда/слитки/угли + снаряжение). Мелворовских костей/рун/руд нет.
+ */
 export const MONSTERS: Monster[] = [
   // ── Farmlands ──────────────────────────────────────────────
   {
@@ -8,8 +12,8 @@ export const MONSTERS: Monster[] = [
     attackBonus: 0, strengthBonus: 0, defenceBonus: 0,
     maxHit: 1, attackInterval: 2400,
     combatLevel: 1,
-    drops: [{ itemId: 'bones', chance: 1.0, quantity: [1, 1] }],
-    gpDrop: [1, 5], bones: 'bones',
+    drops: [{ itemId: 'meat_poultry', chance: 1.0, quantity: [1, 1] }],
+    gpDrop: [1, 5],
   },
   {
     id: 'cow', name: 'Cow', areaId: 'farmlands',
@@ -17,8 +21,11 @@ export const MONSTERS: Monster[] = [
     attackBonus: 0, strengthBonus: 0, defenceBonus: 0,
     maxHit: 3, attackInterval: 2400,
     combatLevel: 2,
-    drops: [{ itemId: 'bones', chance: 1.0, quantity: [1, 1] }],
-    gpDrop: [3, 15], bones: 'bones',
+    drops: [
+      { itemId: 'meat_steak', chance: 1.0, quantity: [1, 1] },
+      { itemId: 'hide_raw', chance: 0.5, quantity: [1, 1] },
+    ],
+    gpDrop: [3, 15],
   },
   {
     id: 'goblin', name: 'Goblin', areaId: 'farmlands',
@@ -27,11 +34,11 @@ export const MONSTERS: Monster[] = [
     maxHit: 6, attackInterval: 2400,
     combatLevel: 5,
     drops: [
-      { itemId: 'bones', chance: 1.0, quantity: [1, 1] },
+      { itemId: 'trophy_guts', chance: 0.7, quantity: [1, 1] },
       { itemId: 'bronze_sword', chance: 0.02, quantity: [1, 1] },
-      { itemId: 'coal_ore', chance: 0.05, quantity: [1, 5] },
+      { itemId: 'coal', chance: 0.05, quantity: [1, 5] },
     ],
-    gpDrop: [5, 30], bones: 'bones',
+    gpDrop: [5, 30],
   },
   {
     id: 'hobgoblin', name: 'Hobgoblin', areaId: 'farmlands',
@@ -40,11 +47,11 @@ export const MONSTERS: Monster[] = [
     maxHit: 12, attackInterval: 2400,
     combatLevel: 28,
     drops: [
-      { itemId: 'bones', chance: 1.0, quantity: [1, 1] },
+      { itemId: 'hide_raw', chance: 1.0, quantity: [1, 1] },
       { itemId: 'iron_sword', chance: 0.05, quantity: [1, 1] },
-      { itemId: 'iron_ore', chance: 0.15, quantity: [1, 5] },
+      { itemId: 'ore_iron', chance: 0.15, quantity: [1, 5] },
     ],
-    gpDrop: [15, 80], bones: 'bones',
+    gpDrop: [15, 80],
   },
   // ── Spider Den ─────────────────────────────────────────────
   {
@@ -54,10 +61,10 @@ export const MONSTERS: Monster[] = [
     maxHit: 9, attackInterval: 2000,
     combatLevel: 20,
     drops: [
-      { itemId: 'bones', chance: 1.0, quantity: [1, 1] },
-      { itemId: 'iron_ore', chance: 0.1, quantity: [1, 3] },
+      { itemId: 'trophy_beast_eye', chance: 0.5, quantity: [1, 1] },
+      { itemId: 'ore_iron', chance: 0.1, quantity: [1, 3] },
     ],
-    gpDrop: [8, 50], bones: 'bones',
+    gpDrop: [8, 50],
   },
   {
     id: 'giant_spider', name: 'Giant Spider', areaId: 'spider_den',
@@ -66,11 +73,11 @@ export const MONSTERS: Monster[] = [
     maxHit: 22, attackInterval: 2400,
     combatLevel: 52,
     drops: [
-      { itemId: 'bones', chance: 1.0, quantity: [1, 1] },
+      { itemId: 'trophy_beast_eye', chance: 1.0, quantity: [1, 2] },
       { itemId: 'steel_sword', chance: 0.03, quantity: [1, 1] },
-      { itemId: 'coal_ore', chance: 0.2, quantity: [3, 8] },
+      { itemId: 'coal_anthracite', chance: 0.2, quantity: [3, 8] },
     ],
-    gpDrop: [50, 200], bones: 'bones',
+    gpDrop: [50, 200],
   },
   // ── Undead Graveyard ────────────────────────────────────────
   {
@@ -80,11 +87,10 @@ export const MONSTERS: Monster[] = [
     maxHit: 16, attackInterval: 2400,
     combatLevel: 35,
     drops: [
-      { itemId: 'bones', chance: 1.0, quantity: [1, 1] },
       { itemId: 'iron_sword', chance: 0.05, quantity: [1, 1] },
-      { itemId: 'chaos_rune', chance: 0.1, quantity: [1, 5] },
+      { itemId: 'coal_embers', chance: 0.1, quantity: [1, 5] },
     ],
-    gpDrop: [20, 100], bones: 'bones',
+    gpDrop: [20, 100],
   },
   {
     id: 'undead_warrior', name: 'Undead Warrior', areaId: 'undead_graveyard',
@@ -93,12 +99,11 @@ export const MONSTERS: Monster[] = [
     maxHit: 26, attackInterval: 2400,
     combatLevel: 65,
     drops: [
-      { itemId: 'bones', chance: 1.0, quantity: [1, 1] },
       { itemId: 'steel_sword', chance: 0.1, quantity: [1, 1] },
       { itemId: 'steel_platebody', chance: 0.02, quantity: [1, 1] },
-      { itemId: 'death_rune', chance: 0.2, quantity: [1, 3] },
+      { itemId: 'coal_embers', chance: 0.2, quantity: [1, 3] },
     ],
-    gpDrop: [60, 300], bones: 'bones',
+    gpDrop: [60, 300],
   },
   // ── Forest ─────────────────────────────────────────────────
   {
@@ -108,9 +113,10 @@ export const MONSTERS: Monster[] = [
     maxHit: 14, attackInterval: 2000,
     combatLevel: 30,
     drops: [
-      { itemId: 'bones', chance: 1.0, quantity: [1, 1] },
+      { itemId: 'meat_ribs', chance: 0.7, quantity: [1, 2] },
+      { itemId: 'hide_raw', chance: 0.5, quantity: [1, 1] },
     ],
-    gpDrop: [10, 60], bones: 'bones',
+    gpDrop: [10, 60],
   },
   // ── Lava Lake ──────────────────────────────────────────────
   {
@@ -120,9 +126,8 @@ export const MONSTERS: Monster[] = [
     maxHit: 40, attackInterval: 2400,
     combatLevel: 100,
     drops: [
-      { itemId: 'fire_rune',  chance: 0.5,  quantity: [5, 20] },
-      { itemId: 'blood_rune', chance: 0.1,  quantity: [1, 3] },
-      { itemId: 'mithril_ore', chance: 0.15, quantity: [1, 5] },
+      { itemId: 'coal_embers', chance: 0.5,  quantity: [5, 20] },
+      { itemId: 'ore_mithril', chance: 0.15, quantity: [1, 5] },
     ],
     gpDrop: [100, 500],
   },
@@ -134,13 +139,12 @@ export const MONSTERS: Monster[] = [
     maxHit: 50, attackInterval: 3000,
     combatLevel: 130,
     drops: [
-      { itemId: 'dragon_bones',  chance: 1.0,  quantity: [1, 1] },
-      { itemId: 'dragon_bar',    chance: 0.1,  quantity: [1, 1] },
-      { itemId: 'dragon_sword',  chance: 0.01, quantity: [1, 1] },
-      { itemId: 'rune_platebody',chance: 0.05, quantity: [1, 1] },
-      { itemId: 'blood_rune',    chance: 0.3,  quantity: [5, 15] },
+      { itemId: 'leather_scaled', chance: 1.0,  quantity: [1, 3] },
+      { itemId: 'bar_orichalcum', chance: 0.1,  quantity: [1, 1] },
+      { itemId: 'dragon_sword',   chance: 0.01, quantity: [1, 1] },
+      { itemId: 'rune_platebody', chance: 0.05, quantity: [1, 1] },
     ],
-    gpDrop: [500, 2000], bones: 'dragon_bones', isBoss: true,
+    gpDrop: [500, 2000], isBoss: true,
   },
 ];
 

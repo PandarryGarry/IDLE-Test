@@ -2,8 +2,8 @@ import React from 'react';
 import { getItem } from '@/domain/items';
 import { formatNumber } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
-import { ItemIcon } from '@/features/bank/ItemIcon';
-import { useBankStore } from '@/store/bankStore';
+import { ItemIcon } from '@/features/inventory/ItemIcon';
+import { useInventoryStore } from '@/store/inventoryStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { Lock, Unlock } from 'lucide-react';
 import {
@@ -34,9 +34,9 @@ export function ItemInfoPopover({
   const { t } = useTranslation();
   const item = getItem(itemId);
 
-  // Получаем состояние lock из bankStore
-  const slot = useBankStore(s => s.getSlot(itemId));
-  const lockItem = useBankStore(s => s.lockItem);
+  // Получаем состояние lock из inventory
+  const slot = useInventoryStore(s => s.getSlot(itemId));
+  const lockItem = useInventoryStore(s => s.lockItem);
   const isLocked = slot?.locked ?? false;
 
   // Получаем текущую экипировку для сравнения

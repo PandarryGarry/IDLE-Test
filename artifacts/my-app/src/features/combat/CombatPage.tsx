@@ -5,7 +5,7 @@ import { useCharacterStore } from '@/store/characterStore';
 import { getLiveAttributes } from '@/domain/attributes/characterAttributes';
 import { useShallow } from 'zustand/react/shallow';
 import { COMBAT_AREAS, MONSTERS_MAP } from '@/domain/combat/monsters';
-import { ItemIcon } from '@/features/bank/ItemIcon';
+import { ItemIcon } from '@/features/inventory/ItemIcon';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { getItem } from '@/domain/items';
 import { getItemVisual } from '@/shared/icons/itemIcons';
@@ -456,9 +456,9 @@ const CombatScreen = memo(function CombatScreen() {
 const FoodPanel = memo(function FoodPanel() {
   const { t } = useTranslation();
   const eatFood = useCombatStore(s => s.eatFood);
-  const bankItems = useInventoryStore(s => s.items);
+  const inventoryItems = useInventoryStore(s => s.items);
 
-  const foodItems = bankItems
+  const foodItems = inventoryItems
     .map(s => ({ slot: s, item: getItem(s.itemId) }))
     .filter(({ item }) => item && item.healAmount && item.healAmount > 0);
 

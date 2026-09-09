@@ -7,7 +7,7 @@ import {
 } from '@/domain/professions/foraging';
 import { useForagingStore } from '@/store/foragingStore';
 import { usePlayerStore } from '@/store/playerStore';
-import { useBankStore } from '@/store/bankStore';
+import { useInventoryStore } from '@/store/inventoryStore';
 import { useCombatStore } from '@/store/combatStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { useAuthStore } from '@/store/authStore';
@@ -192,12 +192,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    const bankStore = useBankStore.getState();
+    const inventory = useInventoryStore.getState();
     const notifs = useNotificationsStore.getState();
     let inventoryFull = false;
 
     for (const { itemId, quantity } of result.items) {
-      const added = bankStore.addItem(itemId, quantity);
+      const added = inventory.addItem(itemId, quantity);
       if (!added) inventoryFull = true;
     }
 

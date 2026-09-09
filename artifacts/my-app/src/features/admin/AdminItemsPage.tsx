@@ -8,8 +8,8 @@ import type { ItemCategory } from '@/data/types';
 
 const CATEGORY_ORDER: ItemCategory[] = [
   'log', 'ore', 'bar', 'raw_fish', 'cooked_fish', 'mineral', 'foraging',
+  'food', 'misc',
   'weapon', 'helm', 'platebody', 'shield',
-  'ash', 'bone', 'rune', 'gem', 'herb', 'misc',
 ];
 const CATEGORY_INDEX = new Map<ItemCategory, number>(CATEGORY_ORDER.map((category, index) => [category, index]));
 
@@ -21,16 +21,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   cooked_fish: 'Жареная рыба',
   mineral: 'Минерал',
   foraging: 'Сбор',
+  food: 'Еда',
+  misc: 'Трофеи',
   weapon: 'Оружие',
   helm: 'Шлемы',
   platebody: 'Нагрудники',
   shield: 'Щиты',
-  ash: 'Зола',
-  bone: 'Кости',
-  rune: 'Руны',
-  gem: 'Самоцветы',
-  herb: 'Травы',
-  misc: 'Прочее',
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -41,16 +37,12 @@ const CATEGORY_ICONS: Record<string, string> = {
   cooked_fish: '🍽️',
   mineral: '🪨',
   foraging: '🌿',
+  food: '🍖',
+  misc: '🏆',
   weapon: '⚔️',
   helm: '⛑️',
   platebody: '🛡️',
   shield: '🛡️',
-  ash: '⚪',
-  bone: '🦴',
-  rune: '✨',
-  gem: '💎',
-  herb: '🌿',
-  misc: '📦',
 };
 
 export function AdminItemsPage() {
@@ -60,8 +52,8 @@ export function AdminItemsPage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Правки предметов из админки обновляют каталог через getItem()/getAllItems().
-  // getAllItems() объединяет каталог (ресурсы/сбор) с легаси-семействами,
-  // включая снаряжение: оружие, шлемы, нагрудники и щиты. Дубли по id не показываем.
+  // getAllItems() отдаёт только настоящий каталог (ресурсы/сбор/снаряжение) —
+  // все предметы с реальными картинками; легаси без своих картинок сюда не входит.
   const itemOverrides = useAdminConfigStore(s => s.itemOverrides);
   const catalog = useMemo(() => {
     const seen = new Set<string>();

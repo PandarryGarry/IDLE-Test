@@ -7,15 +7,16 @@ import { TierBadge } from '@/shared/ui/kit/TierBadge';
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { usePlayerStore } from '@/store/playerStore';
-import { useBankStore } from '@/store/bankStore';
+import { useInventoryStore } from '@/store/inventoryStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { getAvatarPath, getDollPath, getDollPath2x, getRaceLabel, type RaceId } from '@/data/characters';
 import { iconUrl } from '@/lib/assetUrl';
-import { getItemRarity } from '@/features/bank/ItemIcon';
+import { getItemRarity } from '@/features/inventory/ItemIcon';
 import { getItemTier, UniversalInfoModal } from '@/components/modals/UniversalInfoModal';
 import { EquipSlotSilhouette } from '@/shared/icons/EquipSlotIcons';
 import {
   BRANCHES,
+  BRANCH_IDS,
   DEEP_PASSIVES,
   HERO_HELP,
   PILLAR_IDS,
@@ -27,6 +28,7 @@ import {
   type PassiveId,
   type PillarId,
 } from '@/domain/attributes/attributes';
+import { foldBonusesIntoRaw, sumEquipmentBonuses } from '@/domain/attributes/equipmentSubstats';
 import {
   EQUIP_SLOT_ICON,
   HUB_NAV_ICON,
@@ -39,9 +41,10 @@ import { formatNumber } from '@/lib/utils';
 import type { EquipSlot, Equipment, Item } from '@/data/types';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { getLiveGearSets, loadGearSet, saveGearSet } from '@/domain/items/gearSets';
-import { diffCombatStats, EQUIP_STAT_META, sumEquipmentStats, type EquipStatKey } from '@/domain/items/equipmentStats';
+import { diffCombatStats, EQUIP_STAT_META } from '@/domain/items/equipmentStats';
 import {
   computeAttributeSnapshot,
+  computeSubstatDisplays,
   getLiveAttributes,
   nodeBlockReason,
   nodeRank,
@@ -96,24 +99,18 @@ const GEAR_LEFT_COL1: EquipSlotDef[] = [
   { slot: 'shield', label: 'Щит' },
 ];
 
-/** Слева 2-я колонка: аксессуары и украшения (7 слотов, 14-й — будущий контент) */
+/** Слева 2-я колонка: аксессуары и украшения (7 слотов) */
 const GEAR_LEFT_COL2: EquipSlotDef[] = [
-  { slot: 'cape', label: 'Плащ' },
+  { slot: 'amulet', label: 'Ожерелье' },
   { slot: 'belt', label: 'Пояс' },
-  { slot: 'amulet', label: 'Амулет' },
+  { slot: 'cape', label: 'Плащ' },
   { slot: 'ring', label: 'Кольцо 1' },
   { slot: 'ring2', label: 'Кольцо 2' },
-  { slot: 'bracelet', label: 'Браслет' },
-  { slot: 'locked', label: 'Скоро', locked: true },
+  { slot: 'bracelet', label: 'Браслет 1' },
+  { slot: 'bracelet2', label: 'Браслет 2' },
 ];
 
-import { Swords, Zap, Shield, Sparkles, Package, Save, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
-
-const STAT_BADGES: { key: EquipStatKey; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { key: 'attackBonus', label: 'Атака', icon: Swords },
-  { key: 'strengthBonus', label: 'Сила', icon: Zap },
-  { key: 'defenceBonus', label: 'Защита', icon: Shield },
-];
+import { Swords, Shield, Sparkles, Package, Save, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 
 type BagFilter = 'all' | 'weapon' | 'armor' | 'jewel';
 
@@ -181,6 +178,15 @@ function formatSubstat(d: SubstatDisplay): string {
   return d.unit === 'percent' ? `${num}%` : num;
 }
 
+/** Подпись прибавки от экипа к подхарактеристике (уже разница в единице показа). */
+function gearBonusText(value: number, unit: string): string {
+  const sign = value > 0 ? '+' : value < 0 ? '−' : '';
+  const n = Math.abs(value);
+  const rounded = Math.round(n * 10) / 10;
+  const num = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  return unit === 'percent' ? `${sign}${num}%` : `${sign}${num}`;
+}
+
 function isTwoHanded(itemId: string | null): boolean {
   return Boolean(itemId && getItem(itemId)?.twoHanded);
 }
@@ -213,6 +219,21 @@ export function HeroHubPage() {
     () => computeAttributeSnapshot({ state, raceId }),
     [state, raceId],
   );
+
+  // Складываем экип с телом: финальный блок 12 статов = столпы/ветви + экип.
+  const gearTotals = useMemo(
+    () => sumEquipmentBonuses(equipment, getItem).totals,
+    [equipment],
+  );
+  const displaySnapshot = useMemo(() => {
+    if (!snapshot) return snapshot;
+    const substats = foldBonusesIntoRaw(snapshot.substats, gearTotals);
+    return {
+      ...snapshot,
+      substats,
+      substatDisplays: computeSubstatDisplays(substats),
+    };
+  }, [snapshot, gearTotals]);
 
   const applyState = (next: typeof state | null) => {
     if (!next) return;
@@ -319,7 +340,7 @@ export function HeroHubPage() {
         </button>
         {moduleId === 'body' && (
           <BodyModule
-            snapshot={snapshot}
+            snapshot={displaySnapshot}
             canSpendBranch={state.unspentBranchPoints > 0}
             onOpenPillar={id => setDetail({ kind: 'pillar', id })}
             onOpenNode={ref => setDetail(
@@ -333,6 +354,7 @@ export function HeroHubPage() {
           <GearModule
             equipment={equipment}
             avatarId={active.avatarId}
+            snapshot={snapshot}
             onGearSetsChanged={() => setTick(n => n + 1)}
           />
         )}
@@ -403,13 +425,14 @@ const RARITY_DOT: Record<string, string> = {
 };
 
 function GearModule({
-  equipment, avatarId, onGearSetsChanged,
+  equipment, avatarId, snapshot, onGearSetsChanged,
 }: {
   equipment: Equipment;
   avatarId: string;
+  snapshot: ReturnType<typeof computeAttributeSnapshot>;
   onGearSetsChanged: () => void;
 }) {
-  const bankItems = useBankStore(s => s.items);
+  const inventoryItems = useInventoryStore(s => s.items);
   const notifyInfo = useNotificationsStore(s => s.notifyInfo);
   const [filter, setFilter] = useState<BagFilter>('all');
   const [page, setPage] = useState(0);
@@ -420,8 +443,24 @@ function GearModule({
   const [selectedSlot, setSelectedSlot] = useState<EquipSlot | 'locked' | null>(null);
 
   const presets = getLiveGearSets().presets;
-  const totals = useMemo(() => sumEquipmentStats(equipment), [equipment]);
   const twoHand = isTwoHanded(equipment.weapon);
+
+  // Реальный вклад экипа в 12 подхарактеристик (мост domain/attributes/equipmentSubstats).
+  const gearTotals = useMemo(() => sumEquipmentBonuses(equipment, getItem).totals, [equipment]);
+  const equipBonusLines = useMemo(() => {
+    const combRaw = foldBonusesIntoRaw(snapshot.substats, gearTotals);
+    const combDisplays = computeSubstatDisplays(combRaw);
+    const lines: { id: BranchId; label: string; text: string; unit: string }[] = [];
+    for (const id of BRANCH_IDS) {
+      const added = gearTotals[id];
+      if (!added) continue;
+      const comb = combDisplays[id];
+      const base = snapshot.substatDisplays[id];
+      const delta = comb.value - base.value;
+      lines.push({ id, label: BRANCHES[id].nameRu, text: gearBonusText(delta, comb.unit), unit: comb.unit });
+    }
+    return lines;
+  }, [snapshot, gearTotals]);
 
   const saveSet = (index: number) => {
     const next = saveGearSet(index);
@@ -482,7 +521,7 @@ function GearModule({
       item: Item;
       equipSlot: EquipSlot;
     }[] = [];
-    for (const s of bankItems) {
+    for (const s of inventoryItems) {
       if (s.quantity <= 0) continue;
       const item = getItem(s.itemId);
       const equipSlot = item?.equipSlot;
@@ -492,7 +531,7 @@ function GearModule({
       out.push({ slot: { itemId: s.itemId, quantity: s.quantity }, item, equipSlot });
     }
     return out;
-  }, [bankItems, filter]);
+  }, [inventoryItems, filter]);
 
   const BAG_PAGE_SIZE = 14;
   const totalPages = Math.max(1, Math.ceil(bagItems.length / BAG_PAGE_SIZE));
@@ -503,10 +542,6 @@ function GearModule({
   const handleEmptyBagSlotClick = () => {
     setSelectedBagItemId(null);
   };
-
-  const activeStats = STAT_BADGES.filter(
-    s => ['attackBonus', 'strengthBonus', 'defenceBonus'].includes(s.key) || (totals[s.key] ?? 0) > 0
-  );
 
   return (
     <div className="hero-sheet hero-gear2">
@@ -721,23 +756,20 @@ function GearModule({
           </div>
         </div>
         <div className="hero-gear2__stats-grid">
-          {activeStats.map(s => {
-            const val = totals[s.key] ?? 0;
-            const IconComp = s.icon;
-            return (
-              <div key={s.key} className="hero-gear2__stat-card">
+          {equipBonusLines.length === 0 ? (
+            <div className="hero-gear2__stats-note">
+              Экип не даёт бонусов — надень предмет с характеристиками.
+            </div>
+          ) : (
+            equipBonusLines.map(s => (
+              <div key={s.id} className="hero-gear2__stat-card">
                 <div className="hero-gear2__stat-meta">
-                  <span className="hero-gear2__stat-icon">
-                    <IconComp className="w-3.5 h-3.5 text-amber-400/90" />
-                  </span>
                   <span className="hero-gear2__stat-label">{s.label}</span>
                 </div>
-                <span className={`hero-gear2__stat-val ${val === 0 ? 'is-zero' : ''}`}>
-                  {val > 0 ? `+${val}` : val < 0 ? val : '0'}
-                </span>
+                <span className="hero-gear2__stat-val">{s.text}</span>
               </div>
-            );
-          })}
+            ))
+          )}
         </div>
       </div>
 
@@ -816,7 +848,16 @@ function HeroEquipSlotCard({
         />
       )}
       <div className="hero-sq-slot__icon-wrap">
-        <EquipSlotSilhouette slot={ghostLeft ? 'weapon' : slot} className="hero-sq-slot__vector-icon hero-sq-slot__vector-icon--filled" />
+        {(() => {
+          const v = slotVisual(itemId, ghostLeft ? 'weapon' : slot);
+          if (v.src) {
+            return <img src={v.src} alt={item?.name ?? ''} className="hero-sq-slot__icon" decoding="async" />;
+          }
+          if (v.emoji) {
+            return <span className="hero-sq-slot__emoji">{v.emoji}</span>;
+          }
+          return <EquipSlotSilhouette slot={ghostLeft ? 'weapon' : slot} className="hero-sq-slot__vector-icon hero-sq-slot__vector-icon--filled" />;
+        })()}
       </div>
     </button>
   );
@@ -866,7 +907,16 @@ function HeroBagSlotCard({
         />
       )}
       <div className="hero-sq-slot__icon-wrap">
-        <EquipSlotSilhouette slot={equipSlot} className="hero-sq-slot__vector-icon hero-sq-slot__vector-icon--filled" />
+        {(() => {
+          const v = slotVisual(item.id, equipSlot);
+          if (v.src) {
+            return <img src={v.src} alt={item.name} className="hero-sq-slot__icon" decoding="async" />;
+          }
+          if (v.emoji) {
+            return <span className="hero-sq-slot__emoji">{v.emoji}</span>;
+          }
+          return <EquipSlotSilhouette slot={equipSlot} className="hero-sq-slot__vector-icon hero-sq-slot__vector-icon--filled" />;
+        })()}
       </div>
       {slot.quantity > 1 && (
         <span className="hero-sq-slot__qty">
@@ -1325,9 +1375,9 @@ function HeroDetailModal({
         const handleEquip = () => {
           if (!item.equipSlot) return;
           const oldItem = usePlayerStore.getState().equipItem(item.id, item.equipSlot);
-          const bank = useBankStore.getState();
-          bank.removeItem(item.id, 1);
-          if (oldItem) bank.addItem(oldItem, 1);
+          const inventory = useInventoryStore.getState();
+          inventory.removeItem(item.id, 1);
+          if (oldItem) inventory.addItem(oldItem, 1);
           useNotificationsStore.getState().notifyInfo(`Экипировано: ${item.name}`);
           onClose();
         };

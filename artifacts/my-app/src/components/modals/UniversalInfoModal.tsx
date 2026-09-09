@@ -6,7 +6,7 @@ import { useInventoryStore } from '@/store/inventoryStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useCombatStore } from '@/store/combatStore';
 import { getItemVisual } from '@/shared/icons/itemIcons';
-import { getItemRarity } from '@/features/bank/ItemIcon';
+import { getItemRarity } from '@/features/inventory/ItemIcon';
 import { formatNumber } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CoinsDisplay } from '@/shared/ui/CoinsDisplay';
@@ -29,13 +29,13 @@ export function getItemTier(itemId: string, item?: Item): string {
   // предметов без поля `tier` (исчезнет по мере переноса семейств в каталог).
   if (item?.tier) return `T${item.tier}`;
   const id = itemId.toLowerCase();
-  if (id.includes('dragon') || id.includes('redwood') || id.includes('whale') || id.includes('manta')) return 'T7';
-  if (id.includes('runite') || id.includes('magic_logs') || id.includes('shark')) return 'T6';
-  if (id.includes('adamantite') || id.includes('mahogany') || id.includes('swordfish') || id.includes('crab')) return 'T5';
-  if (id.includes('mithril') || id.includes('maple') || id.includes('lobster') || id.includes('gold_bar')) return 'T4';
-  if (id.includes('steel') || id.includes('willow') || id.includes('salmon') || id.includes('mackerel')) return 'T3';
-  if (id.includes('iron') || id.includes('oak') || id.includes('trout') || id.includes('sardine')) return 'T2';
-  if (id.includes('bronze') || id.includes('normal_logs') || id.includes('copper') || id.includes('tin') || id.includes('shrimp')) return 'T1';
+  if (id.includes('dragon')) return 'T7';
+  if (id.includes('runite') || id.includes('rune_')) return 'T6';
+  if (id.includes('adamant')) return 'T5';
+  if (id.includes('mithril')) return 'T4';
+  if (id.includes('steel')) return 'T3';
+  if (id.includes('iron')) return 'T2';
+  if (id.includes('bronze')) return 'T1';
   
   const val = item?.sellValue ?? 0;
   if (val >= 5000) return 'T7';

@@ -5,7 +5,7 @@
 
 import type { SkillId } from '../data/types.ts';
 import { usePlayerStore } from '../store/playerStore.ts';
-import { useBankStore } from '../store/bankStore.ts';
+import { useInventoryStore } from '../store/inventoryStore.ts';
 import {
   FORAGING_ZONES_MAP,
   rollOfflineForaging,
@@ -36,7 +36,7 @@ function calcForagingOffline(actionId: string, offlineMs: number): OfflineResult
   );
   const totalActions = Math.floor(offlineMs / interval);
   const playerStore = usePlayerStore.getState();
-  const bankStore = useBankStore.getState();
+  const inventory = useInventoryStore.getState();
 
   const totalXp = Math.round(zone.xp * rates.xpMultiplier * totalActions);
   const levelUps: { skillId: SkillId; newLevel: number }[] = [];
@@ -49,7 +49,7 @@ function calcForagingOffline(actionId: string, offlineMs: number): OfflineResult
   if (totalActions > 0) {
     const perAction = rollOfflineForaging(actionId, level);
     const totalQty = perAction.quantity * totalActions;
-    const added = bankStore.addItem(perAction.itemId, totalQty);
+    const added = inventory.addItem(perAction.itemId, totalQty);
     if (added) itemsGained.push({ itemId: perAction.itemId, quantity: totalQty });
   }
 

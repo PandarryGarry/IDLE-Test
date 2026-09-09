@@ -5,8 +5,11 @@ import LEGACY_ITEMS from './items.ts';
 import { getAdminConfig } from '../../store/adminConfigStore.ts';
 
 /**
- * Единая точка доступа к предметам: сначала каталог (батч 1),
- * затем легаси-семейства, которые ещё не перенесены (оружие/броня/руны/…).
+ * Единая точка доступа к предметам: каталог (ресурсы + «Сбор» + охота +
+ * снаряжение) с русскими именами и картинками.
+ * Остаток мелворовского легаси-снаряжения (`items.ts`) — только эмодзи/силуэт
+ * без своих картинок — в каталог/админку не попадает (см. `getAllItems`),
+ * но `getItem()` всё ещё достаёт его из сейвов и дропов для совместимости.
  * Замена источника (репозиторий → БД) затрагивает только этот модуль (§8).
  *
  * Админ-настройки применяются здесь же: оверрайды Item + глобальный
@@ -82,7 +85,7 @@ export function getCatalogItems(): Item[] {
 }
 
 export function getAllItems(): Item[] {
-  return [...CATALOG.map(item => getItem(item.id) ?? item), ...Object.values(LEGACY_ITEMS).map(item => getItem(item.id) ?? item)];
+  return CATALOG.map(item => getItem(item.id) ?? item);
 }
 
 export { CATALOG, CATALOG_VERSION, CATALOG_SUMMARY } from './catalog/index.ts';
