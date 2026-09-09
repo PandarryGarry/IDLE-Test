@@ -8,7 +8,7 @@ import { grantItemsToCharacter } from '@/features/admin/adminCharacterSave';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { Minus, Plus, Search, X } from 'lucide-react';
 import { getItemVisual } from '@/shared/icons/itemIcons';
-import { formatTierLabel } from '@/data/balance/gear';
+import { gearQualityLabel } from '@/data/balance/gear';
 import { SquircleSlot } from '@/shared/ui/kit/SquircleSlot';
 import { AdminDropdown } from '@/features/admin/AdminDropdown';
 import {
@@ -19,6 +19,7 @@ import {
   filterValue,
   itemsInBag,
   parseAdminItemBag,
+  sortAdminItems,
 } from '@/features/admin/adminCatalog';
 
 const AdminCatalogCell = memo(function AdminCatalogCell({
@@ -79,7 +80,10 @@ export function AdminItemsPage() {
     return () => window.clearTimeout(t);
   }, [queryDraft]);
 
-  const visible = useMemo(() => filterAdminItems(pool, bag, filters), [pool, bag, filters]);
+  const visible = useMemo(
+    () => sortAdminItems(filterAdminItems(pool, bag, filters), bag),
+    [pool, bag, filters],
+  );
   const selected = selectedId ? catalog.find((i) => i.id === selectedId) ?? getItem(selectedId) ?? null : null;
   const visual = selected ? getItemVisual(selected.id) : null;
 
@@ -186,7 +190,7 @@ export function AdminItemsPage() {
               <strong>{selected.name}</strong>
               <small>
                 {selected.id}
-                {selected.tier ? ` · ${formatTierLabel(selected.tier)}` : ''}
+                {gearQualityLabel(selected) ? ` · ${gearQualityLabel(selected)}` : ''}
                 {typeof selected.maxDurability === 'number' ? ` · прочность ${selected.maxDurability}` : ''}
               </small>
             </div>

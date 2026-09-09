@@ -1,5 +1,5 @@
 import type { Item } from '@/data/types';
-import { formatTierLabel, GEAR_RARITY_RU } from '@/data/balance/gear';
+import { gearQualityLabel, GEAR_RARITY_RU, GEAR_UNIQUE_TAG_RU, isGearUnique } from '@/data/balance/gear';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { getItemRarity } from '@/features/inventory/ItemIcon';
 
@@ -18,15 +18,16 @@ interface GearItemCellProps {
 export function GearItemCell({ item, selected = false, onClick, caption }: GearItemCellProps) {
   const visual = getItemVisual(item.id);
   const rarity = getItemRarity(item.id, item.sellValue, item.equipSlot, item.tier);
-  const tierText = item.tier ? formatTierLabel(item.tier) : '';
+  const unique = isGearUnique(item);
+  const qualityText = gearQualityLabel(item);
   const dur = item.maxDurability;
 
   return (
     <button
       type="button"
-      className={`gear-cell ${selected ? 'is-selected' : ''} is-${rarity}`}
+      className={`gear-cell ${selected ? 'is-selected' : ''} is-${rarity}${unique ? ' is-unique' : ''}`}
       onClick={onClick}
-      title={item.name}
+      title={unique ? `${item.name} — ${GEAR_UNIQUE_TAG_RU}` : item.name}
     >
       <span className="gear-cell__art">
         {visual.type === 'image' ? (
@@ -35,7 +36,11 @@ export function GearItemCell({ item, selected = false, onClick, caption }: GearI
           <span className="gear-cell__emoji">{visual.value}</span>
         )}
       </span>
-      {tierText && <span className="gear-cell__tier">{tierText}</span>}
+      {qualityText && (
+        <span className={`gear-cell__tier${unique ? ' gear-cell__tier--unique' : ''}`}>
+          {qualityText}
+        </span>
+      )}
       {rarity !== 'common' && (
         <span className="gear-cell__rarity" title={GEAR_RARITY_RU[rarity]}>
           {GEAR_RARITY_RU[rarity]}

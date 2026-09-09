@@ -1,12 +1,27 @@
 import type { EquipSlot, GearWeight, Item, ItemCategory, ItemTier } from '../../../../data/types.ts';
-import { ALL_GEAR_TIERS, EQUIP_SLOT_LABELS_RU, GEAR_WEIGHT_NAME_RU } from '../../../../data/balance/gear.ts';
+import {
+  ALL_GEAR_TIERS,
+  EQUIP_SLOT_LABELS_RU,
+  GEAR_WEIGHT_NAME_RU,
+  isGearUnique,
+} from '../../../../data/balance/gear.ts';
 import { GEAR_FAMILY_LABEL_RU } from './gearItems.ts';
+
+/** Отбор по «уникальности»: всё / только тировое / только уники. */
+export type GearUniqueScope = 'all' | 'tiered' | 'unique';
+
+export const GEAR_BROWSE_UNIQUE_SCOPES: readonly { id: GearUniqueScope; label: string }[] = [
+  { id: 'all', label: 'Всё' },
+  { id: 'tiered', label: 'Тировое' },
+  { id: 'unique', label: 'Уникальное' },
+];
 
 export interface GearBrowseFilters {
   query: string;
   slot: EquipSlot | 'all';
   tier: ItemTier | 'all';
   weight: GearWeight | 'all';
+  unique: GearUniqueScope;
 }
 
 export const EMPTY_GEAR_BROWSE: GearBrowseFilters = {
@@ -14,6 +29,7 @@ export const EMPTY_GEAR_BROWSE: GearBrowseFilters = {
   slot: 'all',
   tier: 'all',
   weight: 'all',
+  unique: 'all',
 };
 
 export const GEAR_BROWSE_TIERS: readonly ItemTier[] = ALL_GEAR_TIERS;
@@ -35,6 +51,8 @@ export interface GearBrowseGroup {
   tier: number;
   family: string;
   familyLabel: string;
+  /** Уник-группа: подписывается меткой уника вместо тира и идёт после тировых. */
+  unique: boolean;
   items: Item[];
 }
 
@@ -48,10 +66,14 @@ export function familyLabelOf(item: Item): string {
 
 export function itemMatchesGearBrowse(item: Item, f: GearBrowseFilters): boolean {
   if (f.slot !== 'all' && item.equipSlot !== f.slot) return false;
-  if (f.tier !== 'all' && (item.tier ?? 0) !== f.tier) return false;
   if (f.weight !== 'all') {
     if (item.gearWeight !== f.weight) return false;
   }
+  const unique = isGearUnique(item);
+  if (f.unique === 'unique' && !unique) return false;
+  if (f.unique === 'tiered' && unique) return false;
+  // Тир уника — внутренний (игроку показываем метку «Уник.»), тировый фильтр его не ловит.
+  if (f.tier !== 'all' && (unique || (item.tier ?? 0) !== f.tier)) return false;
   const q = f.query.trim().toLowerCase();
   if (q) {
     const family = familyLabelOf(item).toLowerCase();
@@ -76,8 +98,15 @@ function slotRank(slot: EquipSlot | undefined): number {
   return i < 0 ? 800 : i;
 }
 
+/** Порядок слота в фасовке — наружу, чтобы админ-каталог сортировал так же. */
+export function slotRankOf(slot: EquipSlot | undefined): number {
+  return slotRank(slot);
+}
+
 /**
  * Фасовка «слот → тир → семья». Предметы без слота экипа в группировку не входят.
+ * Уники внутри слота идут отдельными группами ПОСЛЕ тировых и подписываются
+ * меткой уника (см. `GEAR_UNIQUE_TAG_RU`), а не «Тир N».
  */
 export function groupGearItems(items: readonly Item[]): GearBrowseGroup[] {
   const buckets = new Map<string, GearBrowseGroup>();
@@ -85,7 +114,8 @@ export function groupGearItems(items: readonly Item[]): GearBrowseGroup[] {
     if (!it.equipSlot) continue;
     const family = it.gearFamily ?? it.gearWeight ?? 'misc';
     const tier = it.tier ?? 0;
-    const key = `${it.equipSlot}|${tier}|${family}`;
+    const unique = isGearUnique(it);
+    const key = `${it.equipSlot}|${unique ? 'u' : 't'}|${tier}|${family}`;
     let g = buckets.get(key);
     if (!g) {
       g = {
@@ -94,6 +124,7 @@ export function groupGearItems(items: readonly Item[]): GearBrowseGroup[] {
         tier,
         family,
         familyLabel: familyLabelOf(it),
+        unique,
         items: [],
       };
       buckets.set(key, g);
@@ -103,6 +134,7 @@ export function groupGearItems(items: readonly Item[]): GearBrowseGroup[] {
   return [...buckets.values()].sort((a, b) => {
     const sr = slotRank(a.slot) - slotRank(b.slot);
     if (sr !== 0) return sr;
+    if (a.unique !== b.unique) return a.unique ? 1 : -1;
     if (a.tier !== b.tier) return a.tier - b.tier;
     return a.familyLabel.localeCompare(b.familyLabel, 'ru');
   });

@@ -3,6 +3,7 @@ import { getItem } from '@/domain/items';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { getItemTier } from '@/components/modals/UniversalInfoModal';
 import { getItemRarity } from '@/features/inventory/ItemIcon';
+import { isGearUnique } from '@/data/balance/gear';
 import { formatNumber } from '@/lib/utils';
 import { TierBadge } from '@/shared/ui/kit/TierBadge';
 
@@ -41,6 +42,7 @@ export function SquircleSlot({ itemId, quantity, locked = false, isEmptyPlacehol
 
   const item   = getItem(itemId);
   const tier   = item ? getItemTier(itemId, item) : 'T1';
+  const unique = isGearUnique(item);
   const rarity = item ? getItemRarity(itemId, item.sellValue, item.equipSlot, item.tier) : 'common';
   const visual = getItemVisual(itemId);
   const dotColor = RARITY_DOT[rarity] ?? RARITY_DOT.common;
@@ -48,9 +50,9 @@ export function SquircleSlot({ itemId, quantity, locked = false, isEmptyPlacehol
   return (
     <button type="button" onClick={onClick} className={`g-slot${selected ? ' is-selected' : ''} ${className}`}>
 
-      {/* Tier badge */}
+      {/* Tier badge / метка уника */}
       <span style={{ position: 'absolute', top: 3, left: 4, zIndex: 10 }}>
-        <TierBadge tier={tier} size="sm" />
+        <TierBadge tier={tier} size="sm" unique={unique} />
       </span>
 
       {/* Rarity dot */}

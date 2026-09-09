@@ -5066,6 +5066,38 @@
 .gear-cell.is-legendary { border-color: var(--accent-gold-light); }
 .gear-cell.is-mythic { border-color: var(--accent-ruby); }
 
+/* Уникальная экипировка: вместо «Тир N» — залитая золотом метка «Уник.»
+   и тонкое золотое кольцо внутри ячейки (цвет редкости при этом остаётся). */
+.gear-cell__tier--unique {
+  border-color: var(--accent-gold-light);
+  background: var(--accent-gold);
+  color: var(--accent-gold-bg);
+  letter-spacing: 0.06em;
+}
+
+.gear-cell.is-unique {
+  box-shadow: var(--shadow-slot), inset 0 0 0 1px var(--accent-gold-light);
+}
+
+.gear-cell.is-unique.is-selected {
+  box-shadow: var(--shadow-gold), inset 0 0 0 1px var(--accent-gold-light);
+}
+
+.gear-browse__head-uniq {
+  color: var(--accent-gold-light);
+}
+
+.gear-browse__group--unique .gear-browse__head {
+  color: var(--text-gold);
+}
+
+/* Бейдж ячейки (админ-сетка, мини-сумка) у уника — залитое золото. */
+.tier-badge--unique {
+  background: var(--accent-gold);
+  color: var(--accent-gold-bg);
+  border-color: var(--accent-gold-light);
+}
+
 .gear-cell__dur {
   font-family: var(--app-font-mono);
   font-size: 9px;

@@ -1,16 +1,24 @@
 import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import type { EquipSlot, GearWeight, Item, ItemTier } from '@/data/types';
-import { EQUIP_SLOT_LABELS_RU, formatTierLabel, GEAR_WEIGHT_NAME_RU } from '@/data/balance/gear';
+import {
+  EQUIP_SLOT_LABELS_RU,
+  formatTierLabel,
+  GEAR_UNIQUE_TAG_RU,
+  GEAR_WEIGHT_NAME_RU,
+  isGearUnique,
+} from '@/data/balance/gear';
 import {
   EMPTY_GEAR_BROWSE,
   filterGearItems,
   GEAR_BROWSE_TIERS,
+  GEAR_BROWSE_UNIQUE_SCOPES,
   GEAR_BROWSE_WEIGHTS,
   groupGearItems,
   groupLooseItems,
   slotsPresent,
   type GearBrowseFilters,
+  type GearUniqueScope,
 } from '@/domain/items/catalog/gear/gearBrowse';
 import { GearItemCell } from '@/shared/ui/kit/GearItemCell';
 
@@ -35,6 +43,7 @@ export function GearCatalogBrowser({ items, selectedId, onSelect }: GearCatalogB
   const slots = useMemo(() => slotsPresent(scoped), [scoped]);
   const hasWeight = useMemo(() => scoped.some((it) => Boolean(it.gearWeight)), [scoped]);
   const hasTiers = useMemo(() => scoped.some((it) => typeof it.tier === 'number'), [scoped]);
+  const hasUniques = useMemo(() => scoped.some(isGearUnique), [scoped]);
   const hasBoth = useMemo(
     () => items.some((it) => it.equipSlot) && items.some((it) => !it.equipSlot),
     [items],
@@ -47,6 +56,8 @@ export function GearCatalogBrowser({ items, selectedId, onSelect }: GearCatalogB
   const setSlot = (slot: EquipSlot | 'all') => setFilters((f) => ({ ...f, slot }));
   const setTier = (tier: ItemTier | 'all') => setFilters((f) => ({ ...f, tier }));
   const setWeight = (weight: GearWeight | 'all') => setFilters((f) => ({ ...f, weight }));
+  const setUnique = (unique: GearUniqueScope) =>
+    setFilters((f) => ({ ...f, unique, tier: unique === 'unique' ? 'all' : f.tier }));
 
   return (
     <div className="gear-browse">
@@ -101,7 +112,22 @@ export function GearCatalogBrowser({ items, selectedId, onSelect }: GearCatalogB
         </div>
       )}
 
-      {hasTiers && (
+      {hasUniques && (
+        <div className="gear-browse__pills" role="tablist" aria-label="Уникальное">
+          {GEAR_BROWSE_UNIQUE_SCOPES.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className={filters.unique === s.id ? 'is-on' : ''}
+              onClick={() => setUnique(s.id)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {hasTiers && filters.unique !== 'unique' && (
         <div className="gear-browse__pills" role="tablist" aria-label="Тир">
           <button
             type="button"
@@ -147,10 +173,17 @@ export function GearCatalogBrowser({ items, selectedId, onSelect }: GearCatalogB
 
       <div className="gear-browse__scroll">
         {groups.map((g) => (
-          <section key={`${g.slot}-${g.tier}-${g.family}`} className="gear-browse__group">
+          <section
+            key={`${g.slot}-${g.unique ? 'u' : 't'}-${g.tier}-${g.family}`}
+            className={`gear-browse__group${g.unique ? ' gear-browse__group--unique' : ''}`}
+          >
             <header className="gear-browse__head">
               <span>{g.slotLabel}</span>
-              {g.tier > 0 && <span>{formatTierLabel(g.tier as ItemTier)}</span>}
+              {g.unique ? (
+                <span className="gear-browse__head-uniq">{GEAR_UNIQUE_TAG_RU}</span>
+              ) : (
+                g.tier > 0 && <span>{formatTierLabel(g.tier as ItemTier)}</span>
+              )}
               <span>{g.familyLabel}</span>
               <em>{g.items.length}</em>
             </header>

@@ -17,6 +17,7 @@ import {
   gearTierScale,
   gearMaxDurability,
   scaleTierMap,
+  isJewelUniqueIndex,
   uniqueVariantTier,
   uniqueSpice,
   ammoVariantTier,
@@ -134,19 +135,26 @@ function buildWeapons(tiers: readonly ItemTier[]): CatalogItem[] {
   return out;
 }
 
-/** Украшения: стихии v01–v15 на тиры по канону §7-1. */
+/**
+ * Украшения: стихии v01–v15 (кольца/браслеты — v01–v10) на тиры по канону §7-1.
+ * Последние `GEAR_UNIQUE_JEWEL_COUNT` вариантов каждой семьи — УНИКАЛЬНЫЕ:
+ * у них нет тировой подписи, и в фасовке они идут категорией «Уникальное».
+ */
 function buildJewels(): CatalogItem[] {
   const out: CatalogItem[] = [];
   for (const j of GEAR_JEWELS) {
     const isRingPair = j.folder === 'rings_l' || j.folder === 'rings_r'
       || j.folder === 'bracelets_l' || j.folder === 'bracelets_r';
-    for (const el of GEAR_JEWEL_ELEMENTS) {
-      if (isRingPair && !el.rings) continue;
+    const elements = GEAR_JEWEL_ELEMENTS.filter((el) => !isRingPair || el.rings);
+    elements.forEach((el, index) => {
+      const unique = isJewelUniqueIndex(index, elements.length);
       const bonuses = scaleTierMap(j.tier1, el.tier);
       out.push({
         id: `gear_${j.folder}_${el.variant}`,
         name: `${j.slotNameRu} ${el.genitiveRu}`,
-        description: `${j.roleRu} Стихия: ${el.nameRu}, тир ${el.tier}.`,
+        description: unique
+          ? `Уникальное украшение: ${el.nameRu.toLowerCase()}. ${j.roleRu}`
+          : `${j.roleRu} Стихия: ${el.nameRu}, тир ${el.tier}.`,
         category: (j.slot === 'ring2' ? 'ring' : j.slot === 'bracelet2' ? 'bracelet' : j.slot) as ItemCategory,
         equipSlot: j.slot,
         tier: el.tier,
@@ -157,8 +165,9 @@ function buildJewels(): CatalogItem[] {
         iconPath: `jewelry/${j.folder}/${el.variant}`,
         maxDurability: gearMaxDurability('jewel', el.tier),
         gearFamily: el.family,
+        gearUnique: unique,
       });
-    }
+    });
   }
   return out;
 }
@@ -185,7 +194,7 @@ function buildUniques(): CatalogItem[] {
       out.push({
         id: `gear_unique_${folder}_${variant}`,
         name: `${epithet} ${w.nameRu}`,
-        description: `Уникальный ${w.nameRu.toLowerCase()}. ${w.roleRu} Тир ${tier}, материал: ${material}. Основной удар не выше обычного тира 12 этой семьи.`,
+        description: `Уникальный ${w.nameRu.toLowerCase()}. ${w.roleRu} Материал: ${material}. Основной удар не выше обычного тира 12 этой семьи.`,
         category: w.slot,
         equipSlot: w.slot,
         twoHanded: w.twoHanded,
@@ -197,6 +206,7 @@ function buildUniques(): CatalogItem[] {
         iconPath: `weapons/unique/${folder}/${variant}`,
         maxDurability: gearMaxDurability(kind, tier),
         gearFamily: `unique_${folder}`,
+        gearUnique: true,
       });
     }
   }

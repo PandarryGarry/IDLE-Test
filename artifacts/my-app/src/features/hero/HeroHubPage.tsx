@@ -43,10 +43,12 @@ import { EQUIP_SLOT_LABELS_RU, formatTierLabel, GEAR_WEIGHT_NAME_RU } from '@/da
 import {
   EMPTY_GEAR_BROWSE,
   GEAR_BROWSE_TIERS,
+  GEAR_BROWSE_UNIQUE_SCOPES,
   GEAR_BROWSE_WEIGHTS,
   itemMatchesGearBrowse,
   slotsPresent,
   type GearBrowseFilters,
+  type GearUniqueScope,
 } from '@/domain/items/catalog/gear/gearBrowse';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { getLiveGearSets, loadGearSet, saveGearSet } from '@/domain/items/gearSets';
@@ -108,15 +110,19 @@ const GEAR_LEFT_COL1: EquipSlotDef[] = [
   { slot: 'shield', label: 'Щит' },
 ];
 
-/** Слева 2-я колонка: аксессуары и украшения (7 слотов) */
+/**
+ * Слева 2-я колонка: аксессуары и украшения (7 слотов).
+ * Порядок — по договорённости с владельцем: браслеты стоят рядом со штанами
+ * (строка 3), а плащ — в самой нижней ячейке, рядом со щитом.
+ */
 const GEAR_LEFT_COL2: EquipSlotDef[] = [
   { slot: 'amulet', label: 'Ожерелье' },
   { slot: 'belt', label: 'Пояс' },
-  { slot: 'cape', label: 'Плащ' },
-  { slot: 'ring', label: 'Кольцо 1' },
-  { slot: 'ring2', label: 'Кольцо 2' },
   { slot: 'bracelet', label: 'Браслет 1' },
   { slot: 'bracelet2', label: 'Браслет 2' },
+  { slot: 'ring', label: 'Кольцо 1' },
+  { slot: 'ring2', label: 'Кольцо 2' },
+  { slot: 'cape', label: 'Плащ' },
 ];
 
 import { Swords, Shield, Sparkles, Package, Save, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -677,15 +683,31 @@ function GearModule({
         </select>
         <select
           className="hero-gear2__browse-select"
-          value={browse.tier === 'all' ? 'all' : String(browse.tier)}
-          onChange={e => patchBrowse({ tier: e.target.value === 'all' ? 'all' : Number(e.target.value) as ItemTier })}
-          aria-label="Тир"
+          value={browse.unique}
+          onChange={e => {
+            const unique = e.target.value as GearUniqueScope;
+            patchBrowse({ unique, tier: unique === 'unique' ? 'all' : browse.tier });
+          }}
+          aria-label="Уникальное"
         >
-          <option value="all">Тир</option>
-          {GEAR_BROWSE_TIERS.map(t => (
-            <option key={t} value={t}>{formatTierLabel(t)}</option>
+          <option value="all">Вид</option>
+          {GEAR_BROWSE_UNIQUE_SCOPES.filter(s => s.id !== 'all').map(s => (
+            <option key={s.id} value={s.id}>{s.label}</option>
           ))}
         </select>
+        {browse.unique !== 'unique' && (
+          <select
+            className="hero-gear2__browse-select"
+            value={browse.tier === 'all' ? 'all' : String(browse.tier)}
+            onChange={e => patchBrowse({ tier: e.target.value === 'all' ? 'all' : Number(e.target.value) as ItemTier })}
+            aria-label="Тир"
+          >
+            <option value="all">Тир</option>
+            {GEAR_BROWSE_TIERS.map(t => (
+              <option key={t} value={t}>{formatTierLabel(t)}</option>
+            ))}
+          </select>
+        )}
         <select
           className="hero-gear2__browse-select"
           value={browse.weight}
