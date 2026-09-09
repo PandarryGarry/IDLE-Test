@@ -300,6 +300,158 @@
   filter: drop-shadow(0 1px 2px rgba(25,12,3,0.45));
 }
 
+/* ═══════════════════════════════════════════════════════════
+   ЕДИНАЯ ЯЧЕЙКА ПРЕДМЕТА (.item-cell) — используется во всех окнах.
+   Бирка тира/уника — справа-сверху; точка редкости — слева-сверху.
+   ═══════════════════════════════════════════════════════════ */
+.item-cell {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--slot-wood);
+  box-shadow: var(--shadow-slot-wood);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.item-cell:hover {
+  background: var(--slot-wood-hover);
+}
+
+.item-cell:active {
+  transform: translateY(1px);
+}
+
+.item-cell.is-selected {
+  box-shadow: var(--shadow-slot-wood), 0 0 0 2px var(--border-accent), var(--shadow-gold);
+}
+
+.item-cell.is-compatible {
+  box-shadow: var(--shadow-slot-wood), 0 0 0 1px var(--accent-emerald);
+}
+
+.item-cell.is-matching {
+  box-shadow: var(--shadow-slot-wood), 0 0 0 2px var(--accent-gold-light);
+}
+
+.item-cell.is-dimmed {
+  opacity: 0.55;
+}
+
+.item-cell--empty {
+  background: var(--slot-wood);
+}
+
+.item-cell--locked {
+  background: var(--slot-wood-locked);
+  cursor: not-allowed;
+}
+
+/* Бирка тира/уника — всегда ПРАВЫЙ верхний угол */
+.item-cell__badge {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  z-index: 10;
+  line-height: 1;
+}
+
+/* Точка редкости — ЛЕВЫЙ верхний угол */
+.item-cell__dot {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 10;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Иконка по центру */
+.item-cell__art {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16%;
+  color: #f0d6ab;
+  pointer-events: none;
+}
+
+.item-cell__art img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 3px rgba(45, 31, 15, 0.25));
+}
+
+.item-cell__emoji {
+  font-size: 1.6rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 3px rgba(45, 31, 15, 0.2));
+}
+
+.item-cell__vector {
+  width: 62%;
+  height: 62%;
+  color: #f0d6ab;
+  filter: drop-shadow(0 1px 2px rgba(25, 12, 3, 0.45));
+}
+
+/* Прочность — снизу-слева */
+.item-cell__dur {
+  position: absolute;
+  bottom: 3px;
+  left: 4px;
+  z-index: 10;
+  font-family: var(--app-font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--text-gold);
+  line-height: 1;
+}
+
+/* Количество — снизу-справа */
+.item-cell__qty {
+  position: absolute;
+  bottom: 3px;
+  right: 4px;
+  z-index: 10;
+  font-family: var(--app-font-mono);
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--text-light);
+  line-height: 1;
+  background: rgba(20, 10, 0, 0.85);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+/* Подпись (пикер) */
+.item-cell__name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2px;
+  z-index: 5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 4px;
+  font-size: 8px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
 /* Кнопки */
 .g-btn-primary {
   background: linear-gradient(180deg, #c8880a 0%, #a06808 100%);

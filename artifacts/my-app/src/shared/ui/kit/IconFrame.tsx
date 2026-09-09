@@ -70,15 +70,15 @@ export function IconFrame({
       className={`relative inline-flex items-center justify-center shrink-0 select-none transition-all duration-150 overflow-visible ${sizeStyle.frame} ${shapeStyle} ${variantStyle} ${className}`}
       {...props}
     >
-      {/* Top-Left: Tier badge if present */}
+      {/* Top-Right: Tier badge (единый стандарт: тир/уник — справа-сверху) */}
       {tier && (
-        <span className="absolute -top-1 -left-1 z-10">
+        <span className="absolute -top-1 -right-1 z-10">
           <TierBadge tier={tier} size="sm" />
         </span>
       )}
 
-      {/* Top-Right: Rarity Dot or Lock icon */}
-      <div className="absolute top-1 right-1.5 z-10 flex items-center">
+      {/* Top-Left: Rarity Dot or Lock icon */}
+      <div className="absolute top-1 left-1.5 z-10 flex items-center">
         {locked ? (
           <Lock className="w-2.5 h-2.5 text-amber-400" />
         ) : rarityDotColor ? (
