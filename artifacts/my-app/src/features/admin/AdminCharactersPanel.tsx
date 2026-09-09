@@ -71,6 +71,13 @@ function categoryLabel(id: string): string {
   return CATEGORY_RU[id] ?? id;
 }
 
+/** Римский номер тира для метки «Тир N» (1–12). */
+const ROMAN: string[] = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+function tierLabel(t?: number): string {
+  if (!t || t < 1 || t > ROMAN.length - 1) return '';
+  return ROMAN[t];
+}
+
 const EQUIP_SLOTS = Object.keys(EMPTY_EQUIPMENT) as EquipSlot[];
 
 /** Стартовый тир-1 комплект для быстрой проверки «Экип» (оружие+броня+бижа). */
@@ -285,15 +292,24 @@ function ItemPickerModal({
               title={it.name}
               style={{
                 ...CARD, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
-                padding: '10px 6px 8px', cursor: 'pointer',
-                outline: selected === it.id ? `2px solid ${C.accent}` : 'none',
-                outlineOffset: 1,
+                padding: '9px 6px 8px', cursor: 'pointer',
+                // Выделение рисуем ВНУТРИ округлой карточки (inset-кольцо), а не
+                // `outline` — иначе рамка вылезает за скругление и уходит в бок.
+                boxShadow: selected === it.id
+                  ? `inset 0 0 0 2px ${C.accent}, inset 0 0 8px rgba(240,192,48,0.25)`
+                  : undefined,
+                borderColor: selected === it.id ? C.accent : undefined,
               }}
             >
               <AdminItemIcon itemId={it.id} size={32} />
               <span style={{ width: '100%', textAlign: 'center', fontSize: 10, fontWeight: 600, color: C.textSecondary, lineHeight: 1.25, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                 {it.name}
               </span>
+              {(it.tier || it.equipSlot) && (
+                <span style={{ width: '100%', textAlign: 'center', fontSize: 9, fontWeight: 800, fontFamily: 'var(--app-font-mono)', color: it.tier ? '#f0c030' : C.textMuted, lineHeight: 1.2 }}>
+                  {it.tier ? `Тир ${tierLabel(it.tier)}` : ''}{it.tier && it.equipSlot ? ' · ' : ''}{it.equipSlot ? EQUIP_SLOT_LABELS[it.equipSlot] : ''}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -310,7 +326,9 @@ function ItemPickerModal({
               <AdminItemIcon itemId={selectedItem.id} size={44} />
               <div style={{ flex: 1, minWidth: 120 }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{selectedItem.name}</div>
-                <div style={{ fontSize: 11, fontFamily: 'var(--app-font-mono)', color: C.textMuted }}>{selectedItem.id} · {categoryLabel(selectedItem.category)} · {selectedItem.sellValue} GP</div>
+                <div style={{ fontSize: 11, fontFamily: 'var(--app-font-mono)', color: C.textMuted }}>
+                  {selectedItem.id}{selectedItem.tier ? ` · Тир ${tierLabel(selectedItem.tier)}` : ''} · {categoryLabel(selectedItem.category)} · {selectedItem.sellValue} GP
+                </div>
               </div>
             </>
           ) : (
@@ -895,28 +913,31 @@ export function AdminCharactersPanel() {
       {/* ── Снаряжение ── */}
       {tab === 'equipment' && (
         <div style={{ ...CARD, padding: 12 }}>
-          <p style={{ fontSize: 12, color: C.textSecondary, marginBottom: 10 }}>Выбери слот, чтобы назначить предмет из каталога. Клик по занятому слоту — сменить, кнопка «снять» — освободить.</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+          <p style={{ fontSize: 12, color: C.textSecondary, marginBottom: 10 }}>Клик по слоту — выбрать/сменить предмет из каталога. Крестик на занятом слоте — снять.</p>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-2">
             {EQUIP_SLOTS.map(slot => {
               const eqId = draft.player.equipment[slot];
               const eq = eqId ? getItem(eqId) : null;
               return (
-                <div key={slot} style={{ ...CARD, background: C.slot, padding: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                    <AdminItemIcon itemId={eqId ?? ''} size={34} />
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: 10, ...LABEL, marginBottom: 2 }}>{EQUIP_SLOT_LABELS[slot]}</div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: eq ? C.text : C.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {eq?.name ?? (eqId ? eqId : 'пусто')}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                    <button type="button" onClick={() => setPicker({ mode: 'equip', equipSlot: slot })} className={BTN} style={{ ...BTN_SECONDARY, flex: 1 }}>
-                      {eq ? 'Сменить' : 'Надеть'}
+                <div key={slot} style={{ ...CARD, background: C.slot, padding: 8, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center' }}>
+                  {eq && (
+                    <button type="button" onClick={() => unequipItem(slot)} className={BTN} style={{ ...BTN_MUTED, position: 'absolute', top: 4, right: 4, padding: 3, borderRadius: 6 }} title={`Снять: ${eq.name ?? eqId}`} aria-label={`Снять ${EQUIP_SLOT_LABELS[slot]}`}>
+                      <Trash2 size={11} />
                     </button>
-                    {eq && <button type="button" onClick={() => unequipItem(slot)} className={BTN} style={BTN_MUTED} title="Снять"><Trash2 size={13} /></button>}
-                  </div>
+                  )}
+                  <button type="button" onClick={() => setPicker({ mode: 'equip', equipSlot: slot })} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}>
+                    <AdminItemIcon itemId={eqId ?? ''} size={34} />
+                    <span style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: C.textMuted, fontFamily: 'var(--app-font-mono)' }}>{EQUIP_SLOT_LABELS[slot]}</span>
+                    <span style={{ maxWidth: '100%', fontSize: 10, fontWeight: 700, color: eq ? C.text : '#6b5a3d', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
+                      {eq?.name ?? 'пусто'}
+                    </span>
+                    {eq?.tier && (
+                      <span style={{ fontSize: 9, fontWeight: 900, fontFamily: 'var(--app-font-mono)', color: '#f0c030' }}>Тир {tierLabel(eq.tier)}</span>
+                    )}
+                    {!eq && (
+                      <span className={BTN} style={{ ...BTN_SECONDARY, padding: '3px 8px', fontSize: 10 }}>Надеть</span>
+                    )}
+                  </button>
                 </div>
               );
             })}
