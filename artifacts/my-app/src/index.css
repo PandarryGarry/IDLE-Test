@@ -5264,8 +5264,44 @@
   pointer-events: none;
 }
 
+.admin-grant--pane {
+  position: static;
+  width: 100%;
+  margin-top: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  flex-direction: column;
+  align-items: stretch;
+}
 
-
+/* ── Админка NUI: рейл + подменю + сцена ── */
+.admin-nui {
+  display: grid;
+  grid-template-columns: 72px 168px minmax(0, 1fr);
+  min-height: min(78vh, 820px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  background: var(--bg-header);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.admin-nui:not(:has(.admin-nui__sub)) {
+  grid-template-columns: 72px minmax(0, 1fr);
+}
+.admin-nui__rail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 8px;
+  border-right: 1px solid var(--border-sidebar);
+  background: #1a0e06;
+}
+.admin-nui__icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 3px;
   width: 100%;
   padding: 8px 4px;
@@ -5617,51 +5653,3 @@
     min-height: 0;
   }
 }
-
-.hero-gear2__browse {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
-}
-
-.hero-gear2__browse-search,
-.hero-gear2__browse-select {
-  min-width: 0;
-  height: 22px;
-  padding: 0 6px;
-  border: 1px solid var(--border-default);
-  border-radius: 6px;
-  background: var(--bg-slot);
-  color: var(--text-light);
-  font-family: var(--app-font-mono);
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.hero-gear2__browse-search {
-  flex: 1 1 72px;
-}
-
-.hero-gear2__browse-select {
-  flex: 0 0 auto;
-  max-width: 88px;
-}
-
-.hero-sq-slot__dur {
-  position: absolute;
-  bottom: 2px;
-  left: 3px;
-  z-index: 10;
-  padding: 1px 3px;
-  border-radius: 3px;
-  background: var(--bg-header);
-  color: var(--text-gold);
-  font-family: var(--app-font-mono);
-  font-size: 8px;
-  font-weight: 800;
-  line-height: 1;
-  pointer-events: none;
-}
-
-
