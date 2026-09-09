@@ -354,13 +354,15 @@
   cursor: not-allowed;
 }
 
-/* Бирка тира/уника — всегда ПРАВЫЙ верхний угол */
+/* Бирка тира/уника — всегда ПРАВЫЙ верхний угол, «наклеена» на рамку
+   снаружи, чтобы НЕ наезжать на иконку предмета. */
 .item-cell__badge {
   position: absolute;
-  top: 3px;
-  right: 4px;
+  top: -6px;
+  right: -6px;
   z-index: 10;
   line-height: 1;
+  filter: drop-shadow(0 1px 3px rgba(20, 10, 2, 0.55));
 }
 
 /* Точка редкости — ЛЕВЫЙ верхний угол */
@@ -418,6 +420,7 @@
   font-weight: 800;
   color: var(--text-gold);
   line-height: 1;
+  text-shadow: 0 1px 2px rgba(20, 10, 0, 0.9), 0 0 4px rgba(20, 10, 0, 0.7);
 }
 
 /* Количество — снизу-справа */
