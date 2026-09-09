@@ -14,6 +14,7 @@ interface SquircleSlotProps {
   size?: 'sm' | 'md' | 'lg';
   onClick?: () => void;
   className?: string;
+  selected?: boolean;
 }
 
 /* Ячейки у всех одинаковые — плоский «каштан» без рамки.
@@ -27,7 +28,7 @@ const RARITY_DOT: Record<string, string> = {
   mythic:    '#f87171',
 };
 
-export function SquircleSlot({ itemId, quantity, locked = false, isEmptyPlaceholder = false, size = 'md', onClick, className = '' }: SquircleSlotProps) {
+export function SquircleSlot({ itemId, quantity, locked = false, isEmptyPlaceholder = false, size = 'md', onClick, className = '', selected = false }: SquircleSlotProps) {
 
   /* Пустая ячейка */
   if (isEmptyPlaceholder || !itemId) {
@@ -45,7 +46,7 @@ export function SquircleSlot({ itemId, quantity, locked = false, isEmptyPlacehol
   const dotColor = RARITY_DOT[rarity] ?? RARITY_DOT.common;
 
   return (
-    <button type="button" onClick={onClick} className={`g-slot ${className}`}>
+    <button type="button" onClick={onClick} className={`g-slot${selected ? ' is-selected' : ''} ${className}`}>
 
       {/* Tier badge */}
       <span style={{ position: 'absolute', top: 3, left: 4, zIndex: 10 }}>
