@@ -52,8 +52,8 @@ export function AdminItemsPage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Правки предметов из админки обновляют каталог через getItem()/getAllItems().
-  // getAllItems() объединяет каталог (ресурсы/сбор) с легаси-семействами,
-  // включая снаряжение: оружие, шлемы, нагрудники и щиты. Дубли по id не показываем.
+  // getAllItems() отдаёт только настоящий каталог (ресурсы/сбор/снаряжение) —
+  // все предметы с реальными картинками; легаси без своих картинок сюда не входит.
   const itemOverrides = useAdminConfigStore(s => s.itemOverrides);
   const catalog = useMemo(() => {
     const seen = new Set<string>();

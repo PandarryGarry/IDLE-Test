@@ -1,7 +1,6 @@
 import React from 'react';
 import { getItem } from '@/domain/items';
 import { getItemVisual } from '@/shared/icons/itemIcons';
-import { EquipSlotSilhouette } from '@/shared/icons/EquipSlotIcons';
 import { getItemTier } from '@/components/modals/UniversalInfoModal';
 import { getItemRarity } from '@/features/inventory/ItemIcon';
 import { formatNumber } from '@/lib/utils';
@@ -64,12 +63,10 @@ export function SquircleSlot({ itemId, quantity, locked = false, isEmptyPlacehol
       )}
 
       {/* Содержимое — 78% ячейки, строго по центру.
-          Снаряжение рисуем векторным силуэтом (без светлого квадрата-подложки),
-          прочее — эмодзи/иконка. */}
+          Всегда показываем настоящую картинку предмета (`iconPath` → WebP);
+          эмодзи остаётся только там, где своей картинки у предмета нет. */}
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16%', color: '#f0d6ab' }}>
-        {item?.equipSlot ? (
-          <EquipSlotSilhouette slot={item.equipSlot} className="g-slot__vec" />
-        ) : visual.type === 'image' ? (
+        {visual.type === 'image' ? (
           <img src={visual.value} alt={item?.name ?? ''} loading="lazy"
             style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(45,31,15,0.25))' }} />
         ) : (
