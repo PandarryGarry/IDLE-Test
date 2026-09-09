@@ -50,15 +50,15 @@ export function SquircleSlot({ itemId, quantity, locked = false, isEmptyPlacehol
   return (
     <button type="button" onClick={onClick} className={`g-slot${selected ? ' is-selected' : ''} ${className}`}>
 
-      {/* Tier badge / метка уника */}
-      <span style={{ position: 'absolute', top: 3, left: 4, zIndex: 10 }}>
+      {/* Tier / уник badge — всегда справа-сверху (едино на всех экранах) */}
+      <span style={{ position: 'absolute', top: 3, right: 4, zIndex: 10 }}>
         <TierBadge tier={tier} size="sm" unique={unique} />
       </span>
 
-      {/* Rarity dot */}
+      {/* Rarity dot — слева-сверху */}
       {rarity !== 'common' && (
         <span style={{
-          position: 'absolute', top: 4, right: 4, zIndex: 10,
+          position: 'absolute', top: 4, left: 4, zIndex: 10,
           width: 6, height: 6, borderRadius: '50%',
           background: dotColor,
           boxShadow: `0 0 6px ${dotColor}`,

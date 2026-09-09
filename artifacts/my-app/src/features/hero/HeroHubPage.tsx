@@ -842,7 +842,7 @@ function HeroEquipSlotCard({
       title={ghostLeft ? `${slotDef.label} · двуручное` : `${item?.name ?? ''} (${slotDef.label})`}
     >
       {tier && (
-        <span style={{ position: 'absolute', top: 3, left: 4, zIndex: 10 }}>
+        <span style={{ position: 'absolute', top: 3, right: 4, zIndex: 10 }}>
           <TierBadge tier={tier} size="sm" unique={isGearUnique(item)} />
         </span>
       )}
@@ -904,7 +904,7 @@ function HeroBagSlotCard({
       title={`${item.name} · ${GEAR_LABEL[equipSlot] ?? equipSlot}`}
     >
       {tier && (
-        <span style={{ position: 'absolute', top: 3, left: 4, zIndex: 10 }}>
+        <span style={{ position: 'absolute', top: 3, right: 4, zIndex: 10 }}>
           <TierBadge tier={tier} size="sm" unique={isGearUnique(item)} />
         </span>
       )}
