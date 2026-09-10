@@ -2,36 +2,12 @@
  * Централизованный реестр иконок и ассетов предметов.
  *
  * Предметы каталога рисуются своей картинкой (`iconPath` → `iconUrl()`).
- * Ниже — только эмодзи-фолбэки снаряжения, которое ещё не привязано
- * к картинкам тиров. Реестры удалённых мелворовских семейств
- * (брёвна/руда/рыба/руны/кости/…) вычищены вместе с семействами.
+ * Эмодзи-фолбэки мелворовского легаси-снаряжения удалены вместе с самим
+ * легаси (шаг 7 аудита): старые сейвы мигрирует `legacyMigration.ts`.
  */
 
 export const ITEM_IMAGE_URLS: Record<string, string> = {
   // Точечные переопределения «id → картинка» (пока пусто).
-};
-
-// Эмодзи-фоллбэки снаряжения (живёт в `domain/items/items.ts`).
-export const EQUIPMENT_ICONS: Record<string, string> = {
-  bronze_dagger: '🗡️', bronze_sword: '⚔️', bronze_battleaxe: '🪓', bronze_2h_sword: '⚔️', bronze_scimitar: '🗡️',
-  iron_dagger: '🗡️', iron_sword: '⚔️', iron_battleaxe: '🪓', iron_2h_sword: '⚔️', iron_scimitar: '🗡️',
-  steel_dagger: '🗡️', steel_sword: '⚔️', steel_battleaxe: '🪓', steel_2h_sword: '⚔️', steel_scimitar: '🗡️',
-  mithril_dagger: '🗡️', mithril_sword: '⚔️', mithril_battleaxe: '🪓', mithril_2h_sword: '⚔️', mithril_scimitar: '🗡️',
-  adamantite_dagger: '🗡️', adamantite_sword: '⚔️', adamantite_battleaxe: '🪓', adamantite_2h_sword: '⚔️', adamantite_scimitar: '🗡️',
-  runite_dagger: '🗡️', runite_sword: '⚔️', runite_battleaxe: '🪓', runite_2h_sword: '⚔️', runite_scimitar: '🗡️',
-  dragon_dagger: '🗡️', dragon_sword: '⚔️', dragon_battleaxe: '🪓', dragon_2h_sword: '⚔️', dragon_scimitar: '🗡️',
-
-  bronze_helmet: '🪖', bronze_platebody: '🛡️', bronze_platelegs: '👖', bronze_boots: '👢', bronze_shield: '🛡️', bronze_gloves: '🧤',
-  iron_helmet: '🪖', iron_platebody: '🛡️', iron_platelegs: '👖', iron_boots: '👢', iron_shield: '🛡️', iron_gloves: '🧤',
-  steel_helmet: '🪖', steel_platebody: '🛡️', steel_platelegs: '👖', steel_boots: '👢', steel_shield: '🛡️', steel_gloves: '🧤',
-  mithril_helmet: '🪖', mithril_platebody: '🛡️', mithril_platelegs: '👖', mithril_boots: '👢', mithril_shield: '🛡️', mithril_gloves: '🧤',
-  adamantite_helmet: '🪖', adamantite_platebody: '🛡️', adamantite_platelegs: '👖', adamantite_boots: '👢', adamantite_shield: '🛡️', adamantite_gloves: '🧤',
-  runite_helmet: '🪖', runite_platebody: '🛡️', runite_platelegs: '👖', runite_boots: '👢', runite_shield: '🛡️', runite_gloves: '🧤',
-  dragon_helmet: '🪖', dragon_platebody: '🛡️', dragon_platelegs: '👖', dragon_boots: '👢', dragon_shield: '🛡️', dragon_gloves: '🧤',
-
-  amulet_of_power: '📿', amulet_of_defence: '📿', amulet_of_strength: '📿', amulet_of_glory: '📿',
-  ring_of_wealth: '💍', ring_of_recoil: '💍', ring_of_life: '💍',
-  cape_of_legends: '🧣', cape_of_fire: '🧣',
 };
 
 import { getItem } from '@/domain/items';
@@ -56,10 +32,7 @@ export function getItemVisual(itemId: string): { type: 'image' | 'emoji'; value:
     return { type: 'image', value: EQUIP_SLOT_ICON[item.equipSlot] };
   }
 
-  const icon =
-    item?.icon ||
-    EQUIPMENT_ICONS[itemId] ||
-    '📦';
+  const icon = item?.icon || '📦';
 
   return { type: 'emoji', value: icon };
 }

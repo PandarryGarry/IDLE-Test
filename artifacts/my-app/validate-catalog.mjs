@@ -9,10 +9,12 @@
  *   - непустое русское описание у каждой записи;
  *   - существование `.webp` для каждого `iconPath`;
  *   - совпадение `tier` с числом в имени файла (`t05` ↔ tier 5);
+ *   - дроп каждого монстра ссылается на предмет каталога (шаг 7);
  *   - итоговую сводку по семействам.
  */
 import fs from 'node:fs';
 import { CATALOG } from './src/domain/items/catalog/index.ts';
+import { MONSTERS } from './src/domain/combat/monsters.ts';
 
 const problems = [];
 const seen = new Set();
@@ -53,6 +55,16 @@ const byFamily = {
 
 console.log(`✔ итого предметов: ${CATALOG.length}`);
 console.log('   состав:', JSON.stringify(byFamily));
+
+/* Дроп монстров — только предметы каталога (страж шага 7: легаси-id
+   в дропах больше не проскочит молча). */
+for (const monster of MONSTERS) {
+  for (const drop of monster.drops) {
+    if (!seen.has(drop.itemId)) {
+      problems.push(`DROP: ${monster.id} → ${drop.itemId} нет в каталоге`);
+    }
+  }
+}
 
 if (problems.length) {
   console.error('✖ ОШИБКИ:');

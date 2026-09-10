@@ -79,7 +79,7 @@ test('предмет без бонусов и отсутствующий в look
 });
 
 test('шлем складывает бонусы только по своей оси, чужое отбрасывает', () => {
-  const item = gear('steel_helm', 'helm', {
+  const item = gear('test_helm', 'helm', {
     armor: 20, health: 30, will: 5,
     intuition: 999, // не ось шлема
   });
