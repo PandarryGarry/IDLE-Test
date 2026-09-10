@@ -74,6 +74,7 @@
   --text-primary:   #fff8d0;
   --text-secondary: #f5d060;
   --text-muted:     #c8a050;
+  --text-faint:     #9a7a50;
   --text-light:     #f5d880;
   --text-white:     #fff8e0;
   --text-gold:      #f0c030;
@@ -510,6 +511,103 @@
 
 .a-window__body {
   padding: var(--space-sm) var(--space-lg) var(--space-lg);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ATabs — единые вкладки игры (шаг 9 аудита).
+   pills — пилюли разделов; rail — колонка иконок; column — список.
+   ═══════════════════════════════════════════════════════════ */
+.a-tabs {
+  display: flex;
+  gap: var(--space-2xs);
+}
+
+.a-tabs--column {
+  flex-direction: column;
+  gap: 4px;
+}
+
+.a-tabs__tab {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
+  min-height: 28px;
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-header);
+  color: var(--text-gold);
+  font-family: var(--app-font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+}
+
+.a-tabs__tab:hover {
+  border-color: var(--border-accent);
+  background: var(--badge-gold-bg);
+}
+
+.a-tabs__tab.is-on {
+  border-color: var(--border-accent);
+  background: var(--bg-card-dark);
+  color: var(--text-gold);
+  box-shadow: var(--shadow-gold);
+}
+
+.a-tabs--column .a-tabs__tab {
+  justify-content: flex-start;
+  text-align: left;
+  padding: 8px 10px;
+  text-transform: none;
+  font-family: var(--app-font-sans);
+  font-size: 12px;
+}
+
+.a-tabs--rail {
+  flex-direction: column;
+  gap: 6px;
+}
+
+.a-tabs--rail .a-tabs__tab {
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  padding: 8px 4px;
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-muted);
+}
+
+.a-tabs--rail .a-tabs__tab:hover {
+  color: var(--text-gold);
+  background: var(--badge-gold-bg);
+  border-color: transparent;
+}
+
+.a-tabs--rail .a-tabs__tab.is-on {
+  color: var(--text-gold);
+  border-color: var(--border-accent);
+  background: var(--badge-gold-bg);
+}
+
+.a-tabs--rail .a-tabs__label {
+  font-family: var(--app-font-mono);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.a-tabs__icon {
+  display: inline-flex;
+  line-height: 0;
 }
 
 /* Ячейки */
@@ -3615,28 +3713,7 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.hero-hub__tab {
-  appearance: none;
-  min-height: 28px;
-  padding: 0 var(--space-2xs);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
-  background: var(--bg-header);
-  color: var(--text-gold);
-  font-family: var(--app-font-display);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.hero-hub__tab.is-on {
-  border-color: var(--border-accent);
-  background: var(--bg-card-dark);
-  color: var(--text-gold);
-  box-shadow: var(--shadow-gold);
-}
+/* (стили вкладок хаба уехали в примитив ATabs — шаг 9 аудита) */
 
 .hero-hub__panel {
   position: relative;
@@ -5548,46 +5625,16 @@
   gap: 6px;
   padding: 10px 8px;
   border-right: 1px solid var(--border-sidebar);
-  background: #1a0e06;
+  background: var(--bg-header);
 }
-.admin-nui__icon {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  width: 100%;
-  padding: 8px 4px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-.admin-nui__icon-label {
-  font-family: var(--app-font-mono);
-  font-size: 8px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  line-height: 1.1;
-}
-.admin-nui__icon:hover {
-  color: var(--text-gold);
-  background: rgba(200, 136, 10, 0.12);
-}
-.admin-nui__icon.is-on {
-  color: var(--text-gold);
-  border-color: var(--border-accent);
-  background: rgba(200, 136, 10, 0.22);
-  box-shadow: var(--shadow-gold);
-}
+/* (стили иконок рейла уехали в примитив ATabs — шаг 9 аудита) */
 .admin-nui__sub {
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 12px 10px;
   border-right: 1px solid var(--border-sidebar);
-  background: #221208;
+  background: var(--card-cocoa-deep);
 }
 .admin-nui__sub-head {
   margin: 0 0 6px;
@@ -5598,32 +5645,17 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
-.admin-nui__bag {
-  appearance: none;
-  text-align: left;
-  padding: 8px 10px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.admin-nui__bag:hover {
-  color: var(--text-primary);
-  background: rgba(90, 52, 24, 0.55);
-}
-.admin-nui__bag.is-on {
-  color: var(--text-gold);
-  border-color: var(--border-accent);
-  background: var(--bg-slot);
-}
+/* (стили сумок-вкладок уехали в примитив ATabs — шаг 9 аудита) */
 .admin-nui__stage {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  background: linear-gradient(180deg, #2a1508 0%, #1c1006 18%, #24160c 100%);
+  background: linear-gradient(
+    180deg,
+    var(--bg-header) 0%,
+    color-mix(in srgb, var(--bg-header) 82%, black) 18%,
+    color-mix(in srgb, var(--bg-header) 90%, black) 100%
+  );
 }
 .admin-nui__top {
   display: flex;
@@ -5880,7 +5912,7 @@
     border-right: 0;
     border-bottom: 1px solid var(--border-sidebar);
   }
-  .admin-nui__icon {
+  .admin-nui__rail .a-tabs__tab {
     width: auto;
     min-width: 64px;
     flex: 1;
@@ -5891,7 +5923,7 @@
     border-right: 0;
     border-bottom: 1px solid var(--border-sidebar);
   }
-  .admin-nui__bag {
+  .admin-nui__sub .a-tabs__tab {
     white-space: nowrap;
   }
   .admin-items {

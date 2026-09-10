@@ -12,6 +12,7 @@ import { getAvatarPath, getDollPath, getDollPath2x, getRaceLabel, type RaceId } 
 import { iconUrl } from '@/lib/assetUrl';
 import { getItemRarity } from '@/features/inventory/ItemIcon';
 import { UniversalInfoModal } from '@/components/modals/UniversalInfoModal';
+import { ATabs } from '@/shared/ui/kit/ATabs';
 import {
   BRANCHES,
   BRANCH_IDS,
@@ -317,17 +318,12 @@ export function HeroHubPage() {
       </header>
 
       <nav className="hero-hub__tabs" aria-label="Разделы героя">
-        {MODULES.map(mod => (
-          <button
-            key={mod.id}
-            type="button"
-            className={moduleId === mod.id ? 'hero-hub__tab is-on' : 'hero-hub__tab'}
-            aria-pressed={moduleId === mod.id}
-            onClick={() => setModuleId(mod.id)}
-          >
-            {mod.label}
-          </button>
-        ))}
+        <ATabs
+          tabs={MODULES.map((mod) => ({ id: mod.id, label: mod.label }))}
+          activeId={moduleId}
+          onChange={(id) => setModuleId(id as HubModule)}
+          ariaLabel="Разделы героя"
+        />
       </nav>
 
       <div className="hero-hub__panel">
