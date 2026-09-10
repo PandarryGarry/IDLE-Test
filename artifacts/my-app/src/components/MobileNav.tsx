@@ -84,8 +84,9 @@ export function MobileNav({ className = '' }: MobileNavProps) {
         </div>
       )}
 
-      {/* Main Bottom Nav Bar */}
-      <nav className={`fixed bottom-0 left-0 right-0 z-40 backdrop-blur-xl border-t px-2 py-1.5 pb-safe ${className}`}
+      {/* Main Bottom Nav Bar — часть рамки приложения (в потоке, не fixed):
+          всегда видна и никогда не перекрывает контент */}
+      <nav className={`backdrop-blur-xl border-t px-2 py-1.5 pb-safe ${className}`}
         style={{ background: 'rgba(22,14,6,0.97)', borderColor: '#2e2010', boxShadow: '0 -2px 12px rgba(0,0,0,0.5)' }}>
         <div className="flex items-center justify-around max-w-lg mx-auto">
           

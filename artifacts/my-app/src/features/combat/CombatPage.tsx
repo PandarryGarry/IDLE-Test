@@ -82,102 +82,12 @@ export function CombatPage() {
 
   return (
     <div className="space-y-4">
-      {/* Mobile: Stacked; Desktop: Left Side (Areas + Paperdoll) & Right Side (Battle Arena + Log) */}
+      {/* Mobile: Арена и лог ПЕРВЫМИ (главное действие — наверху, без прокрутки),
+          зоны — горизонтальной лентой; Desktop: прежняя двухколоночная раскладка */}
       <div className="flex flex-col lg:flex-row gap-4">
 
-        {/* LEFT COLUMN: Areas & Equipment Paperdoll */}
-        <div className="w-full lg:w-80 xl:w-96 space-y-4 shrink-0">
-
-          {/* Combat Areas Selection */}
-          <div className="g-card border border-[var(--border-default)] p-4 rounded-3xl shadow-xl">
-            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest mb-3 flex items-center gap-1.5" style={{ color: '#ffb090', textShadow: '0 1px 4px rgba(0,0,0,0.8)', letterSpacing: '0.08em' }}>
-              <Skull className="w-3.5 h-3.5" /> {t('combat.areas')}
-            </h2>
-            
-            <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-700">
-              {COMBAT_AREAS.map(area => {
-                const isLocked = heroLevel < (area.combatLevelRequired ?? 1);
-                const isActive = activeAreaId === area.id;
-                return (
-                  <button
-                    type="button"
-                    key={area.id}
-                    onClick={() => handleAreaClick(area.id, area.combatLevelRequired ?? 1)}
-                    disabled={isLocked}
-                    className={`w-full p-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
-                      isLocked
-                        ? 'cursor-not-allowed border-[var(--border-default)] opacity-75'
-                        : isActive
-                          ? 'bg-red-500/20 border-red-500/70 shadow-[0_0_18px_rgba(239,68,68,0.25)] ring-1 ring-red-500/40 cursor-pointer'
-                          : 'bg-[var(--bg-card-dark)] hover:border-red-500/40 cursor-pointer border-[var(--border-light)] hover:bg-[var(--bg-card-dark)]'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center mb-1">
-                      <h3 className="font-bold text-xs sm:text-sm" style={{ color: isActive ? '#ff8060' : '#f5e0b0', textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}>
-                        {area.name}
-                      </h3>
-                      {isLocked ? (
-                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md" style={{ color: '#ff9070', background: 'rgba(120,30,15,0.6)', border: '1px solid rgba(255,120,80,0.4)' }}>
-                          Ур. {area.combatLevelRequired}
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-mono text-stone-500">
-                          {area.monsterIds.length} монстров
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-[var(--text-secondary)] leading-tight mb-2">{area.description}</p>
-                    
-                    {/* Monster Rosters */}
-                    <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-none">
-                      {area.monsterIds.map(mId => (
-                        <span key={mId} className="shrink-0 bg-[var(--bg-slot)] px-1.5 py-0.5 rounded-md text-[10px] font-mono border border-[var(--border-card)] text-[var(--text-primary)] font-medium">
-                          {MONSTERS_MAP[mId]?.name} ({MONSTERS_MAP[mId]?.combatLevel})
-                        </span>
-                      ))}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Equipment Paperdoll (Кукла экипировки) */}
-          <div className="g-card border border-[var(--border-default)] p-4 rounded-3xl shadow-xl">
-            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-[var(--text-primary)] mb-3 flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-amber-400" /> {t('combat.equipment')}
-            </h2>
-            
-            {/* Кукла экипировки — 3 колонки, фиксированные ячейки */}
-            <div className="rounded-xl p-3" style={{ background: 'var(--bg-slot)', border: '1px solid var(--border-slot)' }}>
-              <div className="grid grid-cols-3 gap-y-3 gap-x-2 justify-items-center">
-                {/* Ряд 1: пусто / Шлем / пусто */}
-                <div />
-                <EquipSlotBox slot="helm"      label="Шлем" />
-                <div />
-                {/* Ряд 2: Плащ / Шея / Колчан */}
-                <EquipSlotBox slot="cape"      label="Плащ" />
-                <EquipSlotBox slot="amulet"    label="Шея" />
-                <EquipSlotBox slot="quiver"    label="Колчан" />
-                {/* Ряд 3: Оружие / Доспех / Щит */}
-                <EquipSlotBox slot="weapon"    label="Оружие" />
-                <EquipSlotBox slot="platebody" label="Доспех" />
-                <EquipSlotBox slot="shield"    label="Щит" />
-                {/* Ряд 4: пусто / Поножи / пусто */}
-                <div />
-                <EquipSlotBox slot="platelegs" label="Поножи" />
-                <div />
-                {/* Ряд 5: Перчатки / Сапоги / Кольцо */}
-                <EquipSlotBox slot="gloves"    label="Перчатки" />
-                <EquipSlotBox slot="boots"     label="Сапоги" />
-                <EquipSlotBox slot="ring"      label="Кольцо" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN: Battle Arena & Combat Log & Food */}
-        <div className="flex-1 space-y-4 min-w-0">
+        {/* RIGHT COLUMN: Battle Arena & Combat Log & Food — на телефоне первая */}
+        <div className="flex-1 space-y-4 min-w-0 order-first lg:order-none">
 
           {/* Dynamic Combat Battle Arena */}
           <CombatScreen />
@@ -232,6 +142,100 @@ export function CombatPage() {
           {inCombat && <FoodPanel />}
         </div>
 
+        {/* LEFT COLUMN: Areas & Equipment Paperdoll */}
+        <div className="w-full lg:w-80 xl:w-96 space-y-4 shrink-0">
+
+          {/* Combat Areas Selection */}
+          <div className="g-card border border-[var(--border-default)] p-4 rounded-3xl shadow-xl">
+            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest mb-3 flex items-center gap-1.5" style={{ color: '#ffb090', textShadow: '0 1px 4px rgba(0,0,0,0.8)', letterSpacing: '0.08em' }}>
+              <Skull className="w-3.5 h-3.5" /> {t('combat.areas')}
+            </h2>
+
+            {/* Телефон: горизонтальная лента зон с прилипанием; десктоп: столбик */}
+            <div className="flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-none lg:flex-col lg:space-y-2 lg:max-h-[380px] lg:overflow-y-auto lg:pr-1 lg:snap-none lg:scrollbar-thin">
+              {COMBAT_AREAS.map(area => {
+                const isLocked = heroLevel < (area.combatLevelRequired ?? 1);
+                const isActive = activeAreaId === area.id;
+                return (
+                  <button
+                    type="button"
+                    key={area.id}
+                    onClick={() => handleAreaClick(area.id, area.combatLevelRequired ?? 1)}
+                    disabled={isLocked}
+                    className={`p-3 rounded-2xl border text-left transition-all active:scale-[0.98] w-[236px] shrink-0 snap-start lg:w-full lg:shrink ${
+                      isLocked
+                        ? 'cursor-not-allowed border-[var(--border-default)] opacity-75'
+                        : isActive
+                          ? 'bg-red-500/20 border-red-500/70 shadow-[0_0_18px_rgba(239,68,68,0.25)] ring-1 ring-red-500/40 cursor-pointer'
+                          : 'bg-[var(--bg-card-dark)] hover:border-red-500/40 cursor-pointer border-[var(--border-light)] hover:bg-[var(--bg-card-dark)]'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <h3 className="font-bold text-xs sm:text-sm" style={{ color: isActive ? '#ff8060' : '#f5e0b0', textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}>
+                        {area.name}
+                      </h3>
+                      {isLocked ? (
+                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md" style={{ color: '#ff9070', background: 'rgba(120,30,15,0.6)', border: '1px solid rgba(255,120,80,0.4)' }}>
+                          Ур. {area.combatLevelRequired}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-mono text-stone-500">
+                          {area.monsterIds.length} монстров
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-[var(--text-secondary)] leading-tight mb-2">{area.description}</p>
+                    
+                    {/* Monster Rosters */}
+                    <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-none">
+                      {area.monsterIds.map(mId => (
+                        <span key={mId} className="shrink-0 bg-[var(--bg-slot)] px-1.5 py-0.5 rounded-md text-[10px] font-mono border border-[var(--border-card)] text-[var(--text-primary)] font-medium">
+                          {MONSTERS_MAP[mId]?.name} ({MONSTERS_MAP[mId]?.combatLevel})
+                        </span>
+                      ))}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Equipment Paperdoll (Кукла экипировки) */}
+          <div className="g-card border border-[var(--border-default)] p-4 rounded-3xl shadow-xl">
+            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-[var(--text-primary)] mb-3 flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5 text-amber-400" /> {t('combat.equipment')}
+            </h2>
+            
+            {/* Кукла экипировки — 3 колонки, фиксированные ячейки */}
+              <div className="rounded-xl p-3" style={{ background: 'var(--bg-slot)', border: '1px solid var(--border-slot)' }}>
+              {/* Телефон: компактные 5 колонок без пустышек (3 коротких ряда);
+                  десктоп: прежняя «кукла» 3 колонками с центрированием. */}
+              <div className="grid grid-cols-5 lg:grid-cols-3 gap-y-2 gap-x-1 lg:gap-y-3 lg:gap-x-2 justify-items-center">
+                {/* Ряд 1 (десктоп): пусто / Шлем / пусто */}
+                <div className="hidden lg:block" />
+                <EquipSlotBox slot="helm"      label="Шлем" />
+                <div className="hidden lg:block" />
+                {/* Ряд 2: Плащ / Шея / Колчан */}
+                <EquipSlotBox slot="cape"      label="Плащ" />
+                <EquipSlotBox slot="amulet"    label="Шея" />
+                <EquipSlotBox slot="quiver"    label="Колчан" />
+                {/* Ряд 3: Оружие / Доспех / Щит */}
+                <EquipSlotBox slot="weapon"    label="Оружие" />
+                <EquipSlotBox slot="platebody" label="Доспех" />
+                <EquipSlotBox slot="shield"    label="Щит" />
+                {/* Ряд 4 (десктоп): пусто / Поножи / пусто */}
+                <div className="hidden lg:block" />
+                <EquipSlotBox slot="platelegs" label="Поножи" />
+                <div className="hidden lg:block" />
+                {/* Ряд 5: Перчатки / Сапоги / Кольцо */}
+                <EquipSlotBox slot="gloves"    label="Перчатки" />
+                <EquipSlotBox slot="boots"     label="Сапоги" />
+                <EquipSlotBox slot="ring"      label="Кольцо" />
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );
@@ -283,23 +287,20 @@ const CombatScreen = memo(function CombatScreen() {
   const enemyAttackProgress = Math.max(0, Math.min(100, (1 - enemyAttackTimer / enemyAttackInterval) * 100));
 
   return (
-    <div className="g-card border border-red-500/40 rounded-3xl p-4 sm:p-6 shadow-2xl min-h-[320px] flex flex-col relative overflow-hidden">
-      
+    <div className="g-card border border-red-500/40 rounded-3xl p-4 sm:p-6 shadow-2xl min-h-[220px] lg:min-h-[320px] flex flex-col relative overflow-hidden">
+
       {!inCombat ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-[var(--text-secondary)] p-6 text-center">
-          <div className="w-16 h-16 rounded-3xl bg-[var(--bg-card-dark)] border border-[var(--border-light)] flex items-center justify-center text-4xl mb-3 opacity-70">
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-[var(--text-secondary)] p-4 lg:p-6 text-center">
+          <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-3xl bg-[var(--bg-card-dark)] border border-[var(--border-light)] flex items-center justify-center text-2xl lg:text-4xl mb-2 lg:mb-3 opacity-70">
             ⚔️
           </div>
-          <h2 className="text-lg sm:text-xl font-display font-black text-[var(--text-primary)]">{t('combat.selectArea')}</h2>
-          <p className="text-xs text-stone-500 mt-1 max-w-sm">
-            Выберите боевую локацию или подземелье слева, чтобы начать сражение.
-          </p>
+          <h2 className="text-base lg:text-xl font-display font-black text-[var(--text-primary)]">{t('combat.selectArea')}</h2>
         </div>
       ) : (
         <div className="h-full flex flex-col z-10">
           
           {/* Arena Header */}
-          <div className="flex justify-between items-center mb-6 pb-3 border-b border-[var(--border-light)]">
+          <div className="flex justify-between items-center mb-3 lg:mb-6 pb-3 border-b border-[var(--border-light)]">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
               <h2 className="text-base sm:text-lg font-display font-black text-[var(--text-primary)] flex items-center gap-1.5">
@@ -316,11 +317,12 @@ const CombatScreen = memo(function CombatScreen() {
             </button>
           </div>
 
-          {/* Duel Display (Player vs Monster) */}
-          <div className="flex flex-col md:flex-row gap-6 items-center justify-between flex-grow py-2">
-            
+          {/* Duel Display (Player vs Monster) — телефон: две компактные
+              карточки-ряда, десктоп: две колонки по бокам */}
+          <div className="flex flex-row gap-2 lg:gap-6 items-stretch justify-between flex-grow py-2">
+
             {/* Player Side */}
-            <div className="flex-1 w-full text-center space-y-2.5 bg-[var(--bg-card-dark)] p-4 rounded-2xl border border-[var(--border-light)]">
+            <div className="flex-1 w-full text-center space-y-2 lg:space-y-2.5 bg-[var(--bg-card-dark)] p-2.5 lg:p-4 rounded-2xl border border-[var(--border-light)]">
               <div className="flex items-center justify-between text-xs font-mono text-[var(--text-secondary)]">
                 <span className="font-bold text-[var(--text-primary)]">{t('combat.you')}</span>
                 <span className="bg-[var(--bg-card-dark)] border border-[var(--border-default)] px-2 py-0.5 rounded-md font-bold text-amber-300">
@@ -328,7 +330,7 @@ const CombatScreen = memo(function CombatScreen() {
                 </span>
               </div>
 
-              <div className="text-5xl py-1 filter drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]">
+              <div className="text-3xl lg:text-5xl py-1 filter drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]">
                 🛡️
               </div>
 
@@ -372,7 +374,7 @@ const CombatScreen = memo(function CombatScreen() {
             </div>
 
             {/* Enemy Side */}
-            <div className="flex-1 w-full text-center space-y-2.5 bg-[var(--bg-card-dark)] p-4 rounded-2xl border border-red-500/40">
+            <div className="flex-1 w-full text-center space-y-2 lg:space-y-2.5 bg-[var(--bg-card-dark)] p-2.5 lg:p-4 rounded-2xl border border-red-500/40">
               <div className="flex items-center justify-between text-xs font-mono text-[var(--text-secondary)]">
                 <span className="font-bold text-red-300 truncate">{currentMonster?.name}</span>
                 <span className="bg-red-950/80 border border-red-500/50 px-2 py-0.5 rounded-md font-bold text-red-400">
@@ -380,7 +382,7 @@ const CombatScreen = memo(function CombatScreen() {
                 </span>
               </div>
 
-              <div className="text-5xl py-1 filter drop-shadow-[0_0_12px_rgba(239,68,68,0.4)]">
+              <div className="text-3xl lg:text-5xl py-1 filter drop-shadow-[0_0_12px_rgba(239,68,68,0.4)]">
                 {currentMonster?.isBoss ? '🐉' : '👹'}
               </div>
 
@@ -520,8 +522,8 @@ function EquipSlotBox({ slot, label }: { slot: EquipSlot; label: string }) {
       title={itemId ? `Снять: ${label}` : label}
       className="relative flex flex-col items-center gap-0.5 group"
     >
-      {/* Ячейка */}
-      <div className={`w-16 h-16 rounded-xl border flex items-center justify-center transition-all hover:scale-105 active:scale-95 relative overflow-hidden ${
+      {/* Ячейка (на телефоне компактнее — 5 колонок должны влезать) */}
+      <div className={`w-12 h-12 lg:w-16 lg:h-16 rounded-xl border flex items-center justify-center transition-all hover:scale-105 active:scale-95 relative overflow-hidden ${
         itemId
           ? 'border-amber-500/50'
           : 'border-stone-700/35'
@@ -542,7 +544,7 @@ function EquipSlotBox({ slot, label }: { slot: EquipSlot; label: string }) {
         )}
       </div>
       {/* Подпись под ячейкой */}
-      <span className="text-[9px] font-mono tracking-wide leading-none mt-0.5 truncate max-w-[64px] text-center" style={{ color: itemId ? '#f0d070' : '#c8a050' }}>
+      <span className="text-[9px] font-mono tracking-wide leading-none mt-0.5 truncate max-w-[52px] lg:max-w-[64px] text-center" style={{ color: itemId ? '#f0d070' : '#c8a050' }}>
         {label}
       </span>
     </button>

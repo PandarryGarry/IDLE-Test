@@ -517,6 +517,93 @@
    ATabs — единые вкладки игры (шаг 9 аудита).
    pills — пилюли разделов; rail — колонка иконок; column — список.
    ═══════════════════════════════════════════════════════════ */
+/* ── Рамка приложения «один экран» ─────────────────────────────
+   Игровой шелл фиксирован по высоте окна: шапка и нижняя навигация
+   всегда на месте и не «едут»; прокручивается только контентное окно
+   .app-main. Внутри страниц работает паттерн .a-page: шапка и подвал
+   страницы прибиты, длинный контент лежит в .a-page__scroll — своём
+   «окне» с прокруткой. */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+.app-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.app-main {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  transition: padding-top 0.25s ease;
+}
+/* Пока плавающая плашка активного действия на экране — контент мягко
+   получает верхний резерв, и плашка не накрывает заголовок страницы. */
+.app-stage:has(.app-active-float > *) .app-main {
+  padding-top: 80px;
+}
+/* Плавающая плашка активного действия: висит над окном и НИКОГДА
+   не сдвигает интерфейс (не участвует в потоке). */
+.app-active-float {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+.app-active-float > * {
+  pointer-events: auto;
+}
+
+/* Паттерн страницы: колонка на всю высоту контентного окна
+   (растяжение через flex — надёжнее процентной высоты). */
+.a-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+.a-page__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+/* Прибитый низ страницы (лента находок, итоги корзины и т.п.). */
+.a-page__foot {
+  flex-shrink: 0;
+}
+
+/* ── Хаб героя: лист модуля — прокручиваемое окно внутри рамки ── */
+.hero-hub {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+}
+.hero-hub__header,
+.hero-hub__tabs {
+  flex-shrink: 0;
+}
+.hero-hub__panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 .a-tabs {
   display: flex;
   gap: var(--space-2xs);
@@ -5912,6 +5999,9 @@
     border-right: 0;
     border-bottom: 1px solid var(--border-sidebar);
   }
+  .admin-nui__rail .a-tabs {
+    flex-direction: row;
+  }
   .admin-nui__rail .a-tabs__tab {
     width: auto;
     min-width: 64px;
@@ -5922,6 +6012,12 @@
     overflow-x: auto;
     border-right: 0;
     border-bottom: 1px solid var(--border-sidebar);
+  }
+  .admin-nui__sub-head {
+    display: none;
+  }
+  .admin-nui__sub .a-tabs {
+    flex-direction: row;
   }
   .admin-nui__sub .a-tabs__tab {
     white-space: nowrap;

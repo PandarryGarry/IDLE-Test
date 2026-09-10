@@ -234,7 +234,7 @@ function ZoneCard({
               <GameButton
                 variant="danger"
                 size="sm"
-                className="w-full"
+                className="w-full whitespace-nowrap"
                 icon={<Square size={13} fill="currentColor" />}
                 onClick={e => { e.stopPropagation(); onToggle(); }}
               >
@@ -244,7 +244,7 @@ function ZoneCard({
               <GameButton
                 variant="primary"
                 size="sm"
-                className="w-full"
+                className="w-full whitespace-nowrap"
                 icon={<Play size={13} fill="currentColor" />}
                 onClick={e => { e.stopPropagation(); onToggle(); }}
               >
@@ -512,7 +512,9 @@ export function ForagingPage() {
   };
 
   return (
-    <div className="space-y-4">
+    /* Рамка «один экран»: заголовок и «О профессии» прибиты, сетка зон
+       прокручивается своим окном, лента находок всегда видна внизу. */
+    <div className="a-page">
       <SkillHeader skillId="foraging" skillName={t('skill.foraging')} skillIcon="🌿" compact />
 
       {/* Заголовок зон + кнопка «инфо» */}
@@ -529,8 +531,8 @@ export function ForagingPage() {
         </button>
       </div>
 
-      {/* Сетка зон — компактная, чтобы страница помещалась на экран */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
+      {/* Сетка зон — прокручиваемое окно; кнопки Старт/Стоп остаются в нём */}
+      <div className="a-page__scroll grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 content-start">
         {FORAGING_ZONES.map(zone => (
           <ZoneCard
             key={zone.id}
@@ -543,9 +545,9 @@ export function ForagingPage() {
         ))}
       </div>
 
-      {/* Лента находок */}
+      {/* Лента находок — прибита к низу страницы, всегда на виду */}
       {lootFeed.length > 0 && (
-        <div className="rounded-2xl p-4" style={{ background: 'color-mix(in srgb, var(--bg-header) 82%, black)', border: '1px solid color-mix(in srgb, var(--border-strong) 80%, var(--border-card))' }}>
+        <div className="a-page__foot rounded-2xl p-4" style={{ background: 'color-mix(in srgb, var(--bg-header) 82%, black)', border: '1px solid color-mix(in srgb, var(--border-strong) 80%, var(--border-card))' }}>
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-xs font-extrabold uppercase tracking-widest font-mono text-[var(--text-gold)]">Лента находок</h2>
             <button

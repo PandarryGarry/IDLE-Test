@@ -120,7 +120,9 @@ export function DashboardPage() {
   const handleClaim = () => { clearOffline(); };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    /* Страница короткая — блок героя выравниваем по вертикали в окне
+       (растяжение через flex), чтобы на телефоне не висела пустота. */
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1, minHeight: 0, justifyContent: 'center' }}>
 
       {/* ── ГЕРОЙ ── */}
       <div style={PANEL}>
