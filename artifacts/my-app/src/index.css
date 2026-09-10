@@ -3795,9 +3795,15 @@
 }
 
 .hero-hub__tabs {
-  display: grid;
-  gap: var(--space-2xs);
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* Сетка четырёх колонок осталась со времён старых кнопок-вкладок;
+     теперь внутри один примитив ATabs — он растягивается на всю ширину. */
+}
+.hero-hub__tabs .a-tabs {
+  width: 100%;
+}
+.hero-hub__tabs .a-tabs__tab {
+  flex: 1 1 0;
+  padding-inline: 6px;
 }
 
 /* (стили вкладок хаба уехали в примитив ATabs — шаг 9 аудита) */
@@ -6001,11 +6007,15 @@
   }
   .admin-nui__rail .a-tabs {
     flex-direction: row;
+    /* Растягиваемся на всю ленту: если разделов мало — кнопки делят
+       ширину поровну; если их станет больше — лента прокрутится. */
+    width: max-content;
+    min-width: 100%;
   }
   .admin-nui__rail .a-tabs__tab {
     width: auto;
     min-width: 64px;
-    flex: 1;
+    flex: 1 0 auto;
   }
   .admin-nui__sub {
     flex-direction: row;
