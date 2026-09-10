@@ -7,6 +7,7 @@ import { usePlayerStore } from '@/store/playerStore';
 import { useCombatStore } from '@/store/combatStore';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { getItemRarity } from '@/features/inventory/ItemIcon';
+import { GEAR_UNIQUE_TAG_SHORT, isGearUnique } from '@/data/balance/gear';
 import { formatNumber } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CoinsDisplay } from '@/shared/ui/CoinsDisplay';
@@ -25,6 +26,9 @@ import {
 } from 'lucide-react';
 
 export function getItemTier(itemId: string, item?: Item): string {
+  // Уникальная экипировка — не ступень тировой лестницы: вместо «T12» у неё
+  // своя метка (`GEAR_UNIQUE_TAG_SHORT`), тир остаётся только в расчётах.
+  if (isGearUnique(item)) return GEAR_UNIQUE_TAG_SHORT;
   // Тир — данное поле каталога (1..12). Ниже — эвристика только для легаси
   // предметов без поля `tier` (исчезнет по мере переноса семейств в каталог).
   if (item?.tier) return `T${item.tier}`;
@@ -123,7 +127,7 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
   const quantity = isReadOnly ? 1 : slot?.quantity ?? 1;
   const isLocked = slot?.locked ?? false;
   const tier = getItemTier(itemId, item);
-  const rarityKey = getItemRarity(itemId, item.sellValue, item.equipSlot);
+  const rarityKey = getItemRarity(itemId, item.sellValue, item.equipSlot, item.tier);
   const rarity = RARITY_NAMES[rarityKey] || RARITY_NAMES.common;
   const visual = getItemVisual(itemId);
   const categoryLabel = CATEGORY_NAMES[item.category] || item.category;
@@ -257,6 +261,18 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
               <CoinsDisplay amount={item.sellValue} size="xs" />
             </div>
           </div>
+
+          {typeof item.maxDurability === 'number' && item.maxDurability > 0 && (
+            <div className="bg-stone-950/80 border border-stone-800 rounded-2xl p-2.5 flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                <Shield className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-[10px] text-stone-500 font-mono uppercase font-bold">Прочность</div>
+                <div className="text-xs font-mono font-black text-amber-300">{item.maxDurability}/{item.maxDurability}</div>
+              </div>
+            </div>
+          )}
 
           {item.healAmount !== undefined && (
             <div className="bg-stone-950/80 border border-emerald-500/30 rounded-2xl p-2.5 flex items-center gap-2.5">

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useCharacterStore } from '@/store/characterStore';
 import { usePlayerStore } from '@/store/playerStore';
-import { useAuthStore } from '@/store/authStore';
 import { updateCharacter } from '@/lib/characterApi';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import {
@@ -15,13 +14,11 @@ import {
   type SkillState,
 } from '@/data/types';
 import { getAllItems, getItem } from '@/domain/items';
-import { migrateInventoryItems } from '@/domain/items/legacyMigration';
 import { getLevelForXp, getXpForLevel, MAX_LEVEL } from '@/core/xpTable';
 import { skillNameRu } from '@/lib/skillNames';
 import {
   createDefaultAttributes,
   getLiveAttributes,
-  migrateSaveAttributes,
 } from '@/domain/attributes/characterAttributes';
 import {
   BRANCHES,
@@ -39,12 +36,14 @@ import { SYNERGIES } from '@/domain/attributes/synergies';
 import { NODE_RANK_CAP, PILLAR_RANK_CAP_STUB } from '@/data/balance/pillars';
 import { HERO_LEVEL_CAP } from '@/data/balance/substats';
 import { REPUTATION_MAX, REPUTATION_MIN } from '@/data/balance/reputation';
-import { createEmptyGearSets } from '@/domain/items/gearSets';
 import { applySaveData } from '@/lib/saveManager';
 import { getAvatarPath, getRaceLabel } from '@/data/characters';
+import { grantItemsToCharacter, normalizeSave } from '@/features/admin/adminCharacterSave';
+import { AdminCharacterPickerModal, useAdminSession } from '@/features/admin/AdminSessionContext';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { formatNumber } from '@/lib/utils';
 import { GModal } from '@/shared/ui/gameUI';
+import { GearCatalogBrowser } from '@/shared/ui/kit/GearCatalogBrowser';
 import {
   Save, Trash2, Plus, Minus, Search, RotateCcw, User, Boxes, Swords, LayoutDashboard,
   Sparkles, Hammer,
@@ -117,56 +116,6 @@ const INPUT: React.CSSProperties = { background: C.slot, border: '1px solid ' + 
 const CARD: React.CSSProperties = { background: C.surfaceAlt, border: '1px solid ' + C.border, borderRadius: 16 };
 const LABEL: React.CSSProperties = { fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: C.textMuted, fontFamily: 'var(--app-font-mono)' };
 
-function makeEmptySave(): SaveData {
-  const skills = {} as Record<SkillId, SkillState>;
-  for (const id of ALL_SKILL_IDS) {
-    const level = 1;
-    skills[id] = { level, xp: getXpForLevel(level), unlocked: true, mastery: {} };
-  }
-  return {
-    version: '1.0.0', savedAt: Date.now(), totalPlayTime: 0, gameMode: 'standard',
-    player: { skills, equipment: { ...EMPTY_EQUIPMENT } },
-    inventory: { items: [], gp: 0, maxSlots: 24 },
-    game: { activeSkill: null, activeActionId: null, activeAreaId: null, activeMonsterId: null },
-    settings: {}, attributes: createDefaultAttributes(), gearSets: createEmptyGearSets(),
-  };
-}
-
-function normalizeSave(
-  save: SaveData | null | undefined,
-  fallbackSkills?: Record<SkillId, SkillState>,
-  fallbackAttributes?: CharacterAttributeState,
-): SaveData {
-  const base = makeEmptySave();
-  const originalSkills = save?.player?.skills ?? {};
-  const fallback = fallbackSkills && Object.keys(fallbackSkills).length > 0 ? fallbackSkills : undefined;
-  const skills = { ...base.player.skills, ...fallback, ...originalSkills } as Record<SkillId, SkillState>;
-  return {
-    ...base, ...save,
-    player: {
-      skills,
-      equipment: { ...EMPTY_EQUIPMENT, ...(save?.player?.equipment ?? {}) },
-    },
-    inventory: (() => {
-      const src = save as unknown as { inventory?: unknown; bank?: unknown };
-      const raw = src?.inventory ?? src?.bank;
-      const rec = raw as { items?: unknown; gp?: unknown; maxSlots?: unknown } | undefined;
-      return {
-        items: Array.isArray(rec?.items) ? migrateInventoryItems(rec.items as never[]) : [],
-        gp: typeof rec?.gp === 'number' ? rec.gp : 0,
-        maxSlots: typeof rec?.maxSlots === 'number' ? rec.maxSlots : 24,
-      };
-    })(),
-    game: {
-      activeSkill: save?.game?.activeSkill ?? null,
-      activeActionId: save?.game?.activeActionId ?? null,
-      activeAreaId: save?.game?.activeAreaId ?? null,
-      activeMonsterId: save?.game?.activeMonsterId ?? null,
-    },
-    attributes: migrateSaveAttributes(save?.attributes ?? fallbackAttributes ?? undefined),
-  };
-}
-
 function clampLevel(value: number): number {
   if (!Number.isFinite(value)) return 1;
   return Math.max(1, Math.min(MAX_LEVEL, Math.round(value)));
@@ -223,28 +172,15 @@ function ItemPickerModal({
   onAddInventory: (itemId: string, qty: number) => void;
   onEquip: (itemId: string) => void;
 }) {
-  const [query, setQuery] = useState('');
-  const [category, setCategory] = useState('all');
   const [selected, setSelected] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
 
-  const categories = useMemo(() => {
-    const seen = new Set<string>();
-    for (const it of items) if (it.category) seen.add(it.category);
-    return [...seen].sort();
-  }, [items]);
+  const pool = useMemo(() => {
+    if (mode === 'equip' && equipSlot) return items.filter(it => it.equipSlot === equipSlot);
+    return items;
+  }, [equipSlot, items, mode]);
 
-  const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return items.filter(it => {
-      if (mode === 'equip' && equipSlot && it.equipSlot !== equipSlot) return false;
-      if (category !== 'all' && it.category !== category) return false;
-      if (!q) return true;
-      return it.name.toLowerCase().includes(q) || it.id.toLowerCase().includes(q);
-    });
-  }, [category, equipSlot, items, mode, query]);
-
-  const selectedItem = selected ? items.find(i => i.id === selected) ?? null : null;
+  const selectedItem = selected ? pool.find(i => i.id === selected) ?? items.find(i => i.id === selected) ?? null : null;
 
   const confirm = () => {
     if (!selectedItem) return;
@@ -256,63 +192,11 @@ function ItemPickerModal({
   return (
     <GModal open onClose={onClose} title={mode === 'equip' ? 'Выбрать предмет для слота' : 'Выдать предмет в сумку'} width={760}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-          <div style={{ flex: 1, minWidth: 180, display: 'flex', alignItems: 'center', gap: 8, background: C.slot, border: '1px solid ' + C.borderLight, borderRadius: 12, padding: '8px 12px' }}>
-            <Search size={15} style={{ color: C.textMuted }} />
-            <input
-              autoFocus
-              placeholder="Поиск по названию или id…"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: C.text, fontSize: 13 }}
-            />
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {['all', ...categories].map(cat => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setCategory(cat)}
-              className={BTN}
-              style={{ ...BTN_SECONDARY, ...(category === cat ? { background: 'rgba(255,255,255,0.1)', borderColor: C.accent, color: '#fff' } : {}) }}
-            >
-              {cat === 'all' ? 'Все' : categoryLabel(cat)}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ maxHeight: 360, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))', gap: 8, paddingRight: 4 }}>
-          {visible.map(it => (
-            <button
-              key={it.id}
-              type="button"
-              onClick={() => setSelected(it.id)}
-              title={it.name}
-              style={{
-                ...CARD, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
-                padding: '9px 6px 8px', cursor: 'pointer',
-                // Выделение рисуем ВНУТРИ округлой карточки (inset-кольцо), а не
-                // `outline` — иначе рамка вылезает за скругление и уходит в бок.
-                boxShadow: selected === it.id
-                  ? `inset 0 0 0 2px ${C.accent}, inset 0 0 8px rgba(240,192,48,0.25)`
-                  : undefined,
-                borderColor: selected === it.id ? C.accent : undefined,
-              }}
-            >
-              <AdminItemIcon itemId={it.id} size={32} />
-              <span style={{ width: '100%', textAlign: 'center', fontSize: 10, fontWeight: 600, color: C.textSecondary, lineHeight: 1.25, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                {it.name}
-              </span>
-              {(it.tier || it.equipSlot) && (
-                <span style={{ width: '100%', textAlign: 'center', fontSize: 9, fontWeight: 800, fontFamily: 'var(--app-font-mono)', color: it.tier ? '#f0c030' : C.textMuted, lineHeight: 1.2 }}>
-                  {it.tier ? `Тир ${tierLabel(it.tier)}` : ''}{it.tier && it.equipSlot ? ' · ' : ''}{it.equipSlot ? EQUIP_SLOT_LABELS[it.equipSlot] : ''}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+        <GearCatalogBrowser
+          items={pool}
+          selectedId={selected}
+          onSelect={setSelected}
+        />
 
         {/* Всегда видимая панель выдачи: сразу ясно, как выдать выбранный предмет. */}
         <div style={{
@@ -365,36 +249,29 @@ type TabKey = 'overview' | 'attributes' | 'professions' | 'inventory' | 'equipme
 const TIER_RU: Record<number, string> = { 1: 'I', 2: 'II', 3: 'III' };
 
 export function AdminCharactersPanel() {
-  const characters = useCharacterStore(s => s.characters);
-  const activeCharacter = useCharacterStore(s => s.activeCharacter);
+  const { living, target } = useAdminSession();
+  const activeCharacterId = useCharacterStore(s => s.activeCharacter?.id ?? null);
   const notify = useNotificationsStore(s => s.notifyInfo);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState<SaveData | null>(null);
   const [tab, setTab] = useState<TabKey>('overview');
   const [saving, setSaving] = useState(false);
   const [skillQuery, setSkillQuery] = useState('');
   const [touched, setTouched] = useState({ attributes: false, skills: false, inventory: false, equipment: false });
   const [picker, setPicker] = useState<{ mode: 'inventory' | 'equip'; equipSlot?: EquipSlot } | null>(null);
+  const [heroOpen, setHeroOpen] = useState(false);
 
   const items = useMemo(() => getAllItems().sort((a, b) => a.name.localeCompare(b.name, 'ru')), []);
 
-  useEffect(() => {
-    const user = useAuthStore.getState().user;
-    if (user && useCharacterStore.getState().characters.length === 0) {
-      void useCharacterStore.getState().loadCharacters(user.id);
-    }
-  }, []);
-
-  const selected = characters.find(c => c.id === selectedId) ?? characters[0] ?? null;
+  const selected = target ?? living[0] ?? null;
 
   useEffect(() => {
-    if (!selected) { setSelectedId(null); setDraft(null); return; }
-    if (selected.id !== selectedId) setSelectedId(selected.id);
+    if (!selected) { setDraft(null); return; }
+    const row = useCharacterStore.getState().characters.find(c => c.id === selected.id && !c.isDeleted);
+    if (!row) { setDraft(null); return; }
     const liveSkills = usePlayerStore.getState().skills as Record<SkillId, SkillState>;
-    const fallback = selected.saveData?.player?.skills ? undefined : liveSkills;
-    setDraft(normalizeSave(selected.saveData, fallback, getLiveAttributes()));
+    const fallback = row.saveData?.player?.skills ? undefined : liveSkills;
+    setDraft(normalizeSave(row.saveData, fallback, getLiveAttributes()));
     setTouched({ attributes: false, skills: false, inventory: false, equipment: false });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected?.id]);
 
   const attrs: CharacterAttributeState = draft?.attributes ?? createDefaultAttributes();
@@ -421,7 +298,9 @@ export function AdminCharactersPanel() {
     return (
       <div style={{ ...CARD, padding: 24, textAlign: 'center' }}>
         <User size={32} style={{ margin: '0 auto 8px', color: C.textMuted }} />
-        <p style={{ fontSize: 13, color: C.textSecondary }}>Персонажи загружаются…</p>
+        <p style={{ fontSize: 13, color: C.textSecondary }}>
+          {living.length === 0 ? 'Нет персонажей. Создай героя — потом выдавай предметы из каталога.' : 'Персонажи загружаются…'}
+        </p>
       </div>
     );
   }
@@ -517,15 +396,16 @@ export function AdminCharactersPanel() {
 
   const addItemToInventory = (itemId: string, qty: number) => {
     const clean = clampQty(qty);
-    if (!itemId || clean <= 0) return;
-    setTouched(p => ({ ...p, inventory: true }));
-    patchDraft(prev => {
-      const inventory = [...prev.inventory.items];
-      const idx = inventory.findIndex(s => s.itemId === itemId);
-      if (idx >= 0) inventory[idx] = { ...inventory[idx], quantity: (inventory[idx].quantity || 0) + clean };
-      else inventory.push({ itemId, quantity: clean, locked: false, tab: 0 });
-      return { ...prev, inventory: { ...prev.inventory, items: inventory } };
-    });
+    if (!itemId || clean <= 0 || !selected) return;
+    void (async () => {
+      try {
+        const updated = await grantItemsToCharacter(selected.id, [{ itemId, qty: clean }]);
+        setDraft(normalizeSave(updated.saveData, usePlayerStore.getState().skills as Record<SkillId, SkillState>, getLiveAttributes()));
+        notify(`Выдано в сумку ${selected.nickname}: ${getItem(itemId)?.name ?? itemId} ×${clean}`);
+      } catch (e) {
+        notify(`Не удалось выдать: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    })();
   };
 
   const changeItemQty = (itemId: string, delta: number) => {
@@ -553,8 +433,10 @@ export function AdminCharactersPanel() {
     if (!draft || !selected || saving) return;
     setSaving(true);
     try {
-      const fallbackSkills = selected.saveData?.player?.skills ? undefined : (usePlayerStore.getState().skills as Record<SkillId, SkillState>);
-      const base = normalizeSave(selected.saveData, fallbackSkills, getLiveAttributes());
+      const row = useCharacterStore.getState().characters.find(c => c.id === selected.id && !c.isDeleted);
+      if (!row) throw new Error('Персонаж не найден');
+      const fallbackSkills = row.saveData?.player?.skills ? undefined : (usePlayerStore.getState().skills as Record<SkillId, SkillState>);
+      const base = normalizeSave(row.saveData, fallbackSkills, getLiveAttributes());
       const next: SaveData = {
         ...base,
         savedAt: Date.now(),
@@ -572,7 +454,7 @@ export function AdminCharactersPanel() {
         characters: state.characters.map(c => (c.id === updated.id ? updated : c)),
         activeCharacter: state.activeCharacter?.id === updated.id ? updated : state.activeCharacter,
       }));
-      if (activeCharacter?.id === updated.id) applySaveData(normalizeSave(updated.saveData, usePlayerStore.getState().skills as Record<SkillId, SkillState>, getLiveAttributes()));
+      if (activeCharacterId === updated.id) applySaveData(normalizeSave(updated.saveData, usePlayerStore.getState().skills as Record<SkillId, SkillState>, getLiveAttributes()));
       notify('Персонаж сохранён');
     } catch (e) {
       notify(`Ошибка сохранения: ${e instanceof Error ? e.message : String(e)}`);
@@ -605,18 +487,19 @@ export function AdminCharactersPanel() {
           />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 900, color: C.text }}>{selected.nickname}</div>
-            <div style={{ fontSize: 11, color: C.textMuted }}>{getRaceLabel(selected.raceId, 'ru')}{selected.id === activeCharacter?.id ? ' · активный' : ''}</div>
+            <div style={{ fontSize: 11, color: C.textMuted }}>{getRaceLabel(selected.raceId, 'ru')}{selected.id === activeCharacterId ? ' · активный' : ''}</div>
           </div>
         </div>
 
-        <select
-          value={selected.id}
-          onChange={e => setSelectedId(e.target.value)}
+        <button
+          type="button"
+          onClick={() => setHeroOpen(true)}
           className="flex-1 min-w-[140px]"
-          style={{ ...INPUT, fontSize: 12, fontWeight: 600 }}
+          style={{ ...INPUT, fontSize: 12, fontWeight: 600, textAlign: 'left', cursor: 'pointer' }}
         >
-          {characters.map(c => <option key={c.id} value={c.id}>{c.nickname}</option>)}
-        </select>
+          Сменить героя · {living.length}
+        </button>
+        <AdminCharacterPickerModal open={heroOpen} onClose={() => setHeroOpen(false)} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
           {dirty && (
@@ -871,8 +754,15 @@ export function AdminCharactersPanel() {
             <button
               type="button"
               onClick={() => {
-                for (const k of TIER1_STARTER_KIT) addItemToInventory(k.id, k.qty);
-                notify('Выдан тир-1 стартовый комплект (13 предметов)');
+                void (async () => {
+                  try {
+                    const updated = await grantItemsToCharacter(selected.id, TIER1_STARTER_KIT.map(k => ({ itemId: k.id, qty: k.qty })));
+                    setDraft(normalizeSave(updated.saveData, usePlayerStore.getState().skills as Record<SkillId, SkillState>, getLiveAttributes()));
+                    notify(`Выдан тир-1 комплект в сумку ${selected.nickname} (сразу сохранён)`);
+                  } catch (e) {
+                    notify(`Не удалось выдать комплект: ${e instanceof Error ? e.message : String(e)}`);
+                  }
+                })();
               }}
               className={BTN}
               style={{ ...BTN_SECONDARY, borderColor: C.accent, color: C.accent }}

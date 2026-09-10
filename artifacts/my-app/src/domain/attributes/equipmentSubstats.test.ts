@@ -47,6 +47,7 @@ test('профили: у каждого слота есть канон, оси �
   assert.ok(EQUIP_SLOT_SUBSTAT_AXES.weapon.includes('strike'), 'оружие несёт плоский Удар (база урона)');
   assert.ok(EQUIP_SLOT_SUBSTAT_AXES.weapon.includes('tempo'));
   assert.ok(EQUIP_SLOT_SUBSTAT_AXES.weapon.includes('luck'));
+  assert.ok(EQUIP_SLOT_SUBSTAT_AXES.quiver.includes('strike'), 'колчан несёт удар расходников');
   assert.deepEqual(EQUIP_SLOT_SUBSTAT_AXES.passive, []);
   // armour-слоты не могут врать про урон/интуицию.
   for (const slot of ['helm', 'platebody', 'boots'] as EquipSlot[]) {

@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import fs from 'node:fs';
 import { GEAR_ITEMS } from './gearItems.ts';
 import { BRANCH_IDS } from '../../../attributes/attributes.ts';
 import { EQUIP_SLOT_SUBSTAT_AXES } from '../../../../data/balance/equipmentSubstats.ts';
 import { sumEquipmentBonuses } from '../../../attributes/equipmentSubstats.ts';
 import {
   GEAR_WEAPONS,
+  GEAR_UNIQUE_VARIANT_COUNT,
+  GEAR_AMMO,
   gearTierScale,
   scaleTierMap,
   scaleTierBonus,
@@ -13,8 +16,15 @@ import {
 } from '../../../../data/balance/gear.ts';
 import type { EquipSlot, Item } from '../../../../data/types.ts';
 
+const EXPECTED_GEAR =
+  12 * GEAR_WEAPONS.length
+  + 3 * 5 * 12
+  + 15 + 15 + 10 + 10 + 10 + 10
+  + Object.values(GEAR_UNIQUE_VARIANT_COUNT).reduce((a, n) => a + n, 0)
+  + GEAR_AMMO.reduce((a, x) => a + x.variants, 0);
+
 test('каждый введённый предмет снаряжения несёт хоть одну реальную характеристику в своей оси слота', () => {
-  assert.ok(GEAR_ITEMS.length >= 30, 'тир-1 фундамент есть (оружие+броня+украшения)');
+  assert.equal(GEAR_ITEMS.length, EXPECTED_GEAR, 'тировое + магия + уники + колчан');
   for (const it of GEAR_ITEMS) {
     const slot = it.equipSlot;
     assert.ok(slot, `${it.id} — без слота`);
@@ -58,13 +68,62 @@ test('тировая шкала растёт монотонно, а бонусы
   assert.equal(scaleTierBonus(8, 1), 8, 'тир 1 = база');
 });
 
+test('прочность растёт с тиром, бижа v01 — огонь тира 2, кольца без v11–v15', () => {
+  const t1 = GEAR_ITEMS.find((i) => i.id === 'gear_sword_1h_t01');
+  const t12 = GEAR_ITEMS.find((i) => i.id === 'gear_sword_1h_t12');
+  assert.ok(t1 && t12);
+  assert.ok((t1.maxDurability ?? 0) > 0);
+  assert.ok((t12.maxDurability ?? 0) > (t1.maxDurability ?? 0), 'тир 12 служит дольше тира 1');
+  assert.ok((t12.substatBonuses?.strike ?? 0) > (t1.substatBonuses?.strike ?? 0));
+
+  const fireAmulet = GEAR_ITEMS.find((i) => i.id === 'gear_necklaces_v01');
+  assert.equal(fireAmulet?.tier, 2);
+  assert.equal(fireAmulet?.gearFamily, 'fire');
+
+  assert.ok(GEAR_ITEMS.some((i) => i.id === 'gear_necklaces_v15'));
+  assert.equal(GEAR_ITEMS.some((i) => i.id === 'gear_rings_l_v15'), false);
+  assert.equal(GEAR_ITEMS.filter((i) => i.equipSlot === 'ring').length, 10);
+});
+
 test('в определении весов и оружия нет записей вне осей', () => {
   const weights: GearWeight[] = ['plate', 'leather', 'cloth'];
   for (const w of weights) {
     void w;
   }
-  assert.ok(GEAR_WEAPONS.length >= 9, 'физические семьи оружия на месте');
+  assert.ok(GEAR_WEAPONS.length >= 12, 'физика + магия на месте');
   for (const slot of Object.keys(EQUIP_SLOT_SUBSTAT_AXES) as EquipSlot[]) {
     assert.ok(Array.isArray(EQUIP_SLOT_SUBSTAT_AXES[slot]));
   }
+});
+
+test('магия, уники и колчан заведены: картинка есть, удар уника не выше t12 семьи', () => {
+  for (const folder of ['book', 'staff', 'wand'] as const) {
+    assert.equal(GEAR_ITEMS.filter((i) => i.id.startsWith(`gear_${folder}_t`)).length, 12, folder);
+  }
+  const uniques = GEAR_ITEMS.filter((i) => i.id.startsWith('gear_unique_'));
+  assert.equal(uniques.length, Object.values(GEAR_UNIQUE_VARIANT_COUNT).reduce((a, n) => a + n, 0));
+  const byFolder = new Map(GEAR_WEAPONS.map((w) => [w.folder, w]));
+  for (const it of uniques) {
+    const folder = it.gearFamily?.replace(/^unique_/, '') ?? '';
+    const family = byFolder.get(folder);
+    assert.ok(family, it.id);
+    const t12 = scaleTierMap(family.tier1, 12);
+    if (family.slot === 'weapon') {
+      assert.ok((it.substatBonuses?.strike ?? 0) <= (t12.strike ?? 0), `${it.id} удар сильнее t12`);
+    } else {
+      assert.ok((it.substatBonuses?.armor ?? 0) <= (t12.armor ?? 0), `${it.id} броня сильнее t12`);
+    }
+  }
+  assert.equal(GEAR_ITEMS.filter((i) => i.equipSlot === 'quiver').length, 23);
+  assert.ok(GEAR_ITEMS.some((i) => i.id === 'gear_arrow_v15'));
+  assert.ok(GEAR_ITEMS.some((i) => i.id === 'gear_bolt_v08'));
+  assert.equal(GEAR_ITEMS.some((i) => i.id === 'gear_bolt_v09'), false);
+
+  const missing: string[] = [];
+  for (const it of GEAR_ITEMS) {
+    assert.ok(it.iconPath, `${it.id} без iconPath`);
+    const webp = `public/assets/icons/${it.iconPath}.webp`;
+    if (!fs.existsSync(webp)) missing.push(`${it.id} → ${webp}`);
+  }
+  assert.equal(missing.length, 0, missing.slice(0, 8).join('; '));
 });

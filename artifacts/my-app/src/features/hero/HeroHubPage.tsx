@@ -3,7 +3,6 @@ import { useLocation } from 'wouter';
 import {
   GAvatar, GBadge, GButton, GEmptyState, GInfoRow, GModal, GProgressBar, GSlot, GTag,
 } from '@/shared/ui/gameUI';
-import { TierBadge } from '@/shared/ui/kit/TierBadge';
 import { useAuthStore } from '@/store/authStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { usePlayerStore } from '@/store/playerStore';
@@ -12,8 +11,7 @@ import { useNotificationsStore } from '@/store/notificationsStore';
 import { getAvatarPath, getDollPath, getDollPath2x, getRaceLabel, type RaceId } from '@/data/characters';
 import { iconUrl } from '@/lib/assetUrl';
 import { getItemRarity } from '@/features/inventory/ItemIcon';
-import { getItemTier, UniversalInfoModal } from '@/components/modals/UniversalInfoModal';
-import { EquipSlotSilhouette } from '@/shared/icons/EquipSlotIcons';
+import { UniversalInfoModal } from '@/components/modals/UniversalInfoModal';
 import {
   BRANCHES,
   BRANCH_IDS,
@@ -37,7 +35,7 @@ import {
 } from '@/domain/attributes/attributeIcons';
 import { SYNERGIES, type SynergyDef, type SynergyId } from '@/domain/attributes/synergies';
 import { getItem } from '@/domain/items';
-import { formatNumber } from '@/lib/utils';
+import { ItemCell } from '@/shared/ui/kit/ItemCell';
 import type { EquipSlot, Equipment, Item } from '@/data/types';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { getLiveGearSets, loadGearSet, saveGearSet } from '@/domain/items/gearSets';
@@ -99,15 +97,19 @@ const GEAR_LEFT_COL1: EquipSlotDef[] = [
   { slot: 'shield', label: 'Щит' },
 ];
 
-/** Слева 2-я колонка: аксессуары и украшения (7 слотов) */
+/**
+ * Слева 2-я колонка: аксессуары и украшения (7 слотов).
+ * Порядок — по договорённости с владельцем: браслеты стоят рядом со штанами
+ * (строка 3), а плащ — в самой нижней ячейке, рядом со щитом.
+ */
 const GEAR_LEFT_COL2: EquipSlotDef[] = [
   { slot: 'amulet', label: 'Ожерелье' },
   { slot: 'belt', label: 'Пояс' },
-  { slot: 'cape', label: 'Плащ' },
-  { slot: 'ring', label: 'Кольцо 1' },
-  { slot: 'ring2', label: 'Кольцо 2' },
   { slot: 'bracelet', label: 'Браслет 1' },
   { slot: 'bracelet2', label: 'Браслет 2' },
+  { slot: 'ring', label: 'Кольцо 1' },
+  { slot: 'ring2', label: 'Кольцо 2' },
+  { slot: 'cape', label: 'Плащ' },
 ];
 
 import { Swords, Shield, Sparkles, Package, Save, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -414,15 +416,6 @@ function BodyModule({
     />
   );
 }
-
-const RARITY_DOT: Record<string, string> = {
-  common: '#8b4e20',
-  uncommon: '#22c55e',
-  rare: '#3b82f6',
-  epic: '#a855f7',
-  legendary: '#f59e0b',
-  mythic: '#ef4444',
-};
 
 function GearModule({
   equipment, avatarId, snapshot, onGearSetsChanged,
@@ -798,14 +791,14 @@ function HeroEquipSlotCard({
 }) {
   if (slotDef.locked) {
     return (
-      <button
-        type="button"
-        onClick={() => onOpen('locked')}
-        className={`hero-sq-slot hero-sq-slot--locked ${isSelected ? 'is-selected' : ''}`}
+      <ItemCell
+        compact
+        locked
+        silhouette="locked"
+        selected={isSelected}
         title="Скоро — будущий слот"
-      >
-        <EquipSlotSilhouette slot="locked" className="hero-sq-slot__vector-icon" />
-      </button>
+        onClick={() => onOpen('locked')}
+      />
     );
   }
 
@@ -813,53 +806,30 @@ function HeroEquipSlotCard({
   const ghostLeft = slot === 'shield' && twoHand;
   const itemId = ghostLeft ? equipment.weapon : equipment[slot];
   const item = itemId ? getItem(itemId) : undefined;
-  const rarity = itemId && item ? getItemRarity(itemId, item.sellValue, item.equipSlot) : 'common';
-  const tier = itemId && item ? getItemTier(itemId, item) : undefined;
 
-  if (!itemId) {
+  if (!itemId || !item) {
     return (
-      <button
-        type="button"
-        onClick={() => onOpen(slot)}
-        className={`hero-sq-slot hero-sq-slot--empty ${isSelected ? 'is-selected' : ''} ${isMatchingTarget ? 'is-matching-target' : ''}`}
+      <ItemCell
+        compact
+        silhouette={slot}
+        selected={isSelected}
+        matchingTarget={isMatchingTarget}
         title={`Надеть: ${slotDef.label}`}
-      >
-        <EquipSlotSilhouette slot={slot} className="hero-sq-slot__vector-icon" />
-      </button>
+        onClick={() => onOpen(slot)}
+      />
     );
   }
 
   return (
-    <button
-      type="button"
+    <ItemCell
+        compact
+      item={item}
+      dimmed={ghostLeft}
+      selected={isSelected}
+      matchingTarget={isMatchingTarget}
+      title={ghostLeft ? `${slotDef.label} · двуручное` : `${item.name} (${slotDef.label})`}
       onClick={() => onOpen(ghostLeft ? 'weapon' : slot)}
-      className={`hero-sq-slot hero-sq-slot--equipped ${ghostLeft ? 'is-dimmed' : ''} ${isSelected ? 'is-selected' : ''} ${isMatchingTarget ? 'is-matching-target' : ''}`}
-      title={ghostLeft ? `${slotDef.label} · двуручное` : `${item?.name ?? ''} (${slotDef.label})`}
-    >
-      {tier && (
-        <span className="hero-sq-slot__tier">
-          {tier}
-        </span>
-      )}
-      {rarity !== 'common' && (
-        <span
-          className="hero-sq-slot__dot"
-          style={{ background: RARITY_DOT[rarity] || '#8b4e20' }}
-        />
-      )}
-      <div className="hero-sq-slot__icon-wrap">
-        {(() => {
-          const v = slotVisual(itemId, ghostLeft ? 'weapon' : slot);
-          if (v.src) {
-            return <img src={v.src} alt={item?.name ?? ''} className="hero-sq-slot__icon" decoding="async" />;
-          }
-          if (v.emoji) {
-            return <span className="hero-sq-slot__emoji">{v.emoji}</span>;
-          }
-          return <EquipSlotSilhouette slot={ghostLeft ? 'weapon' : slot} className="hero-sq-slot__vector-icon hero-sq-slot__vector-icon--filled" />;
-        })()}
-      </div>
-    </button>
+    />
   );
 }
 
@@ -876,54 +846,26 @@ function HeroBagSlotCard({
 }) {
   if (!slot || !item || !equipSlot) {
     return (
-      <button
-        type="button"
-        onClick={onEmptyClick}
-        className={`hero-sq-slot hero-sq-slot--empty-bag ${isSelected ? 'is-selected' : ''}`}
+      <ItemCell
+        compact
+        empty
+        selected={isSelected}
         title="Пустая ячейка"
+        onClick={onEmptyClick}
       />
     );
   }
 
-  const rarity = getItemRarity(item.id, item.sellValue, equipSlot);
-  const tier = getItemTier(item.id, item);
-
   return (
-    <button
-      type="button"
-      onClick={() => onOpen?.(item, equipSlot)}
-      className={`hero-sq-slot hero-sq-slot--bag-item ${isSelected ? 'is-selected' : ''} ${isCompatible ? 'is-compatible' : ''}`}
+    <ItemCell
+        compact
+      item={item}
+      quantity={slot.quantity}
+      selected={isSelected}
+      compatible={isCompatible}
       title={`${item.name} · ${GEAR_LABEL[equipSlot] ?? equipSlot}`}
-    >
-      {tier && (
-        <span className="hero-sq-slot__tier">
-          {tier}
-        </span>
-      )}
-      {rarity !== 'common' && (
-        <span
-          className="hero-sq-slot__dot"
-          style={{ background: RARITY_DOT[rarity] || '#8b4e20' }}
-        />
-      )}
-      <div className="hero-sq-slot__icon-wrap">
-        {(() => {
-          const v = slotVisual(item.id, equipSlot);
-          if (v.src) {
-            return <img src={v.src} alt={item.name} className="hero-sq-slot__icon" decoding="async" />;
-          }
-          if (v.emoji) {
-            return <span className="hero-sq-slot__emoji">{v.emoji}</span>;
-          }
-          return <EquipSlotSilhouette slot={equipSlot} className="hero-sq-slot__vector-icon hero-sq-slot__vector-icon--filled" />;
-        })()}
-      </div>
-      {slot.quantity > 1 && (
-        <span className="hero-sq-slot__qty">
-          {formatNumber(slot.quantity)}
-        </span>
-      )}
-    </button>
+      onClick={() => onOpen?.(item, equipSlot)}
+    />
   );
 }
 
@@ -1325,7 +1267,7 @@ function HeroDetailModal({
           {gearItem ? (
             <>
               <div className="hero-item-card">
-                <span className={`hero-item-card__tile is-${getItemRarity(gearItem.id, gearItem.sellValue, gearItem.equipSlot)}`}>
+                <span className={`hero-item-card__tile is-${getItemRarity(gearItem.id, gearItem.sellValue, gearItem.equipSlot, gearItem.tier)}`}>
                   {slotVisual(gearItem.id, detail.slot).src ? (
                     <img src={slotVisual(gearItem.id, detail.slot).src} alt="" decoding="async" />
                   ) : (
@@ -1334,13 +1276,16 @@ function HeroDetailModal({
                 </span>
                 <span className="hero-item-card__meta">
                   <strong>{gearItem.name}</strong>
-                  <em className={`hero-item-rarity is-${getItemRarity(gearItem.id, gearItem.sellValue, gearItem.equipSlot)}`}>
-                    {RARITY_RU[getItemRarity(gearItem.id, gearItem.sellValue, gearItem.equipSlot)]}
+                  <em className={`hero-item-rarity is-${getItemRarity(gearItem.id, gearItem.sellValue, gearItem.equipSlot, gearItem.tier)}`}>
+                    {RARITY_RU[getItemRarity(gearItem.id, gearItem.sellValue, gearItem.equipSlot, gearItem.tier)]}
                   </em>
                   <small>{GEAR_LABEL[detail.slot]}</small>
                 </span>
               </div>
               {gearItem.description && <p className="hero-item-desc">{gearItem.description}</p>}
+              {typeof gearItem.maxDurability === 'number' && gearItem.maxDurability > 0 && (
+                <GInfoRow label="Прочность" value={`${gearItem.maxDurability}/${gearItem.maxDurability}`} />
+              )}
               {twoHand && <p className="hero-item-note">Двуручное: занимает обе руки.</p>}
               {EQUIP_STAT_META
                 .map(({ key, label }) => ({ key, label, value: gearItem.combatStats?.[key] ?? 0 }))
@@ -1397,6 +1342,9 @@ function HeroDetailModal({
               </span>
             </div>
             {item.description && <p className="hero-item-desc">{item.description}</p>}
+            {typeof item.maxDurability === 'number' && item.maxDurability > 0 && (
+              <GInfoRow label="Прочность" value={`${item.maxDurability}/${item.maxDurability}`} />
+            )}
             {EQUIP_STAT_META
               .map(({ key, label }) => ({ key, label, value: item.combatStats?.[key] ?? 0 }))
               .filter(r => r.value !== 0)
