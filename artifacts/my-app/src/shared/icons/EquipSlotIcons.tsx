@@ -325,7 +325,7 @@ export function EquipSlotLockedIcon({ className = 'w-5 h-5', size }: SlotIconPro
 
 export function EquipSlotSilhouette({
   slot,
-  className = 'hero-sq-slot__vector-icon',
+  className = 'item-cell__vector',
 }: {
   slot: EquipSlot | 'locked';
   className?: string;

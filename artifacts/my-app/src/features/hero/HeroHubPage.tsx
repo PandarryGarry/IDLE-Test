@@ -792,6 +792,7 @@ function HeroEquipSlotCard({
   if (slotDef.locked) {
     return (
       <ItemCell
+        compact
         locked
         silhouette="locked"
         selected={isSelected}
@@ -809,6 +810,7 @@ function HeroEquipSlotCard({
   if (!itemId || !item) {
     return (
       <ItemCell
+        compact
         silhouette={slot}
         selected={isSelected}
         matchingTarget={isMatchingTarget}
@@ -820,6 +822,7 @@ function HeroEquipSlotCard({
 
   return (
     <ItemCell
+        compact
       item={item}
       dimmed={ghostLeft}
       selected={isSelected}
@@ -844,6 +847,7 @@ function HeroBagSlotCard({
   if (!slot || !item || !equipSlot) {
     return (
       <ItemCell
+        compact
         empty
         selected={isSelected}
         title="Пустая ячейка"
@@ -854,6 +858,7 @@ function HeroBagSlotCard({
 
   return (
     <ItemCell
+        compact
       item={item}
       quantity={slot.quantity}
       selected={isSelected}

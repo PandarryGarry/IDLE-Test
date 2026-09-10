@@ -47,6 +47,8 @@ export interface ItemCellProps {
   matchingTarget?: boolean;
   /** Подпись под иконкой (пикер каталога). */
   caption?: string;
+  /** Компактный режим (мелкие ячейки «Экипа»): бирка и точка мельче. */
+  compact?: boolean;
   onClick?: () => void;
   title?: string;
   className?: string;
@@ -63,10 +65,13 @@ export function ItemCell({
   compatible = false,
   matchingTarget = false,
   caption,
+  compact = false,
   onClick,
   title,
   className = '',
 }: ItemCellProps) {
+  const rootMods = compact ? 'item-cell--compact' : '';
+
   const mods = [
     selected ? 'is-selected' : '',
     dimmed ? 'is-dimmed' : '',
@@ -81,7 +86,7 @@ export function ItemCell({
         type="button"
         onClick={onClick}
         title={title}
-        className={`item-cell item-cell--empty ${selected ? 'is-selected' : ''} ${className}`}
+        className={`item-cell item-cell--empty ${rootMods} ${selected ? 'is-selected' : ''} ${className}`}
       />
     );
   }
@@ -93,7 +98,7 @@ export function ItemCell({
         type="button"
         onClick={onClick}
         title={title}
-        className={`item-cell ${locked ? 'item-cell--locked' : 'item-cell--empty'} ${mods} ${className}`}
+        className={`item-cell ${rootMods} ${locked ? 'item-cell--locked' : 'item-cell--empty'} ${mods} ${className}`}
       >
         <EquipSlotSilhouette slot={silhouette ?? 'locked'} className="item-cell__vector" />
       </button>
@@ -111,11 +116,11 @@ export function ItemCell({
       type="button"
       onClick={onClick}
       title={title ?? item.name}
-      className={`item-cell ${mods} ${className}`}
+      className={`item-cell ${rootMods} ${mods} ${className}`}
     >
       {/* Бирка тира/уника — всегда справа-сверху */}
       <span className="item-cell__badge">
-        <TierBadge tier={tier} size="sm" unique={unique} />
+        <TierBadge tier={tier} size={compact ? 'xs' : 'sm'} unique={unique} />
       </span>
 
       {/* Точка редкости — слева-сверху */}

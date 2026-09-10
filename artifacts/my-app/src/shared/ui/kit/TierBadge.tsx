@@ -3,13 +3,18 @@ import React from 'react';
 interface TierBadgeProps {
   tier: string;
   className?: string;
-  size?: 'sm' | 'md';
+  size?: 'xs' | 'sm' | 'md';
   /** Уникальная экипировка: вместо «T12» метка «УНИК» и своё оформление. */
   unique?: boolean;
 }
 
 export function TierBadge({ tier, className = '', size = 'sm', unique = false }: TierBadgeProps) {
-  const sizeClasses = size === 'sm' ? 'text-[9px] px-1.5 py-0.2' : 'text-[11px] px-2 py-0.5';
+  const sizeClasses =
+    size === 'xs'
+      ? 'text-[7px] px-1 py-px'
+      : size === 'sm'
+        ? 'text-[9px] px-1.5 py-0.2'
+        : 'text-[11px] px-2 py-0.5';
 
   return (
     <span
