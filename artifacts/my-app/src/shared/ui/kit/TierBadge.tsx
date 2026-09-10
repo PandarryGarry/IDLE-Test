@@ -4,11 +4,9 @@ interface TierBadgeProps {
   tier: string;
   className?: string;
   size?: 'xs' | 'sm' | 'md';
-  /** Уникальная экипировка: вместо «T12» метка «УНИК» и своё оформление. */
-  unique?: boolean;
 }
 
-export function TierBadge({ tier, className = '', size = 'sm', unique = false }: TierBadgeProps) {
+export function TierBadge({ tier, className = '', size = 'sm' }: TierBadgeProps) {
   const sizeClasses =
     size === 'xs'
       ? 'text-[7px] px-1 py-px'
@@ -18,7 +16,7 @@ export function TierBadge({ tier, className = '', size = 'sm', unique = false }:
 
   return (
     <span
-      className={`font-mono font-black uppercase rounded-md bg-[var(--bg-page)] text-[var(--text-gold)] border border-[var(--cinematic-line)] shadow-sm leading-tight inline-flex items-center justify-center ${sizeClasses} ${unique ? 'tier-badge--unique' : ''} ${className}`}
+      className={`font-mono font-black uppercase rounded-md bg-[var(--bg-page)] text-[var(--text-gold)] border border-[var(--cinematic-line)] shadow-sm leading-tight inline-flex items-center justify-center ${sizeClasses} ${className}`}
     >
       {tier}
     </span>

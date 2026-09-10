@@ -556,15 +556,58 @@
   cursor: not-allowed;
 }
 
-/* Бирка тира/уника — всегда ПРАВЫЙ верхний угол, «наклеена» на рамку
-   снаружи, чтобы НЕ наезжать на иконку предмета. */
+/* Бирка тира — всегда ПРАВЫЙ верхний угол, «наклеена» на рамку
+   снаружи, чтобы НЕ наезжать на иконку предмета.
+   У уника справа от бирки — золотая звезда-эмблема. */
 .item-cell__badge {
   position: absolute;
   top: -6px;
   right: -6px;
   z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 3px;
   line-height: 1;
   filter: drop-shadow(0 1px 3px rgba(20, 10, 2, 0.55));
+}
+
+/* Уникальная ячейка — мягкое золотое свечение + золотой край. */
+.item-cell--unique {
+  border: 1px solid var(--border-accent);
+  box-shadow: var(--shadow-slot-wood), var(--unique-glow);
+}
+
+.item-cell--unique.is-selected {
+  box-shadow: var(--shadow-slot-wood), 0 0 0 2px var(--border-accent), var(--shadow-gold), var(--unique-glow);
+}
+
+/* Звезда-эмблема уникальности (шаг 6): золото с мягким сиянием. */
+.unique-emblem {
+  display: inline-flex;
+  line-height: 0;
+}
+
+.unique-emblem svg {
+  display: block;
+  fill: var(--accent-gold-light);
+  stroke: var(--accent-gold);
+  stroke-width: 1;
+  filter: drop-shadow(0 0 3px rgba(245, 195, 92, 0.8));
+}
+
+.unique-emblem--xs svg {
+  width: 10px;
+  height: 10px;
+}
+
+.unique-emblem--sm svg {
+  width: 13px;
+  height: 13px;
+}
+
+.unique-emblem--md svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* Компактные ячейки («Экип»): ярлыки мельче, чтобы не давили на мелкие клетки */
@@ -5126,19 +5169,8 @@
   text-align: center;
 }
 
-.gear-browse__head-uniq {
-  color: var(--accent-gold-light);
-}
-
 .gear-browse__group--unique .gear-browse__head {
   color: var(--text-gold);
-}
-
-/* Бейдж ячейки (админ-сетка, мини-сумка) у уника — залитое золото. */
-.tier-badge--unique {
-  background: var(--accent-gold);
-  color: var(--accent-gold-bg);
-  border-color: var(--accent-gold-light);
 }
 
 .admin-target {

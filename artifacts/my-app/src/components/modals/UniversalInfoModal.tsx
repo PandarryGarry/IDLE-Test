@@ -7,11 +7,12 @@ import { usePlayerStore } from '@/store/playerStore';
 import { useCombatStore } from '@/store/combatStore';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { getItemRarity } from '@/features/inventory/ItemIcon';
-import { GEAR_UNIQUE_TAG_SHORT, isGearUnique } from '@/data/balance/gear';
+import { isGearUnique } from '@/data/balance/gear';
 import { formatNumber } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CoinsDisplay } from '@/shared/ui/CoinsDisplay';
 import { TierBadge } from '@/shared/ui/kit/TierBadge';
+import { UniqueEmblem } from '@/shared/ui/kit/UniqueEmblem';
 import { RarityBadge, type RarityType } from '@/shared/ui/kit/RarityBadge';
 import { StatPill } from '@/shared/ui/kit/StatPill';
 import { 
@@ -29,9 +30,8 @@ import {
 } from 'lucide-react';
 
 export function getItemTier(itemId: string, item?: Item): string {
-  // Уникальная экипировка — не ступень тировой лестницы: вместо «T12» у неё
-  // своя метка (`GEAR_UNIQUE_TAG_SHORT`), тир остаётся только в расчётах.
-  if (isGearUnique(item)) return GEAR_UNIQUE_TAG_SHORT;
+  // Уник — тоже ступень тира в бейдже: числовой тир виден у всех предметов,
+  // а уникальность показывает звезда-эмблема рядом (шаг 6 плана).
   // Тир — данное поле каталога (1..12). Ниже — эвристика только для легаси
   // предметов без поля `tier` (исчезнет по мере переноса семейств в каталог).
   if (item?.tier) return `T${item.tier}`;
@@ -183,6 +183,7 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
               {item.equipSlot ? 'Снаряжение' : 'Предмет'}
             </span>
             <TierBadge tier={tier} size="sm" />
+            {isGearUnique(item) && <UniqueEmblem size="sm" />}
           </div>
 
           <div className="flex items-center gap-1">

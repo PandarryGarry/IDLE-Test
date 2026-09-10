@@ -8,8 +8,9 @@ import { grantItemsToCharacter } from '@/features/admin/adminCharacterSave';
 import { useNotificationsStore } from '@/store/notificationsStore';
 import { Minus, Plus, Search, X } from 'lucide-react';
 import { getItemVisual } from '@/shared/icons/itemIcons';
-import { gearQualityLabel } from '@/data/balance/gear';
+import { gearQualityLabel, isGearUnique } from '@/data/balance/gear';
 import { SquircleSlot } from '@/shared/ui/kit/SquircleSlot';
+import { UniqueEmblem } from '@/shared/ui/kit/UniqueEmblem';
 import { AdminDropdown } from '@/features/admin/AdminDropdown';
 import {
   applyFilterChange,
@@ -191,6 +192,12 @@ export function AdminItemsPage() {
               <small>
                 {selected.id}
                 {gearQualityLabel(selected) ? ` · ${gearQualityLabel(selected)}` : ''}
+                {isGearUnique(selected) ? (
+                  <>
+                    {' '}
+                    <UniqueEmblem size="xs" />
+                  </>
+                ) : null}
                 {typeof selected.maxDurability === 'number' ? ` · прочность ${selected.maxDurability}` : ''}
               </small>
             </div>

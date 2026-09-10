@@ -4,10 +4,10 @@ import type { EquipSlot, GearWeight, Item, ItemTier } from '@/data/types';
 import {
   EQUIP_SLOT_LABELS_RU,
   formatTierLabel,
-  GEAR_UNIQUE_TAG_RU,
   GEAR_WEIGHT_NAME_RU,
   isGearUnique,
 } from '@/data/balance/gear';
+import { UniqueEmblem } from '@/shared/ui/kit/UniqueEmblem';
 import {
   EMPTY_GEAR_BROWSE,
   filterGearItems,
@@ -180,7 +180,10 @@ export function GearCatalogBrowser({ items, selectedId, onSelect }: GearCatalogB
             <header className="gear-browse__head">
               <span>{g.slotLabel}</span>
               {g.unique ? (
-                <span className="gear-browse__head-uniq">{GEAR_UNIQUE_TAG_RU}</span>
+                <>
+                  <UniqueEmblem size="xs" />
+                  {g.tier > 0 && <span>{formatTierLabel(g.tier as ItemTier)}</span>}
+                </>
               ) : (
                 g.tier > 0 && <span>{formatTierLabel(g.tier as ItemTier)}</span>
               )}

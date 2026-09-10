@@ -8,12 +8,14 @@ import { getItemTier } from '@/components/modals/UniversalInfoModal';
 import { isGearUnique } from '@/data/balance/gear';
 import { formatNumber } from '@/lib/utils';
 import { TierBadge } from '@/shared/ui/kit/TierBadge';
+import { UniqueEmblem } from '@/shared/ui/kit/UniqueEmblem';
 import { THEME } from '@/styles/tokens';
 
 /**
  * ЕДИНАЯ карточка/ячейка предмета. Единственный источник правды о том,
  * как выглядит ячейка во ВСЕХ окнах (Инвентарь, Админка, пикер, «Экип», бой):
- *   - бирка тира/«УНИК» — маленький TierBadge в ПРАВОМ верхнем углу;
+ *   - бирка тира — маленький TierBadge в ПРАВОМ верхнем углу (числовой у всех,
+ *     у уников рядом золотая звезда-эмблема + свечение всей ячейки);
  *   - точка редкости — в ЛЕВОМ верхнем углу;
  *   - иконка/силуэт — по центру; прочность — снизу-слева; количество — снизу-справа;
  *   - фон «каштан» (--slot-wood), одинаковый радиус и тень.
@@ -117,11 +119,12 @@ export function ItemCell({
       type="button"
       onClick={onClick}
       title={title ?? item.name}
-      className={`item-cell ${rootMods} ${mods} ${className}`}
+      className={`item-cell ${rootMods} ${mods} ${unique ? 'item-cell--unique' : ''} ${className}`}
     >
-      {/* Бирка тира/уника — всегда справа-сверху */}
+      {/* Бирка тира — всегда справа-сверху; у уника рядом звезда */}
       <span className="item-cell__badge">
-        <TierBadge tier={tier} size={compact ? 'xs' : 'sm'} unique={unique} />
+        <TierBadge tier={tier} size={compact ? 'xs' : 'sm'} />
+        {unique && <UniqueEmblem size={compact ? 'xs' : 'sm'} />}
       </span>
 
       {/* Точка редкости — слева-сверху */}
