@@ -18,7 +18,7 @@ export function TierBadge({ tier, className = '', size = 'sm', unique = false }:
 
   return (
     <span
-      className={`font-mono font-black uppercase rounded-md bg-[var(--bg-page)] text-amber-300 border border-amber-400/40 shadow-sm leading-tight inline-flex items-center justify-center ${sizeClasses} ${unique ? 'tier-badge--unique' : ''} ${className}`}
+      className={`font-mono font-black uppercase rounded-md bg-[var(--bg-page)] text-[var(--text-gold)] border border-[var(--cinematic-line)] shadow-sm leading-tight inline-flex items-center justify-center ${sizeClasses} ${unique ? 'tier-badge--unique' : ''} ${className}`}
     >
       {tier}
     </span>

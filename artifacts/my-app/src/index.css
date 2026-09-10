@@ -217,6 +217,110 @@
   --radius-sheet:        22px;
 
   /* ═══════════════════════════════════════════════════════════
+     ШАГ 3 — роли примитивов gameUI/kit (план миграции §6).
+     Значения = живые краски gameUI один в один (вид не меняется);
+     калибровка оттенков «под таверну» — позже, глазами владельца.
+     Где значение уже жило в старой переменной — роль ссылается
+     на неё через var(), а не дублирует код.
+     ═══════════════════════════════════════════════════════════ */
+
+  /* Чернила: сплошное золото подписей + самая тихая ступень */
+  --ink-gold:            var(--text-gold);
+  --ink-bright:          var(--text-primary);
+  --ink-faint:           #8b6030;
+
+  /* Кайма общего назначения (светлая + акцентная) */
+  --edge-light:          var(--border-light);
+  --edge-accent:         var(--border-accent);
+
+  /* Поля ввода (GInput) */
+  --field-bg:            linear-gradient(160deg, #3d2008, #2a1406);
+  --field-shadow:        inset 0 2px 4px rgba(0, 0, 0, 0.35);
+  --field-focus-glow:    0 0 0 2px rgba(200, 136, 10, 0.2);
+  --field-error:         #c83020;
+  --field-error-ink:     #ff7060;
+
+  /* Кнопки: вторичная и опасная (главная уже в --btn-primary-*) */
+  --btn-secondary:       var(--card-cocoa-deep);
+  --btn-danger:          linear-gradient(180deg, #c83020, #a02010);
+  --btn-danger-edge:     #6b1808;
+  --btn-danger-shadow:   0 3px 0 #5a0a04;
+  --btn-disabled:        linear-gradient(180deg, #6a5028, #4a3818);
+  --btn-disabled-ink:    #a07838;
+
+  /* Карты: тёмные рецепты панелей (GPanel/GCard) */
+  --card-cocoa-deep:     linear-gradient(160deg, #5a3010, #3a1e08);
+  --card-select:         linear-gradient(160deg, #4a2c0a, #2e1a06);
+  --card-select-shadow:  0 3px 0 #2a1005, 0 0 14px rgba(200, 136, 10, 0.3);
+  --card-shadow-sm:      0 3px 0 #3d1e08;
+  --card-dark:           linear-gradient(160deg, #3a2008, #2a1406);
+  --card-active-shadow:  0 4px 0 #2a1005, 0 0 24px rgba(200, 136, 10, 0.2);
+
+  /* Бой и тревога (GPanel combat) */
+  --combat-bg:           linear-gradient(160deg, #5a1808, #3a0e06);
+  --combat-edge:         #c83020;
+  --combat-shadow:       0 4px 0 #2a0a04, 0 0 24px rgba(200, 48, 32, 0.2);
+
+  /* Модалка (GModal; рецепт эталона придёт на шаге 8, сейчас 1:1) */
+  --modal-veil:          rgba(15, 8, 0, 0.8);
+  --modal-bg:            linear-gradient(160deg, #7a5028, #4a2c10);
+  --modal-shadow:        0 8px 0 #2a1005, 0 12px 40px rgba(10, 4, 0, 0.7);
+  --modal-title-shadow:  0 2px 4px rgba(0, 0, 0, 0.5);
+
+  /* Тултип (GTooltip) */
+  --tooltip-bg:          rgba(20, 10, 0, 0.95);
+  --tooltip-shadow:      0 4px 12px rgba(0, 0, 0, 0.5);
+
+  /* Мягкое золотое свечение подписи (GDivider) */
+  --glow-gold-soft:      0 0 12px rgba(240, 192, 48, 0.4);
+
+  /* Пилюли (GBadge): фон + край + чернила каждого цвета */
+  --badge-gold-bg:       rgba(200, 136, 10, 0.2);
+  --badge-red-bg:        rgba(200, 40, 20, 0.2);
+  --badge-red-edge:      #c82818;
+  --badge-red-ink:       #ff8060;
+  --badge-green-bg:      rgba(30, 160, 80, 0.2);
+  --badge-green-ink:     #4ade80;
+  --badge-blue-bg:       rgba(30, 100, 200, 0.2);
+  --badge-blue-ink:      #60a0ff;
+  --badge-purple-bg:     rgba(120, 40, 200, 0.2);
+  --badge-purple-edge:   #7828c8;
+  --badge-purple-ink:    #c080ff;
+  --badge-gray-bg:       rgba(100, 70, 40, 0.3);
+  --badge-gray-edge:     #6b4020;
+  --badge-level-bg:      #1e0c04;
+  --badge-level-ink:     #d4a840;
+
+  /* Теги (GTag): свои фоны и края, чернила делит с пилюлями */
+  --tag-gold-bg:         rgba(200, 136, 10, 0.15);
+  --tag-gold-edge:       rgba(200, 136, 10, 0.4);
+  --tag-brown-bg:        rgba(90, 48, 16, 0.4);
+  --tag-red-bg:          rgba(200, 40, 20, 0.15);
+  --tag-red-edge:        rgba(200, 40, 20, 0.4);
+  --tag-green-bg:        rgba(30, 160, 80, 0.15);
+  --tag-green-edge:      rgba(30, 160, 80, 0.4);
+
+  /* Полосы (GProgressBar): лоток + блик каждого цвета */
+  --progress-track:      #1a0a04;
+  --progress-track-edge: #4a2810;
+  --progress-track-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+  --bar-gold-glow:       rgba(240, 192, 48, 0.5);
+  --bar-green-from:      #1a7a38;
+  --bar-green-to:        #2ecc70;
+  --bar-green-glow:      rgba(46, 204, 112, 0.5);
+  --bar-red-glow:        rgba(224, 64, 64, 0.5);
+  --bar-blue-from:       #1848a0;
+  --bar-blue-to:         #4080e0;
+  --bar-blue-glow:       rgba(64, 128, 224, 0.5);
+  --bar-purple-from:     #6020a0;
+  --bar-purple-to:       #a050e0;
+  --bar-purple-glow:     rgba(160, 80, 224, 0.5);
+
+  /* Пилюля статистики (StatPill) */
+  --stat-bg:             linear-gradient(160deg, #231a10, #1a1108);
+  --stat-shadow:         inset 0 1px 0 rgba(255, 220, 130, 0.04);
+
+  /* ═══════════════════════════════════════════════════════════
      СЛОЙ 1 АДАПТИВА — единая шкала токенов (RESPONSIVE_SYSTEM_PLAN.md)
      Каждый токен: clamp(мин, текучее, макс). Мин — узкие телефоны (~320),
      макс — десктоп (~1440). Сырой px допустим только для хайрлайнов.

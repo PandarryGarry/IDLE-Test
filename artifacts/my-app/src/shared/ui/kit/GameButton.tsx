@@ -11,11 +11,11 @@ interface GameButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> 
 }
 
 const VARIANT_STYLES: Record<ButtonVariant, string> = {
-  primary:   'bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-slate-950 font-extrabold shadow-[0_0_15px_rgba(245,158,11,0.25)] border border-amber-400/40',
-  secondary: 'bg-stone-800/90 hover:bg-slate-700 text-stone-200 hover:text-white font-bold border border-stone-700 shadow-sm',
-  success:   'bg-gradient-to-r from-emerald-600 to-teal-500 hover:brightness-110 text-white font-extrabold shadow-[0_0_15px_rgba(16,185,129,0.25)] border border-emerald-400/30',
-  danger:    'bg-red-500/15 hover:bg-red-500 text-red-300 hover:text-white font-bold border border-red-500/30 shadow-sm',
-  ghost:     'bg-transparent hover:bg-stone-800 text-stone-500 hover:text-stone-100 font-semibold',
+  primary:   '[background:var(--btn-primary)] hover:brightness-110 text-[var(--btn-primary-ink)] font-extrabold [box-shadow:var(--btn-primary-shadow)] border border-[var(--btn-primary-edge)]',
+  secondary: '[background:var(--btn-secondary)] text-[var(--text-muted)] hover:text-[var(--text-primary)] font-bold border border-[var(--border-light)] [box-shadow:var(--btn-primary-shadow)]',
+  success:   '[background:var(--btn-secondary)] text-[var(--badge-green-ink)] hover:text-[var(--text-primary)] font-extrabold border border-[var(--accent-emerald)] [box-shadow:var(--btn-primary-shadow)]',
+  danger:    '[background:var(--btn-danger)] text-[var(--text-primary)] font-bold border border-[var(--btn-danger-edge)] [box-shadow:var(--btn-danger-shadow)]',
+  ghost:     'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)] font-semibold',
 };
 
 const SIZE_STYLES: Record<ButtonSize, string> = {

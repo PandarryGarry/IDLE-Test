@@ -8,6 +8,7 @@ import { getItemTier } from '@/components/modals/UniversalInfoModal';
 import { isGearUnique } from '@/data/balance/gear';
 import { formatNumber } from '@/lib/utils';
 import { TierBadge } from '@/shared/ui/kit/TierBadge';
+import { THEME } from '@/styles/tokens';
 
 /**
  * ЕДИНАЯ карточка/ячейка предмета. Единственный источник правды о том,
@@ -20,14 +21,14 @@ import { TierBadge } from '@/shared/ui/kit/TierBadge';
  * чтобы больше не хардкодить разметку/позиции по окнам.
  */
 
-/** Цвета точки редкости, читаемые на дереве (как в инвентаре). */
+/** Точка редкости — единая шкала канона (значения = живые, вид 1:1). */
 export const ITEM_CELL_RARITY_DOT: Record<string, string> = {
-  common: '#c8a070',
-  uncommon: '#4ade80',
-  rare: '#60a5fa',
-  epic: '#c084fc',
-  legendary: '#fbbf24',
-  mythic: '#f87171',
+  common: THEME.rarity.common,
+  uncommon: THEME.rarity.uncommon,
+  rare: THEME.rarity.rare,
+  epic: THEME.rarity.epic,
+  legendary: THEME.rarity.legendary,
+  mythic: THEME.rarity.mythic,
 };
 
 export interface ItemCellProps {
