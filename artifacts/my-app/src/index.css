@@ -208,7 +208,7 @@
   /* «Уникальный предмет» — золотая звезда (решение владельца №3;
      сама эмблема подключается на шаге 6 плана) */
   --unique-gold:         var(--cinematic-gold);
-  --unique-glow:         0 0 12px rgba(245, 195, 92, 0.50);
+  --unique-glow:         0 0 18px rgba(245, 195, 92, 0.62);
 
   /* Радиусы канона: метки 8 / ячейки и поля 12 / карточки 14 / окна-листы 22 */
   --radius-tag:          8px;
@@ -561,8 +561,8 @@
    У уника справа от бирки — золотая звезда-эмблема. */
 .item-cell__badge {
   position: absolute;
-  top: -6px;
-  right: -6px;
+  top: -7px;
+  right: -7px;
   z-index: 10;
   display: flex;
   align-items: center;
@@ -571,17 +571,61 @@
   filter: drop-shadow(0 1px 3px rgba(20, 10, 2, 0.55));
 }
 
-/* Уникальная ячейка — мягкое золотое свечение + золотой край. */
-.item-cell--unique {
-  border: 1px solid var(--border-accent);
-  box-shadow: var(--shadow-slot-wood), var(--unique-glow);
+/* Бирка тира (Т1–Т12): тёмная компактная плашка, цифра — по медальной
+   шкале (бронза/серебро/золото). Светлая пилюля сливалась с какао-сеткой
+   (замечание владельца); теперь контраст даёт тёмное дерево подложки. */
+.tier-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono, monospace);
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 1.35;
+  letter-spacing: 0.03em;
+  border-radius: 4px;
+  background: linear-gradient(170deg, rgba(56, 32, 13, 0.96) 0%, rgba(32, 17, 7, 0.96) 100%);
+  border: 1px solid currentColor;
+  box-shadow: inset 0 1px 0 rgba(255, 244, 214, 0.16), 0 1px 2px rgba(16, 8, 2, 0.45);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.65);
+  white-space: nowrap;
+}
+
+.tier-badge--xs { font-size: 7px; padding: 0 3px; }
+.tier-badge--sm { font-size: 8px; padding: 1px 4px; }
+.tier-badge--md { font-size: 10px; padding: 1px 5px; }
+
+.tier-badge--bronze { color: #d9955c; }
+.tier-badge--silver { color: #ccd6da; }
+.tier-badge--gold {
+  color: #ffd35e;
+  box-shadow: inset 0 1px 0 rgba(255, 244, 214, 0.22), 0 1px 2px rgba(16, 8, 2, 0.45), 0 0 7px rgba(255, 200, 90, 0.35);
+}
+
+/* Уникальная ячейка — яркий золотой край, тёплый отсвет «углей» снизу
+   и усиленное сияние: топовая вещь обязана выделяться сразу
+   (урок Diablo 4 — уники, неотличимые в сетке, игроки считают провалом). */
+.item-cell.item-cell--unique {
+  border: 1.5px solid var(--accent-gold-light);
+  background:
+    radial-gradient(140% 95% at 50% 118%, rgba(255, 196, 84, 0.34) 0%, rgba(255, 196, 84, 0) 58%),
+    var(--slot-wood);
+  box-shadow: var(--shadow-slot-wood), inset 0 0 12px rgba(255, 206, 110, 0.22), var(--unique-glow);
+}
+
+.item-cell.item-cell--unique:hover {
+  background:
+    radial-gradient(140% 95% at 50% 118%, rgba(255, 200, 92, 0.42) 0%, rgba(255, 200, 92, 0) 60%),
+    var(--slot-wood-hover);
+  box-shadow: var(--shadow-slot-wood), inset 0 0 14px rgba(255, 206, 110, 0.28), var(--unique-glow);
 }
 
 .item-cell--unique.is-selected {
   box-shadow: var(--shadow-slot-wood), 0 0 0 2px var(--border-accent), var(--shadow-gold), var(--unique-glow);
 }
 
-/* Звезда-эмблема уникальности (шаг 6): золото с мягким сиянием. */
+/* Звезда-эмблема уникальности (шаг 6): крупная, яркое золото с тёмным
+   контуром, светлым бликом и двойным ореолом — читается с первого взгляда. */
 .unique-emblem {
   display: inline-flex;
   line-height: 0;
@@ -589,25 +633,32 @@
 
 .unique-emblem svg {
   display: block;
-  fill: var(--accent-gold-light);
-  stroke: var(--accent-gold);
-  stroke-width: 1;
-  filter: drop-shadow(0 0 3px rgba(245, 195, 92, 0.8));
+  fill: #ffd76a;
+  stroke: #8a5a06;
+  stroke-width: 1.1;
+  filter: drop-shadow(0 0 3px rgba(255, 222, 130, 0.95)) drop-shadow(0 0 8px rgba(242, 158, 34, 0.55));
+}
+
+.unique-emblem .unique-emblem__glint {
+  fill: #fff8dc;
+  stroke: none;
+  opacity: 0.95;
+  filter: none;
 }
 
 .unique-emblem--xs svg {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
 }
 
 .unique-emblem--sm svg {
-  width: 13px;
-  height: 13px;
+  width: 19px;
+  height: 19px;
 }
 
 .unique-emblem--md svg {
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
 }
 
 /* Компактные ячейки («Экип»): ярлыки мельче, чтобы не давили на мелкие клетки */
