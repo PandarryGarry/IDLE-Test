@@ -180,10 +180,7 @@ export function GearCatalogBrowser({ items, selectedId, onSelect }: GearCatalogB
             <header className="gear-browse__head">
               <span>{g.slotLabel}</span>
               {g.unique ? (
-                <>
-                  <UniqueEmblem size="xs" />
-                  {g.tier > 0 && <span>{formatTierLabel(g.tier as ItemTier)}</span>}
-                </>
+                <UniqueEmblem size="xs" />
               ) : (
                 g.tier > 0 && <span>{formatTierLabel(g.tier as ItemTier)}</span>
               )}

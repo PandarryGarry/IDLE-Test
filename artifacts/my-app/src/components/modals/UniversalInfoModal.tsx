@@ -30,8 +30,10 @@ import {
 } from 'lucide-react';
 
 export function getItemTier(itemId: string, item?: Item): string {
-  // Уник — тоже ступень тира в бейдже: числовой тир виден у всех предметов,
-  // а уникальность показывает звезда-эмблема рядом (шаг 6 плана).
+  // Правило владельца: тировый бейдж — только у экипировки (оружие, броня,
+  // бижутерия). У уника вместо бейджа только звезда-эмблема, у обычных
+  // предметов и ресурсов бейджа нет вообще — возвращаем пусто.
+  if (!item || isGearUnique(item) || !item.equipSlot) return '';
   // Тир — данное поле каталога (1..12). Ниже — эвристика только для легаси
   // предметов без поля `tier` (исчезнет по мере переноса семейств в каталог).
   if (item?.tier) return `T${item.tier}`;
@@ -182,7 +184,7 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
             <span className="text-xs font-mono font-black text-[var(--ink-strong)] uppercase tracking-wider">
               {item.equipSlot ? 'Снаряжение' : 'Предмет'}
             </span>
-            <TierBadge tier={tier} size="sm" />
+            {tier ? <TierBadge tier={tier} size="sm" /> : null}
             {isGearUnique(item) && <UniqueEmblem size="sm" />}
           </div>
 

@@ -337,9 +337,8 @@ export function formatTierLabel(tier: number): string {
  * (колец 10 → 5 уников, ожерелий 15 → 5 уников).
  *
  * Поле `tier` у уника остаётся (по нему считаются статы, прочность и редкость),
- * и игроку он тоже виден — числовым бейджем, как у всех. Уникальность
- * показывает звезда-эмблема и золотое свечение ячейки (шаг 6 плана),
- * текстовой плашки «УНИК» больше нет.
+ * но игроку не показывается: у уника только звезда-эмблема и золотое
+ * свечение ячейки (шаг 6 плана), текстовой плашки «УНИК» больше нет.
  */
 export const GEAR_UNIQUE_JEWEL_COUNT = 5;
 
@@ -367,16 +366,16 @@ export function isGearUnique(item: GearUniqueProbe | null | undefined): boolean 
   return false;
 }
 
-/** Полная подпись качества: «Тир VII» — и у тирового, и у уника. */
+/** Полная подпись качества: «Тир VII» у тирового, пусто у уника (там звезда). */
 export function gearQualityLabel(item: GearUniqueProbe | null | undefined): string {
-  if (!item) return '';
+  if (!item || isGearUnique(item)) return '';
   const tier = item.tier;
   return typeof tier === 'number' && tier >= 1 ? formatTierLabel(tier) : '';
 }
 
-/** Компактная подпись для бейджа ячейки: «T7» — и у тирового, и у уника. */
+/** Компактная подпись для бейджа ячейки: «T7» у тирового, пусто у уника. */
 export function gearQualityShort(item: GearUniqueProbe | null | undefined): string {
-  if (!item) return '';
+  if (!item || isGearUnique(item)) return '';
   const tier = item.tier;
   return typeof tier === 'number' && tier >= 1 ? `T${tier}` : '';
 }
