@@ -170,8 +170,13 @@ function Router() {
   if (isGuest && isGuestBlockedPath(pathname)) return <Redirect to="/" />;
 
   return (
-    <div className="flex min-h-screen bg-[var(--bg-page)] text-[var(--text-primary)] selection:bg-amber-500/30">
-      
+    <div className="flex min-h-screen text-[var(--text-primary)] selection:bg-amber-500/30">
+
+      {/* Канон «Стекло таверны», слой 0 «Картина»: живописный фон игры
+          (полотно — --art-backdrop, вуаль — --art-veil; подложка фиксированная,
+          лежит под каркасом и страницами). */}
+      <div className="app-backdrop" aria-hidden="true" />
+
       {/* Desktop Sidebar (Permanent) */}
       <div className="hidden md:block">
         <Sidebar />
@@ -191,7 +196,7 @@ function Router() {
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 md:ml-[240px] min-h-screen flex flex-col overflow-x-hidden" style={{ background: 'var(--bg-page)' }}>
+      <div className="flex-1 md:ml-[240px] min-h-screen flex flex-col overflow-x-hidden">
 
         {/* Unified Top Navigation */}
         <TopNavBar onOpenMobileMenu={() => setMobileMenuOpen(true)} />

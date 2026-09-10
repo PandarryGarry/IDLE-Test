@@ -273,16 +273,26 @@
 
   body {
     font-family: var(--app-font-sans);
-    background-color: #a07038;
+    /* Канон «Стекло таверны»: под картиной лежит глубокий тёплый тон,
+       виден только в просветы прокрутки за пределами .app-backdrop. */
+    background-color: #160c05;
     color: var(--text-primary);
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
-    /* Тёплый пергаментный фон с лёгкой текстурой через градиент */
-    background-image:
-      radial-gradient(ellipse at 30% 0%,   rgba(212,134,10,0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at 100% 80%,  rgba(180,100,20,0.06) 0%, transparent 50%),
-      radial-gradient(ellipse at 0% 100%,   rgba(160,80,10,0.05)  0%, transparent 50%);
-    background-attachment: fixed;
+  }
+
+  /* Канон «Стекло таверны», слой 0 «Картина» — живописный фон игры.
+     Одна общая картина на всё приложение (решение владельца 2026-09-10):
+     полотно — --art-backdrop, затемняющая вуаль — --art-veil. */
+  .app-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: var(--art-veil), var(--art-backdrop);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
   }
 
   ::selection {
