@@ -34,8 +34,11 @@
 
 /* ═══════════════════════════════════════════════════════════
    AETHELIA RPG — CSS CUSTOM PROPERTIES
-   Все значения берутся из src/styles/tokens.ts
-   Меняй tokens.ts → запускай скрипт → всё обновляется
+   ЕДИНЫЙ ИСТОЧНИК ПРАВДЫ темы «Стекло таверны» (UI_UX_AUDIT.md §5).
+   Значения живут только здесь (:root). TS-код берёт их через
+   карту ролей src/styles/tokens.ts (она экспортирует var(--…)).
+   Закон: цвета/тени/радиусы менять только здесь, а компоненты
+   обязаны ссылаться на роли — не на шестнадцатеричные коды.
    ═══════════════════════════════════════════════════════════ */
 :root {
   /* Фоны */
@@ -146,6 +149,72 @@
   --onboarding-panel:         linear-gradient(160deg, rgba(49, 31, 19, 0.64), rgba(16, 10, 6, 0.76));
   --onboarding-panel-edge:    rgba(224, 168, 70, 0.36);
   --onboarding-panel-shadow:  0 1.25rem 3.5rem rgba(0, 0, 0, 0.46), inset 0 1px 0 rgba(255, 235, 190, 0.10);
+
+  /* ═══════════════════════════════════════════════════════════
+     КАНОН «СТЕКЛО ТАВЕРНЫ» — роли слоёв (UI_UX_AUDIT.md §0/§5)
+     Значения — из эталона «Ложа таверны» (создание персонажа),
+     утверждённого владельцем 2026-09-10.
+     Шаг 1: роли объявлены; старые переменные выше живы и
+     переезжают сюда шагами плана миграции §6 — вид не меняется.
+     ═══════════════════════════════════════════════════════════ */
+
+  /* Слой 0. Картина — выбор полотна в одной точке (шаг 2 подключит) */
+  --art-backdrop:        url('/assets/art/auth_tavern_background.webp');
+  --art-veil:            linear-gradient(180deg, rgba(18, 10, 4, 0.45), rgba(12, 7, 3, 0.66));
+
+  /* Слой 1. Стекло — панели, листы окон, каркас */
+  --glass-bg:            var(--onboarding-panel);
+  --glass-edge:          var(--onboarding-panel-edge);
+  --glass-shadow:        var(--onboarding-panel-shadow);
+  --glass-filter:        blur(0.65rem) saturate(1.04);
+
+  /* Слой 2. Карточка — тёплое какао внутри листа */
+  --card-cocoa:          linear-gradient(160deg, #7a5028, #5a3818);
+  --card-cocoa-active:   linear-gradient(160deg, #5a3810, #3a2208);
+  --card-edge:           #5a3010;
+  --card-edge-active:    var(--border-accent);
+  --card-shadow:         0 4px 0 #3d1e08, 0 6px 20px rgba(10, 4, 0, 0.35);
+
+  /* Слой 3. Ячейка — рама «каштан» едина у всех; пустая подкладка
+     станет приглушённым стеклом (решение владельца №6), наполненная
+     остаётся светлой арт-панелью, как сейчас. */
+  --cell-frame:          var(--slot-wood);
+  --cell-frame-hover:    var(--slot-wood-hover);
+  --cell-empty:          linear-gradient(160deg, rgba(24, 13, 6, 0.42), rgba(16, 10, 6, 0.62));
+  --cell-empty-edge:     var(--cinematic-line);
+
+  /* Слой 4. Краски — чернила и золото */
+  --ink-hero:            var(--cinematic-gold);
+  --ink-strong:          var(--cinematic-light);
+  --ink-body:            var(--cinematic-copy);
+  --ink-dim:             var(--text-muted);
+  --ink-danger:          var(--cinematic-danger);
+
+  /* Акцент — ОДИН янтарь-главный для всех окон (из GButton primary) */
+  --btn-primary:         linear-gradient(180deg, #c8880a, #9a6008);
+  --btn-primary-edge:    #6b4008;
+  --btn-primary-shadow:  0 3px 0 #2a1005;
+  --btn-primary-ink:     #fff8d0;
+
+  /* Редкость — единая шкала (сейчас = живые значения ItemCell;
+     калибровка оттенков «под таверну» — отдельный шаг глазами владельца) */
+  --rarity-common:       #c8a070;
+  --rarity-uncommon:     #4ade80;
+  --rarity-rare:         #60a5fa;
+  --rarity-epic:         #c084fc;
+  --rarity-legendary:    #fbbf24;
+  --rarity-mythic:       #f87171;
+
+  /* «Уникальный предмет» — золотая звезда (решение владельца №3;
+     сама эмблема подключается на шаге 6 плана) */
+  --unique-gold:         var(--cinematic-gold);
+  --unique-glow:         0 0 12px rgba(245, 195, 92, 0.50);
+
+  /* Радиусы канона: метки 8 / ячейки и поля 12 / карточки 14 / окна-листы 22 */
+  --radius-tag:          8px;
+  --radius-cell:         12px;
+  --radius-card-canon:   14px;
+  --radius-sheet:        22px;
 
   /* ═══════════════════════════════════════════════════════════
      СЛОЙ 1 АДАПТИВА — единая шкала токенов (RESPONSIVE_SYSTEM_PLAN.md)
