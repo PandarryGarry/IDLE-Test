@@ -15,10 +15,15 @@
 |---|---|---|---|---|
 | `artifacts/my-app` | `web` | **8080** | `PORT=8080`, `BASE_PATH=/` | Vite: `process.env.PORT \|\| '3000'`, `strictPort: true`, `host: 0.0.0.0` |
 | `artifacts/api-server` | `api` | **5000** | (в dev — не задаётся) | Express: `process.env.PORT_API \|\| 5000`, `0.0.0.0` |
-| `artifacts/mockup-sandbox` | `design` | **8081** | `PORT=8081`, `BASE_PATH=/__mockup` | Vite; **без `PORT` бросает исключение** (см. `vite.config.ts`) |
 
-Занятые порты: **8080 (web), 5000 (api), 8081 (design-canvas)**.
+Занятые порты: **8080 (web), 5000 (api)**.
 Вне Replit (локально, без `PORT`) веб-приложение встаёт на **3000** — это норма.
+
+> **Canvas удалён (Сессия 31, 2026-09-10).** `artifacts/mockup-sandbox` и его
+> workflow «Component Preview Server» (порт **8081**, `/__mockup`) убраны из
+> репозитория и `.replit`: мокапы экранов реализованы в игре и больше не нужны.
+> Порт 8081 свободен. Если Canvas понадобится снова — поднимать заново,
+> это был отдельный `kind = "design"` артефакт.
 
 ---
 
@@ -89,18 +94,17 @@ app.listen(port, "0.0.0.0", ...);
 
 1. **8080 = только web.** Никакой другой сервис его не объявляет.
 2. **5000 = только api.** Меняется через `PORT_API`, совпадает с `localPort`.
-3. **8081 = только mockup-sandbox** (Canvas, `/__mockup`).
-4. **`strictPort: true` у Vite не снимать** — иначе порт «уедет» молча,
+3. **`strictPort: true` у Vite не снимать** — иначе порт «уедет» молча,
    и Replit снова будет проксировать в пустоту. Пусть лучше упадёт заметно.
-5. **`server.host: '0.0.0.0'`, `allowedHosts: true`, `cors: true`, `hmr: false`**
+4. **`server.host: '0.0.0.0'`, `allowedHosts: true`, `cors: true`, `hmr: false`**
    в `artifacts/my-app/vite.config.ts` — не трогать. Это то, что позволяет
    открывать приложение в iframe-превью (без `hmr: false` WebSocket клиента
    роняет страницу → белый экран).
-6. **Только pnpm.** Корневой `preinstall` намеренно ломает `npm`/`yarn`
+5. **Только pnpm.** Корневой `preinstall` намеренно ломает `npm`/`yarn`
    (`Use pnpm instead`). Воркспейс + `catalog:` в `pnpm-workspace.yaml`.
-7. **`minimumReleaseAge: 1440` не отключать** — защита от supply-chain атак.
+6. **`minimumReleaseAge: 1440` не отключать** — защита от supply-chain атак.
    Исключения — только в `minimumReleaseAgeExclude`.
-8. **`BASE_PATH=/`** для web — из него Vite берёт `base`. Для Canvas — `/__mockup`.
+7. **`BASE_PATH=/`** для web — из него Vite берёт `base`.
 
 ---
 

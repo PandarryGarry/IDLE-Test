@@ -59,6 +59,12 @@ Cap пакета героя ~5 с — страховка сети, не «мож
 **Облако.** Аккаунт и герой — таблицы Supabase (`SUPABASE_STAGE4.sql`).
 Прогресс героя — JSON `characters.save_data`. Мигратор атрибутов
 (`domain/attributes/characterAttributes.ts`) поднимает старый сейв без новой SQL.
+Авторитетный сейв — самый свежий (`reconcileCharacterSave`).
+
+**Инвентарь.** Сумка героя — `/inventory` ( термины: «инвентарь»/«сумка»).
+«Банк» как система **не существует** — будущая отдельная фича, контракт
+терминов и рамка: `BANK_FOUNDATION.md` (корень репо). Слово `bank` в коде —
+только legacy-чтение старых сейвов, не трогать.
 
 ## Что осталось в корне репозитория и почему
 
@@ -66,12 +72,18 @@ Cap пакета героя ~5 с — страховка сети, не «мож
 workspace-пакеты pnpm (my-app + api-server). Внутрь `my-app` не переносить:
 сломает api-server и Replit.
 
+Честный статус: это **скелет шаблона Replit**. Игрой они не используются
+(my-app ходит в Supabase напрямую, `lib/db` пуст, api-server — health-check,
+`api-client-react` объявлен в deps, но в `src/` не импортируется).
+Не подключать и не удалять без решения владельца.
+
 ## Проверки перед мержем
 
 ```
 pnpm typecheck          # чисто по всем пакетам
 pnpm build              # в artifacts/my-app
-pnpm test:pillars       # characterAttributes + xpRates + strikeRange + offlineAway
+pnpm test:pillars       # characterAttributes + equipmentSubstats + gear + xpRates + …
+pnpm validate:catalog   # каталог предметов: id, описания, webp, tier↔tNN
 ```
 
 Владелец перед «мержи» заходит **своим** аккаунтом на ветке в Replit
