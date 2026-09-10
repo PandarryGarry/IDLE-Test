@@ -25,6 +25,7 @@
 import React, { useState, useEffect } from 'react';
 import { iconUrl } from '@/lib/assetUrl';
 import { THEME } from '@/styles/tokens';
+import { AWindow } from '@/shared/ui/kit/AWindow';
 
 /* ════════════════════════════════════════════════════════════════
    ЦВЕТА — только роли канона «Стекло таверны» (THEME → index.css).
@@ -296,75 +297,17 @@ interface GModalProps {
 }
 
 export function GModal({ open, onClose, title, children, width = 340, closeOnOverlay = true }: GModalProps) {
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [open]);
-
-  if (!open) return null;
-
+  // Каркас единый — kit/AWindow (стекло эталона, шаг 8 аудита).
   return (
-    <>
-      {/* Оверлей */}
-      <div
-        onClick={closeOnOverlay ? onClose : undefined}
-        style={{
-          position: 'fixed', inset: 0, zIndex: 200,
-          background: THEME.modal.veil,
-          backdropFilter: 'blur(4px)',
-          animation: 'fadeIn 0.15s ease',
-        }}
-      />
-
-      {/* Окно. role/aria-label — контракт QA-скриптов (scripts/qa closeModal). */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        style={{
-          position: 'fixed', zIndex: 201,
-          left: '50%', top: '50%',
-          transform: 'translate(-50%,-50%)',
-          width: `min(${typeof width === 'number' ? width + 'px' : width}, 92vw)`,
-          maxHeight: '85vh', overflowY: 'auto',
-          background: THEME.modal.bg,
-          border: `2px solid ${C.borderAccent}`,
-          borderRadius: 20,
-          boxShadow: THEME.modal.shadow,
-          animation: 'slideUp 0.2s ease',
-        }}
-      >
-        {/* Шапка */}
-        {title && (
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '16px 18px 12px',
-            borderBottom: `1px solid ${C.borderLight}`,
-          }}>
-            <span style={{
-              fontFamily: C.fontDisplay, fontSize: 18, fontWeight: 900,
-              color: C.text, textShadow: THEME.modal.titleShadow,
-            }}>{title}</span>
-            <button
-              onClick={onClose}
-              aria-label="Закрыть"
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: C.textDim, fontSize: 20, padding: 4, lineHeight: 1,
-              }}
-            >✕</button>
-          </div>
-        )}
-
-        {/* Контент */}
-        <div style={{ padding: '14px 18px 18px' }}>
-          {children}
-        </div>
-      </div>
-    </>
+    <AWindow
+      open={open}
+      onClose={onClose}
+      title={title}
+      width={width}
+      closeOnOverlay={closeOnOverlay}
+    >
+      {children}
+    </AWindow>
   );
 }
 
@@ -867,7 +810,9 @@ interface GInfoRowProps {
 export function GInfoRow({ label, value, valueColor = C.gold }: GInfoRowProps) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-      <span style={{ fontFamily: C.fontMono, fontSize: 10, color: C.textDim }}>{label}</span>
+      {/* Подпись — тёплый приглушённый крем эталона: старый серый textDim
+          на коричневом фоне окна не читался (замечание аудита §3.1, столп). */}
+      <span style={{ fontFamily: C.fontMono, fontSize: 11, color: 'var(--cinematic-copy)', letterSpacing: '0.02em' }}>{label}</span>
       <span style={{ fontFamily: C.fontMono, fontSize: 11, fontWeight: 800, color: valueColor }}>{value}</span>
     </div>
   );

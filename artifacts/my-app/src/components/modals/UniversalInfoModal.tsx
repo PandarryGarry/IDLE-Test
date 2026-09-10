@@ -15,8 +15,8 @@ import { TierBadge } from '@/shared/ui/kit/TierBadge';
 import { UniqueEmblem } from '@/shared/ui/kit/UniqueEmblem';
 import { RarityBadge, type RarityType } from '@/shared/ui/kit/RarityBadge';
 import { StatPill } from '@/shared/ui/kit/StatPill';
-import { 
-  X, 
+import { AWindow } from '@/shared/ui/kit/AWindow';
+import {
   Lock, 
   Unlock, 
   Coins, 
@@ -170,50 +170,39 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
   const totalSellPrice = (item.sellValue ?? 0) * quantity;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 select-none animate-in fade-in duration-200">
-      <div
-        className="fixed inset-0 [background:var(--modal-veil)] backdrop-blur-md"
-        onClick={onClose}
-      />
-
-      <div className="relative w-full max-w-[360px] sm:max-w-[400px] [background:var(--glass-bg)] border [border-color:var(--glass-edge)] rounded-[var(--radius-sheet)] p-4 sm:p-5 [box-shadow:var(--glass-shadow)] [backdrop-filter:var(--glass-filter)] z-10 space-y-4 animate-in zoom-in-95 duration-200 max-h-[86vh] overflow-y-auto">
-        
-        {/* Header Bar */}
-        <div className="flex items-center justify-between pb-2 border-b [border-color:var(--glass-edge)]">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-black text-[var(--ink-strong)] uppercase tracking-wider">
-              {item.equipSlot ? 'Снаряжение' : 'Предмет'}
-            </span>
-            {tier ? <TierBadge tier={tier} size="sm" /> : null}
-            {isGearUnique(item) && <UniqueEmblem size="sm" />}
-          </div>
-
-          <div className="flex items-center gap-1">
-            {!isReadOnly && (
-              <button
-                type="button"
-                onClick={() => lockItem(itemId, !isLocked)}
-                className={`p-2 rounded-xl transition-all active:scale-95 ${
-                  isLocked
-                    ? '[background:var(--badge-gold-bg)] text-[var(--text-gold)] border [border-color:var(--border-accent)] [box-shadow:var(--unique-glow)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:[background:var(--badge-gray-bg)] border border-transparent'
-                }`}
-                title={isLocked ? 'Заперто от продажи' : 'Запереть предмет'}
-              >
-                {isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:[background:var(--badge-gray-bg)] transition-all active:scale-95"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
+    // Каркас единый — kit/AWindow (стекло эталона, шаг 8 аудита);
+    // внутренние секции попапа неизменны.
+    <AWindow
+      open
+      onClose={onClose}
+      width={400}
+      title={
+        <span className="flex items-center gap-2">
+          <span className="text-xs font-mono font-black text-[var(--ink-strong)] uppercase tracking-wider">
+            {item.equipSlot ? 'Снаряжение' : 'Предмет'}
+          </span>
+          {tier ? <TierBadge tier={tier} size="sm" /> : null}
+          {isGearUnique(item) && <UniqueEmblem size="sm" />}
+        </span>
+      }
+      headerActions={
+        !isReadOnly ? (
+          <button
+            type="button"
+            onClick={() => lockItem(itemId, !isLocked)}
+            className={`p-2 rounded-xl transition-all active:scale-95 ${
+              isLocked
+                ? '[background:var(--badge-gold-bg)] text-[var(--text-gold)] border [border-color:var(--border-accent)] [box-shadow:var(--unique-glow)]'
+                : 'text-[var(--cinematic-copy)] hover:text-[var(--cinematic-gold)] hover:[background:rgba(224,168,70,0.12)] border border-transparent'
+            }`}
+            title={isLocked ? 'Заперто от продажи' : 'Запереть предмет'}
+          >
+            {isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+          </button>
+        ) : undefined
+      }
+    >
+      <div className="space-y-4">
         {/* Hero Visual & Name Row */}
         <div className="flex items-center gap-3.5">
           <div className="relative w-20 h-20 rounded-2xl border [border-color:var(--card-edge)] [background:var(--cell-frame)] flex items-center justify-center text-4xl shadow-inner shrink-0 overflow-hidden">
@@ -423,6 +412,6 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
         )}
 
       </div>
-    </div>
+    </AWindow>
   );
 }

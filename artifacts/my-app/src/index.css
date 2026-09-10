@@ -442,6 +442,76 @@
   box-shadow: 0 0 20px rgba(192,40,30,0.2);
 }
 
+/* ═══════════════════════════════════════════════════════════
+   AWindow — единое модальное окно (шаг 8 аудита): матовое стекло
+   эталона «Ложа таверны» поверх вуали с блюром.
+   ═══════════════════════════════════════════════════════════ */
+.a-window__veil {
+  background: var(--modal-veil);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.15s ease;
+}
+
+.a-window {
+  position: fixed;
+  z-index: 201;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-sheet);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: var(--glass-filter);
+  animation: slideUp 0.2s ease;
+}
+
+.a-window__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2xs);
+  padding: var(--space-md) var(--space-lg) var(--space-xs);
+  border-bottom: 1px solid var(--glass-edge);
+}
+
+.a-window__title {
+  font-family: var(--app-font-display);
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--cinematic-light);
+  text-shadow: var(--modal-title-shadow);
+}
+
+.a-window__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.a-window__close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--cinematic-copy);
+  font-size: 18px;
+  padding: 4px;
+  line-height: 1;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.a-window__close:hover {
+  color: var(--cinematic-gold);
+  background: rgba(224, 168, 70, 0.12);
+}
+
+.a-window__body {
+  padding: var(--space-sm) var(--space-lg) var(--space-lg);
+}
+
 /* Ячейки */
 .g-slot {
   aspect-ratio: 1;
