@@ -335,6 +335,8 @@ function rollEnemy(zone: ForagingZone, rng: () => number): ForagingEnemy | null 
 
 export interface ForagingCycleResult {
   items: { itemId: string; quantity: number }[];
+  /** Выпавшее из редкой таблицы зоны (для тостов «находок», шаг 11 аудита). */
+  rareFinds: { itemId: string; quantity: number }[];
   xp: number;
   masteryXp: number;
   encounter: { areaId: string; monsterId: string; boss: boolean; iconPath: string } | null;
@@ -348,10 +350,11 @@ export interface ForagingCycleResult {
 export function rollForagingCycle(zoneId: string, level: number, rng: () => number = Math.random): ForagingCycleResult {
   const zone = FORAGING_ZONES_MAP[zoneId];
   if (!zone || level < zone.levelRequired) {
-    return { items: [], xp: 0, masteryXp: 0, encounter: null, empty: true };
+    return { items: [], rareFinds: [], xp: 0, masteryXp: 0, encounter: null, empty: true };
   }
 
   const items: { itemId: string; quantity: number }[] = [];
+  const rareFinds: { itemId: string; quantity: number }[] = [];
   const { qualityBoost, emptyReduction } = attentionBonuses(level);
   const doubleChance = doubleFindChance(level);
   const rareChance = rareFindChance(level);
@@ -369,7 +372,10 @@ export function rollForagingCycle(zoneId: string, level: number, rng: () => numb
   // Редкая находка (своя таблица зоны).
   if (zone.rareTable.length && rng() * 100 < rareChance + qualityBoost) {
     const rare = rollTable(zone.rareTable, rng);
-    if (rare) items.push(rare);
+    if (rare) {
+      items.push(rare);
+      rareFinds.push(rare);
+    }
   }
 
   // Встреча с мобом.
@@ -379,6 +385,7 @@ export function rollForagingCycle(zoneId: string, level: number, rng: () => numb
 
   return {
     items,
+    rareFinds,
     xp: zone.xp,
     masteryXp: zone.masteryXp,
     encounter: encounter

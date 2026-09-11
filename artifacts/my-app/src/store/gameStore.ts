@@ -10,6 +10,8 @@ import { usePlayerStore } from '@/store/playerStore';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { useCombatStore } from '@/store/combatStore';
 import { useNotificationsStore } from '@/store/notificationsStore';
+import { getItem } from '@/domain/items';
+import { MONSTERS_MAP } from '@/domain/combat/monsters';
 import { useAuthStore } from '@/store/authStore';
 import { isSkillAllowedForGuest, GUEST_NOTICE } from '@/lib/guestMode';
 import {
@@ -20,6 +22,8 @@ import {
 
 export interface ActionResult {
   items: { itemId: string; quantity: number }[];
+  /** Редкие находки цикла — для тостов уровня 2 (аудит, шаг 11). */
+  rareFinds?: { itemId: string; quantity: number }[];
   xpGained: number;
   masteryXpGained: number;
   bonusXp?: number;
@@ -81,6 +85,7 @@ function processForaging(actionId: string): ActionResult | null {
   const result = rollForagingCycle(actionId, playerLevel);
   return {
     items: result.items,
+    rareFinds: result.rareFinds.length ? result.rareFinds : undefined,
     xpGained: result.xp,
     masteryXpGained: result.masteryXp,
     encounter: result.encounter ?? undefined,
@@ -202,7 +207,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     if (inventoryFull) {
-      notifs.notifyInfo('⚠️ Сумка заполнена — часть находок потеряна.');
+      // Уровень 1: сумка переполнена — важное объявление в колокольчик топбара (аудит, шаг 11).
+      notifs.notifyInventoryFull();
+    } else if (result.rareFinds?.length) {
+      // Уровень 2: ценная находка — тост с цветной кромкой (аудит, шаг 11).
+      // Уникальная экипировка звучит как «легендарная», остальное из редкой таблицы — «редкое».
+      for (const find of result.rareFinds) {
+        const found = getItem(find.itemId);
+        notifs.notifyFind(
+          found?.name ?? find.itemId,
+          find.quantity,
+          found?.gearUnique ? 'legendary' : 'rare',
+          found?.icon,
+        );
+      }
     }
 
     const rates = getAdminRates();
@@ -220,7 +238,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       playerStore.addMasteryXp(state.activeSkill, state.activeActionId, effectiveMasteryXp);
       const newMastery = playerStore.getMasteryLevel(state.activeSkill, state.activeActionId);
       if (newMastery > oldMastery) {
-        notifs.notifyMasteryLevelUp(state.activeSkill, state.activeActionId, newMastery);
+        // Исправление аудита (шаг 11): в тост — русское название зоны, а не её id.
+        const zoneName = FORAGING_ZONES_MAP[state.activeActionId]?.name ?? state.activeActionId;
+        notifs.notifyMasteryLevelUp(state.activeSkill, zoneName, newMastery);
       }
     }
 
@@ -234,6 +254,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (result.encounter && isSkillEnabledForAdmin('combat')) {
       useForagingStore.setState({ activeZoneId: null });
       useCombatStore.getState().startCombat(result.encounter.areaId, result.encounter.monsterId);
+      // Уровень 1: нападение во время сбора / появление босса — важное объявление (аудит, шаг 11).
+      const ambusher = MONSTERS_MAP[result.encounter.monsterId];
+      notifs.notifyAmbush(ambusher?.name ?? 'противник', Boolean(result.encounter.boss));
       set({
         activeSkill: null,
         activeActionId: null,

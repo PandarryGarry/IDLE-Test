@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Route, Switch, Router as WouterRouter, Redirect, useLocation } from 'wouter';
-import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ErrorBoundary } from '@/components/error-boundary';
 
@@ -241,7 +240,6 @@ function Router() {
       </div>
 
       <NotificationToast />
-      <Toaster />
     </div>
   );
 }
