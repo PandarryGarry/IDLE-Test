@@ -1,148 +1,116 @@
 /**
  * ╔══════════════════════════════════════════════════════════╗
- * ║         AETHELIA RPG — DESIGN TOKENS                    ║
- * ║  Единый источник правды для всей палитры игры.          ║
- * ║  Меняй здесь — меняется везде.                          ║
+ * ║   AETHELIA — КАРТА РОЛЕЙ ТЕМЫ «СТЕКЛО ТАВЕРНЫ»           ║
  * ╚══════════════════════════════════════════════════════════╝
  *
- * СТИЛЬ: Warm Light Fantasy — светлый, живой, уютный RPG.
- * Вдохновение: классические fantasy UI.
+ * ЗАКОН (UI_UX_AUDIT.md §5, утверждено владельцем 2026-09-10):
+ *
+ * - Значения цветов/теней/радиусов живут ТОЛЬКО в src/index.css (:root).
+ *   Этот файл — типизированный способ добраться до них из TS-кода:
+ *
+ *     import { THEME } from '@/styles/tokens';
+ *     <div style={{ background: THEME.glass.bg, color: THEME.ink.strong }} />
+ *     // → background: var(--glass-bg)
+ *
+ * - ЗАПРЕЩЕНО класть в этот файл конкретные значения (#…, rgba()).
+ *   Нужна новая роль? Сначала объяви переменную в :root, потом — строку тут.
+ *
+ * ИСТОРИЯ: здесь была светлая тема «Warm Light Fantasy», заявленная как
+ * «единый источник правды», но не имевшая ни одного импорта (0 потребителей)
+ * и расходившаяся с игрой. Стерта при утверждении канона «Стекло таверны».
  */
 
+const v = (name: string) => `var(--${name})`;
+
+/** Слои канона «Стекло таверны» (по убыванию глубины). */
 export const THEME = {
 
-  // ─── ФОНЫ ───────────────────────────────────────────────
-  bg: {
-    page:       '#f5ede0',   // Базовый фон страницы — светлый пергамент
-    sidebar:    '#2d1f0f',   // Сайдбар — тёмный дуб
-    card:       '#fdf5e8',   // Карточка/панель — кремовый
-    cardHover:  '#fff8ef',   // Карточка при наведении
-    cardDark:   '#e8d5b5',   // Карточка второго уровня
-    slot:       '#ede0c8',   // Ячейка инвентаря — пустая
-    slotHover:  '#f5e8cc',   // Ячейка при наведении
-    input:      '#fdf5e8',   // Поле ввода
-    overlay:    'rgba(45, 31, 15, 0.75)', // Оверлей/модал
-    header:     '#3d2910',   // Шапка (топ-бар)
+  // ─── Слой 0. Картина (фон приложения) ───────────────────
+  art: {
+    backdrop: v('art-backdrop'),  // Полотно фона — выбор в одной точке
+    veil:     v('art-veil'),      // Затемняющая вуаль над полотном
   },
 
-  // ─── БОРДЕРЫ ────────────────────────────────────────────
-  border: {
-    default:    '#c8a878',   // Обычная граница — бронза
-    light:      '#e0c898',   // Лёгкая граница
-    strong:     '#8b6030',   // Акцентная граница
-    accent:     '#d4860a',   // Золотая граница
-    sidebar:    '#4a3018',   // Граница сайдбара
-    card:       '#d4b880',   // Граница карточки
-    slot:       '#b8966a',   // Граница ячейки
-    slotEmpty:  '#c8a870',   // Граница пустой ячейки (dashed)
+  // ─── Слой 1. Стекло (панели, листы окон, каркас) ────────
+  glass: {
+    bg:     v('glass-bg'),
+    edge:   v('glass-edge'),
+    shadow: v('glass-shadow'),
+    filter: v('glass-filter'),    // backdrop-filter рецепта эталона
   },
 
-  // ─── ТЕКСТ ──────────────────────────────────────────────
-  text: {
-    primary:    '#2d1f0f',   // Основной — тёмный шоколад
-    secondary:  '#6b4a28',   // Вторичный — тёплый коричневый
-    muted:      '#9a7450',   // Приглушённый
-    light:      '#c8a878',   // Светлый (на тёмном фоне)
-    white:      '#fdf5e8',   // Белый (на тёмном)
-    accent:     '#c8780a',   // Акцент — янтарь
-    gold:       '#d4860a',   // Золотой
-    sidebar:    '#e8d0a8',   // Текст сайдбара
-    sidebarMuted: '#9a7850', // Приглушённый текст сайдбара
+  // ─── Слой 2. Карточка (тёплое какао внутри листа) ───────
+  card: {
+    cocoa:        v('card-cocoa'),
+    cocoaActive:  v('card-cocoa-active'),
+    edge:         v('card-edge'),
+    edgeActive:   v('card-edge-active'),
+    shadow:       v('card-shadow'),
   },
 
-  // ─── АКЦЕНТНЫЕ ЦВЕТА (навыки, статусы) ─────────────────
-  accent: {
-    gold:       '#d4860a',   // Золото — основной акцент
-    goldLight:  '#f0a820',   // Светлое золото
-    goldBg:     '#fef3d0',   // Фон золотого акцента
-    emerald:    '#1a9e5a',   // Изумруд — добыча/природа
-    emeraldBg:  '#d0f0e0',   // Фон изумруда
-    ruby:       '#c0281e',   // Рубин — бой/урон
-    rubyBg:     '#fde8e8',   // Фон рубина
-    sapphire:   '#1860c0',   // Сапфир — магия/вода
-    sapphireBg: '#e0eeff',   // Фон сапфира
-    amber:      '#d06010',   // Янтарь — огонь/ремесло
-    amberBg:    '#fff0d8',   // Фон янтаря
-    teal:       '#0e8a7a',   // Бирюза — рыбалка
-    tealBg:     '#d0f5f0',   // Фон бирюзы
-    purple:     '#7030b0',   // Фиолет — магия
-    purpleBg:   '#f0e0ff',   // Фон фиолета
+  // ─── Слой 3. Ячейка предмета ────────────────────────────
+  cell: {
+    frame:      v('cell-frame'),        // Рама «каштан» — едина у всех ячеек
+    frameHover: v('cell-frame-hover'),
+    empty:      v('cell-empty'),        // Пустая подкладка — приглушённое стекло
+    emptyEdge:  v('cell-empty-edge'),
   },
 
-  // ─── РЕДКОСТЬ ПРЕДМЕТОВ ─────────────────────────────────
-  rarity: {
-    common:    { border: '#b8a080', bg: '#f5eedd', text: '#6b5030', glow: 'none' },
-    uncommon:  { border: '#3a9e50', bg: '#e0f5e8', text: '#1a6e30', glow: '0 0 8px rgba(58,158,80,0.3)' },
-    rare:      { border: '#2060c0', bg: '#e0eeff', text: '#1040a0', glow: '0 0 10px rgba(32,96,192,0.3)' },
-    epic:      { border: '#8040c0', bg: '#f0e0ff', text: '#6020a0', glow: '0 0 12px rgba(128,64,192,0.35)' },
-    legendary: { border: '#c07010', bg: '#fff0c0', text: '#904800', glow: '0 0 14px rgba(192,112,16,0.45)' },
-    mythic:    { border: '#c02840', bg: '#ffe0e8', text: '#900020', glow: '0 0 16px rgba(192,40,64,0.5)' },
+  // ─── Слой 4. Краски (чернила и золото) ──────────────────
+  ink: {
+    hero:   v('ink-hero'),    // Золото заголовков/выделенного
+    strong: v('ink-strong'),  // Основной текст (крем)
+    body:   v('ink-body'),    // Вторичный текст
+    dim:    v('ink-dim'),     // Приглушённый
+    danger: v('ink-danger'),
   },
 
-  // ─── ПОЛОСЫ ПРОГРЕССА ───────────────────────────────────
-  bar: {
-    track:      '#dcc8a0',   // Фон полосы
-    trackBorder:'#c0a070',   // Граница фона
-    xp:         { from: '#d4860a', to: '#f0b830' },  // XP — золото
-    hp:         { from: '#b02020', to: '#e04040' },  // HP — красный
-    mana:       { from: '#2050b0', to: '#4080e0' },  // Мана — синий
-    mastery:    { from: '#c07010', to: '#e0a030' },  // Мастерство — янтарь
-    combat:     { from: '#c02828', to: '#e05050' },  // Боевой — красный
-    gathering:  { from: '#3f6212', to: '#84cc16' },  // Сбор
-  },
-
-  // ─── КНОПКИ ─────────────────────────────────────────────
+  // ─── ОДИН янтарь-главный (все primary-кнопки игры) ──────
   button: {
-    primary:    { bg: '#d4860a', bgHover: '#e09820', border: '#b06008', text: '#fff8ee' },
-    secondary:  { bg: '#e8d5b5', bgHover: '#f0e0c0', border: '#c0a070', text: '#4a2e10' },
-    danger:     { bg: '#fde8e8', bgHover: '#c02828', border: '#c05050', text: '#900020' },
-    success:    { bg: '#e0f5e8', bgHover: '#2e8b40', border: '#3a9e50', text: '#1a5e28' },
-    ghost:      { bg: 'transparent', bgHover: '#f0e0c8', border: '#c8a878', text: '#6b4a28' },
+    primary:       v('btn-primary'),
+    primaryEdge:   v('btn-primary-edge'),
+    primaryShadow: v('btn-primary-shadow'),
+    primaryInk:    v('btn-primary-ink'),
   },
 
-  // ─── ТЕНИ И ЭФФЕКТЫ ─────────────────────────────────────
-  shadow: {
-    card:   '0 2px 12px rgba(45,31,15,0.12), 0 1px 4px rgba(45,31,15,0.08)',
-    cardHover: '0 6px 24px rgba(45,31,15,0.18)',
-    slot:   'inset 0 2px 4px rgba(45,31,15,0.12)',
-    gold:   '0 0 16px rgba(212,134,10,0.4)',
-    active: '0 0 20px rgba(26,158,90,0.3)',
-    combat: '0 0 20px rgba(192,40,30,0.3)',
+  // ─── Редкость предметов (единая шкала) ──────────────────
+  rarity: {
+    common:    v('rarity-common'),
+    uncommon:  v('rarity-uncommon'),
+    rare:      v('rarity-rare'),
+    epic:      v('rarity-epic'),
+    legendary: v('rarity-legendary'),
+    mythic:    v('rarity-mythic'),
+  } as const,
+
+  // ─── «Уникальный предмет» (золотая звезда-эмблема) ──────
+  unique: {
+    gold: v('unique-gold'),
+    glow: v('unique-glow'),
   },
 
-  // ─── РАДИУСЫ ────────────────────────────────────────────
+  // ─── Радиусы канона ─────────────────────────────────────
   radius: {
-    sm:   '6px',
-    md:   '10px',
-    lg:   '14px',
-    xl:   '18px',
-    full: '9999px',
+    tag:   v('radius-tag'),        // 8 — метки/пилюли
+    cell:  v('radius-cell'),       // 12 — ячейки/поля
+    card:  v('radius-card-canon'), // 14 — карточки
+    sheet: v('radius-sheet'),      // 22 — окна/листы
   },
 
-  // ─── ШРИФТЫ ─────────────────────────────────────────────
+  // ─── Шрифтовые роли ─────────────────────────────────────
   font: {
-    display: "'Cinzel', serif",
-    sans:    "'Inter', sans-serif",
-    mono:    "'JetBrains Mono', monospace",
+    display: v('app-font-display'),
+    sans:    v('app-font-sans'),
+    mono:    v('app-font-mono'),
   },
 
 } as const;
 
+export type RarityId = keyof typeof THEME.rarity;
+
 // ─── УТИЛИТЫ ────────────────────────────────────────────────
 
-/** Градиент для полосы прогресса */
-export function barGradient(bar: { from: string; to: string }) {
-  return `linear-gradient(90deg, ${bar.from}, ${bar.to})`;
-}
-
-/** CSS-переменные как строка для вставки в style */
+/** CSS-переменная как строка для вставки в style: cssVar('glass-bg') */
 export function cssVar(name: string) {
-  return `var(--${name})`;
+  return v(name);
 }
-
-// Экспорт отдельных групп для удобства
-export const COLORS   = THEME;
-export const RARITY   = THEME.rarity;
-export const BARS     = THEME.bar;
-export const BUTTONS  = THEME.button;
-export const SHADOWS  = THEME.shadow;
