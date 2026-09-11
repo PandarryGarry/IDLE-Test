@@ -585,6 +585,155 @@
   flex-shrink: 0;
 }
 
+/* ── Нижняя навигация — стеклянная панель слоя 1 (шаг 10 аудита) ──
+   Матовое стекло канона, рисованные иконки серии; активный пункт —
+   одно золото: черта сверху + тёплое свечение иконки. */
+.mobile-nav {
+  background: var(--glass-bg);
+  border-top: 1px solid var(--glass-edge);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  box-shadow: 0 -6px 24px rgba(8, 4, 0, 0.55);
+  padding: 4px 4px calc(4px + env(safe-area-inset-bottom, 0px));
+}
+.mobile-nav__row {
+  display: flex;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.mobile-nav__item {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 2px 4px;
+  border-radius: 12px;
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+a.mobile-nav__item,
+button.mobile-nav__item {
+  text-decoration: none;
+  background: none;
+  border: 0;
+  font: inherit;
+}
+.mobile-nav__item:hover {
+  color: var(--text-secondary);
+}
+.mobile-nav__item:active {
+  transform: translateY(1px);
+}
+.mobile-nav__icon {
+  width: 28px;
+  height: 28px;
+  display: block;
+  object-fit: contain;
+  opacity: 0.8;
+  filter: saturate(0.85);
+  transition: opacity 0.15s ease, filter 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+}
+.mobile-nav__item:hover .mobile-nav__icon {
+  opacity: 0.95;
+}
+.mobile-nav__item.is-on {
+  color: var(--text-gold);
+}
+.mobile-nav__item.is-on .mobile-nav__icon {
+  opacity: 1;
+  filter: saturate(1) drop-shadow(0 0 7px rgba(240, 192, 48, 0.5));
+  transform: translateY(-1px);
+}
+.mobile-nav__item.is-on::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 24%;
+  right: 24%;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--text-gold), transparent);
+  box-shadow: 0 0 6px rgba(240, 192, 48, 0.55);
+}
+.mobile-nav__label {
+  font-family: var(--app-font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.mobile-nav__dot {
+  position: absolute;
+  top: 4px;
+  right: calc(50% - 22px);
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+.mobile-nav__dot--combat {
+  background: #e5484d;
+  box-shadow: 0 0 6px rgba(229, 72, 77, 0.8);
+  animation: pulse-dot 1.2s ease-in-out infinite;
+}
+.mobile-nav__dot--skill {
+  background: #34d399;
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.8);
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+.mobile-nav__dot--inline {
+  position: static;
+  display: inline-block;
+  margin-left: 6px;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+/* Шит пункта (подменю): каркас на будущее — локации боя, виды квестов. */
+.mobile-nav__sheet-title {
+  font-family: var(--app-font-display);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-gold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.mobile-nav__sheet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  text-decoration: none;
+  border: 1px solid var(--border-default);
+  background: var(--bg-card-dark);
+  color: var(--text-primary);
+  transition: border-color 0.15s ease;
+}
+.mobile-nav__sheet-row:hover {
+  border-color: var(--border-accent);
+}
+.mobile-nav__sheet-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+.mobile-nav__sheet-meta {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--app-font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
 /* ── Хаб героя: лист модуля — прокручиваемое окно внутри рамки ── */
 .hero-hub {
   display: flex;
