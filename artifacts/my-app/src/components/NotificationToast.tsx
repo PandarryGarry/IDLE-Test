@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useNotificationsStore } from '@/store/notificationsStore';
+import { THEME } from '@/styles/tokens';
 import type { FindRarity } from '@/data/types';
 import { X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -20,22 +21,22 @@ interface ToastView {
   rarity?: FindRarity;
 }
 
-/** Цвет кромки: по типу, а для находок — по классу ценности. */
+/** Цвет кромки: по типу, а для находок — по шкале редкости (единый язык с ячейками). */
 function edgeColor(n: ToastView): string {
-  if (n.type === 'levelup')          return '#f0c030'; // золото — новый уровень навыка
-  if (n.type === 'mastery_levelup')  return '#e8a24e'; // мёд — мастерство зоны
-  if (n.type === 'combat')           return '#e0563d'; // кровь — бой
-  if (n.type === 'warning')          return '#fb923c'; // апельсин — предупреждение
-  if (n.type === 'achievement')      return '#f0c030';
+  if (n.type === 'levelup')          return THEME.announce.levelup;   // золото
+  if (n.type === 'mastery_levelup')  return THEME.announce.mastery;   // мёд
+  if (n.type === 'combat')           return THEME.announce.combat;    // кровь
+  if (n.type === 'warning')          return THEME.announce.warning;   // апельсин
+  if (n.type === 'achievement')      return THEME.announce.levelup;   // достижение — золото
   if (n.type === 'item') {
     switch (n.rarity) {
-      case 'rare':      return '#6aa3ff'; // сапфир
-      case 'epic':      return '#b07aff'; // аметист
-      case 'legendary': return '#f0d060'; // сияющее золото
+      case 'rare':      return THEME.rarity.rare;       // сапфир
+      case 'epic':      return THEME.rarity.epic;       // аметист
+      case 'legendary': return THEME.rarity.legendary;  // сияющее золото
     }
-    return '#4ade80';                   // изумруд — обычная выдача предметов
+    return THEME.rarity.uncommon;                       // обычная выдача — изумруд
   }
-  return '#b8a184';                     // нейтральное дерево — прочие заметки
+  return THEME.announce.info;                           // нейтральное дерево
 }
 
 export function NotificationToast() {

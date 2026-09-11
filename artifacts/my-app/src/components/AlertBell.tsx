@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNotificationsStore } from '@/store/notificationsStore';
+import { THEME } from '@/styles/tokens';
 import type { AlertKind, ImportantAlert } from '@/data/types';
 import { Bell, X, Trash2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -9,14 +10,15 @@ import { AnimatePresence, motion } from 'framer-motion';
  * Не исчезают сами: живут в колокольчике топбара, пока игрок не закроет карточку.
  * Открытие панели помечает все объявления прочитанными — счётчик на колокольчике
  * означает «есть непрочитанные», а не число карточек списка.
+ * Цвета — только токены темы (страж шага 12).
  */
 
 const KIND_STYLE: Record<AlertKind, { edge: string; tint: string }> = {
-  ambush:        { edge: '#e0563d', tint: 'rgba(120, 36, 22, 0.35)' },
-  boss:          { edge: '#b07aff', tint: 'rgba( 74, 34, 108, 0.35)' },
-  world_boss:    { edge: '#f0d060', tint: 'rgba(120, 90, 20, 0.35)' },
-  restart:       { edge: '#6aa3ff', tint: 'rgba( 30, 54, 96, 0.35)' },
-  inventory_full:{ edge: '#fb923c', tint: 'rgba(130, 70, 16, 0.35)' },
+  ambush:        { edge: THEME.announce.combat,   tint: 'rgba(120, 36, 22, 0.35)' },
+  boss:          { edge: THEME.rarity.epic,       tint: 'rgba( 74, 34, 108, 0.35)' },
+  world_boss:    { edge: THEME.rarity.legendary,  tint: 'rgba(120, 90, 20, 0.35)' },
+  restart:       { edge: THEME.rarity.rare,       tint: 'rgba( 30, 54, 96, 0.35)' },
+  inventory_full:{ edge: THEME.announce.warning,  tint: 'rgba(130, 70, 16, 0.35)' },
 };
 
 export function AlertBell() {
@@ -51,10 +53,10 @@ export function AlertBell() {
           position: 'relative',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           width: 30, borderRadius: 8,
-          background: open ? 'linear-gradient(180deg,#6a5a2a,#4a3a14)' : 'linear-gradient(180deg,#7a4818,#5a3010)',
-          border: '2px solid #3d1e08',
-          color: '#f0d070', cursor: 'pointer',
-          boxShadow: '0 2px 0 #2a1005', flexShrink: 0,
+          background: open ? THEME.chrome.btnOpen : THEME.chrome.btn,
+          border: `2px solid ${THEME.chrome.btnEdge}`,
+          color: THEME.chrome.btnInk, cursor: 'pointer',
+          boxShadow: THEME.chrome.btnShadow, flexShrink: 0,
         }}
         title="Важные объявления"
         aria-label="Важные объявления"
@@ -66,16 +68,16 @@ export function AlertBell() {
           transition={{ duration: 0.6 }}
           style={{ display: 'inline-flex' }}
         >
-          <Bell size={14} color={unread ? '#ffd35a' : '#c8a050'} />
+          <Bell size={14} color={unread ? 'var(--text-gold)' : 'var(--text-muted)'} />
         </motion.span>
         {unread > 0 && (
           <span style={{
             position: 'absolute', top: -6, right: -6,
             minWidth: 16, height: 16, padding: '0 3px',
-            borderRadius: 999, background: '#b92a1e',
-            border: '1.5px solid #f0c030',
-            color: '#fff8e0', fontSize: 10, fontWeight: 800, lineHeight: '14px',
-            fontFamily: 'var(--app-font-mono)', textAlign: 'center',
+            borderRadius: 999, background: 'var(--accent-ruby)',
+            border: '1.5px solid var(--text-gold)',
+            color: 'var(--text-primary)', fontSize: 10, fontWeight: 800, lineHeight: '14px',
+            fontFamily: THEME.font.mono, textAlign: 'center',
           }}>
             {unread > 9 ? '9+' : unread}
           </span>
@@ -183,7 +185,7 @@ function AlertRow({ alert, onDismiss }: { alert: ImportantAlert; onDismiss: (id:
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
           <span style={{
-            fontSize: 12, fontWeight: 700, color: 'var(--text-primary, #f3e7c8)',
+            fontSize: 12, fontWeight: 700, color: 'var(--text-primary)',
             lineHeight: 1.3,
           }}>
             {alert.title}
@@ -202,7 +204,7 @@ function AlertRow({ alert, onDismiss }: { alert: ImportantAlert; onDismiss: (id:
             {alert.detail}
           </p>
         )}
-        <span style={{ fontSize: 10, color: 'var(--text-dim, rgba(220,200,160,0.45))', fontFamily: 'var(--app-font-mono)' }}>
+        <span style={{ fontSize: 10, color: THEME.ink.faint, fontFamily: THEME.font.mono }}>
           {time}
         </span>
       </div>

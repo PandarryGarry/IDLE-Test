@@ -9,6 +9,7 @@
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "validate:catalog": "node --experimental-strip-types validate-catalog.mjs",
+    "validate:colors": "node validate-colors.mjs",
     "test:pillars": "node --experimental-strip-types --test src/domain/attributes/characterAttributes.test.ts src/domain/attributes/equipmentSubstats.test.ts src/domain/items/catalog/gear/gearCatalog.test.ts src/domain/items/catalog/gear/gearBrowse.test.ts src/domain/items/legacyMigration.test.ts src/features/admin/adminCatalog.test.ts src/data/balance/xpRates.test.ts src/data/balance/strikeRange.test.ts src/lib/offlineAway.test.ts"
   },
   "devDependencies": {

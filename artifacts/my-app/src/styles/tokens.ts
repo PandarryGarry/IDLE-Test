@@ -229,6 +229,24 @@ export const THEME = {
     mono:    v('app-font-mono'),
   },
 
+  // ─── Объявления двух уровней (шаги 11–12): цветная кромка по типу ──
+  announce: {
+    levelup: v('announce-levelup'),   // уровень навыка — золото
+    mastery: v('announce-mastery'),   // мастерство зоны — мёд
+    combat:  v('announce-combat'),    // бой/нападение — кровь
+    warning: v('announce-warning'),   // предупреждение, сумка полна — апельсин
+    info:    v('announce-info'),      // нейтральная заметка — дерево
+  },
+
+  // ─── Хром переключателей топбара (живые значения шапки) ─
+  chrome: {
+    btn:       v('chrome-btn'),
+    btnOpen:   v('chrome-btn-open'),
+    btnEdge:   v('chrome-btn-edge'),
+    btnInk:    v('chrome-btn-ink'),
+    btnShadow: v('chrome-btn-shadow'),
+  },
+
 } as const;
 
 export type RarityId = keyof typeof THEME.rarity;
