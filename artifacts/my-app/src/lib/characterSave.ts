@@ -17,9 +17,12 @@ import { saveCharacterToCloud } from '@/lib/characterApi';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import type { SaveData } from '@/data/types';
 import type { Character } from '@/lib/characterApi';
+import { isPrimaryTab } from '@/lib/tabAuthority';
+import { CLOUD_CHECK_INTERVAL_MS, CLOUD_PUSH_INTERVAL_MS } from '@/data/balance/loop';
 
-const CLOUD_INTERVAL_MS = 3 * 60 * 1000; // ~3 мин
-const CHECK_INTERVAL_MS = 30 * 1000;      // проверяем каждые 30с (локальный сейв — там же)
+// Темп сохранений — в data/balance/loop.ts.
+const CLOUD_INTERVAL_MS = CLOUD_PUSH_INTERVAL_MS;
+const CHECK_INTERVAL_MS = CLOUD_CHECK_INTERVAL_MS;
 
 let cloudTimer: ReturnType<typeof setInterval> | null = null;
 let lastCloudPush = 0;
@@ -36,6 +39,8 @@ export async function pushCharacterCloud(force = false): Promise<void> {
   const active = useCharacterStore.getState().activeCharacter;
   if (!active) return;
   if (!isSupabaseConfigured) return;
+  // Фоновая вкладка не тащит в облако свой устаревший снимок (см. tabAuthority).
+  if (!isPrimaryTab()) return;
 
   const now = Date.now();
   if (!force && now - lastCloudPush < CLOUD_INTERVAL_MS) return;
@@ -90,10 +95,14 @@ export async function reconcileCharacterSave(character: Character): Promise<void
     // Локальный новее (или облако «голое»/пустое) — ВОЗВРАЩАЕМ его в память
     // и поднимаем облако до него, чтобы бэкап не оставался позади.
     applySaveData(chosen);
-    try {
-      await saveCharacterToCloud(character.id, chosen);
-    } catch (e) {
-      console.warn('reconcileCharacterSave → cloud backup failed:', e);
+    // В облако локальный снимок поднимает только вкладка-хозяин: фоновая вкладка
+    // видит устаревший автосейв (его пишет хозяин) и иначе откатила бы бэкап.
+    if (isPrimaryTab()) {
+      try {
+        await saveCharacterToCloud(character.id, chosen);
+      } catch (e) {
+        console.warn('reconcileCharacterSave → cloud backup failed:', e);
+      }
     }
   }
   lastCloudPush = Date.now();

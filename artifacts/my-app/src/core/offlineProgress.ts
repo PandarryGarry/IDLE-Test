@@ -12,8 +12,31 @@ import {
   foragingSpeedMultiplier,
 } from '../domain/professions/foraging.ts';
 import { getAdminRates } from '../store/adminConfigStore.ts';
+import { useSettingsStore } from '../store/settingsStore.ts';
+import {
+  OFFLINE_MAX_HOURS_DEFAULT,
+  OFFLINE_MAX_HOURS_MIN,
+  OFFLINE_MAX_HOURS_MAX,
+  OFFLINE_MIN_MS,
+} from '../data/balance/offline.ts';
+import { ACTION_MIN_INTERVAL_MS } from '../data/balance/loop.ts';
 
-const MAX_OFFLINE_MS = 24 * 60 * 60 * 1000; // 24 hours cap
+/**
+ * Потолок оффлайна. Раньше был жёсткой константой на 24 ч, и настройка
+ * «Максимум часов вне игры» в Settings ничего не делала. Теперь настройка
+ * управляет, но в разрешённом балансом коридоре (защита от 0 и от 9999).
+ */
+function offlineCapMs(): number {
+  let hours = OFFLINE_MAX_HOURS_DEFAULT;
+  try {
+    const raw = useSettingsStore.getState().maxOfflineHours;
+    if (Number.isFinite(raw)) hours = Math.floor(raw);
+  } catch {
+    // стор ещё не гидратирован — считаем дефолт
+  }
+  const clamped = Math.min(OFFLINE_MAX_HOURS_MAX, Math.max(OFFLINE_MAX_HOURS_MIN, hours));
+  return clamped * 60 * 60 * 1000;
+}
 
 interface OfflineResult {
   offlineMs: number;
@@ -31,7 +54,7 @@ function calcForagingOffline(actionId: string, offlineMs: number): OfflineResult
   const rates = getAdminRates();
   const level = usePlayerStore.getState().getSkillLevel('foraging');
   const interval = Math.max(
-    100,
+    ACTION_MIN_INTERVAL_MS,
     Math.round(zone.interval / Math.max(0.01, rates.actionSpeedMultiplier * foragingSpeedMultiplier(level))),
   );
   const totalActions = Math.floor(offlineMs / interval);
@@ -63,9 +86,9 @@ export function calculateOfflineProgress(
 ): OfflineResult {
   const now = Date.now();
   const rawOfflineMs = now - lastSaveTime;
-  const offlineMs = Math.min(rawOfflineMs, MAX_OFFLINE_MS);
+  const offlineMs = Math.min(rawOfflineMs, offlineCapMs());
 
-  if (offlineMs < 1000 || !skillId || !actionId) {
+  if (offlineMs < OFFLINE_MIN_MS || !skillId || !actionId) {
     return { offlineMs: 0, actions: 0, xpGained: 0, itemsGained: [], levelUps: [] };
   }
 

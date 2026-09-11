@@ -7,6 +7,10 @@ import type {
 } from '@/data/types';
 import type { ProfessionStatDef } from '@/domain/professions/professionStats';
 import type { ProfessionFeed } from '@/data/balance/professions';
+import {
+  registerAdminItemSnapshot as registerDomainAdminItemSnapshot,
+  registerProfessionFeedOverrides as registerDomainProfessionFeedOverrides,
+} from '@/domain/runtimePorts';
 
 /**
  * Админ-конфигурация: правки предметов и «рейты игры» (XP, темп, дроп,
@@ -415,3 +419,13 @@ export function isSkillEnabledForAdmin(skill: AdminSkillToggle): boolean {
 }
 
 export const ADMIN_CONFIG_STORAGE_KEY = STORAGE_KEY;
+
+// ── Адаптер домена ─────────────────────────────────────────────
+// Чистая логика (`domain/`) не имеет права импортировать этот стор — она
+// читает админ-правки через порты `domain/runtimePorts.ts`. Импорт стора
+// тянул бы zustand в тесты столпов и в `validate-catalog.mjs`.
+registerDomainProfessionFeedOverrides(() => getProfessionFeedOverrides());
+registerDomainAdminItemSnapshot(() => {
+  const { itemOverrides, gameRates } = getAdminConfig();
+  return { itemOverrides, sellPriceMultiplier: gameRates.sellPriceMultiplier };
+});

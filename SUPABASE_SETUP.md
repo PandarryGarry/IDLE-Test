@@ -180,3 +180,23 @@ create policy "Users can update own profile"
 - Не вставлять ключи в чат.
 - Не коммитить `.env.local`.
 - Не создавать никакой бэкенд-сервер: весь auth выполняется напрямую в браузере через Supabase JS.
+
+---
+
+## 9. Защита привилегий аккаунта (один раз, после `SUPABASE_STAGE4.sql`)
+
+Политика `Users can update own profile` разрешает владельцу строки менять
+любые колонки — включая `role` и `donate_currency`. То есть игрок может
+сам себе выдать `role='admin'` и накрутить донат-валюту (она уже
+показывается в UI героя). Файл
+`artifacts/my-app/SUPABASE_STAGE4_1_PROFILE_GUARD.sql` вешает `BEFORE UPDATE`
+триггер, который возвращает эти две колонки к прежнему значению для всех,
+кроме `service_role`, плюс `CHECK` на допустимую роль и неотрицательный
+баланс. Идемпотентно: Supabase → SQL Editor → Run.
+
+Что не ломается: `rules_version`, `rules_accepted_at`,
+`selected_character_id`, `email` — обычные пользовательские правки как были.
+
+Как проверить: в конце файла — `update profiles set role='admin'` под своим
+`auth.uid()` должно промолчать и ничего не изменить. Откат — `drop trigger
+profiles_protect_privileges` (комментарий в файле).

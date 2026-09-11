@@ -43,6 +43,16 @@ export function isQaMockEnabled(): boolean {
     const qaDev = Boolean(import.meta.env.DEV && !import.meta.env.VITE_SUPABASE_URL);
     if (qaBuild || qaDev) {
       if (!flagged) window.localStorage.setItem(QA_MOCK_FLAG, '1');
+      // Прод-сборка с флагом = игра без облака: сейвы живут в localStorage этого
+      // браузера, `/admin` доступен всякому вошедшему. Для превью это намеренно,
+      // для боевого деплоя — авария, поэтому громко и в консоль.
+      if (qaBuild && !import.meta.env.DEV) {
+        console.warn(
+          '[Aethelia] QA-мок включён в ПРОД-сборке (VITE_QA_MOCK=1): '
+          + 'прогресс не уходит в Supabase, админка доступна всем. '
+          + 'Если это боевой деплой — пересоберите без флага и с VITE_SUPABASE_URL.',
+        );
+      }
       return true;
     }
     return false;

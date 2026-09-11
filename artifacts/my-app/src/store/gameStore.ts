@@ -17,6 +17,11 @@ import {
   isSkillEnabledForAdmin,
   type AdminSkillToggle,
 } from '@/store/adminConfigStore';
+import {
+  ACTION_DEFAULT_INTERVAL_MS,
+  ACTION_MIN_INTERVAL_MS,
+  ACTION_UNKNOWN_ZONE_INTERVAL_MS,
+} from '@/data/balance/loop';
 
 export interface ActionResult {
   items: { itemId: string; quantity: number }[];
@@ -93,13 +98,13 @@ function processAction(skillId: SkillId, actionId: string): ActionResult | null 
 }
 
 function getActionInterval(skillId: SkillId, actionId: string): number {
-  let base = 3000;
+  let base = ACTION_DEFAULT_INTERVAL_MS;
   if (skillId === 'foraging') {
-    base = Math.round((FORAGING_ZONES_MAP[actionId]?.interval ?? 4000) / Math.max(0.01, foragingSpeedMultiplier(usePlayerStore.getState().getSkillLevel('foraging'))));
+    base = Math.round((FORAGING_ZONES_MAP[actionId]?.interval ?? ACTION_UNKNOWN_ZONE_INTERVAL_MS) / Math.max(0.01, foragingSpeedMultiplier(usePlayerStore.getState().getSkillLevel('foraging'))));
   }
   const speed = getAdminRates().actionSpeedMultiplier;
   if (speed <= 0) return base;
-  return Math.max(100, Math.round(base / speed));
+  return Math.max(ACTION_MIN_INTERVAL_MS, Math.round(base / speed));
 }
 
 type AdminGatheringToggle = Exclude<AdminSkillToggle, 'combat'>;
@@ -115,7 +120,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   actionProgress: 0,
   actionStartTime: 0,
   nextActionTime: 0,
-  currentActionInterval: 3000,
+  currentActionInterval: ACTION_DEFAULT_INTERVAL_MS,
   gameMode: 'standard',
   totalPlayTime: 0,
   sessionStartTime: Date.now(),
@@ -258,7 +263,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   reset: () => set({
     activeSkill: null, activeActionId: null, actionProgress: 0,
-    actionStartTime: 0, nextActionTime: 0, currentActionInterval: 3000,
+    actionStartTime: 0, nextActionTime: 0, currentActionInterval: ACTION_DEFAULT_INTERVAL_MS,
     totalPlayTime: 0, sessionStartTime: Date.now(), lastSaveTime: Date.now(),
     isRunning: false, isPaused: false, xpGainedThisSession: {},
   }),

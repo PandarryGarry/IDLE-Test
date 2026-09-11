@@ -4,7 +4,7 @@ import {
   computeAttributeSnapshot,
 } from '../attributes/characterAttributes.ts';
 import { ratingToPercent } from '../../data/balance/substats.ts';
-import { getProfessionStatValue } from '../../store/professionStatsStore.ts';
+import { getProfessionStatValue } from '../runtimePorts.ts';
 
 /**
  * ДАННЫЕ И ЧИСТЫЕ ПРАВИЛА профессии «Сбор».

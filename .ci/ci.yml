@@ -1,0 +1,82 @@
+name: CI
+
+# ВНИМАНИЕ: файл лежит в .ci/ci.yml, потому что GitHub App-токен агента не имеет
+# scope workflows и не может коммитить в .github/workflows/*. Владельцу нужно
+# один раз скопировать это содержимое в .github/workflows/ci.yml (Web UI —
+# добавление файла), после чего CI заработает на каждом push/PR.
+
+# Приёмка «как в DEVLOG-ритуале», но автоматически: то, что раньше
+# прогонялось руками/агентом перед «мержи» (typecheck · test:pillars ·
+# validate:catalog · build). Плюс отчёт про вес ассетов — он не блокирует,
+# но делает видимой единственную большую свалку репозитория (PNG-мастера).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Один прогон на ветку: старые коммиты в PR не греем.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: typecheck · тесты · каталог · сборка
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.5
+
+      - uses: actions/setup-node@v4
+        with:
+          # Совпадает с `modules = ["nodejs-24", …]` в `.replit`.
+          node-version: 24
+          cache: pnpm
+
+      - name: Установка зависимостей
+        run: pnpm install --frozen-lockfile
+
+      - name: typecheck по всем пакетам
+        run: pnpm typecheck
+
+      - name: Тесты фундамента (столпы · каталог gear · XP · бой · оффлайн · сейв)
+        # Отдельно проверяем, что тесты чистой логики не зависят от нод-модулей:
+        # `domain/` и `lib/saveSchema` обязаны запускаться «на голом железе».
+        run: pnpm --filter @workspace/my-app run test:pillars
+
+      - name: Валидатор каталога предметов
+        run: pnpm --filter @workspace/my-app run validate:catalog
+
+      - name: Сборка (все пакеты)
+        run: pnpm build
+
+      - name: Отчёт про вес ассетов (не блокирует)
+        run: |
+          pub=artifacts/my-app/public/assets
+          png=$(find "$pub" -name '*.png' | wc -l)
+          webp=$(find "$pub" -name '*.webp' | wc -l)
+          size=$(du -sh "$pub" 2>/dev/null | cut -f1)
+          dist=$(du -sh artifacts/my-app/dist 2>/dev/null | cut -f1)
+          echo "public/assets — PNG-мастеров: $png, WebP-рантайма: $webp, вес: $size"
+          echo "dist после сборки: $dist (Vite копирует public/ целиком, вот почему мастера раздувают деплой)"
+          echo "См. чекбокс «Вынести PNG-мастера из public/ в art_masters/» в ROADMAP.md."
+          if [ "$png" -gt 0 ]; then
+            echo "::warning title=PNG-мастера в public::В публичной папке $png мастер-PNG — они едут в dist"
+          fi
+
+      - name: Проверка, что в рантайм не лезут мастер-PNG
+        run: |
+          # Закон проекта: в <img>/CSS только WebP. Считаем по коду, не по ассетам.
+          hits=$(grep -rn --include='*.tsx' --include='*.ts' --include='*.css' -E "assets/(icons|art)/[^\"']*\.png" artifacts/my-app/src || true)
+          if [ -n "$hits" ]; then
+            echo "Найдены прямые ссылки на PNG из public/assets — нужны iconUrl()/getAvatarPath():"
+            echo "$hits"
+            exit 1
+          fi
+          echo "PNG в коде не используется — закон вывески соблюдён."

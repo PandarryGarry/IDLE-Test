@@ -1,29 +1,31 @@
 // Game formulas for Aethelia Idle RPG mechanics
 
 import type { Monster } from '../data/types.ts';
+import { HIT_ROLL, MAX_HIT_MELEE, AUTO_EAT_HP_RATIO } from '../data/balance/combat.ts';
 
 // ── Combat formulas ──────────────────────────────────────────
 
 export function calcMaxHitMelee(strengthLevel: number, strengthBonus: number): number {
-  return Math.floor(1.3 + (strengthLevel + 8) * (strengthBonus + 64) / 640);
+  const { base, levelShift, bonusShift, divisor } = MAX_HIT_MELEE;
+  return Math.floor(base + (strengthLevel + levelShift) * (strengthBonus + bonusShift) / divisor);
 }
 
 export function calcAttackRating(attackLevel: number, attackBonus: number): number {
-  return attackLevel * (attackBonus + 64);
+  return attackLevel * (attackBonus + HIT_ROLL.bonusShift);
 }
 
 export function calcDefenceRating(defenceLevel: number, defenceBonus: number): number {
-  return defenceLevel * (defenceBonus + 64);
+  return defenceLevel * (defenceBonus + HIT_ROLL.bonusShift);
 }
 
 export function calcHitChance(attackRating: number, defenceRating: number): number {
-  if (defenceRating <= 0) return 95;
-  const chance = (attackRating / defenceRating) * 55 + 45;
-  return Math.min(Math.max(chance, 0), 95);
+  if (defenceRating <= 0) return HIT_ROLL.maxChance;
+  const chance = (attackRating / defenceRating) * HIT_ROLL.slope + HIT_ROLL.baseChance;
+  return Math.min(Math.max(chance, 0), HIT_ROLL.maxChance);
 }
 
 export function calcAutoEatThreshold(maxHp: number): number {
-  return Math.floor(maxHp * 0.2);
+  return Math.floor(maxHp * AUTO_EAT_HP_RATIO);
 }
 
 // ── Drop simulation ───────────────────────────────────────────
