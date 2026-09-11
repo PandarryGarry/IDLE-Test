@@ -72,7 +72,8 @@ export function itemMatchesGearBrowse(item: Item, f: GearBrowseFilters): boolean
   const unique = isGearUnique(item);
   if (f.unique === 'unique' && !unique) return false;
   if (f.unique === 'tiered' && unique) return false;
-  // Тир уника — внутренний (игроку показываем метку «Уник.»), тировый фильтр его не ловит.
+  // Тир уника — внутренний (в ячейке только звезда), тировый фильтр его
+  // не ловит: уники отбираются только переключателем «Уникальное».
   if (f.tier !== 'all' && (unique || (item.tier ?? 0) !== f.tier)) return false;
   const q = f.query.trim().toLowerCase();
   if (q) {
@@ -105,8 +106,8 @@ export function slotRankOf(slot: EquipSlot | undefined): number {
 
 /**
  * Фасовка «слот → тир → семья». Предметы без слота экипа в группировку не входят.
- * Уники внутри слота идут отдельными группами ПОСЛЕ тировых и подписываются
- * меткой уника (см. `GEAR_UNIQUE_TAG_RU`), а не «Тир N».
+ * Уники внутри слота идут отдельными группами ПОСЛЕ тировых и помечаются
+ * звездой-эмблемой (тир не показывается).
  */
 export function groupGearItems(items: readonly Item[]): GearBrowseGroup[] {
   const buckets = new Map<string, GearBrowseGroup>();

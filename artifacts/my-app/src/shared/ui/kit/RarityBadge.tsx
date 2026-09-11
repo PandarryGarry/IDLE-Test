@@ -9,12 +9,12 @@ interface RarityBadgeProps {
 }
 
 const RARITY_CONFIG: Record<RarityType, { label: string; text: string; bg: string; border: string }> = {
-  common:    { label: 'Обычный',     text: 'text-stone-200',   bg: 'bg-stone-800/80',   border: 'border-stone-700' },
-  uncommon:  { label: 'Необычный',   text: 'text-emerald-300', bg: 'bg-emerald-50', border: 'border-emerald-500/50' },
-  rare:      { label: 'Редкий',      text: 'text-blue-300',    bg: 'bg-blue-950/50',    border: 'border-blue-500/50' },
-  epic:      { label: 'Эпический',   text: 'text-purple-300',  bg: 'bg-purple-950/50',  border: 'border-purple-500/50' },
-  legendary: { label: 'Легендарный', text: 'text-amber-300',   bg: 'bg-amber-950/50',   border: 'border-amber-500/50' },
-  mythic:    { label: 'Мифический',  text: 'text-rose-300',    bg: 'bg-rose-950/50',    border: 'border-rose-500/50' },
+  common:    { label: 'Обычный',     text: 'text-[var(--rarity-common)]',    bg: 'bg-[color-mix(in_srgb,var(--rarity-common)_18%,transparent)]',    border: 'border-[color-mix(in_srgb,var(--rarity-common)_55%,transparent)]' },
+  uncommon:  { label: 'Необычный',   text: 'text-[var(--rarity-uncommon)]',  bg: 'bg-[color-mix(in_srgb,var(--rarity-uncommon)_18%,transparent)]',  border: 'border-[color-mix(in_srgb,var(--rarity-uncommon)_55%,transparent)]' },
+  rare:      { label: 'Редкий',      text: 'text-[var(--rarity-rare)]',      bg: 'bg-[color-mix(in_srgb,var(--rarity-rare)_18%,transparent)]',      border: 'border-[color-mix(in_srgb,var(--rarity-rare)_55%,transparent)]' },
+  epic:      { label: 'Эпический',   text: 'text-[var(--rarity-epic)]',      bg: 'bg-[color-mix(in_srgb,var(--rarity-epic)_18%,transparent)]',      border: 'border-[color-mix(in_srgb,var(--rarity-epic)_55%,transparent)]' },
+  legendary: { label: 'Легендарный', text: 'text-[var(--rarity-legendary)]', bg: 'bg-[color-mix(in_srgb,var(--rarity-legendary)_18%,transparent)]', border: 'border-[color-mix(in_srgb,var(--rarity-legendary)_55%,transparent)]' },
+  mythic:    { label: 'Мифический',  text: 'text-[var(--rarity-mythic)]',    bg: 'bg-[color-mix(in_srgb,var(--rarity-mythic)_18%,transparent)]',    border: 'border-[color-mix(in_srgb,var(--rarity-mythic)_55%,transparent)]' },
 };
 
 export function RarityBadge({ rarity, className = '', size = 'sm' }: RarityBadgeProps) {

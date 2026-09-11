@@ -60,8 +60,10 @@ export function InventoryPage() {
   const visibleEmptySlots = Math.min(emptySlotsCount, 15);
 
   return (
-    <div className="space-y-4 max-w-4xl mx-auto">
-      
+    /* Рамка «один экран»: шапка и фильтры прибиты, прокручивается
+       только сетка ячеек — своим «окном». */
+    <div className="a-page max-w-4xl mx-auto w-full">
+
       {/* 1. Header Banner */}
       <div className="rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3 shadow-xl" style={{ background: 'linear-gradient(160deg,#2a1e0e,#1a1108)', border: '1px solid #3d2e1e' }}>
         
@@ -160,8 +162,8 @@ export function InventoryPage() {
 
       </div>
 
-      {/* 3. Squircle Inventory Slots Grid */}
-      <div className="rounded-2xl p-3 sm:p-4 min-h-[380px]" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.35)' }}>
+      {/* 3. Squircle Inventory Slots Grid — прокручиваемое окно ячеек */}
+      <div className="a-page__scroll rounded-2xl p-3 sm:p-4" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.35)' }}>
         
         {filteredItems.length === 0 && !emptySlotsCount ? (
           <div className="text-center py-20 text-slate-500 flex flex-col items-center gap-2">

@@ -94,11 +94,9 @@ export interface Item {
   gearWeight?: GearWeight;
   /**
    * Уникальная экипировка (уник-оружие/щит и последние 5 вариантов каждой
-   * семьи бижутерии). У такой экипировки НЕТ тировой подписи — в UI вместо
-   * «Тир N» показывается метка уника (`GEAR_UNIQUE_TAG_RU`), а в фасовке
-   * она идёт отдельной категорией «Уникальное», отсортированной по типу.
-   * Сам `tier` у предмета остаётся: по нему считаются статы, прочность и
-   * редкость — просто игроку он не показывается как «обычный тир».
+   * семьи бижутерии). Тирового бейджа у неё нет — только звезда-эмблема
+   * и свечение ячейки; в фасовке она идёт отдельной категорией
+   * «Уникальное», отсортированной по типу.
    */
   gearUnique?: boolean;
 }
@@ -221,6 +219,9 @@ export interface InventorySlot {
 
 export type NotificationType = 'levelup' | 'mastery_levelup' | 'item' | 'combat' | 'info' | 'warning' | 'achievement';
 
+/** Класс ценности находки — задаёт цветную кромку тоста (аудит, шаг 11). */
+export type FindRarity = 'rare' | 'epic' | 'legendary';
+
 export interface GameNotification {
   id: string;
   type: NotificationType;
@@ -229,6 +230,33 @@ export interface GameNotification {
   timestamp: number;
   skillId?: SkillId;
   level?: number;
+  /** Ценность находки (редкая/эпическая/легендарная кромка, шаг 11). */
+  rarity?: FindRarity;
+}
+
+/**
+ * Уровень 1 объявлений — ВАЖНЫЕ (аудит, шаг 11): не исчезают сами,
+ * живут в колокольчике топбара, закрываются рукой игрока.
+ * Каналы `world_boss` и `restart` готовы к подключению,
+ * когда появятся мировые боссы и служба перезапусков.
+ */
+export type AlertKind =
+  | 'ambush'         // нападение во время сбора
+  | 'boss'           // появление босса
+  | 'world_boss'     // мировой босс (система впереди)
+  | 'restart'        // «перезапуск через N» (система впереди)
+  | 'inventory_full';// сумка переполнена
+
+export interface ImportantAlert {
+  id: string;
+  kind: AlertKind;
+  title: string;
+  detail?: string;
+  icon: string;
+  time: number;
+  read: boolean;
+  /** Сколько раз однотипное событие повторилось подряд (объединённо в карточку). */
+  count: number;
 }
 
 export type GameMode = 'standard' | 'hardcore' | 'adventure';

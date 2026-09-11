@@ -35,7 +35,7 @@ export const MONSTERS: Monster[] = [
     combatLevel: 5,
     drops: [
       { itemId: 'trophy_guts', chance: 0.7, quantity: [1, 1] },
-      { itemId: 'bronze_sword', chance: 0.02, quantity: [1, 1] },
+      { itemId: 'gear_sword_1h_t03', chance: 0.02, quantity: [1, 1] },
       { itemId: 'coal', chance: 0.05, quantity: [1, 5] },
     ],
     gpDrop: [5, 30],
@@ -48,7 +48,7 @@ export const MONSTERS: Monster[] = [
     combatLevel: 28,
     drops: [
       { itemId: 'hide_raw', chance: 1.0, quantity: [1, 1] },
-      { itemId: 'iron_sword', chance: 0.05, quantity: [1, 1] },
+      { itemId: 'gear_sword_1h_t04', chance: 0.05, quantity: [1, 1] },
       { itemId: 'ore_iron', chance: 0.15, quantity: [1, 5] },
     ],
     gpDrop: [15, 80],
@@ -74,7 +74,7 @@ export const MONSTERS: Monster[] = [
     combatLevel: 52,
     drops: [
       { itemId: 'trophy_beast_eye', chance: 1.0, quantity: [1, 2] },
-      { itemId: 'steel_sword', chance: 0.03, quantity: [1, 1] },
+      { itemId: 'gear_sword_1h_t05', chance: 0.03, quantity: [1, 1] },
       { itemId: 'coal_anthracite', chance: 0.2, quantity: [3, 8] },
     ],
     gpDrop: [50, 200],
@@ -87,7 +87,7 @@ export const MONSTERS: Monster[] = [
     maxHit: 16, attackInterval: 2400,
     combatLevel: 35,
     drops: [
-      { itemId: 'iron_sword', chance: 0.05, quantity: [1, 1] },
+      { itemId: 'gear_sword_1h_t04', chance: 0.05, quantity: [1, 1] },
       { itemId: 'coal_embers', chance: 0.1, quantity: [1, 5] },
     ],
     gpDrop: [20, 100],
@@ -99,8 +99,8 @@ export const MONSTERS: Monster[] = [
     maxHit: 26, attackInterval: 2400,
     combatLevel: 65,
     drops: [
-      { itemId: 'steel_sword', chance: 0.1, quantity: [1, 1] },
-      { itemId: 'steel_platebody', chance: 0.02, quantity: [1, 1] },
+      { itemId: 'gear_sword_1h_t05', chance: 0.1, quantity: [1, 1] },
+      { itemId: 'gear_plate_chest_t05', chance: 0.02, quantity: [1, 1] },
       { itemId: 'coal_embers', chance: 0.2, quantity: [1, 3] },
     ],
     gpDrop: [60, 300],
@@ -141,8 +141,8 @@ export const MONSTERS: Monster[] = [
     drops: [
       { itemId: 'leather_scaled', chance: 1.0,  quantity: [1, 3] },
       { itemId: 'bar_orichalcum', chance: 0.1,  quantity: [1, 1] },
-      { itemId: 'dragon_sword',   chance: 0.01, quantity: [1, 1] },
-      { itemId: 'rune_platebody', chance: 0.05, quantity: [1, 1] },
+      { itemId: 'gear_sword_1h_t12',   chance: 0.01, quantity: [1, 1] },
+      { itemId: 'gear_plate_chest_t11', chance: 0.05, quantity: [1, 1] },
     ],
     gpDrop: [500, 2000], isBoss: true,
   },

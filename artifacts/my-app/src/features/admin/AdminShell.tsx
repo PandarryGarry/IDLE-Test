@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { Leaf, Package, Settings, Shield, User } from 'lucide-react';
 import { AdminTargetBar } from '@/features/admin/AdminSessionContext';
 import { ADMIN_ITEM_BAGS, parseAdminItemBag } from '@/features/admin/adminCatalog';
+import { ATabs } from '@/shared/ui/kit/ATabs';
 
 export type AdminSection = 'items' | 'characters' | 'professions' | 'settings';
 
@@ -37,34 +38,36 @@ export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <div className="admin-nui">
       <nav className="admin-nui__rail" aria-label="Разделы админки">
-        {SECTIONS.map((s) => (
-          <button
-            key={s.key}
-            type="button"
-            className={`admin-nui__icon${section === s.key ? ' is-on' : ''}`}
-            title={s.label}
-            aria-current={section === s.key ? 'page' : undefined}
-            onClick={() => navigate(s.href)}
-          >
-            <s.Icon size={18} aria-hidden />
-            <span className="admin-nui__icon-label">{s.label}</span>
-          </button>
-        ))}
+        <ATabs
+          variant="rail"
+          ariaLabel="Разделы админки"
+          tabs={SECTIONS.map((s) => ({
+            id: s.key,
+            label: s.label,
+            title: s.label,
+            icon: <s.Icon size={18} />,
+          }))}
+          activeId={section}
+          onChange={(id) => {
+            const target = SECTIONS.find((s) => s.key === id);
+            if (target) navigate(target.href);
+          }}
+        />
       </nav>
 
       {section === 'items' && (
         <aside className="admin-nui__sub" aria-label="Сумки предметов">
           <p className="admin-nui__sub-head">Предметы</p>
-          {ADMIN_ITEM_BAGS.map((b) => (
-            <button
-              key={b.id}
-              type="button"
-              className={`admin-nui__bag${bag === b.id ? ' is-on' : ''}`}
-              onClick={() => navigate(b.href)}
-            >
-              {b.label}
-            </button>
-          ))}
+          <ATabs
+            direction="column"
+            ariaLabel="Сумки предметов"
+            tabs={ADMIN_ITEM_BAGS.map((b) => ({ id: b.id, label: b.label }))}
+            activeId={bag}
+            onChange={(id) => {
+              const target = ADMIN_ITEM_BAGS.find((b) => b.id === id);
+              if (target) navigate(target.href);
+            }}
+          />
         </aside>
       )}
 

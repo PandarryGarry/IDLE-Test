@@ -13,7 +13,7 @@ import {
   type CharacterAttributeState,
 } from '@/domain/attributes/characterAttributes';
 import { createEmptyGearSets } from '@/domain/items/gearSets';
-import { migrateInventoryItems } from '@/domain/items/legacyMigration';
+import { migrateEquipment, migrateInventoryItems, sanitizeInventoryItems } from '@/domain/items/legacyMigration';
 import { updateCharacter, type Character } from '@/lib/characterApi';
 import { applySaveData } from '@/lib/saveManager';
 import { useCharacterStore } from '@/store/characterStore';
@@ -52,14 +52,14 @@ export function normalizeSave(
     ...save,
     player: {
       skills,
-      equipment: { ...EMPTY_EQUIPMENT, ...(save?.player?.equipment ?? {}) },
+      equipment: migrateEquipment({ ...EMPTY_EQUIPMENT, ...(save?.player?.equipment ?? {}) }),
     },
     inventory: (() => {
       const src = save as unknown as { inventory?: unknown; bank?: unknown };
       const raw = src?.inventory ?? src?.bank;
       const rec = raw as { items?: unknown; gp?: unknown; maxSlots?: unknown } | undefined;
       return {
-        items: Array.isArray(rec?.items) ? migrateInventoryItems(rec.items as never[]) : [],
+        items: Array.isArray(rec?.items) ? sanitizeInventoryItems(migrateInventoryItems(rec.items as never[])) : [],
         gp: typeof rec?.gp === 'number' ? rec.gp : 0,
         maxSlots: typeof rec?.maxSlots === 'number' ? rec.maxSlots : 24,
       };

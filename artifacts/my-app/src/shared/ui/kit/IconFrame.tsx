@@ -38,10 +38,10 @@ const SHAPE_CONFIG: Record<IconShape, string> = {
 
 const VARIANT_CONFIG: Record<FrameVariant, string> = {
   default:     'bg-[var(--bg-card-dark)] border border-[var(--border-light)] shadow-md',
-  active:      'bg-emerald-100/80 border border-emerald-500/80 shadow-[0_0_20px_rgba(16,185,129,0.35)] ring-1 ring-emerald-400/50',
-  gold:        'bg-amber-50 border border-amber-400/70 shadow-[0_0_20px_rgba(245,158,11,0.35)] ring-1 ring-amber-400/40',
-  combat:      'bg-red-50 border border-red-500/70 shadow-[0_0_20px_rgba(239,68,68,0.35)] ring-1 ring-red-400/40',
-  slot:        'bg-[#1a2538] border border-[var(--border-light)] hover:border-amber-400/60 shadow-inner',
+  active:      '[background:var(--glass-bg)] border border-[var(--border-accent)] [box-shadow:var(--shadow-gold)]',
+  gold:        '[background:var(--card-cocoa)] border border-[var(--card-edge)] [box-shadow:var(--card-shadow)]',
+  combat:      '[background:var(--combat-bg)] border border-[var(--combat-edge)] [box-shadow:var(--combat-shadow)]',
+  slot:        '[background:var(--cell-frame)] border border-[var(--border-light)] hover:border-[var(--border-accent)] shadow-inner',
   transparent: 'bg-transparent border-transparent shadow-none',
 };
 
@@ -80,7 +80,7 @@ export function IconFrame({
       {/* Top-Left: Rarity Dot or Lock icon */}
       <div className="absolute top-1 left-1.5 z-10 flex items-center">
         {locked ? (
-          <Lock className="w-2.5 h-2.5 text-amber-400" />
+          <Lock className="w-2.5 h-2.5 text-[var(--text-gold)]" />
         ) : rarityDotColor ? (
           <span className={`w-1.5 h-1.5 rounded-full ${rarityDotColor}`} />
         ) : null}

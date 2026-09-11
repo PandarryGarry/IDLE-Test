@@ -4,22 +4,24 @@ interface TierBadgeProps {
   tier: string;
   className?: string;
   size?: 'xs' | 'sm' | 'md';
-  /** Уникальная экипировка: вместо «T12» метка «УНИК» и своё оформление. */
-  unique?: boolean;
 }
 
-export function TierBadge({ tier, className = '', size = 'sm', unique = false }: TierBadgeProps) {
-  const sizeClasses =
-    size === 'xs'
-      ? 'text-[7px] px-1 py-px'
-      : size === 'sm'
-        ? 'text-[9px] px-1.5 py-0.2'
-        : 'text-[11px] px-2 py-0.5';
+/**
+ * Бирка тира экипировки (Т1–Т12). По современному канону игровых сеток
+ * (Альбиан: цвет — сам по себе код тира) бирка тёмная и компактная,
+ * а цифра окрашена по «медальной» шкале ценности:
+ *   - Т1–Т4  — бронза;
+ *   - Т5–Т8  — серебро;
+ *   - Т9–Т12 — золото (одно золото канона остаётся вершиной шкалы).
+ * Тёмная подложка даёт контраст на любом фоне ячейки — светлая пилюля
+ * сливалась с какао-сеткой (замечание владельца к шагу 6).
+ */
+export function TierBadge({ tier, className = '', size = 'sm' }: TierBadgeProps) {
+  const level = Number.parseInt(tier.replace(/\D/g, ''), 10);
+  const grade = Number.isFinite(level) && level >= 9 ? 'gold' : Number.isFinite(level) && level >= 5 ? 'silver' : 'bronze';
 
   return (
-    <span
-      className={`font-mono font-black uppercase rounded-md bg-[var(--bg-page)] text-amber-300 border border-amber-400/40 shadow-sm leading-tight inline-flex items-center justify-center ${sizeClasses} ${unique ? 'tier-badge--unique' : ''} ${className}`}
-    >
+    <span className={`tier-badge tier-badge--${grade} tier-badge--${size} ${className}`}>
       {tier}
     </span>
   );

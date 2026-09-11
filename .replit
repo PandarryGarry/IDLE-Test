@@ -9,7 +9,7 @@ args = ["pnpm", "store", "prune"]
 env = { "CI" = "true" }
 
 [workflows]
-runButton = "artifacts/my-app: web"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "artifacts/my-app: web"
@@ -51,6 +51,24 @@ router = "path"
 
 [workflows.workflow.tasks.env]
 PORT = "5000"
+
+# Составной запуск всего проекта: веб-приложение + api-сервер.
+# Именно он назначен на кнопку Run (runButton выше), чтобы сервер
+# поднимался сам после перезагрузки Repl — как раньше, без ручных
+# остановок и перезапусков. Режим parallel: оба сервиса долгоживущие
+# (dev-серверы не завершаются сами, sequential застрял бы на первом).
+[[workflows.workflow]]
+name = "Project"
+author = "agent"
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "artifacts/my-app: web"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Aethelia"
 
 [agent]
 stack = "PNPM_WORKSPACE"

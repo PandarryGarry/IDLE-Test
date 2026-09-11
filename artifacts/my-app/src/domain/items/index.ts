@@ -1,15 +1,14 @@
 import type { Item } from '../../data/types.ts';
 
 import { CATALOG } from './catalog/index.ts';
-import LEGACY_ITEMS from './items.ts';
 import { getAdminItemSnapshot } from '../runtimePorts.ts';
 
 /**
  * Единая точка доступа к предметам: каталог (ресурсы + «Сбор» + охота +
- * снаряжение) с русскими именами и картинками.
- * Остаток мелворовского легаси-снаряжения (`items.ts`) — только эмодзи/силуэт
- * без своих картинок — в каталог/админку не попадает (см. `getAllItems`),
- * но `getItem()` всё ещё достаёт его из сейвов и дропов для совместимости.
+ * снаряжение) с русскими именами и картинками — единственный источник
+ * правды (шаг 7 аудита: мелворовское легаси-снаряжение с английскими
+ * именами удалено полностью; старые сейвы мигрирует и бережно чистит
+ * `legacyMigration.ts`, дропы монстров переведены на предметы каталога).
  * Замена источника (репозиторий → БД) затрагивает только этот модуль (§8).
  *
  * Админ-настройки применяются здесь же через порт домена
@@ -20,7 +19,7 @@ import { getAdminItemSnapshot } from '../runtimePorts.ts';
 const CATALOG_BY_ID = new Map<string, Item>(CATALOG.map(i => [i.id, i]));
 
 function rawGetItem(id: string): Item | undefined {
-  return CATALOG_BY_ID.get(id) ?? LEGACY_ITEMS[id];
+  return CATALOG_BY_ID.get(id);
 }
 
 /** Исходный предмет БЕЗ админ-правок и глобальных множителей. */
