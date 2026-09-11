@@ -2,7 +2,7 @@ import type { Item } from '../../data/types.ts';
 
 import { CATALOG } from './catalog/index.ts';
 import LEGACY_ITEMS from './items.ts';
-import { getAdminConfig } from '../../store/adminConfigStore.ts';
+import { getAdminItemSnapshot } from '../runtimePorts.ts';
 
 /**
  * Единая точка доступа к предметам: каталог (ресурсы + «Сбор» + охота +
@@ -12,8 +12,9 @@ import { getAdminConfig } from '../../store/adminConfigStore.ts';
  * но `getItem()` всё ещё достаёт его из сейвов и дропов для совместимости.
  * Замена источника (репозиторий → БД) затрагивает только этот модуль (§8).
  *
- * Админ-настройки применяются здесь же: оверрайды Item + глобальный
- * множитель цены продажи. `getBaseItem()` возвращает исходник без правок
+ * Админ-настройки применяются здесь же через порт домена
+ * (`runtimePorts.adminItemSnapshot` — его регистрирует `store/adminConfigStore`):
+ * оверрайды Item + глобальный множитель цены продажи. `getBaseItem()` возвращает исходник без правок
  * (для админ-редактора), `getItem()` — эффективный предмет для игры.
  */
 const CATALOG_BY_ID = new Map<string, Item>(CATALOG.map(i => [i.id, i]));
@@ -35,7 +36,7 @@ export function getBaseItem(id: string): Item | undefined {
 export function getAdminItem(id: string): Item | undefined {
   const base = rawGetItem(id);
   if (!base) return undefined;
-  const admin = getAdminConfig();
+  const admin = getAdminItemSnapshot();
   return admin.itemOverrides[id]
     ? applyOverride(base, admin.itemOverrides[id])
     : base;
@@ -71,12 +72,12 @@ export function getItem(id: string): Item | undefined {
   const base = rawGetItem(id);
   if (!base) return undefined;
 
-  const admin = getAdminConfig();
+  const admin = getAdminItemSnapshot();
   const withOverride = admin.itemOverrides[id]
     ? applyOverride(base, admin.itemOverrides[id])
     : base;
 
-  return applyGlobalSellRate(withOverride, admin.gameRates.sellPriceMultiplier);
+  return applyGlobalSellRate(withOverride, admin.sellPriceMultiplier);
 }
 
 /** Все предметы каталога с применёнными админ-правками. */

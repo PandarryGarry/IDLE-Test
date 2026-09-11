@@ -8,6 +8,7 @@ import {
 } from '@/domain/professions/professionStats';
 import { getProfessionStatOverrides } from '@/store/adminConfigStore';
 import { usePlayerStore } from '@/store/playerStore';
+import { registerProfessionStatValue as registerDomainProfessionStatValue } from '@/domain/runtimePorts';
 
 export interface EffectiveProfessionStat {
   def: ProfessionStatDef;
@@ -85,3 +86,9 @@ export function mergedProfessionStatDef(statId: string): ProfessionStatDef {
   const override = getProfessionStatOverrides()[statId];
   return override ? { ...base, ...override } : base;
 }
+
+// ── Адаптер домена: `domain/professions/foraging.ts` читает статы через порт,
+// а не импортирует этот стор (см. `domain/runtimePorts.ts`).
+registerDomainProfessionStatValue((skillId, statId, level) =>
+  getProfessionStatValue(skillId as SkillId, statId, level),
+);

@@ -5,9 +5,14 @@ import { migrateInventoryItems } from '@/domain/items/legacyMigration';
 import { useAuthStore } from '@/store/authStore';
 import { usePlayerStore } from '@/store/playerStore';
 
-const DEFAULT_MAX_SLOTS = 24;
-const SLOTS_PER_UPGRADE = 10;
-const BASE_UPGRADE_COST = 500;
+// Числа сумки — в data/balance/inventory.ts (были локальными константами стора
+// и расходились с фолбэком в saveManager: 24 против 40).
+import {
+  INVENTORY_BASE_SLOTS as DEFAULT_MAX_SLOTS,
+  INVENTORY_SLOTS_PER_UPGRADE as SLOTS_PER_UPGRADE,
+  INVENTORY_UPGRADE_BASE_COST as BASE_UPGRADE_COST,
+  INVENTORY_UPGRADE_COST_GROWTH as UPGRADE_COST_GROWTH,
+} from '@/data/balance/inventory';
 
 export type CategoryFilter = 'all' | 'equipment' | 'resources' | 'food' | 'misc';
 
@@ -67,7 +72,7 @@ export const useInventoryStore = create<InventoryStore>((set, get) => ({
 
   getUpgradeCost: () => {
     const upgradesBought = Math.max(0, Math.floor((get().maxSlots - DEFAULT_MAX_SLOTS) / SLOTS_PER_UPGRADE));
-    return BASE_UPGRADE_COST * Math.pow(1.5, upgradesBought);
+    return BASE_UPGRADE_COST * Math.pow(UPGRADE_COST_GROWTH, upgradesBought);
   },
 
   getTotalNetWorth: () => {

@@ -4,9 +4,11 @@
 import { useGameStore } from '../store/gameStore.ts';
 import { useCombatStore } from '../store/combatStore.ts';
 
-const COMBAT_TICK_INTERVAL = 100; // ms — process combat every 100ms
-/** Maximum combat ticks simulated per frame to prevent frame-freeze after tab suspension */
-const MAX_COMBAT_TICKS_PER_FRAME = 10;
+// Числа темпа — в data/balance/combat.ts (закон «числа только в балансе»).
+import { COMBAT_TICK_INTERVAL_MS, COMBAT_MAX_TICKS_PER_FRAME } from '../data/balance/combat.ts';
+
+const COMBAT_TICK_INTERVAL = COMBAT_TICK_INTERVAL_MS;
+const MAX_COMBAT_TICKS_PER_FRAME = COMBAT_MAX_TICKS_PER_FRAME;
 
 class TickManager {
   private rafId: number | null = null;

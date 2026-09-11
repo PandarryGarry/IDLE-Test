@@ -16,6 +16,14 @@ import {
 } from '@/domain/attributes/characterAttributes';
 import { commitHeroAttributes } from '@/lib/heroPersist';
 import { getAdminRates, isSkillEnabledForAdmin } from '@/store/adminConfigStore';
+import {
+  COMBAT_LOG_MAX_ENTRIES,
+  DEATH_RESTORE_RATIO,
+  HERO_ATTACK_INTERVAL_MS,
+  HERO_FIRST_ATTACK_DELAY_MS,
+  HERO_MIN_HEALTH,
+  HERO_XP_PER_MONSTER_LEVEL,
+} from '@/data/balance/combat';
 
 export interface CombatLogEntry {
   id: string;
@@ -84,7 +92,7 @@ function finalPillar(id: 'fortitude' | 'might' | 'finesse' | 'instinct'): number
 
 /** Здоровье героя из Столпа Стойкости. */
 function liveMaxHp(): number {
-  return Math.max(120, Math.round(liveSnapshot().substats.health));
+  return Math.max(HERO_MIN_HEALTH, Math.round(liveSnapshot().substats.health));
 }
 
 export const useCombatStore = create<CombatStore>((set, get) => ({
@@ -135,7 +143,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       playerMaxHp,
       enemyHp: monster.maxHp,
       enemyMaxHp: monster.maxHp,
-      playerAttackTimer: 2400,
+      playerAttackTimer: HERO_FIRST_ATTACK_DELAY_MS,
       enemyAttackTimer: monster.attackInterval,
       combatLog: [newLog('info', `Бой: ${monster.name}`)],
     });
@@ -166,7 +174,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     // ── Атака героя (столпы, а не навыки) ──────────────────────
     playerAttackTimer -= deltaMs;
     if (playerAttackTimer <= 0) {
-      playerAttackTimer += 2400;
+      playerAttackTimer += HERO_ATTACK_INTERVAL_MS;
 
       const might = finalPillar('might');
       const eq = playerStore.equipment;
@@ -195,7 +203,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       logs.push(newLog('enemy_death', `${monster.name} повержен! (убийство #${killCount})`));
 
       // Опыт героя — единственный «боевой» прогресс. Он кормит столпы.
-      const heroXp = Math.round(monster.combatLevel * 5 * rates.xpMultiplier);
+      const heroXp = Math.round(monster.combatLevel * HERO_XP_PER_MONSTER_LEVEL * rates.xpMultiplier);
       if (heroXp > 0) addHeroXp(heroXp);
 
       if (state.autoLoot) {
@@ -206,7 +214,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       }
 
       set({ enemyHp: monster.maxHp, enemyMaxHp: monster.maxHp, killCount, totalDamageDealt });
-      set(s => ({ combatLog: [...logs, ...s.combatLog].slice(0, 100) }));
+      set(s => ({ combatLog: [...logs, ...s.combatLog].slice(0, COMBAT_LOG_MAX_ENTRIES) }));
       return;
     }
 
@@ -257,8 +265,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     // ── Смерть героя ──────────────────────────────────────────
     if (playerHp <= 0) {
       logs.push(newLog('player_death', 'Вы пали! Возврат к точке...'));
-      playerHp = Math.floor(state.playerMaxHp * 0.5);
-      set({ inCombat: false, playerHp, enemyHp: monster.maxHp, playerAttackTimer, enemyAttackTimer, totalDamageTaken, combatLog: [...logs, ...state.combatLog].slice(0, 100) });
+      playerHp = Math.floor(state.playerMaxHp * DEATH_RESTORE_RATIO);
+      set({ inCombat: false, playerHp, enemyHp: monster.maxHp, playerAttackTimer, enemyAttackTimer, totalDamageTaken, combatLog: [...logs, ...state.combatLog].slice(0, COMBAT_LOG_MAX_ENTRIES) });
       notifs.notifyCombat('💀 Вы пали!');
       return;
     }
@@ -267,7 +275,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       playerHp, enemyHp,
       playerAttackTimer, enemyAttackTimer,
       totalDamageDealt, totalDamageTaken,
-      combatLog: [...logs, ...s.combatLog].slice(0, 100),
+      combatLog: [...logs, ...s.combatLog].slice(0, COMBAT_LOG_MAX_ENTRIES),
     }));
   },
 
@@ -299,7 +307,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   },
 
   addLog: (entry) => {
-    set(s => ({ combatLog: [{ id: String(++_logId), timestamp: Date.now(), ...entry }, ...s.combatLog].slice(0, 100) }));
+    set(s => ({ combatLog: [{ id: String(++_logId), timestamp: Date.now(), ...entry }, ...s.combatLog].slice(0, COMBAT_LOG_MAX_ENTRIES) }));
   },
 
   reset: () => set({

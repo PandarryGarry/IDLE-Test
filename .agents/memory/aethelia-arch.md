@@ -24,8 +24,11 @@ hub icons + known hero avatars/dolls. Do not wait for 800 item icons.
 ## Routing
 
 - `/hero` — HeroHubPage (Тело / Экип / Нити / Путь)
-- `/inventory` — InventoryPage (items + gp). `/bank` redirects here.
-- `/combat`, gathering/artisan routes, `/settings`, auth + onboarding fullscreen
+- `/inventory` — InventoryPage (items + gp). **Банка нет** и в ближайшее
+  время не планируется; «банк» в коде — только legacy-чтение старых
+  сейвов (3 места, см. `BANK_FOUNDATION.md`). Мёртвый редирект
+  `/inventory`→`/inventory` в App.tsx известен — чинится вместе с банком.
+- `/combat`, `/foraging`, `/settings`, `/admin/*`, auth + onboarding fullscreen
 
 `wouter`; routes must not mount under the splash (iOS autofill).
 
@@ -33,8 +36,20 @@ hub icons + known hero avatars/dolls. Do not wait for 800 item icons.
 
 - Account: `profiles`. Hero row: `characters` (`SUPABASE_STAGE4.sql`).
 - Progress: one JSON `save_data`. Migrator in `characterAttributes.ts`.
-- Local ~30s, cloud ~3 min + pagehide. Replit `main` has live keys; this
+- Local ~30s, cloud ~3 min + pagehide. **Авторитетный сейв — самый свежий**
+  (`reconcileCharacterSave`, PR #17): слепое применение облачного слепка
+  запрещено.
+- Replit `main` has live keys; this
   sandbox usually does not. Agent does not log into the owner's account.
+
+## Repo notes
+
+- Items catalog: `domain/items/catalog/` (630 шт.), вход `domain/items/index.ts`.
+  Тиры снаряжения 1–12 генерируются из `data/balance/gear.ts`; уники — `gearUnique`.
+- Canvas/`artifacts/mockup-sandbox` удалён 2026-09-10 (мокапы реализованы).
+  Порт 8081 свободен; канон портов — 8080 web / 5000 api (`REPLIT_SETUP.md`).
+- `lib/db`, `api-server`, `api-*` — шаблонные пакеты Replit, игра их не вызывает
+  (my-app ходит в Supabase напрямую). Не переносить, не подключать без владельца.
 
 ## Hero / attributes
 

@@ -11,6 +11,17 @@ import { GUEST_NOTICE } from '@/lib/guestMode';
 import { calculateOfflineProgress } from '@/core/offlineProgress';
 import { skillNameRu } from '@/lib/skillNames';
 import { getLiveAttributes, setLiveAttributes, createDefaultAttributes, migrateSaveAttributes } from '@/domain/attributes/characterAttributes';
+import { isPrimaryTab, startTabAuthority } from '@/lib/tabAuthority';
+import {
+  encodeSaveJson,
+  isFullSaveShape,
+  normalizeSaveData,
+  parseSaveInput,
+} from '@/lib/saveSchema';
+import {
+  AUTOSAVE_INTERVAL_S_DEFAULT,
+  AUTOSAVE_INTERVAL_S_MIN,
+} from '@/data/balance/loop';
 import {
   createEmptyGearSets,
   getLiveGearSets,
@@ -78,26 +89,27 @@ export function collectSaveData(): SaveData {
   };
 }
 
-export function applySaveData(data: SaveData): void {
+export function applySaveData(raw: SaveData): void {
+  // Единственная воронка «сейв → сторы»: прогоняем через контракт
+  // (`lib/saveSchema`), иначе в сторы течёт что попало из localStorage/облака.
+  const data = normalizeSaveData(raw) ?? raw;
+  // «Полный» профиль — есть и герой, и сумка. Голый сейв (атрибуты без
+  // инвентаря — так `createCharacter` пишет героя до первого пуша) НЕ имеет
+  // права затирать сумку и XP: применяем только столпы/наборы.
+  const fullSave = isFullSaveShape(raw);
   const playerStore = usePlayerStore.getState();
   const inventory = useInventoryStore.getState();
   const gameStore = useGameStore.getState();
 
   setLiveAttributes(migrateSaveAttributes(data.attributes));
   setLiveGearSets(migrateGearSets(data.gearSets));
-  playerStore.loadFromSave(data.player?.skills ?? ({} as any), data.player?.equipment);
-  // Совместимость со старыми сейвами, где блок инвентаря хранился как `bank`.
-  const invRaw = (data as unknown as { inventory?: unknown; bank?: unknown }).inventory
-    ?? (data as unknown as { bank?: unknown }).bank
-    ?? {};
-  const inv = invRaw as { items?: unknown; gp?: unknown; maxSlots?: unknown };
-  inventory.loadFromSave(
-    Array.isArray(inv.items) ? (inv.items as never[]) : [],
-    typeof inv.gp === 'number' ? inv.gp : 0,
-    typeof inv.maxSlots === 'number' ? inv.maxSlots : 40,
-  );
+  if (!fullSave) return;
+
+  playerStore.loadFromSave(data.player.skills, data.player.equipment);
+  // Инвентарь уже нормализован (включая старый блок `bank`) в saveSchema.
+  inventory.loadFromSave(data.inventory.items, data.inventory.gp, data.inventory.maxSlots);
   gameStore.loadFromSave({
-    gameMode: data.gameMode ?? 'normal',
+    gameMode: data.gameMode,
     totalPlayTime: data.totalPlayTime ?? 0,
     activeSkill: data.game?.activeSkill ?? null,
     activeActionId: data.game?.activeActionId ?? null,
@@ -110,7 +122,7 @@ export function applySaveData(data: SaveData): void {
     setTimeout(() => {
       const gs = useGameStore.getState();
       if (!gs.isRunning && data.game?.activeSkill && data.game?.activeActionId) {
-        gs.startSkillAction(data.game.activeSkill as any, data.game.activeActionId);
+        gs.startSkillAction(data.game.activeSkill, data.game.activeActionId);
       }
     }, 500);
   }
@@ -144,6 +156,9 @@ export function applySaveData(data: SaveData): void {
 // ── localStorage operations ────────────────────────────────────
 
 export function saveToSlot(slot: SaveSlot): void {
+  // Автозейв пишет только вкладка-хозяин (см. lib/tabAuthority): иначе две
+  // вкладки затирают друг друга, а `pagehide` фоновой убивает свежий прогресс.
+  if (slot === AUTO_SAVE_SLOT && !isPrimaryTab()) return;
   try {
     const data = collectSaveData();
     const json = JSON.stringify(data);
@@ -159,7 +174,7 @@ export function loadFromSlot(slot: SaveSlot): SaveData | null {
     const store = isGuestMode() ? window.sessionStorage : window.localStorage;
     const json = store.getItem(saveKey(slot));
     if (!json) return null;
-    return JSON.parse(json) as SaveData;
+    return normalizeSaveData(JSON.parse(json) as unknown) ?? null;
   } catch (e) {
     console.error('Failed to load save:', e);
     return null;
@@ -195,11 +210,14 @@ export function getSaveMetadata(slot: SaveSlot): { savedAt: number; gameMode: st
 
 let autoSaveTimer: ReturnType<typeof setInterval> | null = null;
 
-export function startAutoSave(intervalSeconds = 30): void {
+export function startAutoSave(intervalSeconds = AUTOSAVE_INTERVAL_S_DEFAULT): void {
   stopAutoSave();
+  const seconds = Number.isFinite(intervalSeconds)
+    ? Math.max(AUTOSAVE_INTERVAL_S_MIN, Math.floor(intervalSeconds))
+    : AUTOSAVE_INTERVAL_S_DEFAULT;
   autoSaveTimer = setInterval(() => {
     saveToSlot(AUTO_SAVE_SLOT);
-  }, intervalSeconds * 1000);
+  }, seconds * 1000);
 }
 
 export function stopAutoSave(): void {
@@ -217,14 +235,19 @@ export function manualSave(slot: SaveSlot = AUTO_SAVE_SLOT): void {
 
 export function exportSave(): string {
   const data = collectSaveData();
-  return btoa(JSON.stringify(data)); // base64 encode
+  // Не `btoa`: в сейве живут юникод-строки (названия наборов «Набор 1»),
+  // на них `btoa` бросает InvalidCharacterError.
+  return encodeSaveJson(JSON.stringify(data));
 }
 
-export function importSave(encoded: string): boolean {
+/** Принимает и нашу Base64-строку, и голый JSON из файла экспорта. */
+export function importSave(input: string): boolean {
+  const data = parseSaveInput(input);
+  if (!data) {
+    console.error('Failed to import save: не похоже на сейв');
+    return false;
+  }
   try {
-    const json = atob(encoded);
-    const data = JSON.parse(json) as SaveData;
-    if (!data.version || !data.player) throw new Error('Invalid save data');
     applySaveData(data);
     saveToSlot(AUTO_SAVE_SLOT);
     return true;
@@ -266,7 +289,7 @@ export function initGame(): void {
     // Start auto-save timer
     const settings = useSettingsStore.getState();
     if (settings && settings.autoSaveEnabled) {
-      startAutoSave(settings.autoSaveInterval || 30);
+      startAutoSave(settings.autoSaveInterval || AUTOSAVE_INTERVAL_S_DEFAULT);
     }
   } catch (e) {
     console.error('Failed to start auto-save:', e);
@@ -335,7 +358,14 @@ export function getOfflineDuration(): number {
 }
 
 /** Инициализирует обработчики ухода игрока */
+let offlineTrackingArmed = false;
+
+/** Идемпотентно: повторный вызов (StrictMode, ретрай инициализации) не вешает второй набор слушателей. */
 export function setupOfflineTracking(): void {
+  if (offlineTrackingArmed) return;
+  offlineTrackingArmed = true;
+  // Арбитраж вкладок живёт рядом: он решает, КОТОРАЯ из них пишет сейвы.
+  startTabAuthority();
   // Закрытие вкладки/браузера
   window.addEventListener('beforeunload', saveOnLeave);
   // Переход на другую вкладку / скрытие

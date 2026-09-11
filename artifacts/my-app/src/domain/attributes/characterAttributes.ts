@@ -47,7 +47,7 @@ import {
 import { HERO_LEVEL_CAP } from '../../data/balance/substats.ts';
 import { xpToNextLevel } from '../../data/balance/xpRates.ts';
 import { PROFESSION_FEEDS } from '../../data/balance/professions.ts';
-import { getProfessionFeedOverrides } from '../../store/adminConfigStore.ts';
+import { getProfessionFeedOverrides } from '../runtimePorts.ts';
 import {
   REPUTATION_MAX,
   REPUTATION_MIN,

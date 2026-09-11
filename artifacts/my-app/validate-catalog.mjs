@@ -39,20 +39,38 @@ for (const item of CATALOG) {
   groups[item.category] = (groups[item.category] ?? 0) + 1;
 }
 
-const byFamily = {
-  logs: groups['log'] ?? 0,
-  ores: groups['ore'] ?? 0,
-  bars: groups['bar'] ?? 0,
-  rawFish: groups['raw_fish'] ?? 0,
-  cookedFish: groups['cooked_fish'] ?? 0,
-  minerals: groups['mineral'] ?? 0,
-  foraging: groups['foraging'] ?? 0,
-  food: groups['food'] ?? 0,
-  misc: groups['misc'] ?? 0,
+// Сводка по ВСЕМ категориям: раньше перечислялись 9 «старых» семейств,
+// из-за чего 498 позиций снаряжения в разбивку не попадали и цифра врала.
+const GEAR_CATEGORIES = [
+  'weapon', 'shield', 'helm', 'platebody', 'platelegs', 'boots', 'gloves',
+  'amulet', 'belt', 'ring', 'bracelet', 'cape', 'quiver', 'passive', 'arrow',
+];
+const RESOURCE_CATEGORIES = ['log', 'ore', 'bar', 'raw_fish', 'cooked_fish', 'mineral'];
+const FOOD_CATEGORIES = ['food', 'potion'];
+
+const sumOf = (list) => list.reduce((n, c) => n + (groups[c] ?? 0), 0);
+const known = new Set([...GEAR_CATEGORIES, ...RESOURCE_CATEGORIES, ...FOOD_CATEGORIES, 'foraging']);
+
+const byGroup = {
+  'сырьё (семейства удалённых навыков — шаг 7 UI-плана)': sumOf(RESOURCE_CATEGORIES),
+  'находки «Сбора»': groups['foraging'] ?? 0,
+  'еда и зелья': sumOf(FOOD_CATEGORIES),
+  'снаряжение и боеприпасы': sumOf(GEAR_CATEGORIES),
+  // Всё, что ещё не приписано к семейству, — осознанно видимым, а не молча потерянным.
+  'вне известных семейств': Object.entries(groups)
+    .filter(([category]) => !known.has(category))
+    .reduce((n, [, count]) => n + count, 0),
 };
 
 console.log(`✔ итого предметов: ${CATALOG.length}`);
-console.log('   состав:', JSON.stringify(byFamily));
+console.log('   группы:', JSON.stringify(byGroup, null, 0));
+console.log('   по категориям:', JSON.stringify(groups, null, 0));
+
+// Сводка обязана сходиться с каталогом — иначе она снова начнёт врать.
+const summed = Object.values(byGroup).reduce((a, b) => a + b, 0);
+if (summed !== CATALOG.length) {
+  problems.push(`SUMMARY≠CATALOG: группы дают ${summed}, каталог — ${CATALOG.length}`);
+}
 
 if (problems.length) {
   console.error('✖ ОШИБКИ:');

@@ -7,10 +7,15 @@ description: Owner review loop, branch/session rules
 
 - Tests **only in Replit** (iPhone). Arena iframe is white — never fix it.
 - `main` has Supabase secrets and the live hero. Feature work is on `arena/…`.
-- Pull this branch: `git fetch origin arena/01a07240-idle-test && git reset --hard origin/arena/01a07240-idle-test`
+- Pull the **current session's** branch (its name comes with the Arena
+  environment, e.g. `arena/01a08a68-idle-test`):
+  `git fetch origin && git reset --hard origin/<session-branch>`
 - Merge to `main` only when the owner says **«мержи»**, after they logged in
   with the real account on the branch.
 - One task at a time. Not in a hurry. Ask if unclear.
+- Next strategic stage after cleanup (owner, 2026-09-10): **UI/UX
+  unification** (palette, centralized colors/cells/windows). Do NOT do
+  spot color fixes before that stage. Bank — only per `BANK_FOUNDATION.md`.
 
 ## Agent
 
