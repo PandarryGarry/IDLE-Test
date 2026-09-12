@@ -6769,6 +6769,20 @@ button.mobile-nav__item {
   height: 23px;
 }
 
+.combat2-monster-portrait {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(255, 208, 113, 0.18), transparent 54%),
+    rgba(26, 12, 4, 0.38);
+}
+
+.combat2-monster-portrait img {
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 7px rgba(0, 0, 0, 0.36));
+}
+
 .combat2-vs {
   display: flex;
   align-items: center;
@@ -6940,8 +6954,7 @@ button.mobile-nav__item {
 }
 
 .combat2-status-row span,
-.combat2-traits span,
-.combat2-area-roster span {
+.combat2-traits span {
   border: 1px solid rgba(255, 214, 142, 0.14);
   border-radius: 999px;
   background: rgba(23, 10, 3, 0.36);
@@ -7050,10 +7063,11 @@ button.mobile-nav__item {
   font-family: var(--font-mono);
   font-size: 0.62rem;
   font-weight: 850;
+  line-height: 1.22;
 }
 
 .combat2-timeline {
-  margin-top: 14px;
+  margin-top: 12px;
   border: 1px solid rgba(255, 214, 142, 0.15);
   border-radius: 18px;
   background: rgba(24, 10, 3, 0.32);
@@ -7240,6 +7254,54 @@ button.mobile-nav__item {
   line-height: 1.2;
 }
 
+.combat2-quick {
+  display: none;
+}
+
+.combat2-quick-btn {
+  min-width: 0;
+  border: 1px solid var(--combat2-edge);
+  border-radius: 15px;
+  background: rgba(26, 12, 4, 0.4);
+  color: var(--combat2-ink);
+  padding: 7px 5px;
+  text-align: center;
+}
+
+.combat2-quick-btn span {
+  width: 28px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  color: var(--combat2-gold);
+}
+
+.combat2-quick-btn span svg {
+  width: 18px;
+  height: 18px;
+}
+
+.combat2-quick-btn b,
+.combat2-quick-btn small {
+  display: block;
+}
+
+.combat2-quick-btn b {
+  font-size: 0.64rem;
+  font-weight: 950;
+}
+
+.combat2-quick-btn small {
+  color: var(--combat2-muted);
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  font-weight: 900;
+}
+
+.combat2-quick-btn.is-cooldown {
+  opacity: 0.6;
+}
+
 .combat2-command-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -7377,10 +7439,57 @@ button.mobile-nav__item {
 }
 
 .combat2-area-roster {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
   margin-top: 8px;
+}
+
+.combat2-roster-chip {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 214, 142, 0.14);
+  border-radius: 13px;
+  background: rgba(23, 10, 3, 0.34);
+  color: var(--combat2-dim);
+  padding: 5px 6px;
+}
+
+.combat2-roster-chip img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.32));
+}
+
+.combat2-roster-chip span,
+.combat2-roster-chip b,
+.combat2-roster-chip small {
+  min-width: 0;
+  display: block;
+}
+
+.combat2-roster-chip b,
+.combat2-roster-chip small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.combat2-roster-chip b {
+  color: var(--combat2-ink);
+  font-size: 0.66rem;
+  font-weight: 950;
+}
+
+.combat2-roster-chip small {
+  color: var(--combat2-muted);
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 850;
 }
 
 .combat2-area-why {
@@ -7664,8 +7773,8 @@ button.mobile-nav__item {
   .combat2-log-card,
   .combat2-food,
   .combat2-equipment {
-    padding: 11px;
-    border-radius: 20px;
+    padding: 10px;
+    border-radius: 19px;
   }
 
   .combat2-empty-stage {
@@ -7689,6 +7798,15 @@ button.mobile-nav__item {
     flex-direction: column;
   }
 
+  .combat2-stage-head {
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+
+  .combat2-stage-head h1 {
+    font-size: 1.18rem;
+  }
+
   .combat2-stage-actions,
   .combat2-log-stats {
     width: 100%;
@@ -7706,17 +7824,38 @@ button.mobile-nav__item {
 
   .combat2-fighter,
   .combat2-pack {
-    padding: 10px;
-    border-radius: 18px;
+    padding: 9px;
+    border-radius: 17px;
+  }
+
+  .combat2-fighter-top,
+  .combat2-pack-head {
+    margin-bottom: 7px;
+  }
+
+  .combat2-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 13px;
+  }
+
+  .combat2-avatar svg {
+    width: 20px;
+    height: 20px;
   }
 
   .combat2-stat-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 5px;
+    margin-top: 8px;
   }
 
   .combat2-mini-stat {
-    padding: 6px 4px;
+    padding: 5px 4px;
+  }
+
+  .combat2-status-row {
+    margin-top: 7px;
   }
 
   .combat2-mini-stat span {
@@ -7725,6 +7864,22 @@ button.mobile-nav__item {
 
   .combat2-mini-stat b {
     font-size: 0.72rem;
+  }
+
+  .combat2-quick {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
+    margin-top: 8px;
+  }
+
+  .combat2-timeline {
+    margin-top: 8px;
+    padding: 8px;
+  }
+
+  .combat2-timeline-head b {
+    display: none;
   }
 
   .combat2-tactics {
@@ -7748,7 +7903,7 @@ button.mobile-nav__item {
   }
 
   .combat2-area {
-    min-width: min(286px, 82vw);
+    min-width: min(340px, 92vw);
     scroll-snap-align: start;
   }
 
@@ -7775,5 +7930,23 @@ button.mobile-nav__item {
   .combat2-equip-label {
     max-width: 54px;
     font-size: 0.54rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .combat2-area-roster {
+    grid-template-columns: 1fr;
+  }
+
+  .combat2-quick-btn {
+    padding-inline: 3px;
+  }
+
+  .combat2-quick-btn b {
+    font-size: 0.58rem;
+  }
+
+  .combat2-quick-btn small {
+    font-size: 0.5rem;
   }
 }

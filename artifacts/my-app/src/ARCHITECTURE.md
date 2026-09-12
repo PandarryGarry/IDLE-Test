@@ -14,6 +14,8 @@ src/
   data/            данные и числа
     balance/       ВСЕ числа баланса — единственный источник
                   (professions.ts теперь только foraging)
+    combat/        экосистема боя: зоны + мобы по отдельным файлам
+                  (описание, картинка, роли, способности, телеграфы)
     characters.ts  расы, аватары, манекены
   features/        экраны
     hero/ combat/ professions/ auth/ inventory/ system/
@@ -46,8 +48,9 @@ Cap пакета героя ~5 с — страховка сети, не «мож
 Фундамент: `balance/substats.ts`, `balance/threads.ts`, `balance/branchEffects.ts`,
 `balance/xpRates.ts`, `balance/combat.ts`. Канон — `BALANCE_FOUNDATION.md`.
 Combat 2.0: чистые расчёты (`domain/combat/combatModel.ts`) не импортируют сторы;
-`store/combatStore.ts` — только адаптер тиков, лута, еды, уведомлений и save-safe
-runtime-состояния боя.
+`data/combat/mobs/*` хранит мобов как отдельные записи с картинкой/описанием/
+способностями; `store/combatStore.ts` — только адаптер тиков, лута, еды,
+уведомлений и save-safe runtime-состояния боя.
 
 **Импорты.** UI (`features/`, `components/`, `store/`, `hooks/`) — через `@/`.
 Чистая логика (`domain/`, `data/`, `core/`) — относительными путями с `.ts`

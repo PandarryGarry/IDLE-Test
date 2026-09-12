@@ -4,13 +4,14 @@ import { useCombatStore, type CombatEnemy, type CombatLogEntry } from '@/store/c
 import { usePlayerStore } from '@/store/playerStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { getLiveAttributes } from '@/domain/attributes/characterAttributes';
-import { COMBAT_AREAS, MONSTERS_MAP } from '@/domain/combat/monsters';
+import { COMBAT_AREAS, MONSTERS_MAP, monsterIconPath } from '@/domain/combat/monsters';
 import { ItemIcon } from '@/features/inventory/ItemIcon';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { getItem } from '@/domain/items';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import type { EquipSlot } from '@/data/types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { iconUrl } from '@/lib/assetUrl';
 import { formatNumber } from '@/lib/utils';
 import { COMBAT_RISK, COMBAT_STRATEGIES } from '@/data/balance/combat';
 import type { CombatStrategyId, CombatTacticId, FighterCombatStats, TargetPriority } from '@/domain/combat/combatModel';
@@ -58,6 +59,15 @@ const TRAIT_LABEL: Record<string, string> = {
   elite: 'элита',
 };
 
+const ROLE_LABEL: Record<string, string> = {
+  fodder: 'учебный',
+  skirmisher: 'налётчик',
+  bruiser: 'громила',
+  sentinel: 'страж',
+  controller: 'контроль',
+  boss: 'босс',
+};
+
 function pct(current: number, max: number): number {
   if (!Number.isFinite(current) || !Number.isFinite(max) || max <= 0) return 0;
   return Math.max(0, Math.min(100, (current / max) * 100));
@@ -97,6 +107,10 @@ function progressToReady(timer: number, interval: number): number {
 
 function aliveEnemies(enemies: CombatEnemy[]): CombatEnemy[] {
   return enemies.filter(e => e.alive && e.hp > 0);
+}
+
+function foodQuantity(slots: { itemId: string; quantity: number }[]): number {
+  return slots.reduce((sum, slot) => sum + ((getItem(slot.itemId)?.healAmount ?? 0) > 0 ? Math.max(0, slot.quantity) : 0), 0);
 }
 
 export function CombatPage() {
@@ -273,6 +287,7 @@ const CombatStage = memo(function CombatStage() {
         />
       </div>
 
+      <MobileQuickTactics />
       <CombatTimeline
         enemies={liveEnemies}
         playerTimer={playerAttackTimer}
@@ -364,11 +379,20 @@ function EnemyPack({
   );
 }
 
+function MonsterPortrait({ monsterId, isBoss = false }: { monsterId: string; isBoss?: boolean }) {
+  return (
+    <span className={`combat2-avatar combat2-monster-portrait ${isBoss ? 'is-boss' : ''}`}>
+      <img src={iconUrl(monsterIconPath(monsterId))} alt="" loading="lazy" decoding="async" />
+    </span>
+  );
+}
+
 function EnemyCard({ enemy, selected, onSelect }: { enemy: CombatEnemy; selected: boolean; onSelect: () => void }) {
+  const firstAbility = enemy.abilities?.find(ability => ability.intent === enemy.intent.kind) ?? enemy.abilities?.[0];
   return (
     <button type="button" className={`combat2-enemy ${selected ? 'is-selected' : ''}`} onClick={onSelect}>
       <div className="combat2-enemy-main">
-        <span className={`combat2-avatar ${enemy.isBoss ? 'is-boss' : ''}`}><Skull aria-hidden="true" /></span>
+        <MonsterPortrait monsterId={enemy.monsterId} isBoss={enemy.isBoss} />
         <div className="combat2-enemy-copy">
           <div className="combat2-enemy-title">
             <b>{enemy.name}</b>
@@ -380,8 +404,8 @@ function EnemyCard({ enemy, selected, onSelect }: { enemy: CombatEnemy; selected
       <div className="combat2-intent-row">
         <span className="combat2-intent-icon">{enemy.intent.icon}</span>
         <span>
-          <b>{enemy.intent.label}</b>
-          <small>{seconds(enemy.attackTimer)}</small>
+          <b>{firstAbility?.name ?? enemy.intent.label}</b>
+          <small>{seconds(enemy.attackTimer)} · {firstAbility?.counterplay ?? enemy.intent.hint}</small>
         </span>
       </div>
       <div className="combat2-traits">
@@ -438,6 +462,36 @@ function CombatTimeline({ enemies, playerTimer, playerInterval }: { enemies: Com
     </div>
   );
 }
+
+const MobileQuickTactics = memo(function MobileQuickTactics() {
+  const { tacticCooldowns, performTactic } = useCombatStore(useShallow(s => ({
+    tacticCooldowns: s.tacticCooldowns,
+    performTactic: s.performTactic,
+  })));
+
+  return (
+    <div className="combat2-quick" aria-label="Быстрые команды">
+      {TACTIC_META.map(tactic => {
+        const cd = tacticCooldowns[tactic.id];
+        const ready = cd <= 0;
+        return (
+          <button
+            key={tactic.id}
+            type="button"
+            className={`combat2-quick-btn ${ready ? 'is-ready' : 'is-cooldown'}`}
+            onClick={() => performTactic(tactic.id)}
+            disabled={!ready}
+            title={tactic.hint}
+          >
+            <span>{tactic.icon}</span>
+            <b>{tactic.title}</b>
+            <small>{ready ? 'готово' : seconds(cd)}</small>
+          </button>
+        );
+      })}
+    </div>
+  );
+});
 
 const CombatCommandDeck = memo(function CombatCommandDeck() {
   const {
@@ -575,10 +629,7 @@ const PreparationPanel = memo(function PreparationPanel() {
   const activeCharacter = useCharacterStore(s => s.activeCharacter);
   const inventoryItems = useInventoryStore(s => s.items);
   const heroLevel = useMemo(() => getLiveAttributes().heroLevel, [activeCharacter]);
-  const foodCount = useMemo(
-    () => inventoryItems.filter(slot => (getItem(slot.itemId)?.healAmount ?? 0) > 0).length,
-    [inventoryItems],
-  );
+  const foodCount = useMemo(() => foodQuantity(inventoryItems), [inventoryItems]);
 
   const handleAreaClick = (areaId: string, minLevel = 1) => {
     if (heroLevel < minLevel) return;
@@ -627,7 +678,7 @@ const PreparationPanel = memo(function PreparationPanel() {
                 {area.monsterIds.map(id => {
                   const monster = MONSTERS_MAP[id];
                   if (!monster) return null;
-                  return <span key={id}>{monster.name} · {monster.combatLevel}</span>;
+                  return <MonsterRosterChip key={id} monsterId={id} />;
                 })}
               </div>
               {risk && !locked && (
@@ -644,6 +695,22 @@ const PreparationPanel = memo(function PreparationPanel() {
     </section>
   );
 });
+
+function MonsterRosterChip({ monsterId }: { monsterId: string }) {
+  const monster = MONSTERS_MAP[monsterId];
+  if (!monster) return null;
+  const traits = (monster.traits ?? []).slice(0, 2).map(trait => TRAIT_LABEL[trait] ?? trait).join(' · ');
+  const title = [monster.description, monster.abilities?.[0]?.counterplay].filter(Boolean).join(' ');
+  return (
+    <span className="combat2-roster-chip" title={title}>
+      <img src={iconUrl(monsterIconPath(monster))} alt="" loading="lazy" decoding="async" />
+      <span>
+        <b>{monster.name}</b>
+        <small>{ROLE_LABEL[monster.role ?? ''] ?? 'моб'} · ур. {monster.combatLevel}{traits ? ` · ${traits}` : ''}</small>
+      </span>
+    </span>
+  );
+}
 
 function SortieReportPanel() {
   const report = useCombatStore(s => s.lastReport);

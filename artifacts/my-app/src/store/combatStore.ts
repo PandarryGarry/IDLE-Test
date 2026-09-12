@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Monster } from '@/data/types';
+import type { Monster, MonsterAbility } from '@/data/types';
 import { MONSTERS_MAP, AREAS_MAP } from '@/domain/combat/monsters';
 import { rollDrops, rollGp } from '@/core/formulas';
 import { usePlayerStore } from '@/store/playerStore';
@@ -20,6 +20,7 @@ import { getAdminRates, isSkillEnabledForAdmin } from '@/store/adminConfigStore'
 import {
   AUTO_EAT_HP_RATIO,
   COMBAT_AUTOPLAN,
+  COMBAT_INTENTS,
   COMBAT_LOG_MAX_ENTRIES,
   COMBAT_MODEL,
   COMBAT_STRATEGIES,
@@ -39,7 +40,6 @@ import {
   estimateRisk,
   inferMonsterTraits,
   intentAttackModifiers,
-  intentGuardBonusPct,
   nextIntentForMonster,
   resolveAttack,
   rollPrd,
@@ -76,6 +76,9 @@ export interface CombatLogEntry {
 export interface CombatEnemy extends TargetSnapshot {
   monsterId: string;
   name: string;
+  description?: string;
+  iconPath?: string;
+  abilities?: MonsterAbility[];
   combatLevel: number;
   attackInterval: number;
   guardedMs: number;
@@ -235,21 +238,36 @@ function pickTarget(
   return chosen ? enemies.find(e => e.instanceId === chosen.instanceId) ?? null : null;
 }
 
+function encounterRoster(
+  areaId: string,
+  preferredMonsterId?: string,
+  options: StartCombatOptions = {},
+): Monster[] {
+  const area = AREAS_MAP[areaId];
+  if (!area) return [];
+  const roster = area.monsterIds.map(id => MONSTERS_MAP[id]).filter(Boolean) as Monster[];
+  const preferredBase = preferredMonsterId ? MONSTERS_MAP[preferredMonsterId] : undefined;
+  const preferred = preferredBase && options.boss ? { ...preferredBase, isBoss: true } : preferredBase;
+  if (!preferred || !(preferred.areaId === areaId || area.monsterIds.includes(preferred.id))) return roster;
+  return [preferred, ...roster.filter(m => m.id !== preferred.id)];
+}
+
+function foodStackCount(): number {
+  return useInventoryStore.getState().items.reduce((sum, slot) => {
+    const item = getItem(slot.itemId);
+    return sum + ((item?.healAmount ?? 0) > 0 ? Math.max(0, slot.quantity) : 0);
+  }, 0);
+}
+
 function buildWave(
   areaId: string,
   preferredMonsterId: string | undefined,
   waveNumber: number,
   options: StartCombatOptions = {},
 ): CombatEnemy[] {
-  const area = AREAS_MAP[areaId];
-  if (!area) return [];
-  const roster = area.monsterIds.map(id => MONSTERS_MAP[id]).filter(Boolean) as Monster[];
-  const preferredBase = preferredMonsterId ? MONSTERS_MAP[preferredMonsterId] : undefined;
-  const preferred = preferredBase && options.boss ? { ...preferredBase, isBoss: true } : preferredBase;
-  if (roster.length === 0 && !preferred) return [];
-  const seedRoster = preferred && (preferred.areaId === areaId || area.monsterIds.includes(preferred.id))
-    ? [preferred, ...roster.filter(m => m.id !== preferred.id)]
-    : roster;
+  const seedRoster = encounterRoster(areaId, preferredMonsterId, options);
+  if (seedRoster.length === 0) return [];
+  const preferred = preferredMonsterId ? seedRoster.find(m => m.id === preferredMonsterId) : undefined;
   const packSize = encounterPackSize(areaId, seedRoster.map(m => m.id), preferred);
   const start = preferred ? 0 : waveNumber % Math.max(1, seedRoster.length);
   const picked: Monster[] = [];
@@ -271,6 +289,9 @@ function buildWave(
       instanceId: `${waveNumber}:${monster.id}:${index}`,
       monsterId: monster.id,
       name: monster.name,
+      description: monster.description,
+      iconPath: monster.iconPath,
+      abilities: monster.abilities,
       combatLevel: monster.combatLevel,
       hp: stats.maxHp,
       maxHp: stats.maxHp,
@@ -485,12 +506,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const enemyPrd = Object.fromEntries(wave.map(e => [e.instanceId, emptyPrd()]));
     const risk = estimateRisk({
       hero: hero.stats,
-      enemies: area.monsterIds.map(id => MONSTERS_MAP[id]).filter(Boolean) as Monster[],
+      enemies: encounterRoster(areaId, monsterId, options),
       areaId,
       heroLevel: getLiveAttributes().heroLevel,
       requiredLevel: area.combatLevelRequired,
       strategy: get().strategy,
-      foodStacks: useInventoryStore.getState().items.filter(s => (getItem(s.itemId)?.healAmount ?? 0) > 0).length,
+      foodStacks: foodStackCount(),
     });
 
     set({
@@ -625,7 +646,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         modifiers: {
           ...modifiers,
           defenderArmorBonusPct: (modifiers.defenderArmorBonusPct ?? 0)
-            + (defender.guardedMs > 0 ? intentGuardBonusPct(defender.intent) : 0),
+            + (defender.guardedMs > 0 ? COMBAT_INTENTS.guard.guardPct : 0),
         },
       });
       playerPrd = resolution.nextPrd;
@@ -1126,7 +1147,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       heroLevel: getLiveAttributes().heroLevel,
       requiredLevel: area.combatLevelRequired,
       strategy: get().strategy,
-      foodStacks: useInventoryStore.getState().items.filter(s => (getItem(s.itemId)?.healAmount ?? 0) > 0).length,
+      foodStacks: foodStackCount(),
     });
   },
 

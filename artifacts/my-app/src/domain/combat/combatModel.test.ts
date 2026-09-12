@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { emptyBranchRanks, type BranchRanks } from '../attributes/attributes.ts';
-import { MONSTERS_MAP } from './monsters.ts';
+import { getItem } from '../items/index.ts';
+import { COMBAT_INTENTS } from '../../data/balance/combat.ts';
+import { COMBAT_AREAS, MONSTERS, MONSTERS_MAP } from './monsters.ts';
 import {
   bossPhaseAttackModifiers,
   bossPhaseForHp,
@@ -9,7 +13,9 @@ import {
   deriveEnemyCombatStats,
   deriveHeroCombatStats,
   estimateRisk,
+  inferMonsterTraits,
   makeIntent,
+  nextIntentForMonster,
   prdEffectiveChance,
   resolveAttack,
   type FighterCombatStats,
@@ -38,6 +44,52 @@ function fixedStats(overrides: Partial<FighterCombatStats> = {}): FighterCombatS
     ...overrides,
   };
 }
+
+test('monster ecosystem is explicit: stats, art, abilities, area links and drops are valid', () => {
+  const ids = new Set<string>();
+  for (const monster of MONSTERS) {
+    assert.ok(!ids.has(monster.id), `duplicate monster id: ${monster.id}`);
+    ids.add(monster.id);
+    assert.ok(monster.description && monster.description.length >= 24, `${monster.id}: missing description`);
+    assert.ok(monster.iconPath, `${monster.id}: missing iconPath`);
+    assert.ok(monster.role, `${monster.id}: missing role`);
+    assert.ok(Array.isArray(monster.traits), `${monster.id}: traits must be explicit array`);
+    assert.ok(monster.intentCycle && monster.intentCycle.length > 0, `${monster.id}: missing intent cycle`);
+    assert.ok(monster.abilities && monster.abilities.length > 0, `${monster.id}: missing abilities`);
+    assert.ok(monster.maxHp > 0 && monster.maxHit > 0 && monster.attackInterval > 0, `${monster.id}: invalid combat stats`);
+
+    const iconFile = fileURLToPath(new URL(`../../../public/assets/icons/${monster.iconPath}.webp`, import.meta.url));
+    assert.ok(existsSync(iconFile), `${monster.id}: missing webp icon ${monster.iconPath}`);
+
+    for (const intent of monster.intentCycle) {
+      assert.ok(intent in COMBAT_INTENTS, `${monster.id}: bad intent ${intent}`);
+    }
+    for (const ability of monster.abilities) {
+      assert.ok(ability.id && ability.name && ability.description && ability.counterplay, `${monster.id}: incomplete ability ${ability.id}`);
+      assert.ok(ability.intent in COMBAT_INTENTS, `${monster.id}: bad ability intent ${ability.intent}`);
+    }
+    for (const drop of monster.drops) {
+      assert.ok(getItem(drop.itemId), `${monster.id}: unknown drop ${drop.itemId}`);
+      assert.ok(drop.chance >= 0 && drop.chance <= 1, `${monster.id}: drop chance out of range`);
+      assert.ok(drop.quantity[0] > 0 && drop.quantity[1] >= drop.quantity[0], `${monster.id}: invalid drop quantity`);
+    }
+  }
+
+  for (const area of COMBAT_AREAS) {
+    assert.ok(area.monsterIds.length > 0, `${area.id}: empty roster`);
+    for (const monsterId of area.monsterIds) {
+      const monster = MONSTERS_MAP[monsterId];
+      assert.ok(monster, `${area.id}: missing monster ${monsterId}`);
+      assert.equal(monster.areaId, area.id, `${monsterId}: area mismatch`);
+    }
+  }
+});
+
+test('monster behavior comes from explicit catalog fields, not id-name heuristics', () => {
+  const spider = MONSTERS_MAP.spider!;
+  assert.deepEqual(inferMonsterTraits({ ...spider, id: 'renamed_creature' }), spider.traits);
+  assert.equal(nextIntentForMonster({ ...spider, id: 'renamed_creature' }, 0).kind, spider.intentCycle?.[0]);
+});
 
 test('hero combat stats use the 12-substat model and strategy modifiers', () => {
   const balanced = deriveHeroCombatStats({ substats: branch(), finalPillars: { finesse: 10 }, strategy: 'balanced' });

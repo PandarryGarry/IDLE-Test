@@ -11,6 +11,7 @@ import {
   rareFindChance,
   type ForagingZone,
 } from '@/domain/professions/foraging';
+import { MONSTERS_MAP, monsterIconPath } from '@/domain/combat/monsters';
 import { getItem } from '@/domain/items';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { skillNameRu } from '@/lib/skillNames';
@@ -360,19 +361,23 @@ function ZoneInfoModal({ zone, rareChance, onClose }: { zone: ForagingZone | nul
           </div>
           {zone.danger.enemies.length > 0 ? (
             <div className="space-y-1.5">
-              {zone.danger.enemies.map((enemy, i) => (
-                <div key={`${enemy.monsterId}-${i}`} className="flex items-center gap-2 rounded-lg px-2 py-1.5" style={enemy.boss
-                  ? { background: 'color-mix(in srgb, var(--bg-slot) 38%, transparent)', border: '1px solid color-mix(in srgb, var(--border-accent) 40%, transparent)' }
-                  : INSET_STYLE}>
-                  <img src={mobIconUrl(enemy.iconPath)} alt="" style={{ width: 26, height: 26, objectFit: 'contain', flexShrink: 0 }} />
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 11, fontWeight: 600, color: 'var(--text-primary)' }}>
-                    {enemy.boss ? 'Босс зоны' : 'Моб зоны'}
-                  </span>
-                  <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 10, color: enemy.boss ? 'var(--text-gold)' : 'var(--border-accent)' }}>
-                    вес {enemy.weight}
-                  </span>
-                </div>
-              ))}
+              {zone.danger.enemies.map((enemy, i) => {
+                const monster = MONSTERS_MAP[enemy.monsterId];
+                const role = enemy.boss ? 'Босс зоны' : (monster?.role === 'skirmisher' ? 'Быстрый' : monster?.role === 'sentinel' ? 'Страж' : monster?.role === 'controller' ? 'Контроль' : 'Моб зоны');
+                return (
+                  <div key={`${enemy.monsterId}-${i}`} className="flex items-center gap-2 rounded-lg px-2 py-1.5" style={enemy.boss
+                    ? { background: 'color-mix(in srgb, var(--bg-slot) 38%, transparent)', border: '1px solid color-mix(in srgb, var(--border-accent) 40%, transparent)' }
+                    : INSET_STYLE}>
+                    <img src={mobIconUrl(enemy.iconPath || monsterIconPath(enemy.monsterId))} alt="" style={{ width: 26, height: 26, objectFit: 'contain', flexShrink: 0 }} />
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {monster?.name ?? enemy.monsterId}
+                    </span>
+                    <span style={{ fontFamily: 'var(--app-font-mono)', fontSize: 10, color: enemy.boss ? 'var(--text-gold)' : 'var(--border-accent)', flexShrink: 0 }}>
+                      {role} · вес {enemy.weight}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <p style={{ margin: 0, fontSize: 11, color: 'var(--text-faint)' }}>В этой зоне безопасно — монстры не встречаются.</p>

@@ -138,10 +138,35 @@ export interface MonsterDrop {
   quantity: [number, number];
 }
 
+export type MonsterTraitId = 'swift' | 'armored' | 'evasive' | 'venom' | 'pack' | 'boss' | 'elite';
+export type MonsterIntentId = 'strike' | 'heavy' | 'flurry' | 'guard' | 'venom' | 'enrage';
+export type MonsterRole = 'fodder' | 'skirmisher' | 'bruiser' | 'sentinel' | 'controller' | 'boss';
+
+export interface MonsterAbility {
+  id: string;
+  name: string;
+  /** Что игрок должен прочитать в телеграфе/описании. */
+  description: string;
+  /** Намерение, через которое способность появляется в бою. */
+  intent: MonsterIntentId;
+  /** Короткая подсказка контригры для UI и QA. */
+  counterplay: string;
+}
+
 export interface Monster {
   id: string;
   name: string;
   areaId: string;
+  /** Лор и геймплейная роль — каталог мобов не должен быть безликой таблицей чисел. */
+  description?: string;
+  /** Путь в public/assets/icons без расширения, например characters/mobs/mob_goblin. */
+  iconPath?: string;
+  role?: MonsterRole;
+  /** Явные теги поведения. Никаких выводов по id вроде "если spider". */
+  traits?: MonsterTraitId[];
+  /** Явный цикл телеграфов/намерений. */
+  intentCycle?: MonsterIntentId[];
+  abilities?: MonsterAbility[];
   maxHp: number;
   attackLevel: number;
   strengthLevel: number;

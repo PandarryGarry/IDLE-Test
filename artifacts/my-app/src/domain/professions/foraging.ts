@@ -5,6 +5,7 @@ import {
 } from '../attributes/characterAttributes.ts';
 import { ratingToPercent } from '../../data/balance/substats.ts';
 import { getProfessionStatValue } from '../runtimePorts.ts';
+import { monsterIconPath } from '../combat/monsters.ts';
 
 /**
  * ДАННЫЕ И ЧИСТЫЕ ПРАВИЛА профессии «Сбор».
@@ -76,15 +77,8 @@ export function getForagingAttributeSnapshot(): StatSnapshot {
 }
 
 // ── Зоны ───────────────────────────────────────────────────────
-const MOB_ICON: Record<string, string> = {
-  goblin: 'characters/mobs/mob_goblin',
-  wolf: 'characters/mobs/mob_wolf',
-  spider: 'characters/mobs/mob_spider',
-  skeleton: 'characters/mobs/mob_skeleton',
-  undead_warrior: 'characters/mobs/mob_skeleton',
-  giant_spider: 'characters/mobs/mob_spider',
-  green_dragon: 'characters/mobs/mob_orc',
-};
+// Иконки опасностей берём из единого каталога мобов, чтобы Сбор и Бой не
+// расходились в названиях/картинках/босс-флагах.
 
 // XP на цикл выстроено по хардкорной кривой (RS-таблица, 13M XP до 99 ур.):
 // ранние зоны почти не дают опыта, а верхний «Тайник» резко ускоряет финальный
@@ -112,7 +106,7 @@ export const FORAGING_ZONES: ForagingZone[] = [
     rareTable: [],
     danger: {
       enemyChance: 1,
-      enemies: [{ monsterId: 'goblin', areaId: 'farmlands', weight: 100, iconPath: MOB_ICON.goblin }],
+      enemies: [{ monsterId: 'goblin', areaId: 'farmlands', weight: 100, iconPath: monsterIconPath('goblin') }],
     },
     previewItemIds: ['branch_01', 'leaf_01', 'cone_01', 'mushroom_04_raw'],
   },
@@ -143,8 +137,8 @@ export const FORAGING_ZONES: ForagingZone[] = [
     danger: {
       enemyChance: 3,
       enemies: [
-        { monsterId: 'goblin', areaId: 'farmlands', weight: 55, iconPath: MOB_ICON.goblin },
-        { monsterId: 'wolf', areaId: 'forest', weight: 45, iconPath: MOB_ICON.wolf },
+        { monsterId: 'goblin', areaId: 'farmlands', weight: 55, iconPath: monsterIconPath('goblin') },
+        { monsterId: 'wolf', areaId: 'forest', weight: 45, iconPath: monsterIconPath('wolf') },
       ],
     },
     previewItemIds: ['mushroom_02_raw', 'wild_berries', 'healing_herbs', 'stick_04'],
@@ -176,9 +170,9 @@ export const FORAGING_ZONES: ForagingZone[] = [
     danger: {
       enemyChance: 5,
       enemies: [
-        { monsterId: 'spider', areaId: 'spider_den', weight: 80, iconPath: MOB_ICON.spider },
-        { monsterId: 'giant_spider', areaId: 'spider_den', weight: 16, iconPath: MOB_ICON.giant_spider },
-        { monsterId: 'giant_spider', areaId: 'spider_den', weight: 4, boss: true, iconPath: MOB_ICON.giant_spider },
+        { monsterId: 'spider', areaId: 'spider_den', weight: 80, iconPath: monsterIconPath('spider') },
+        { monsterId: 'giant_spider', areaId: 'spider_den', weight: 16, iconPath: monsterIconPath('giant_spider') },
+        { monsterId: 'giant_spider', areaId: 'spider_den', weight: 4, boss: true, iconPath: monsterIconPath('giant_spider') },
       ],
     },
     previewItemIds: ['clay_lump', 'pine_resin', 'mushroom_09_raw', 'stone'],
@@ -212,9 +206,9 @@ export const FORAGING_ZONES: ForagingZone[] = [
     danger: {
       enemyChance: 8,
       enemies: [
-        { monsterId: 'skeleton', areaId: 'undead_graveyard', weight: 65, iconPath: MOB_ICON.skeleton },
-        { monsterId: 'undead_warrior', areaId: 'undead_graveyard', weight: 28, iconPath: MOB_ICON.undead_warrior },
-        { monsterId: 'undead_warrior', areaId: 'undead_graveyard', weight: 7, boss: true, iconPath: MOB_ICON.undead_warrior },
+        { monsterId: 'skeleton', areaId: 'undead_graveyard', weight: 65, iconPath: monsterIconPath('skeleton') },
+        { monsterId: 'undead_warrior', areaId: 'undead_graveyard', weight: 28, iconPath: monsterIconPath('undead_warrior') },
+        { monsterId: 'undead_warrior', areaId: 'undead_graveyard', weight: 7, boss: true, iconPath: monsterIconPath('undead_warrior') },
       ],
     },
     previewItemIds: ['glow_berry', 'heart_root', 'mushroom_01_raw', 'pine_resin'],
@@ -248,9 +242,9 @@ export const FORAGING_ZONES: ForagingZone[] = [
     danger: {
       enemyChance: 12,
       enemies: [
-        { monsterId: 'undead_warrior', areaId: 'undead_graveyard', weight: 60, iconPath: MOB_ICON.undead_warrior },
-        { monsterId: 'fire_elemental', areaId: 'lava_lake', weight: 30, iconPath: MOB_ICON.undead_warrior },
-        { monsterId: 'green_dragon', areaId: 'dragons_lair', weight: 10, boss: true, iconPath: MOB_ICON.green_dragon },
+        { monsterId: 'undead_warrior', areaId: 'undead_graveyard', weight: 60, iconPath: monsterIconPath('undead_warrior') },
+        { monsterId: 'fire_elemental', areaId: 'lava_lake', weight: 30, iconPath: monsterIconPath('fire_elemental') },
+        { monsterId: 'green_dragon', areaId: 'dragons_lair', weight: 10, boss: true, iconPath: monsterIconPath('green_dragon') },
       ],
     },
     previewItemIds: ['glow_berry', 'heart_root', 'mushroom_10_raw', 'mushroom_03_raw'],

@@ -1,4 +1,4 @@
-import type { Monster } from '../../data/types.ts';
+import type { Monster, MonsterIntentId, MonsterTraitId } from '../../data/types.ts';
 import type { BranchRanks, PillarId } from '../attributes/attributes.ts';
 import { substatDisplay } from '../attributes/characterAttributes.ts';
 import { strikeRange } from '../../data/balance/strikeRange.ts';
@@ -18,10 +18,10 @@ import {
 } from '../../data/balance/combat.ts';
 
 export type CombatStrategyId = keyof typeof COMBAT_STRATEGIES;
-export type CombatIntentKind = keyof typeof COMBAT_INTENTS;
+export type CombatIntentKind = MonsterIntentId;
 export type CombatTacticId = 'guard' | 'maneuver' | 'technique' | 'pierce';
 export type TargetPriority = 'auto' | 'weakest' | 'dangerous' | 'armored' | 'nearest';
-export type CombatTraitId = 'swift' | 'armored' | 'evasive' | 'venom' | 'pack' | 'boss' | 'elite';
+export type CombatTraitId = MonsterTraitId;
 
 export interface FighterCombatStats {
   maxHp: number;
@@ -267,21 +267,21 @@ export function deriveHeroCombatStats(input: {
 }
 
 export function inferMonsterTraits(monster: Monster): CombatTraitId[] {
-  const traits = new Set<CombatTraitId>();
+  const traits = new Set<CombatTraitId>(monster.traits ?? []);
   if (monster.isBoss) traits.add('boss');
-  if (monster.combatLevel >= ENEMY_TRAIT_RULES.eliteCombatLevel || monster.maxHp >= ENEMY_TRAIT_RULES.eliteMaxHp) traits.add('elite');
-  if (monster.attackInterval <= ENEMY_TRAIT_RULES.swiftAttackIntervalMs || monster.id.includes('wolf')) traits.add('swift');
-  if (
-    monster.defenceLevel >= ENEMY_TRAIT_RULES.armoredDefenceLevel
-    || monster.defenceBonus >= ENEMY_TRAIT_RULES.armoredDefenceBonus
-    || monster.id.includes('skeleton')
-  ) traits.add('armored');
-  if (
-    monster.attackLevel >= monster.defenceLevel + ENEMY_TRAIT_RULES.evasiveAttackOverDefence
-    || monster.id.includes('spider')
-  ) traits.add('evasive');
-  if (monster.id.includes('spider') || monster.id.includes('poison')) traits.add('venom');
-  if (monster.id.includes('wolf') || monster.id.includes('goblin') || monster.areaId === 'spider_den') traits.add('pack');
+
+  // Fallback только по числам для будущих черновых мобов. В боевом каталоге
+  // теги прописаны явно рядом с описанием/способностями — никакой логики по id.
+  if (!monster.traits || monster.traits.length === 0) {
+    if (monster.combatLevel >= ENEMY_TRAIT_RULES.eliteCombatLevel || monster.maxHp >= ENEMY_TRAIT_RULES.eliteMaxHp) traits.add('elite');
+    if (monster.attackInterval <= ENEMY_TRAIT_RULES.swiftAttackIntervalMs) traits.add('swift');
+    if (
+      monster.defenceLevel >= ENEMY_TRAIT_RULES.armoredDefenceLevel
+      || monster.defenceBonus >= ENEMY_TRAIT_RULES.armoredDefenceBonus
+    ) traits.add('armored');
+    if (monster.attackLevel >= monster.defenceLevel + ENEMY_TRAIT_RULES.evasiveAttackOverDefence) traits.add('evasive');
+  }
+
   return [...traits];
 }
 
@@ -387,13 +387,20 @@ export function bossPhaseAttackModifiers(phase: number): AttackModifiers {
   return {};
 }
 
+function isIntentKind(value: string): value is CombatIntentKind {
+  return value in COMBAT_INTENTS;
+}
+
 export function nextIntentForMonster(monster: Monster, index: number): CombatIntent {
+  const explicitCycle = (monster.intentCycle ?? []).filter(isIntentKind);
   const traits = inferMonsterTraits(monster);
-  let cycle: CombatIntentKind[] = ['strike', 'heavy', 'strike'];
-  if (traits.includes('boss')) cycle = ['heavy', 'strike', 'guard', 'enrage'];
-  else if (traits.includes('venom')) cycle = ['venom', 'strike', 'flurry'];
-  else if (traits.includes('swift')) cycle = ['flurry', 'strike', 'heavy'];
-  else if (traits.includes('armored')) cycle = ['guard', 'strike', 'heavy'];
+  let cycle: CombatIntentKind[] = explicitCycle.length > 0 ? explicitCycle : ['strike', 'heavy', 'strike'];
+  if (explicitCycle.length === 0) {
+    if (traits.includes('boss')) cycle = ['heavy', 'strike', 'guard', 'enrage'];
+    else if (traits.includes('venom')) cycle = ['venom', 'strike', 'flurry'];
+    else if (traits.includes('swift')) cycle = ['flurry', 'strike', 'heavy'];
+    else if (traits.includes('armored')) cycle = ['guard', 'strike', 'heavy'];
+  }
   return makeIntent(cycle[Math.abs(index) % cycle.length]);
 }
 
