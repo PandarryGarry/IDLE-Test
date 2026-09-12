@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getItem } from '@/domain/items';
 import { AdminItemEditor } from '@/features/admin/AdminItemEditor';
 import type { Item } from '@/data/types';
@@ -30,6 +30,7 @@ import {
   Minus,
   Plus,
   Utensils,
+  Trash2,
 } from 'lucide-react';
 
 /** Иконка подхарактеристики для мелких ячеек (без новых зависимостей). */
@@ -191,6 +192,17 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
   const playerMaxHp = useCombatStore(s => s.playerMaxHp);
 
   const [sellQty, setSellQty] = useState(1);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  // «Корзина» в модалке (2026-09-12): защита от случайного клика —
+  // подтверждение живёт 3 секунды и сбрасывается при смене предмета.
+  useEffect(() => {
+    if (!confirmDelete) return;
+    const t = setTimeout(() => setConfirmDelete(false), 3000);
+    return () => clearTimeout(t);
+  }, [confirmDelete]);
+  useEffect(() => {
+    setConfirmDelete(false);
+  }, [itemId]);
 
   if (!itemId || !item) return null;
 
@@ -249,6 +261,20 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
     }
     if (qty >= quantity) {
       onClose();
+    }
+  };
+
+  const handleDelete = () => {
+    if (isLocked) return;
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    if (removeItem(itemId, quantity)) {
+      notifyInfo(`Удалено «${item.name}»${quantity > 1 ? ` ×${formatNumber(quantity)}` : ''}`);
+      onClose();
+    } else {
+      setConfirmDelete(false);
     }
   };
 
@@ -369,19 +395,19 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
 
         {/* Action Controls Section */}
         {!isReadOnly && (
-        <div className="space-y-2 pt-2 border-t [border-color:var(--glass-edge)]">
+        <div className="space-y-1.5 pt-2 border-t [border-color:var(--glass-edge)]">
 
           {item.equipSlot && (
             <button
               type="button"
               onClick={isEquipped ? handleUnequip : handleEquip}
-              className={`w-full py-2 rounded-xl font-extrabold text-[11px] transition-all active:scale-95 flex items-center justify-center gap-2 border ${
+              className={`w-full h-8 px-3 rounded-lg font-extrabold text-[11px] transition-all active:scale-95 flex items-center justify-center gap-1.5 border ${
                 isEquipped
                   ? '[background:var(--btn-secondary)] hover:brightness-110 text-[var(--badge-red-ink)] [border-color:var(--badge-red-edge)]'
                   : '[background:var(--btn-primary)] hover:brightness-110 text-[var(--btn-primary-ink)] [border-color:var(--btn-primary-edge)] [box-shadow:var(--btn-primary-shadow)]'
               }`}
             >
-              <Shield className="w-4 h-4" />
+              <Shield className="w-3.5 h-3.5" />
               <span>{isEquipped ? 'Снять снаряжение' : 'Надеть предмет'}</span>
             </button>
           )}
@@ -391,42 +417,42 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
               type="button"
               onClick={handleEat}
               disabled={playerHp >= playerMaxHp}
-              className="w-full py-2 rounded-xl [background:var(--btn-secondary)] hover:brightness-110 text-[var(--badge-green-ink)] border [border-color:var(--accent-emerald)] font-extrabold text-[11px] transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full h-8 px-3 rounded-lg [background:var(--btn-secondary)] hover:brightness-110 text-[var(--badge-green-ink)] border [border-color:var(--accent-emerald)] font-extrabold text-[11px] transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
             >
-              <Utensils className="w-4 h-4" />
+              <Utensils className="w-3.5 h-3.5" />
               <span>Съесть (+{item.healAmount} ОЗ)</span>
             </button>
           )}
 
           {item.canSell && (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {isLocked ? (
-                <div className="w-full p-2.5 [background:var(--badge-gold-bg)] border [border-color:var(--tag-gold-edge)] rounded-2xl text-center">
-                  <span className="text-xs font-mono font-bold text-[var(--text-gold)] flex items-center justify-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5" /> Заперто — продажа заблокирована
+                <div className="w-full h-8 px-2.5 [background:var(--badge-gold-bg)] border [border-color:var(--tag-gold-edge)] rounded-lg flex items-center justify-center">
+                  <span className="text-[11px] font-mono font-bold text-[var(--text-gold)] flex items-center justify-center gap-1.5">
+                    <Lock className="w-3 h-3" /> Заперто — продажа заблокирована
                   </span>
                 </div>
               ) : (
                 <>
                   <div className="flex items-center gap-2">
                     {quantity > 1 && (
-                      <div className="flex items-center [background:var(--field-bg)] border [border-color:var(--card-edge)] rounded-2xl p-1 shrink-0">
+                      <div className="flex items-center [background:var(--field-bg)] border [border-color:var(--card-edge)] rounded-lg p-0.5 shrink-0">
                         <button
                           type="button"
                           onClick={() => setSellQty(Math.max(1, sellQty - 1))}
-                          className="w-7 h-7 rounded-lg [background:var(--btn-secondary)] hover:brightness-125 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] active:scale-90"
+                          className="w-6 h-6 rounded-md [background:var(--btn-secondary)] hover:brightness-125 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] active:scale-90"
                         >
-                          <Minus className="w-3.5 h-3.5" />
+                          <Minus className="w-3 h-3" />
                         </button>
-                        <span className="w-10 text-center font-mono text-xs font-black text-[var(--text-gold)]">
+                        <span className="w-7 text-center font-mono text-[11px] font-black text-[var(--text-gold)]">
                           {sellQty}
                         </span>
                         <button
                           type="button"
                           onClick={() => setSellQty(Math.min(quantity, sellQty + 1))}
-                          className="w-7 h-7 rounded-lg [background:var(--btn-secondary)] hover:brightness-125 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] active:scale-90"
+                          className="w-6 h-6 rounded-md [background:var(--btn-secondary)] hover:brightness-125 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] active:scale-90"
                         >
-                          <Plus className="w-3.5 h-3.5" />
+                          <Plus className="w-3 h-3" />
                         </button>
                       </div>
                     )}
@@ -434,7 +460,7 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
                     <button
                       type="button"
                       onClick={() => handleSell(sellQty)}
-                      className="flex-1 py-2 px-3 rounded-xl [background:var(--btn-secondary)] hover:brightness-110 text-[var(--text-gold)] border [border-color:var(--tag-gold-edge)] font-extrabold text-[11px] transition-all active:scale-95 flex items-center justify-center"
+                      className="flex-1 h-8 px-3 rounded-lg [background:var(--btn-secondary)] hover:brightness-110 text-[var(--text-gold)] border [border-color:var(--tag-gold-edge)] font-extrabold text-[11px] transition-all active:scale-95 flex items-center justify-center"
                     >
                       <span>Продать {quantity > 1 ? `(${sellQty} шт.)` : ''}</span>
                     </button>
@@ -444,7 +470,7 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
                     <button
                       type="button"
                       onClick={() => handleSell(quantity)}
-                      className="w-full py-1.5 rounded-xl bg-transparent border [border-color:var(--card-edge)] hover:[border-color:var(--border-accent)] text-[var(--text-muted)] hover:text-[var(--text-gold)] font-bold text-[11px] transition-all active:scale-95 flex items-center justify-center px-3 font-mono"
+                      className="w-full h-7 px-3 rounded-lg bg-transparent border [border-color:var(--card-edge)] hover:[border-color:var(--border-accent)] text-[var(--text-muted)] hover:text-[var(--text-gold)] font-bold text-[11px] font-mono transition-all active:scale-95 flex items-center justify-center"
                     >
                       <span>Продать всё (x{formatNumber(quantity)})</span>
                     </button>
@@ -454,24 +480,47 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full py-2.5 rounded-2xl bg-transparent hover:[background:var(--badge-gray-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] text-xs font-semibold transition-all active:scale-95"
-          >
-            Закрыть
-          </button>
+          <div className="flex items-center gap-1.5 pt-0.5">
+            {!confirmDelete ? (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isLocked}
+                title={isLocked ? 'Заперто — удаление заблокировано' : 'Удалить предмет'}
+                className="w-8 h-8 rounded-lg bg-transparent border [border-color:var(--card-edge)] hover:[border-color:var(--badge-red-edge)] text-[var(--text-muted)] hover:text-[var(--badge-red-ink)] transition-all active:scale-95 flex items-center justify-center shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleDelete}
+                title="Подтвердить удаление"
+                className="h-8 px-3 rounded-lg [background:var(--badge-red-bg)] border [border-color:var(--badge-red-edge)] text-[var(--badge-red-ink)] font-extrabold text-[11px] transition-all active:scale-95 flex items-center justify-center gap-1.5 shrink-0"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Удалить ×{formatNumber(quantity)}?</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={confirmDelete ? () => setConfirmDelete(false) : onClose}
+              className="flex-1 h-7 px-3 rounded-lg bg-transparent hover:[background:var(--badge-gray-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] text-[11px] font-semibold transition-all active:scale-95"
+            >
+              {confirmDelete ? 'Отмена' : 'Закрыть'}
+            </button>
+          </div>
 
         </div>
         )}
 
         {/* Читаем из админки: нет игровых действий, только кнопка закрыть */}
         {isReadOnly && (
-          <div className="space-y-2 pt-2 border-t [border-color:var(--glass-edge)]">
+          <div className="space-y-1.5 pt-2 border-t [border-color:var(--glass-edge)]">
             <button
               type="button"
               onClick={onClose}
-              className="w-full py-2.5 rounded-2xl bg-transparent hover:[background:var(--badge-gray-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] text-xs font-semibold transition-all active:scale-95"
+              className="w-full h-7 px-3 rounded-lg bg-transparent hover:[background:var(--badge-gray-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] text-[11px] font-semibold transition-all active:scale-95"
             >
               Закрыть
             </button>
