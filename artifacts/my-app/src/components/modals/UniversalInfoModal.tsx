@@ -71,19 +71,19 @@ function MiniStat({
   return (
     <div
       title={title}
-      className="flex items-center gap-2 rounded-xl px-2 py-1.5 border min-w-0"
+      className="flex items-center gap-1.5 rounded-lg px-2 py-1 border min-w-0"
       style={{ background: 'var(--stat-bg)', borderColor: edge, boxShadow: 'var(--stat-shadow)' }}
     >
       {icon && (
         <span
-          className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-[var(--text-gold)]"
+          className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 text-[var(--text-gold)]"
           style={{ background: 'var(--tag-gold-bg)' }}
         >
           {icon}
         </span>
       )}
       <span className="min-w-0">
-        <span className="block text-[9px] text-[var(--text-muted)] font-mono uppercase font-bold tracking-wide truncate">
+        <span className="block text-[8px] text-[var(--text-muted)] font-mono uppercase font-bold tracking-wide truncate">
           {label}
         </span>
         <span className="block text-[11px] font-mono font-black truncate" style={{ color: ink }}>
@@ -346,10 +346,10 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
         </p>
 
         {/* Характеристики — компактные ячейки: цена/прочность/лечение + бонусы предмета */}
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-2 gap-1">
           <MiniStat
             icon={<Coins className="w-3 h-3" />}
-            label="Цена за 1 шт."
+            label="Цена"
           >
             <CoinsDisplay amount={item.sellValue} size="xs" />
           </MiniStat>

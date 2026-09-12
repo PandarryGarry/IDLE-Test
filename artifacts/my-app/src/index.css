@@ -5981,9 +5981,11 @@ button.mobile-nav__item {
 }
 .admin-items__toolbar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
   margin-bottom: 10px;
   padding: 6px;
   border: 1px solid #3a2b1a;
@@ -5994,6 +5996,12 @@ button.mobile-nav__item {
   margin-left: auto;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
+  padding-left: 8px;
+  border-left: 1px solid var(--border-default);
+}
+.admin-items__toolbar::-webkit-scrollbar {
+  display: none;
 }
 .admin-items__loupe {
   padding: 8px;
@@ -6030,6 +6038,7 @@ button.mobile-nav__item {
   cursor: pointer;
 }
 .admin-items__count {
+  flex-shrink: 0;
   color: var(--text-gold);
   font-family: var(--app-font-mono);
   font-size: 11px;
@@ -6073,7 +6082,8 @@ button.mobile-nav__item {
 
 .admin-dd {
   position: relative;
-  min-width: 132px;
+  min-width: 116px;
+  flex-shrink: 0;
 }
 .admin-dd__btn {
   display: flex;
