@@ -1,21 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { useCombatStore } from '@/store/combatStore';
 import { FORAGING_ZONES_MAP } from '@/domain/professions/foraging';
 import { ActionProgressBar } from '@/features/professions/ActionProgressBar';
 import { Link } from 'wouter';
-import { Square, ArrowUpRight } from 'lucide-react';
+import { Square, ArrowUpRight, X } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { skillNameRu } from '@/lib/skillNames';
 import { SkillIcon } from '@/features/professions/SkillIcon';
 
-const SKILL_THEMES: Record<string, { nameKey: string; icon: string; path: string; color: 'green'; accent: string }> = {
-  foraging: { nameKey: 'skill.foraging', icon: '🌿', path: '/foraging', color: 'green', accent: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' },
-};
+/**
+ * Плавающая плашка активного действия (решение владельца 2026-09-12):
+ * маленький полупрозрачный чип стекла слоя 1 у правого края под шапкой —
+ * ничего не перекрывает (колокольчик в топбаре свободен), контент не сдвигает,
+ * закрывается крестиком — сбор при этом продолжается; на новом действии
+ * чип появляется снова.
+ */
 
-function getActionName(skillId: string, actionId: string): string {
-  if (skillId === 'foraging') return FORAGING_ZONES_MAP[actionId]?.name ?? actionId;
-  return actionId;
+const BAR_HIDDEN_KEY = 'aethelia_activebar_hidden_v1';
+
+function readHiddenMap(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem(BAR_HIDDEN_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeHidden(key: string, hidden: boolean) {
+  try {
+    const map = readHiddenMap();
+    if (hidden) map[key] = true;
+    else delete map[key];
+    localStorage.setItem(BAR_HIDDEN_KEY, JSON.stringify(map));
+  } catch {
+    /* приватный режим — просто не запоминаем */
+  }
 }
 
 export function GlobalActiveBar() {
@@ -31,45 +52,82 @@ export function GlobalActiveBar() {
   const playerMaxHp = useCombatStore(s => s.playerMaxHp);
   const stopCombat = useCombatStore(s => s.stopCombat);
 
-  if (inCombat && currentMonster) {
+  const skillKey = activeSkill && activeActionId ? `${activeSkill}:${activeActionId}` : null;
+  const activeKey = inCombat && currentMonster ? 'combat' : skillKey;
+
+  const [dismissed, setDismissed] = useState<boolean>(
+    () => (activeKey ? readHiddenMap()[activeKey] === true : false),
+  );
+  // Смена действия/врага — чип возвращается, даже если его скрыли раньше.
+  React.useEffect(() => {
+    setDismissed(activeKey ? readHiddenMap()[activeKey] === true : false);
+  }, [activeKey]);
+
+  if (!activeKey || dismissed) return null;
+
+  const hide = () => {
+    writeHidden(activeKey, true);
+    setDismissed(true);
+  };
+
+  const glassStyle = {
+    background: 'var(--glass-bg)',
+    border: '1px solid var(--glass-edge)',
+    boxShadow: 'var(--glass-shadow)',
+    backdropFilter: 'var(--glass-filter)',
+  } as const;
+
+  if (activeKey === 'combat' && currentMonster) {
     const hpPct = Math.max(0, Math.min(100, (playerHp / playerMaxHp) * 100));
     return (
-      <div className="sticky top-2 z-40 mb-3 mx-auto w-full max-w-4xl px-2">
-        <div className="fantasy-card border-red-500/40 bg-stone-950/90 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 shadow-[0_0_25px_rgba(239,68,68,0.2)] flex items-center justify-between gap-3 border animate-in fade-in slide-in-from-top-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-red-500/20 border border-red-500/40 flex items-center justify-center text-lg shrink-0 animate-pulse">
-              ⚔️
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-red-400 font-mono">
-                  {t('group.combat')}
-                </span>
-                <span className="text-[var(--text-muted)] text-xs">•</span>
-                <span className="text-xs font-bold text-[var(--text-primary)] truncate">
-                  vs {currentMonster.name} (Ур. {currentMonster.combatLevel})
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-xs font-mono mt-0.5">
-                <span className="text-[var(--text-muted)] text-[11px]">ОЗ:</span>
-                <div className="w-24 sm:w-32 h-2 bg-stone-800 rounded-full overflow-hidden border border-stone-700">
-                  <div className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-300" style={{ width: `${hpPct}%` }} />
-                </div>
-                <span className="text-[11px] font-bold text-red-300">{playerHp}/{playerMaxHp}</span>
-              </div>
-            </div>
+      <div style={glassStyle} className="pointer-events-auto flex items-center gap-2 rounded-2xl px-2.5 py-1.5">
+        <span
+          className="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0"
+          style={{ background: 'var(--badge-red-bg)', border: '1px solid var(--badge-red-edge)' }}
+        >
+          ⚔️
+        </span>
+        <div className="min-w-0">
+          <div className="flex items-center gap-1 text-[10px] leading-tight">
+            <span className="font-mono font-black uppercase tracking-wider" style={{ color: 'var(--announce-combat)' }}>
+              {t('group.combat')}
+            </span>
+            <span className="text-[var(--text-muted)]">•</span>
+            <span className="font-bold text-[var(--text-primary)] truncate max-w-[120px] sm:max-w-[180px]">
+              {currentMonster.name} · ур. {currentMonster.combatLevel}
+            </span>
           </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <Link href="/combat" className="px-2.5 py-1.5 rounded-xl bg-stone-800/80 border border-stone-700 hover:border-red-500/50 text-xs font-bold text-stone-200 transition-all flex items-center gap-1 active:scale-95">
-              <span className="hidden sm:inline">{t('nav.combat')}</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </Link>
-            <button onClick={stopCombat} className="px-2.5 py-1.5 rounded-xl bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white border border-red-500/40 text-xs font-bold transition-all flex items-center gap-1 active:scale-95" title={t('combat.stop')}>
-              <Square className="w-3.5 h-3.5 fill-current" />
-              <span className="hidden sm:inline">{t('combat.stop')}</span>
-            </button>
+          <div className="flex items-center gap-1.5 mt-1">
+            <div className="w-16 sm:w-24 h-1 rounded-full overflow-hidden [background:var(--bg-slot)]">
+              <div className="h-full transition-all duration-300" style={{ width: `${hpPct}%`, background: 'var(--announce-combat)' }} />
+            </div>
+            <span className="text-[9px] font-mono font-bold text-[var(--text-muted)]">{playerHp}/{playerMaxHp}</span>
           </div>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <Link
+            href="/combat"
+            title={t('nav.combat')}
+            className="p-1.5 rounded-lg [background:var(--chrome-btn)] text-[var(--chrome-btn-ink)] border [border-color:var(--chrome-btn-edge)] [box-shadow:var(--chrome-btn-shadow)] active:scale-95 transition-all"
+          >
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </Link>
+          <button
+            type="button"
+            onClick={stopCombat}
+            title={t('combat.stop')}
+            className="p-1.5 rounded-lg text-[var(--badge-red-ink)] border [border-color:var(--badge-red-edge)] hover:brightness-110 active:scale-95 transition-all flex items-center"
+          >
+            <Square className="w-3 h-3 fill-current" />
+          </button>
+          <button
+            type="button"
+            onClick={hide}
+            title="Скрыть (бой продолжится)"
+            className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] active:scale-95 transition-all"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
     );
@@ -77,47 +135,56 @@ export function GlobalActiveBar() {
 
   if (!isRunning || !activeSkill || !activeActionId) return null;
 
-  const theme = SKILL_THEMES[activeSkill] || {
-    nameKey: 'ui.active',
-    icon: '⚡',
-    path: `/${activeSkill}`,
-    color: 'green' as const,
-    accent: 'text-primary border-primary/30 bg-primary/10',
-  };
-
-  const actionName = getActionName(activeSkill, activeActionId);
+  const actionName = activeSkill === 'foraging'
+    ? (FORAGING_ZONES_MAP[activeActionId]?.name ?? activeActionId)
+    : activeActionId;
 
   return (
-    <div className="sticky top-2 z-40 mb-3 mx-auto w-full max-w-4xl px-2">
-      <div className="fantasy-card border-emerald-500/30 bg-stone-950/90 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 shadow-[0_0_20px_rgba(16,185,129,0.15)] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border animate-in fade-in slide-in-from-top-2">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 rounded-xl border border-emerald-500/40 bg-emerald-500/15 flex items-center justify-center shrink-0 shadow-inner overflow-hidden p-1">
-            <SkillIcon skillId={activeSkill} size="sm" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-300 font-mono">
-                {skillNameRu(activeSkill)}
-              </span>
-              <span className="text-stone-500 text-xs">•</span>
-              <span className="text-xs font-bold text-stone-100 truncate">{actionName}</span>
-            </div>
-            <div className="w-full mt-1.5 pr-2 sm:max-w-md">
-              <ActionProgressBar height="h-2" color={theme.color} />
-            </div>
-          </div>
+    <div style={glassStyle} className="pointer-events-auto flex items-center gap-2 rounded-2xl px-2.5 py-1.5">
+      <span
+        className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 overflow-hidden p-0.5"
+        style={{ background: 'var(--badge-green-bg)', border: '1px solid var(--accent-emerald)' }}
+      >
+        <SkillIcon skillId={activeSkill} size="sm" />
+      </span>
+      <div className="min-w-0">
+        <div className="flex items-center gap-1 text-[10px] leading-tight">
+          <span className="font-mono font-black uppercase tracking-wider text-[var(--badge-green-ink)]">
+            {skillNameRu(activeSkill)}
+          </span>
+          <span className="text-[var(--text-muted)]">•</span>
+          <span className="font-bold text-[var(--text-primary)] truncate max-w-[110px] sm:max-w-[160px]">
+            {actionName}
+          </span>
         </div>
-
-        <div className="flex items-center justify-end gap-2 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-stone-800">
-          <Link href={theme.path} className="px-2.5 py-1.5 rounded-xl bg-stone-800/80 border border-stone-700 hover:border-emerald-500/50 text-xs font-bold text-stone-200 transition-all flex items-center gap-1 active:scale-95">
-            <span className="text-[11px] font-medium">{t('ui.view') || 'View'}</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
-          </Link>
-          <button onClick={stopAction} className="px-2.5 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500 text-red-300 hover:text-white border border-red-500/30 text-xs font-bold transition-all flex items-center gap-1 active:scale-95" title={t('ui.stop') || 'Stop'}>
-            <Square className="w-3.5 h-3.5 fill-current" />
-            <span className="text-[11px] font-medium">{t('ui.stop') || 'Stop'}</span>
-          </button>
+        <div className="w-20 sm:w-28 mt-1">
+          <ActionProgressBar height="h-1" color="green" />
         </div>
+      </div>
+      <div className="flex items-center gap-1 shrink-0">
+        <Link
+          href={`/${activeSkill}`}
+          title={t('ui.view')}
+          className="p-1.5 rounded-lg [background:var(--chrome-btn)] text-[var(--chrome-btn-ink)] border [border-color:var(--chrome-btn-edge)] [box-shadow:var(--chrome-btn-shadow)] active:scale-95 transition-all"
+        >
+          <ArrowUpRight className="w-3.5 h-3.5" />
+        </Link>
+        <button
+          type="button"
+          onClick={stopAction}
+          title={t('ui.stop')}
+          className="p-1.5 rounded-lg text-[var(--badge-red-ink)] border [border-color:var(--badge-red-edge)] hover:brightness-110 active:scale-95 transition-all flex items-center"
+        >
+          <Square className="w-3 h-3 fill-current" />
+        </button>
+        <button
+          type="button"
+          onClick={hide}
+          title="Скрыть (сбор продолжится)"
+          className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] active:scale-95 transition-all"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
   );

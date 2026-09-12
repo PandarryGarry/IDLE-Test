@@ -439,14 +439,23 @@ function GearModule({
   const equipBonusLines = useMemo(() => {
     const combRaw = foldBonusesIntoRaw(snapshot.substats, gearTotals);
     const combDisplays = computeSubstatDisplays(combRaw);
-    const lines: { id: BranchId; label: string; text: string; unit: string }[] = [];
+    const lines: { id: BranchId; label: string; text: string; unit: string; title?: string }[] = [];
     for (const id of BRANCH_IDS) {
       const added = gearTotals[id];
       if (!added) continue;
       const comb = combDisplays[id];
       const base = snapshot.substatDisplays[id];
       const delta = comb.value - base.value;
-      lines.push({ id, label: BRANCHES[id].nameRu, text: gearBonusText(delta, comb.unit), unit: comb.unit });
+      // Удар — «промежуточный урон» (gear.ts): плоское число не показываем,
+      // только итоговый диапазон ±15% — как на листах «Тело»/«Путь».
+      // Прибавка от снаряжения остаётся в подсказке ячейки.
+      const text = id === 'strike'
+        ? formatStrikeRange(combRaw.strike)
+        : gearBonusText(delta, comb.unit);
+      const title = id === 'strike'
+        ? `Промежуточный урон: итог Удара со снаряжением, диапазон ±15% (от экипа ${gearBonusText(delta, comb.unit)})`
+        : undefined;
+      lines.push({ id, label: BRANCHES[id].nameRu, text, unit: comb.unit, title });
     }
     return lines;
   }, [snapshot, gearTotals]);
@@ -751,7 +760,7 @@ function GearModule({
             </div>
           ) : (
             equipBonusLines.map(s => (
-              <div key={s.id} className="hero-gear2__stat-card">
+              <div key={s.id} className="hero-gear2__stat-card" title={s.title}>
                 <div className="hero-gear2__stat-meta">
                   <span className="hero-gear2__stat-label">{s.label}</span>
                 </div>

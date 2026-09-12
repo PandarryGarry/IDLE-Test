@@ -35,7 +35,6 @@ const LEGACY = new Map(Object.entries({
   'components/TopNavBar.tsx': ['#1a6028','#2a0e33','#2a1005','#2a8a38','#3a1444','#3d1e08','#5a2a6a','#5a3010','#7a4818','#7aff90','#c8a050','#d9a6ff','#f0c030','#f0d070'],
   'features/admin/AdminCharactersPanel.tsx': ['#150c04','#1c1108','#241408','#241a05','#2a1c0e','#3a2b1a','#4a3520','#6b5a3d','#7a5610','#8a6b42','#c2a374','#f0c030','#f5ead0'],
   'features/admin/AdminItemEditor.tsx': ['#1a1207','#231302','#3a2b1a','#5a3408','#8a5a10','#b97710','#d4a017','#e0a32e'],
-  'features/inventory/InventoryPage.tsx': ['#1a1108','#1c1108','#2a1e0e','#3a2b1a','#3d2e1e','#d97706','#f59e0b'],
   'features/combat/CombatPage.tsx': ['#8b5020','#c8a050','#f0d070','#f5e0b0','#ff8060','#ff9070','#ffb090'],
   'features/admin/AdminProfessionsPanel.tsx': ['#3a2b1a'],
   'data/changelog.ts': ['#4ade80','#60a0ff','#e060ff','#f0c030','#ff8060'],

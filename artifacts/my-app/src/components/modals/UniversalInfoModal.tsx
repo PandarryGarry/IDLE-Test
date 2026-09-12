@@ -5,29 +5,93 @@ import type { Item } from '@/data/types';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useCombatStore } from '@/store/combatStore';
+import { useNotificationsStore } from '@/store/notificationsStore';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { getItemRarity } from '@/features/inventory/ItemIcon';
 import { isGearUnique } from '@/data/balance/gear';
+import { BRANCHES, BRANCH_IDS, type BranchId } from '@/domain/attributes/attributes';
+import { substatDisplay } from '@/domain/attributes/characterAttributes';
 import { formatNumber } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
-import { CoinsDisplay } from '@/shared/ui/CoinsDisplay';
+import { CoinsDisplay, formatCoinsText } from '@/shared/ui/CoinsDisplay';
 import { TierBadge } from '@/shared/ui/kit/TierBadge';
 import { UniqueEmblem } from '@/shared/ui/kit/UniqueEmblem';
 import { RarityBadge, type RarityType } from '@/shared/ui/kit/RarityBadge';
-import { StatPill } from '@/shared/ui/kit/StatPill';
 import { AWindow } from '@/shared/ui/kit/AWindow';
 import {
-  Lock, 
-  Unlock, 
-  Coins, 
-  Heart, 
-  Sword, 
-  Shield, 
-  Zap, 
-  Minus, 
-  Plus, 
-  Utensils 
+  Lock,
+  Unlock,
+  Coins,
+  Heart,
+  Sword,
+  Shield,
+  Zap,
+  Star,
+  Minus,
+  Plus,
+  Utensils,
 } from 'lucide-react';
+
+/** Иконка подхарактеристики для мелких ячеек (без новых зависимостей). */
+const BONUS_ICON: Partial<Record<BranchId, React.ReactNode>> = {
+  health: <Heart className="w-3 h-3" />,
+  strike: <Sword className="w-3 h-3" />,
+  armor: <Shield className="w-3 h-3" />,
+  will: <Shield className="w-3 h-3" />,
+  evasion: <Shield className="w-3 h-3" />,
+  tempo: <Zap className="w-3 h-3" />,
+  reaction: <Zap className="w-3 h-3" />,
+  onslaught: <Zap className="w-3 h-3" />,
+  destruction: <Sword className="w-3 h-3" />,
+  luck: <Star className="w-3 h-3" />,
+  resourcefulness: <Zap className="w-3 h-3" />,
+  intuition: <Star className="w-3 h-3" />,
+};
+
+/**
+ * Мелкая ячейка характеристики (решение владельца 2026-09-12: цена/прочность
+ * и бонусы предмета — в одинаковых компактных ячейках, все поменьше).
+ */
+function MiniStat({
+  icon, label, children, tone = 'gold', title,
+}: {
+  icon?: React.ReactNode;
+  label: string;
+  children: React.ReactNode;
+  tone?: 'gold' | 'green' | 'glass';
+  title?: string;
+}) {
+  const ink = tone === 'gold' ? 'var(--text-gold)'
+    : tone === 'green' ? 'var(--badge-green-ink)'
+      : 'var(--text-primary)';
+  const edge = tone === 'gold' ? 'var(--tag-gold-edge)'
+    : tone === 'green' ? 'var(--tag-green-edge)'
+      : 'var(--glass-edge)';
+  return (
+    <div
+      title={title}
+      className="flex items-center gap-2 rounded-xl px-2 py-1.5 border min-w-0"
+      style={{ background: 'var(--stat-bg)', borderColor: edge, boxShadow: 'var(--stat-shadow)' }}
+    >
+      {icon && (
+        <span
+          className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-[var(--text-gold)]"
+          style={{ background: 'var(--tag-gold-bg)' }}
+        >
+          {icon}
+        </span>
+      )}
+      <span className="min-w-0">
+        <span className="block text-[9px] text-[var(--text-muted)] font-mono uppercase font-bold tracking-wide truncate">
+          {label}
+        </span>
+        <span className="block text-[11px] font-mono font-black truncate" style={{ color: ink }}>
+          {children}
+        </span>
+      </span>
+    </div>
+  );
+}
 
 export function getItemTier(itemId: string, item?: Item): string {
   // Правило владельца: тировый бейдж — только у экипировки (оружие, броня,
@@ -84,6 +148,15 @@ const CATEGORY_NAMES: Record<string, string> = {
   foraging: 'Сбор',
 };
 
+/** Бонус предмета в единице показа: flat — очки, rating/percent — проценты. */
+function bonusText(id: BranchId, raw: number): string {
+  const d = substatDisplay(id, raw);
+  const rounded = Math.round(Math.abs(d.value) * 10) / 10;
+  const num = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  const sign = raw > 0 ? '+' : raw < 0 ? '−' : '';
+  return d.unit === 'percent' ? `${sign}${num}%` : `${sign}${num}`;
+}
+
 interface UniversalInfoModalProps {
   itemId: string | null;
   onClose: () => void;
@@ -111,6 +184,7 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
   const equipment = usePlayerStore(s => s.equipment);
   const equipItem = usePlayerStore(s => s.equipItem);
   const unequipItem = usePlayerStore(s => s.unequipItem);
+  const notifyInfo = useNotificationsStore(s => s.notifyInfo);
   
   const eatFood = useCombatStore(s => s.eatFood);
   const playerHp = useCombatStore(s => s.playerHp);
@@ -126,6 +200,12 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
   const rarityKey = getItemRarity(itemId, item.sellValue, item.equipSlot, item.tier) as RarityType;
   const visual = getItemVisual(itemId);
   const categoryLabel = CATEGORY_NAMES[item.category] || item.category;
+
+  // Бонусы предмета к 12 подхарактеристикам (настоящая ось каталога;
+  // легаси combatStats не показываем — в расчёт персонажа они не входят).
+  const bonusEntries = (Object.entries(item.substatBonuses ?? {}) as [BranchId, number][])
+    .filter(([, raw]) => typeof raw === 'number' && raw !== 0)
+    .sort((a, b) => BRANCH_IDS.indexOf(a[0]) - BRANCH_IDS.indexOf(b[0]));
 
   const equippedSlot = item.equipSlot
     ? equipment[item.equipSlot] === itemId
@@ -160,14 +240,17 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
 
   const handleSell = (qty: number) => {
     if (isLocked) return;
-    sellItem(itemId, qty);
+    const sold = Math.min(qty, quantity);
+    const earned = sellItem(itemId, qty);
+    // Решение владельца 2026-09-12: цены в кнопках продажи не дублируем —
+    // заработанная сумма объявляется тостом после продажи.
+    if (earned > 0) {
+      notifyInfo(`Продано «${item.name}»${sold > 1 ? ` ×${formatNumber(sold)}` : ''} — заработано ${formatCoinsText(earned)}`);
+    }
     if (qty >= quantity) {
       onClose();
     }
   };
-
-  const currentSellPrice = (item.sellValue ?? 0) * Math.min(sellQty, quantity);
-  const totalSellPrice = (item.sellValue ?? 0) * quantity;
 
   return (
     // Каркас единый — kit/AWindow (стекло эталона, шаг 8 аудита);
@@ -231,65 +314,51 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
           </div>
         </div>
 
-        {/* Stat Pill Badges — общий примитив шкалы таверны */}
-        <div className="grid grid-cols-2 gap-2 pt-1">
-          <StatPill
-            icon={<Coins className="w-4 h-4" />}
-            label="Цена за 1 шт."
-            value={<CoinsDisplay amount={item.sellValue} size="xs" />}
-            color="amber"
-          />
-
-          {typeof item.maxDurability === 'number' && item.maxDurability > 0 && (
-            <StatPill
-              icon={<Shield className="w-4 h-4" />}
-              label="Прочность"
-              value={`${item.maxDurability}/${item.maxDurability}`}
-              color="amber"
-            />
-          )}
-
-          {item.healAmount !== undefined && (
-            <StatPill
-              icon={<Heart className="w-4 h-4 fill-current" />}
-              label="Лечение"
-              value={`+${item.healAmount} ОЗ`}
-              color="emerald"
-            />
-          )}
-
-          {item.combatStats?.attackBonus !== undefined && item.combatStats.attackBonus > 0 && (
-            <StatPill
-              icon={<Sword className="w-4 h-4" />}
-              label="Атака"
-              value={`+${item.combatStats.attackBonus}`}
-              color="rose"
-            />
-          )}
-
-          {item.combatStats?.strengthBonus !== undefined && item.combatStats.strengthBonus > 0 && (
-            <StatPill
-              icon={<Zap className="w-4 h-4" />}
-              label="Сила"
-              value={`+${item.combatStats.strengthBonus}`}
-              color="emerald"
-            />
-          )}
-
-          {item.combatStats?.defenceBonus !== undefined && item.combatStats.defenceBonus > 0 && (
-            <StatPill
-              icon={<Shield className="w-4 h-4" />}
-              label="Защита"
-              value={`+${item.combatStats.defenceBonus}`}
-              color="blue"
-            />
-          )}
-        </div>
-
-        {/* Description Text */}
+        {/* Описание — сразу под именем (решение владельца 2026-09-12) */}
         <p className="text-xs text-[var(--ink-body)] italic [background:var(--card-cocoa-deep)] p-2.5 rounded-xl border [border-color:var(--card-edge)] leading-relaxed">
           {item.description ?? 'Классический предмет средневекового мира.'}
         </p>
+
+        {/* Характеристики — компактные ячейки: цена/прочность/лечение + бонусы предмета */}
+        <div className="grid grid-cols-2 gap-1.5">
+          <MiniStat
+            icon={<Coins className="w-3 h-3" />}
+            label="Цена за 1 шт."
+          >
+            <CoinsDisplay amount={item.sellValue} size="xs" />
+          </MiniStat>
+
+          {typeof item.maxDurability === 'number' && item.maxDurability > 0 && (
+            <MiniStat
+              icon={<Shield className="w-3 h-3" />}
+              label="Прочность"
+            >
+              {item.maxDurability}/{item.maxDurability}
+            </MiniStat>
+          )}
+
+          {item.healAmount !== undefined && (
+            <MiniStat
+              icon={<Heart className="w-3 h-3 fill-current" />}
+              label="Лечение"
+              tone="green"
+            >
+              +{item.healAmount} ОЗ
+            </MiniStat>
+          )}
+
+          {bonusEntries.map(([id, raw]) => (
+            <MiniStat
+              key={id}
+              icon={BONUS_ICON[id]}
+              label={BRANCHES[id].nameRu}
+              tone="gold"
+              title={`Бонус предмета: ${raw > 0 ? '+' : ''}${raw} (${BRANCHES[id].ruleRu.split('.')[0].toLowerCase()})`}
+            >
+              {bonusText(id, raw)}
+            </MiniStat>
+          ))}
+        </div>
 
         {/* ── Админ-редактор предмета ─────────────────────────── */}
         {adminEditable && (
@@ -306,7 +375,7 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
             <button
               type="button"
               onClick={isEquipped ? handleUnequip : handleEquip}
-              className={`w-full py-3 rounded-2xl font-extrabold text-xs transition-all active:scale-95 flex items-center justify-center gap-2 border ${
+              className={`w-full py-2 rounded-xl font-extrabold text-[11px] transition-all active:scale-95 flex items-center justify-center gap-2 border ${
                 isEquipped
                   ? '[background:var(--btn-secondary)] hover:brightness-110 text-[var(--badge-red-ink)] [border-color:var(--badge-red-edge)]'
                   : '[background:var(--btn-primary)] hover:brightness-110 text-[var(--btn-primary-ink)] [border-color:var(--btn-primary-edge)] [box-shadow:var(--btn-primary-shadow)]'
@@ -322,7 +391,7 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
               type="button"
               onClick={handleEat}
               disabled={playerHp >= playerMaxHp}
-              className="w-full py-3 rounded-2xl [background:var(--btn-secondary)] hover:brightness-110 text-[var(--badge-green-ink)] border [border-color:var(--accent-emerald)] font-extrabold text-xs transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-2 rounded-xl [background:var(--btn-secondary)] hover:brightness-110 text-[var(--badge-green-ink)] border [border-color:var(--accent-emerald)] font-extrabold text-[11px] transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               <Utensils className="w-4 h-4" />
               <span>Съесть (+{item.healAmount} ОЗ)</span>
@@ -345,7 +414,7 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
                         <button
                           type="button"
                           onClick={() => setSellQty(Math.max(1, sellQty - 1))}
-                          className="w-8 h-8 rounded-xl [background:var(--btn-secondary)] hover:brightness-125 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] active:scale-90"
+                          className="w-7 h-7 rounded-lg [background:var(--btn-secondary)] hover:brightness-125 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] active:scale-90"
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>
@@ -355,7 +424,7 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
                         <button
                           type="button"
                           onClick={() => setSellQty(Math.min(quantity, sellQty + 1))}
-                          className="w-8 h-8 rounded-xl [background:var(--btn-secondary)] hover:brightness-125 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] active:scale-90"
+                          className="w-7 h-7 rounded-lg [background:var(--btn-secondary)] hover:brightness-125 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] active:scale-90"
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </button>
@@ -365,10 +434,9 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
                     <button
                       type="button"
                       onClick={() => handleSell(sellQty)}
-                      className="flex-1 py-3 px-4 rounded-2xl [background:var(--btn-secondary)] hover:brightness-110 text-[var(--text-gold)] border [border-color:var(--tag-gold-edge)] font-extrabold text-xs transition-all active:scale-95 flex items-center justify-between"
+                      className="flex-1 py-2 px-3 rounded-xl [background:var(--btn-secondary)] hover:brightness-110 text-[var(--text-gold)] border [border-color:var(--tag-gold-edge)] font-extrabold text-[11px] transition-all active:scale-95 flex items-center justify-center"
                     >
                       <span>Продать {quantity > 1 ? `(${sellQty} шт.)` : ''}</span>
-                      <CoinsDisplay amount={currentSellPrice} size="xs" />
                     </button>
                   </div>
 
@@ -376,10 +444,9 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
                     <button
                       type="button"
                       onClick={() => handleSell(quantity)}
-                      className="w-full py-2.5 rounded-2xl bg-transparent border [border-color:var(--card-edge)] hover:[border-color:var(--border-accent)] text-[var(--text-muted)] hover:text-[var(--text-gold)] font-bold text-xs transition-all active:scale-95 flex items-center justify-between px-4 font-mono"
+                      className="w-full py-1.5 rounded-xl bg-transparent border [border-color:var(--card-edge)] hover:[border-color:var(--border-accent)] text-[var(--text-muted)] hover:text-[var(--text-gold)] font-bold text-[11px] transition-all active:scale-95 flex items-center justify-center px-3 font-mono"
                     >
                       <span>Продать всё (x{formatNumber(quantity)})</span>
-                      <CoinsDisplay amount={totalSellPrice} size="xs" />
                     </button>
                   )}
                 </>
