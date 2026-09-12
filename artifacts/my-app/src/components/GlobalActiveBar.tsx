@@ -80,53 +80,53 @@ export function GlobalActiveBar() {
   if (activeKey === 'combat' && currentMonster) {
     const hpPct = Math.max(0, Math.min(100, (playerHp / playerMaxHp) * 100));
     return (
-      <div style={glassStyle} className="pointer-events-auto flex items-center gap-2 rounded-2xl px-2.5 py-1.5">
+      <div style={glassStyle} className="pointer-events-auto flex items-center gap-1 rounded-lg px-1.5 py-0.5">
         <span
-          className="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0"
+          className="w-5 h-5 rounded-md flex items-center justify-center text-[11px] shrink-0"
           style={{ background: 'var(--badge-red-bg)', border: '1px solid var(--badge-red-edge)' }}
         >
           ⚔️
         </span>
         <div className="min-w-0">
-          <div className="flex items-center gap-1 text-[10px] leading-tight">
+          <div className="flex items-center gap-1 text-[8.5px] leading-tight">
             <span className="font-mono font-black uppercase tracking-wider" style={{ color: 'var(--announce-combat)' }}>
               {t('group.combat')}
             </span>
             <span className="text-[var(--text-muted)]">•</span>
-            <span className="font-bold text-[var(--text-primary)] truncate max-w-[120px] sm:max-w-[180px]">
+            <span className="font-bold text-[var(--text-primary)] truncate max-w-[80px] sm:max-w-[132px]">
               {currentMonster.name} · ур. {currentMonster.combatLevel}
             </span>
           </div>
           <div className="flex items-center gap-1.5 mt-1">
-            <div className="w-16 sm:w-24 h-1 rounded-full overflow-hidden [background:var(--bg-slot)]">
+            <div className="w-12 sm:w-[4.5rem] h-1 rounded-full overflow-hidden [background:var(--bg-slot)]">
               <div className="h-full transition-all duration-300" style={{ width: `${hpPct}%`, background: 'var(--announce-combat)' }} />
             </div>
-            <span className="text-[9px] font-mono font-bold text-[var(--text-muted)]">{playerHp}/{playerMaxHp}</span>
+            <span className="text-[7.5px] font-mono font-bold text-[var(--text-muted)]">{playerHp}/{playerMaxHp}</span>
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <Link
             href="/combat"
             title={t('nav.combat')}
-            className="p-1.5 rounded-lg [background:var(--chrome-btn)] text-[var(--chrome-btn-ink)] border [border-color:var(--chrome-btn-edge)] [box-shadow:var(--chrome-btn-shadow)] active:scale-95 transition-all"
+            className="inline-flex items-center justify-center w-5 h-5 rounded-md [background:var(--chrome-btn)] text-[var(--chrome-btn-ink)] border [border-color:var(--chrome-btn-edge)] [box-shadow:var(--chrome-btn-shadow)] active:scale-95 transition-all"
           >
-            <ArrowUpRight className="w-3.5 h-3.5" />
+            <ArrowUpRight className="w-2.5 h-2.5" />
           </Link>
           <button
             type="button"
             onClick={stopCombat}
             title={t('combat.stop')}
-            className="p-1.5 rounded-lg text-[var(--badge-red-ink)] border [border-color:var(--badge-red-edge)] hover:brightness-110 active:scale-95 transition-all flex items-center"
+            className="inline-flex items-center justify-center w-5 h-5 rounded-md text-[var(--badge-red-ink)] border [border-color:var(--badge-red-edge)] hover:brightness-110 active:scale-95 transition-all"
           >
-            <Square className="w-3 h-3 fill-current" />
+            <Square className="w-2 h-2 fill-current" />
           </button>
           <button
             type="button"
             onClick={hide}
             title="Скрыть (бой продолжится)"
-            className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] active:scale-95 transition-all"
+            className="inline-flex items-center justify-center w-5 h-5 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] active:scale-95 transition-all"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-2.5 h-2.5" />
           </button>
         </div>
       </div>
@@ -140,24 +140,24 @@ export function GlobalActiveBar() {
     : activeActionId;
 
   return (
-    <div style={glassStyle} className="pointer-events-auto flex items-center gap-2 rounded-2xl px-2.5 py-1.5">
+    <div style={glassStyle} className="pointer-events-auto flex items-center gap-1 rounded-lg px-1.5 py-0.5">
       <span
-        className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 overflow-hidden p-0.5"
+        className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 overflow-hidden p-0.5"
         style={{ background: 'var(--badge-green-bg)', border: '1px solid var(--accent-emerald)' }}
       >
         <SkillIcon skillId={activeSkill} size="sm" />
       </span>
       <div className="min-w-0">
-        <div className="flex items-center gap-1 text-[10px] leading-tight">
+        <div className="flex items-center gap-1 text-[8.5px] leading-tight">
           <span className="font-mono font-black uppercase tracking-wider text-[var(--badge-green-ink)]">
             {skillNameRu(activeSkill)}
           </span>
           <span className="text-[var(--text-muted)]">•</span>
-          <span className="font-bold text-[var(--text-primary)] truncate max-w-[110px] sm:max-w-[160px]">
+          <span className="font-bold text-[var(--text-primary)] truncate max-w-[78px] sm:max-w-[126px]">
             {actionName}
           </span>
         </div>
-        <div className="w-20 sm:w-28 mt-1">
+        <div className="w-14 sm:w-20 mt-0.5">
           <ActionProgressBar height="h-1" color="green" />
         </div>
       </div>
@@ -165,25 +165,25 @@ export function GlobalActiveBar() {
         <Link
           href={`/${activeSkill}`}
           title={t('ui.view')}
-          className="p-1.5 rounded-lg [background:var(--chrome-btn)] text-[var(--chrome-btn-ink)] border [border-color:var(--chrome-btn-edge)] [box-shadow:var(--chrome-btn-shadow)] active:scale-95 transition-all"
+          className="inline-flex items-center justify-center w-5 h-5 rounded-md [background:var(--chrome-btn)] text-[var(--chrome-btn-ink)] border [border-color:var(--chrome-btn-edge)] [box-shadow:var(--chrome-btn-shadow)] active:scale-95 transition-all"
         >
-          <ArrowUpRight className="w-3.5 h-3.5" />
+          <ArrowUpRight className="w-2.5 h-2.5" />
         </Link>
         <button
           type="button"
           onClick={stopAction}
           title={t('ui.stop')}
-          className="p-1.5 rounded-lg text-[var(--badge-red-ink)] border [border-color:var(--badge-red-edge)] hover:brightness-110 active:scale-95 transition-all flex items-center"
+          className="inline-flex items-center justify-center w-5 h-5 rounded-md text-[var(--badge-red-ink)] border [border-color:var(--badge-red-edge)] hover:brightness-110 active:scale-95 transition-all"
         >
-          <Square className="w-3 h-3 fill-current" />
+          <Square className="w-2 h-2 fill-current" />
         </button>
         <button
           type="button"
           onClick={hide}
           title="Скрыть (сбор продолжится)"
-          className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] active:scale-95 transition-all"
+          className="inline-flex items-center justify-center w-5 h-5 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] active:scale-95 transition-all"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-2.5 h-2.5" />
         </button>
       </div>
     </div>

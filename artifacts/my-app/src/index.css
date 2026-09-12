@@ -530,6 +530,216 @@
   padding: var(--space-sm) var(--space-lg) var(--space-lg);
 }
 
+
+/* ── Универсальная карточка предмета: компактные статы и действия ── */
+.item-mini-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  align-items: stretch;
+}
+.item-mini-stat {
+  --item-mini-stat-edge: var(--tag-gold-edge);
+  --item-mini-stat-ink: var(--text-gold);
+  --item-mini-stat-icon-bg: var(--tag-gold-bg);
+  position: relative;
+  min-width: 0;
+  min-height: 30px;
+  padding: 4px 5px;
+  overflow: hidden;
+  border: 1px solid var(--item-mini-stat-edge);
+  border-radius: var(--radius-sm);
+  background: var(--stat-bg);
+  box-shadow: var(--stat-shadow);
+}
+.item-mini-stat[data-tone='green'] {
+  --item-mini-stat-edge: var(--tag-green-edge);
+  --item-mini-stat-ink: var(--badge-green-ink);
+  --item-mini-stat-icon-bg: var(--badge-green-bg);
+}
+.item-mini-stat[data-tone='glass'] {
+  --item-mini-stat-edge: var(--glass-edge);
+  --item-mini-stat-ink: var(--text-primary);
+  --item-mini-stat-icon-bg: var(--badge-gray-bg);
+}
+.item-mini-stat__icon {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  background: var(--item-mini-stat-icon-bg);
+  color: var(--item-mini-stat-ink);
+  opacity: 0.82;
+  pointer-events: none;
+}
+.item-mini-stat__label {
+  display: block;
+  min-width: 0;
+  padding-right: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-family: var(--app-font-mono);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.025em;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.item-mini-stat__value {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--item-mini-stat-ink);
+  font-family: var(--app-font-mono);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.item-mini-stat__coins {
+  max-width: 100%;
+  gap: 2px;
+}
+.item-mini-stat__coins > span {
+  gap: 1px;
+}
+.item-modal-actions {
+  display: grid;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--glass-edge);
+}
+.item-modal-actions__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.item-modal-actions__row--foot {
+  justify-content: space-between;
+}
+.item-action {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--btn-secondary);
+  color: var(--text-gold);
+  font-family: var(--app-font-sans);
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: filter 0.12s ease, transform 0.12s ease, border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+.item-action:hover {
+  filter: brightness(1.08);
+}
+.item-action:active {
+  transform: scale(0.97);
+}
+.item-action:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  filter: none;
+}
+.item-action--primary {
+  border-color: var(--btn-primary-edge);
+  background: var(--btn-primary);
+  box-shadow: var(--btn-primary-shadow);
+  color: var(--btn-primary-ink);
+}
+.item-action--secondary {
+  border-color: var(--tag-gold-edge);
+}
+.item-action--green {
+  border-color: var(--accent-emerald);
+  color: var(--badge-green-ink);
+}
+.item-action--danger-soft {
+  border-color: var(--badge-red-edge);
+  color: var(--badge-red-ink);
+}
+.item-action--quiet,
+.item-action--flat,
+.item-action--trash {
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+}
+.item-action--quiet:hover,
+.item-action--flat:hover {
+  color: var(--text-gold);
+}
+.item-action--trash:hover,
+.item-action--confirm {
+  border-color: var(--badge-red-edge);
+  background: var(--badge-red-bg);
+  color: var(--badge-red-ink);
+}
+.item-action--icon {
+  width: 28px;
+  padding: 0;
+}
+.item-action--close {
+  margin-left: auto;
+}
+.item-action--locked {
+  cursor: default;
+  color: var(--text-gold);
+  background: var(--badge-gold-bg);
+  border-color: var(--tag-gold-edge);
+}
+.item-sell-stepper {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 2px;
+  border: 1px solid var(--card-edge);
+  border-radius: var(--radius-sm);
+  background: var(--field-bg);
+}
+.item-sell-stepper button {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: var(--btn-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.item-sell-stepper button:hover {
+  color: var(--text-primary);
+  filter: brightness(1.12);
+}
+.item-sell-stepper span {
+  width: 26px;
+  color: var(--text-gold);
+  font-family: var(--app-font-mono);
+  font-size: 11px;
+  font-weight: 900;
+  text-align: center;
+}
+
 /* ═══════════════════════════════════════════════════════════
    ATabs — единые вкладки игры (шаг 9 аудита).
    pills — пилюли разделов; rail — колонка иконок; column — список.
@@ -566,7 +776,7 @@
 /* Пока плавающая плашка активного действия на экране — контент мягко
    получает верхний резерв, и плашка не накрывает заголовок страницы. */
 .app-stage:has(.app-active-float > *) .app-main {
-  padding-top: 64px;
+  padding-top: 40px;
 }
 /* Плавающая плашка активного действия (решение владельца 2026-09-12):
    маленький чип у ПРАВОГО края под шапкой — колокольчик и шапка свободны,
@@ -577,7 +787,7 @@
   right: 12px;
   z-index: 40;
   pointer-events: none;
-  max-width: min(400px, calc(100vw - 24px));
+  max-width: min(320px, calc(100vw - 16px));
 }
 .app-active-float > * {
   pointer-events: auto;
@@ -5226,7 +5436,7 @@ button.mobile-nav__item {
 .hero-readout {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-xs);
+  gap: 6px;
 }
 
 .hero-plaque {
@@ -5234,9 +5444,9 @@ button.mobile-nav__item {
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: 6px;
-  min-height: 5.75rem;
-  padding: 12px 8px 10px;
+  gap: 3px;
+  min-height: 4.25rem;
+  padding: 8px 6px 7px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background:
@@ -5250,8 +5460,8 @@ button.mobile-nav__item {
 .hero-plaque::before {
   content: '';
   position: absolute;
-  inset: 5px;
-  border-radius: 8px;
+  inset: 4px;
+  border-radius: 7px;
   border: 1px solid rgba(245, 216, 128, 0.18);
   pointer-events: none;
 }
@@ -5259,9 +5469,9 @@ button.mobile-nav__item {
 .hero-plaque::after {
   content: '';
   position: absolute;
-  top: 7px;
+  top: 6px;
   left: 50%;
-  width: 28px;
+  width: 22px;
   height: 2px;
   transform: translateX(-50%);
   border-radius: 999px;
@@ -5275,11 +5485,11 @@ button.mobile-nav__item {
   z-index: 1;
   color: var(--text-light);
   font-family: var(--app-font-display);
-  font-size: 11px;
+  font-size: 9.5px;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.035em;
   text-align: center;
-  line-height: 1.15;
+  line-height: 1.1;
   text-transform: uppercase;
 }
 
@@ -5288,7 +5498,7 @@ button.mobile-nav__item {
   z-index: 1;
   color: var(--text-gold);
   font-family: var(--app-font-display);
-  font-size: 1.35rem;
+  font-size: 1.08rem;
   font-weight: 900;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -5368,7 +5578,7 @@ button.mobile-nav__item {
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-sm);
-  padding: 8px 10px;
+  padding: 7px 10px;
   border-top: 1px solid color-mix(in srgb, var(--border-default) 70%, transparent);
 }
 
@@ -5983,32 +6193,42 @@ button.mobile-nav__item {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
   margin-bottom: 10px;
-  padding: 6px;
-  border: 1px solid #3a2b1a;
-  border-radius: 12px;
-  background: #1c1108;
+  padding: 5px;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  background: var(--bg-header);
 }
 .admin-items__search {
   margin-left: auto;
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  padding-left: 8px;
+  padding-left: 6px;
   border-left: 1px solid var(--border-default);
 }
 .admin-items__toolbar::-webkit-scrollbar {
   display: none;
 }
 .admin-items__loupe {
-  padding: 8px;
-  border: 0;
-  border-radius: 12px;
-  background: transparent;
-  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-slot);
+  color: var(--text-gold);
+  font-family: var(--app-font-mono);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
 }
 .admin-items__loupe:hover {
@@ -6021,13 +6241,14 @@ button.mobile-nav__item {
   align-items: center;
 }
 .admin-items__search-field input {
-  width: 10rem;
-  padding: 6px 28px 6px 10px;
+  width: 9rem;
+  height: 30px;
+  padding: 0 28px 0 9px;
   border: 1px solid var(--border-default);
-  border-radius: 12px;
+  border-radius: 8px;
   background: var(--bg-slot);
   color: var(--text-primary);
-  font-size: 12px;
+  font-size: 11px;
 }
 .admin-items__search-field button {
   position: absolute;
@@ -6046,8 +6267,8 @@ button.mobile-nav__item {
 }
 .admin-items__grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
 }
 .admin-items__empty {
   margin: 2rem 0;
@@ -6082,19 +6303,20 @@ button.mobile-nav__item {
 
 .admin-dd {
   position: relative;
-  min-width: 116px;
+  min-width: 90px;
+  max-width: 124px;
   flex-shrink: 0;
 }
 .admin-dd__btn {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 5px;
   width: 100%;
-  min-height: 36px;
-  padding: 4px 10px;
+  min-height: 30px;
+  padding: 0 8px;
   border: 1px solid var(--border-default);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--bg-slot);
   color: var(--text-gold);
   cursor: pointer;
@@ -6104,22 +6326,25 @@ button.mobile-nav__item {
   border-color: var(--border-accent);
 }
 .admin-dd__meta {
-  display: grid;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
   text-align: left;
   min-width: 0;
 }
 .admin-dd__label {
+  flex-shrink: 0;
   color: var(--text-muted);
   font-family: var(--app-font-mono);
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 .admin-dd__value {
   overflow: hidden;
   color: var(--text-primary);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -6160,13 +6385,13 @@ button.mobile-nav__item {
 }
 
 @media (min-width: 640px) {
-  .admin-items__grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-}
-@media (min-width: 768px) {
   .admin-items__grid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
 }
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .admin-items__grid { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .admin-items__grid { grid-template-columns: repeat(9, minmax(0, 1fr)); }
 }
 @media (max-width: 960px) {
   .admin-nui {
@@ -6196,17 +6421,28 @@ button.mobile-nav__item {
   }
   .admin-nui__sub {
     flex-direction: row;
+    gap: 6px;
+    padding: 8px 10px;
     overflow-x: auto;
+    scrollbar-width: none;
     border-right: 0;
     border-bottom: 1px solid var(--border-sidebar);
+  }
+  .admin-nui__sub::-webkit-scrollbar {
+    display: none;
   }
   .admin-nui__sub-head {
     display: none;
   }
   .admin-nui__sub .a-tabs {
     flex-direction: row;
+    gap: 6px;
   }
   .admin-nui__sub .a-tabs__tab {
+    min-height: 32px;
+    padding: 0 10px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
     white-space: nowrap;
   }
   .admin-items {

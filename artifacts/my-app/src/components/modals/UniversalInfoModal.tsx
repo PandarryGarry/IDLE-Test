@@ -62,33 +62,12 @@ function MiniStat({
   tone?: 'gold' | 'green' | 'glass';
   title?: string;
 }) {
-  const ink = tone === 'gold' ? 'var(--text-gold)'
-    : tone === 'green' ? 'var(--badge-green-ink)'
-      : 'var(--text-primary)';
-  const edge = tone === 'gold' ? 'var(--tag-gold-edge)'
-    : tone === 'green' ? 'var(--tag-green-edge)'
-      : 'var(--glass-edge)';
   return (
-    <div
-      title={title}
-      className="flex items-center gap-1.5 rounded-lg px-2 py-1 border min-w-0"
-      style={{ background: 'var(--stat-bg)', borderColor: edge, boxShadow: 'var(--stat-shadow)' }}
-    >
-      {icon && (
-        <span
-          className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 text-[var(--text-gold)]"
-          style={{ background: 'var(--tag-gold-bg)' }}
-        >
-          {icon}
-        </span>
-      )}
-      <span className="min-w-0">
-        <span className="block text-[8px] text-[var(--text-muted)] font-mono uppercase font-bold tracking-wide truncate">
-          {label}
-        </span>
-        <span className="block text-[11px] font-mono font-black truncate" style={{ color: ink }}>
-          {children}
-        </span>
+    <div title={title} className="item-mini-stat" data-tone={tone}>
+      {icon && <span className="item-mini-stat__icon">{icon}</span>}
+      <span className="item-mini-stat__body">
+        <span className="item-mini-stat__label">{label}</span>
+        <span className="item-mini-stat__value">{children}</span>
       </span>
     </div>
   );
@@ -345,13 +324,13 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
           {item.description ?? 'Классический предмет средневекового мира.'}
         </p>
 
-        {/* Характеристики — компактные ячейки: цена/прочность/лечение + бонусы предмета */}
-        <div className="grid grid-cols-2 gap-1">
+        {/* Характеристики — компактные ячейки: до четырёх в строку, без растяжения на пол-окна. */}
+        <div className="item-mini-stats">
           <MiniStat
             icon={<Coins className="w-3 h-3" />}
             label="Цена"
           >
-            <CoinsDisplay amount={item.sellValue} size="xs" />
+            <CoinsDisplay amount={item.sellValue} size="xs" className="item-mini-stat__coins" />
           </MiniStat>
 
           {typeof item.maxDurability === 'number' && item.maxDurability > 0 && (
@@ -395,84 +374,79 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
 
         {/* Action Controls Section */}
         {!isReadOnly && (
-        <div className="space-y-1.5 pt-2 border-t [border-color:var(--glass-edge)]">
+        <div className="item-modal-actions">
 
-          {item.equipSlot && (
-            <button
-              type="button"
-              onClick={isEquipped ? handleUnequip : handleEquip}
-              className={`w-full h-8 px-3 rounded-lg font-extrabold text-[11px] transition-all active:scale-95 flex items-center justify-center gap-1.5 border ${
-                isEquipped
-                  ? '[background:var(--btn-secondary)] hover:brightness-110 text-[var(--badge-red-ink)] [border-color:var(--badge-red-edge)]'
-                  : '[background:var(--btn-primary)] hover:brightness-110 text-[var(--btn-primary-ink)] [border-color:var(--btn-primary-edge)] [box-shadow:var(--btn-primary-shadow)]'
-              }`}
-            >
-              <Shield className="w-3.5 h-3.5" />
-              <span>{isEquipped ? 'Снять снаряжение' : 'Надеть предмет'}</span>
-            </button>
-          )}
+          {(item.equipSlot || item.healAmount !== undefined) && (
+            <div className="item-modal-actions__row">
+              {item.equipSlot && (
+                <button
+                  type="button"
+                  onClick={isEquipped ? handleUnequip : handleEquip}
+                  className={`item-action ${isEquipped ? 'item-action--danger-soft' : 'item-action--primary'}`}
+                >
+                  <Shield className="w-3.5 h-3.5" />
+                  <span>{isEquipped ? 'Снять' : 'Надеть'}</span>
+                </button>
+              )}
 
-          {item.healAmount !== undefined && (
-            <button
-              type="button"
-              onClick={handleEat}
-              disabled={playerHp >= playerMaxHp}
-              className="w-full h-8 px-3 rounded-lg [background:var(--btn-secondary)] hover:brightness-110 text-[var(--badge-green-ink)] border [border-color:var(--accent-emerald)] font-extrabold text-[11px] transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
-            >
-              <Utensils className="w-3.5 h-3.5" />
-              <span>Съесть (+{item.healAmount} ОЗ)</span>
-            </button>
+              {item.healAmount !== undefined && (
+                <button
+                  type="button"
+                  onClick={handleEat}
+                  disabled={playerHp >= playerMaxHp}
+                  className="item-action item-action--green"
+                >
+                  <Utensils className="w-3.5 h-3.5" />
+                  <span>Съесть</span>
+                </button>
+              )}
+            </div>
           )}
 
           {item.canSell && (
-            <div className="space-y-1.5">
+            <div className="item-modal-actions__row">
               {isLocked ? (
-                <div className="w-full h-8 px-2.5 [background:var(--badge-gold-bg)] border [border-color:var(--tag-gold-edge)] rounded-lg flex items-center justify-center">
-                  <span className="text-[11px] font-mono font-bold text-[var(--text-gold)] flex items-center justify-center gap-1.5">
-                    <Lock className="w-3 h-3" /> Заперто — продажа заблокирована
-                  </span>
+                <div className="item-action item-action--locked" aria-label="Продажа заблокирована">
+                  <Lock className="w-3 h-3" />
+                  <span>Заперто</span>
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center gap-2">
-                    {quantity > 1 && (
-                      <div className="flex items-center [background:var(--field-bg)] border [border-color:var(--card-edge)] rounded-lg p-0.5 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => setSellQty(Math.max(1, sellQty - 1))}
-                          className="w-6 h-6 rounded-md [background:var(--btn-secondary)] hover:brightness-125 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] active:scale-90"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="w-7 text-center font-mono text-[11px] font-black text-[var(--text-gold)]">
-                          {sellQty}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setSellQty(Math.min(quantity, sellQty + 1))}
-                          className="w-6 h-6 rounded-md [background:var(--btn-secondary)] hover:brightness-125 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] active:scale-90"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
-                      </div>
-                    )}
+                  {quantity > 1 && (
+                    <div className="item-sell-stepper" aria-label="Количество для продажи">
+                      <button
+                        type="button"
+                        onClick={() => setSellQty(Math.max(1, sellQty - 1))}
+                        aria-label="Меньше"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <span>{sellQty}</span>
+                      <button
+                        type="button"
+                        onClick={() => setSellQty(Math.min(quantity, sellQty + 1))}
+                        aria-label="Больше"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
 
-                    <button
-                      type="button"
-                      onClick={() => handleSell(sellQty)}
-                      className="flex-1 h-8 px-3 rounded-lg [background:var(--btn-secondary)] hover:brightness-110 text-[var(--text-gold)] border [border-color:var(--tag-gold-edge)] font-extrabold text-[11px] transition-all active:scale-95 flex items-center justify-center"
-                    >
-                      <span>Продать {quantity > 1 ? `(${sellQty} шт.)` : ''}</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleSell(sellQty)}
+                    className="item-action item-action--secondary"
+                  >
+                    <span>Продать</span>
+                  </button>
 
                   {quantity > 1 && (
                     <button
                       type="button"
                       onClick={() => handleSell(quantity)}
-                      className="w-full h-7 px-3 rounded-lg bg-transparent border [border-color:var(--card-edge)] hover:[border-color:var(--border-accent)] text-[var(--text-muted)] hover:text-[var(--text-gold)] font-bold text-[11px] font-mono transition-all active:scale-95 flex items-center justify-center"
+                      className="item-action item-action--quiet"
                     >
-                      <span>Продать всё (x{formatNumber(quantity)})</span>
+                      <span>Продать все</span>
                     </button>
                   )}
                 </>
@@ -480,14 +454,14 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
             </div>
           )}
 
-          <div className="flex items-center gap-1.5 pt-0.5">
+          <div className="item-modal-actions__row item-modal-actions__row--foot">
             {!confirmDelete ? (
               <button
                 type="button"
                 onClick={handleDelete}
                 disabled={isLocked}
                 title={isLocked ? 'Заперто — удаление заблокировано' : 'Удалить предмет'}
-                className="w-8 h-8 rounded-lg bg-transparent border [border-color:var(--card-edge)] hover:[border-color:var(--badge-red-edge)] text-[var(--text-muted)] hover:text-[var(--badge-red-ink)] transition-all active:scale-95 flex items-center justify-center shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="item-action item-action--icon item-action--trash"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -496,16 +470,16 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
                 type="button"
                 onClick={handleDelete}
                 title="Подтвердить удаление"
-                className="h-8 px-3 rounded-lg [background:var(--badge-red-bg)] border [border-color:var(--badge-red-edge)] text-[var(--badge-red-ink)] font-extrabold text-[11px] transition-all active:scale-95 flex items-center justify-center gap-1.5 shrink-0"
+                className="item-action item-action--confirm"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Удалить ×{formatNumber(quantity)}?</span>
+                <span>Удалить?</span>
               </button>
             )}
             <button
               type="button"
               onClick={confirmDelete ? () => setConfirmDelete(false) : onClose}
-              className="flex-1 h-7 px-3 rounded-lg bg-transparent hover:[background:var(--badge-gray-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] text-[11px] font-semibold transition-all active:scale-95"
+              className="item-action item-action--flat item-action--close"
             >
               {confirmDelete ? 'Отмена' : 'Закрыть'}
             </button>
@@ -516,14 +490,16 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
 
         {/* Читаем из админки: нет игровых действий, только кнопка закрыть */}
         {isReadOnly && (
-          <div className="space-y-1.5 pt-2 border-t [border-color:var(--glass-edge)]">
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full h-7 px-3 rounded-lg bg-transparent hover:[background:var(--badge-gray-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] text-[11px] font-semibold transition-all active:scale-95"
-            >
-              Закрыть
-            </button>
+          <div className="item-modal-actions">
+            <div className="item-modal-actions__row item-modal-actions__row--foot">
+              <button
+                type="button"
+                onClick={onClose}
+                className="item-action item-action--flat item-action--close"
+              >
+                Закрыть
+              </button>
+            </div>
           </div>
         )}
 

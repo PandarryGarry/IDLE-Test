@@ -158,11 +158,11 @@ export function AdminItemsPage() {
                 title="Поиск предмета"
                 onClick={() => setSearchOpen(true)}
               >
-                <Search size={16} />
+                <Search size={14} />
+                <span>Поиск</span>
               </button>
             )}
           </div>
-          <span className="admin-items__count">{visible.length}</span>
         </div>
 
         {visible.length === 0 ? (
