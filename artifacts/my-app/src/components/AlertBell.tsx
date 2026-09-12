@@ -52,11 +52,12 @@ export function AlertBell() {
         style={{
           position: 'relative',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          width: 30, borderRadius: 8,
+          width: 38, height: 32, borderRadius: 8,
           background: open ? THEME.chrome.btnOpen : THEME.chrome.btn,
           border: `2px solid ${THEME.chrome.btnEdge}`,
           color: THEME.chrome.btnInk, cursor: 'pointer',
           boxShadow: THEME.chrome.btnShadow, flexShrink: 0,
+          padding: 0,
         }}
         title="Важные объявления"
         aria-label="Важные объявления"
@@ -68,7 +69,7 @@ export function AlertBell() {
           transition={{ duration: 0.6 }}
           style={{ display: 'inline-flex' }}
         >
-          <Bell size={14} color={unread ? 'var(--text-gold)' : 'var(--text-muted)'} />
+          <Bell size={16} color={unread ? 'var(--text-gold)' : 'var(--text-muted)'} />
         </motion.span>
         {unread > 0 && (
           <span style={{

@@ -110,11 +110,8 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
             alt="Топор и Перо"
             draggable={false}
             style={{
-              width: 60, height: 60, flexShrink: 0, display: 'block',
-              borderRadius: 14, overflow: 'hidden',
-              border: '1px solid rgba(212,134,10,0.35)',
-              boxShadow: 'inset 0 0 12px rgba(0,0,0,0.5), 0 0 12px rgba(212,134,10,0.25)',
-              filter: 'drop-shadow(0 0 10px rgba(212,134,10,0.28))',
+              width: 64, height: 64, flexShrink: 0, display: 'block',
+              objectFit: 'contain',
             }}
           />
           <div>
