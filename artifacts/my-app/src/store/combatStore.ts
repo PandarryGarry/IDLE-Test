@@ -20,9 +20,11 @@ import { getAdminRates, isSkillEnabledForAdmin } from '@/store/adminConfigStore'
 import {
   AUTO_EAT_HP_RATIO,
   COMBAT_AUTOPLAN,
+  COMBAT_ENERGY,
   COMBAT_INTENTS,
   COMBAT_LOG_MAX_ENTRIES,
   COMBAT_MODEL,
+  COMBAT_RECOVERY,
   COMBAT_STRATEGIES,
   COMBAT_TACTICS,
   DEATH_RESTORE_RATIO,
@@ -90,7 +92,7 @@ export interface CombatEnemy extends TargetSnapshot {
 export interface CombatReport {
   id: string;
   timestamp: number;
-  reason: 'manual' | 'defeat' | 'disabled' | 'reset';
+  reason: 'manual' | 'defeat' | 'disabled' | 'reset' | 'exhausted';
   durationMs: number;
   kills: number;
   waves: number;
@@ -149,6 +151,9 @@ export interface CombatStore {
   sessionGp: number;
   sessionLoot: Record<string, number>;
   lastReport: CombatReport | null;
+  sortieEnergyCurrent: number;
+  sortieEnergyMax: number;
+  energyDrainMs: number;
 
   autoEat: boolean;
   autoLoot: boolean;
@@ -167,6 +172,7 @@ export interface CombatStore {
   selectEnemy: (instanceId: string | null) => void;
   performTactic: (tactic: CombatTacticId) => void;
   eatFood: (itemId: string) => void;
+  restAtCamp: () => void;
   nextMonster: () => void;
   addLog: (entry: Omit<CombatLogEntry, 'id' | 'timestamp'>) => void;
   getRiskForecast: (areaId: string) => RiskForecast | null;
@@ -184,7 +190,7 @@ function currentRaceId(): 'human' | 'elf' | 'dwarf' | 'orc' | 'beastfolk' {
   return (useCharacterStore.getState().activeCharacter?.raceId ?? 'human') as 'human' | 'elf' | 'dwarf' | 'orc' | 'beastfolk';
 }
 
-function liveCombatSnapshot(strategy: CombatStrategyId): HeroLiveCombatSnapshot {
+export function liveCombatSnapshot(strategy: CombatStrategyId): HeroLiveCombatSnapshot {
   const state = getLiveAttributes();
   const base = computeAttributeSnapshot({ state, raceId: currentRaceId() });
   const gear = sumEquipmentBonuses(usePlayerStore.getState().equipment, getItem);
@@ -193,9 +199,44 @@ function liveCombatSnapshot(strategy: CombatStrategyId): HeroLiveCombatSnapshot 
   return { stats, maxHp: stats.maxHp };
 }
 
-function addHeroXp(amount: number): void {
-  if (!Number.isFinite(amount) || amount <= 0) return;
-  commitHeroAttributes(applyHeroXp(getLiveAttributes(), amount));
+function addHeroXp(amount: number): { levelUps: number; nextLevel: number; energyCurrent: number; energyMax: number } {
+  const before = getLiveAttributes();
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return { levelUps: 0, nextLevel: before.heroLevel, energyCurrent: before.energy.current, energyMax: before.energy.max };
+  }
+  const afterXp = applyHeroXp(before, amount);
+  const levelUps = Math.max(0, afterXp.heroLevel - before.heroLevel);
+  const energyRestore = levelUps > 0
+    ? Math.ceil(afterXp.energy.max * COMBAT_RECOVERY.levelUpEnergyRestoreRatio)
+    : 0;
+  const after = energyRestore > 0
+    ? { ...afterXp, energy: { ...afterXp.energy, current: Math.min(afterXp.energy.max, afterXp.energy.current + energyRestore) } }
+    : afterXp;
+  commitHeroAttributes(after);
+  return { levelUps, nextLevel: after.heroLevel, energyCurrent: after.energy.current, energyMax: after.energy.max };
+}
+
+function spendHeroEnergy(amount: number): { spent: number; current: number; max: number } {
+  const state = getLiveAttributes();
+  const max = Math.max(1, Math.floor(state.energy.max));
+  const current = Math.max(0, Math.min(max, Math.floor(state.energy.current)));
+  const spent = Math.max(0, Math.min(current, Math.floor(amount)));
+  if (spent <= 0) return { spent: 0, current, max };
+  const next = current - spent;
+  commitHeroAttributes({ ...state, energy: { ...state.energy, max, current: next } });
+  return { spent, current: next, max };
+}
+
+function restoreHeroCampResources(strategyId: CombatStrategyId): { hpMax: number; energyCurrent: number; energyMax: number } {
+  const hero = liveCombatSnapshot(strategyId);
+  const state = getLiveAttributes();
+  const energyMax = Math.max(1, Math.floor(state.energy.max));
+  const energyCurrent = Math.min(
+    energyMax,
+    Math.max(0, Math.floor(energyMax * COMBAT_RECOVERY.campRestEnergyRatio)),
+  );
+  commitHeroAttributes({ ...state, energy: { ...state.energy, max: energyMax, current: energyCurrent } });
+  return { hpMax: Math.max(1, Math.floor(hero.maxHp * COMBAT_RECOVERY.campRestHealRatio)), energyCurrent, energyMax };
 }
 
 function emptyCooldowns(): Record<CombatTacticId, number> {
@@ -342,6 +383,7 @@ function recordLoot(loot: Record<string, number>, itemId: string, qty: number): 
 
 function reportLabel(reason: CombatReport['reason']): string {
   if (reason === 'defeat') return 'герой пал и вернулся к точке';
+  if (reason === 'exhausted') return 'герой выдохся и вернулся в лагерь';
   if (reason === 'disabled') return 'бой отключён настройками';
   if (reason === 'reset') return 'состояние сброшено';
   return 'вылазка остановлена вручную';
@@ -387,22 +429,29 @@ function grantEnemyRewards(input: {
   sessionXp: number;
   sessionGp: number;
   sessionLoot: Record<string, number>;
-}): { sessionXp: number; sessionGp: number; sessionLoot: Record<string, number> } {
+}): { sessionXp: number; sessionGp: number; sessionLoot: Record<string, number>; levelUps: number; energyCurrent: number; energyMax: number } {
   const monster = MONSTERS_MAP[input.enemy.monsterId];
-  if (!monster) return { sessionXp: input.sessionXp, sessionGp: input.sessionGp, sessionLoot: input.sessionLoot };
+  const energy = getLiveAttributes().energy;
+  if (!monster) return { sessionXp: input.sessionXp, sessionGp: input.sessionGp, sessionLoot: input.sessionLoot, levelUps: 0, energyCurrent: energy.current, energyMax: energy.max };
   const inventory = useInventoryStore.getState();
   const notifs = useNotificationsStore.getState();
   const rates = getAdminRates();
   let { sessionXp, sessionGp, sessionLoot } = input;
+  let levelUps = 0;
+  let energyCurrent = getLiveAttributes().energy.current;
+  let energyMax = getLiveAttributes().energy.max;
 
-  const heroXp = Math.round(monster.combatLevel * HERO_XP_PER_MONSTER_LEVEL * rates.xpMultiplier);
+  const heroXp = Math.max(0, Math.round(monster.combatLevel * HERO_XP_PER_MONSTER_LEVEL * rates.combatXpMultiplier));
   if (heroXp > 0) {
-    addHeroXp(heroXp);
+    const xpResult = addHeroXp(heroXp);
+    levelUps = xpResult.levelUps;
+    energyCurrent = xpResult.energyCurrent;
+    energyMax = xpResult.energyMax;
     sessionXp += heroXp;
   }
 
   if (input.state.autoLoot) {
-    const drops = rollDrops(monster, Math.random, rates.dropRateMultiplier);
+    const drops = rollDrops(monster, Math.random, rates.dropRateMultiplier * rates.combatDropRateMultiplier);
     for (const drop of drops) {
       const ok = inventory.addItem(drop.itemId, drop.quantity);
       const itemName = getItem(drop.itemId)?.name ?? drop.itemId;
@@ -415,7 +464,7 @@ function grantEnemyRewards(input: {
       }
     }
 
-    const gp = rollGp(monster.gpDrop, Math.random, rates.goldMultiplier);
+    const gp = rollGp(monster.gpDrop, Math.random, rates.goldMultiplier * rates.combatGoldMultiplier);
     if (gp > 0) {
       inventory.addGp(gp);
       sessionGp += gp;
@@ -423,7 +472,7 @@ function grantEnemyRewards(input: {
     }
   }
 
-  return { sessionXp, sessionGp, sessionLoot };
+  return { sessionXp, sessionGp, sessionLoot, levelUps, energyCurrent, energyMax };
 }
 
 const initialState = {
@@ -442,7 +491,7 @@ const initialState = {
   currentTargetId: null,
   targetPriority: 'dangerous' as TargetPriority,
   strategy: 'balanced' as CombatStrategyId,
-  autoPlan: true,
+  autoPlan: false,
   playerStats: null,
   playerPrd: emptyPrd(),
   enemyPrd: {},
@@ -459,6 +508,9 @@ const initialState = {
   sessionGp: 0,
   sessionLoot: {},
   lastReport: null,
+  sortieEnergyCurrent: 0,
+  sortieEnergyMax: 0,
+  energyDrainMs: 0,
   autoEat: true,
   autoLoot: true,
   playerAttackTimer: 0,
@@ -475,6 +527,7 @@ const initialState = {
   | 'selectEnemy'
   | 'performTactic'
   | 'eatFood'
+  | 'restAtCamp'
   | 'nextMonster'
   | 'addLog'
   | 'getRiskForecast'
@@ -499,9 +552,17 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     if (!area) return;
 
     const hero = liveCombatSnapshot(get().strategy);
-    const playerCurrentHp = Math.min(get().playerHp > 0 ? get().playerHp : hero.maxHp, hero.maxHp);
+    const previous = get();
+    const keepsKnownHp = previous.playerMaxHp === hero.maxHp && previous.playerHp > 0;
+    const playerCurrentHp = keepsKnownHp ? Math.min(previous.playerHp, hero.maxHp) : hero.maxHp;
     const wave = buildWave(areaId, monsterId, 1, options);
     if (wave.length === 0) return;
+    const energyBefore = getLiveAttributes().energy;
+    if (energyBefore.current < COMBAT_ENERGY.minToStart) {
+      useNotificationsStore.getState().notifyInfo('Не хватает энергии для вылазки. Сделайте передышку в лагере.');
+      return;
+    }
+    const spentEnergy = spendHeroEnergy(COMBAT_ENERGY.startCost);
     const legacy = syncLegacyEnemyFields(wave, null, get().targetPriority);
     const enemyPrd = Object.fromEntries(wave.map(e => [e.instanceId, emptyPrd()]));
     const risk = estimateRisk({
@@ -531,7 +592,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       playerManeuverMs: 0,
       tacticCooldowns: emptyCooldowns(),
       playerAttackTimer: HERO_FIRST_ATTACK_DELAY_MS,
-      combatLog: [newLog('info', `Вылазка: ${area.name}. Прогноз — ${risk.title.toLowerCase()} (${risk.score}).`) ],
+      combatLog: [newLog('info', `Вылазка: ${area.name}. Прогноз — ${risk.title.toLowerCase()} (${risk.score}). Энергия ${spentEnergy.current}/${spentEnergy.max}.`) ],
       killCount: 0,
       waveCount: 1,
       totalDamageDealt: 0,
@@ -541,6 +602,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       sessionGp: 0,
       sessionLoot: {},
       lastReport: null,
+      sortieEnergyCurrent: spentEnergy.current,
+      sortieEnergyMax: spentEnergy.max,
+      energyDrainMs: 0,
     });
   },
 
@@ -563,6 +627,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       playerGuardMs: 0,
       playerManeuverMs: 0,
       tacticCooldowns: emptyCooldowns(),
+      sortieEnergyCurrent: getLiveAttributes().energy.current,
+      sortieEnergyMax: getLiveAttributes().energy.max,
+      energyDrainMs: 0,
       lastReport: report,
       combatLog: prependLogs([newLog('info', report.summary)], state.combatLog),
     });
@@ -586,6 +653,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         enemies: [],
         selectedEnemyId: null,
         currentTargetId: null,
+        sortieEnergyCurrent: getLiveAttributes().energy.current,
+        sortieEnergyMax: getLiveAttributes().energy.max,
+        energyDrainMs: 0,
         lastReport: report,
         combatLog: prependLogs([newLog('info', report.summary)], state.combatLog),
       });
@@ -593,22 +663,26 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       return;
     }
 
+    const adminRates = getAdminRates();
+    const realDeltaMs = Math.max(0, deltaMs);
+    const pacedDeltaMs = realDeltaMs * adminRates.combatPaceMultiplier;
+
     const hero = liveCombatSnapshot(state.strategy);
     let playerStats = hero.stats;
     let playerMaxHp = hero.maxHp;
     let playerHp = Math.min(state.playerHp, playerMaxHp);
     let enemies = state.enemies.map(e => ({ ...e }));
     let selectedEnemyId = state.selectedEnemyId;
-    let playerAttackTimer = state.playerAttackTimer - deltaMs;
+    let playerAttackTimer = state.playerAttackTimer - pacedDeltaMs;
     let playerPrd = { ...state.playerPrd };
     let enemyPrd: Record<string, AttackPrdState> = { ...state.enemyPrd };
-    let playerGuardMs = Math.max(0, state.playerGuardMs - deltaMs);
-    let playerManeuverMs = Math.max(0, state.playerManeuverMs - deltaMs);
+    let playerGuardMs = Math.max(0, state.playerGuardMs - pacedDeltaMs);
+    let playerManeuverMs = Math.max(0, state.playerManeuverMs - pacedDeltaMs);
     let tacticCooldowns: Record<CombatTacticId, number> = {
-      guard: Math.max(0, state.tacticCooldowns.guard - deltaMs),
-      maneuver: Math.max(0, state.tacticCooldowns.maneuver - deltaMs),
-      technique: Math.max(0, state.tacticCooldowns.technique - deltaMs),
-      pierce: Math.max(0, state.tacticCooldowns.pierce - deltaMs),
+      guard: Math.max(0, state.tacticCooldowns.guard - pacedDeltaMs),
+      maneuver: Math.max(0, state.tacticCooldowns.maneuver - pacedDeltaMs),
+      technique: Math.max(0, state.tacticCooldowns.technique - pacedDeltaMs),
+      pierce: Math.max(0, state.tacticCooldowns.pierce - pacedDeltaMs),
     };
     let killCount = state.killCount;
     let waveCount = state.waveCount;
@@ -617,18 +691,84 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     let sessionXp = state.sessionXp;
     let sessionGp = state.sessionGp;
     let sessionLoot = { ...state.sessionLoot };
+    let sortieEnergyCurrent = state.sortieEnergyCurrent || getLiveAttributes().energy.current;
+    let sortieEnergyMax = state.sortieEnergyMax || getLiveAttributes().energy.max;
+    let energyDrainMs = state.energyDrainMs + realDeltaMs;
     const strategy = COMBAT_STRATEGIES[state.strategy];
     const logs: CombatLogEntry[] = [];
 
     enemies = enemies.map(enemy => ({
       ...enemy,
-      attackTimer: Math.max(0, enemy.attackTimer - deltaMs),
-      guardedMs: Math.max(0, enemy.guardedMs - deltaMs),
+      attackTimer: Math.max(0, enemy.attackTimer - pacedDeltaMs),
+      guardedMs: Math.max(0, enemy.guardedMs - pacedDeltaMs),
     }));
 
     const addStatusLog = (type: CombatLogType, message: string, damage?: number) => {
       logs.push(newLog(type, message, damage));
     };
+
+    if (energyDrainMs >= COMBAT_ENERGY.drainIntervalMs) {
+      const drains = Math.floor(energyDrainMs / COMBAT_ENERGY.drainIntervalMs) * COMBAT_ENERGY.drainPerInterval;
+      energyDrainMs %= COMBAT_ENERGY.drainIntervalMs;
+      const spent = spendHeroEnergy(drains);
+      sortieEnergyCurrent = spent.current;
+      sortieEnergyMax = spent.max;
+      if (spent.spent > 0) addStatusLog('info', `Выносливость: −${spent.spent}. Осталось ${spent.current}/${spent.max}.`);
+      if (spent.current <= 0) {
+        const restoredHp = Math.max(1, Math.floor(playerMaxHp * COMBAT_ENERGY.exhaustedRestoreRatio));
+        const reportState = {
+          ...state,
+          playerHp: restoredHp,
+          playerMaxHp,
+          killCount,
+          waveCount,
+          totalDamageDealt,
+          totalDamageTaken,
+          sessionXp,
+          sessionGp,
+          sessionLoot,
+          sortieEnergyCurrent: spent.current,
+          sortieEnergyMax: spent.max,
+          energyDrainMs,
+        } as CombatStore;
+        const report = buildReport(reportState, 'exhausted', ['Энергия вылазки закончилась: сделайте передышку или выберите менее долгую цель.']);
+        logs.push(newLog('info', 'Герой выдохся. Вылазка завершена передышкой в лагере.'));
+        set({
+          inCombat: false,
+          activeMonsterId: null,
+          sortieMonsterId: null,
+          sortieBoss: false,
+          currentMonster: null,
+          playerHp: restoredHp,
+          playerMaxHp,
+          enemyHp: 0,
+          enemyMaxHp: 0,
+          enemyAttackTimer: 0,
+          enemies: [],
+          selectedEnemyId: null,
+          currentTargetId: null,
+          playerStats,
+          playerPrd,
+          enemyPrd: {},
+          playerGuardMs: 0,
+          playerManeuverMs: 0,
+          tacticCooldowns: emptyCooldowns(),
+          killCount,
+          waveCount,
+          totalDamageDealt,
+          totalDamageTaken,
+          sessionXp,
+          sessionGp,
+          sessionLoot,
+          sortieEnergyCurrent: spent.current,
+          sortieEnergyMax: spent.max,
+          energyDrainMs: 0,
+          lastReport: report,
+          combatLog: prependLogs(logs, state.combatLog),
+        });
+        return;
+      }
+    }
 
     const chooseLiveTarget = () => pickTarget(enemies, selectedEnemyId, state.targetPriority);
 
@@ -787,6 +927,15 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         sessionXp = reward.sessionXp;
         sessionGp = reward.sessionGp;
         sessionLoot = reward.sessionLoot;
+        sortieEnergyCurrent = reward.energyCurrent;
+        sortieEnergyMax = reward.energyMax;
+        if (reward.levelUps > 0) {
+          const leveledHero = liveCombatSnapshot(state.strategy);
+          playerStats = leveledHero.stats;
+          playerMaxHp = leveledHero.maxHp;
+          playerHp = Math.max(1, Math.floor(playerMaxHp * COMBAT_RECOVERY.levelUpHealRatio));
+          addStatusLog('info', `Новый уровень! ОЗ восстановлены до ${playerHp}.`);
+        }
         delete enemyPrd[enemy.instanceId];
       }
       enemies = enemies.filter(e => e.alive && e.hp > 0);
@@ -893,6 +1042,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         sessionXp,
         sessionGp,
         sessionLoot,
+        sortieEnergyCurrent,
+        sortieEnergyMax,
+        energyDrainMs,
       } as CombatStore;
       const report = buildReport(reportState, 'defeat', ['Последний удар прошёл до авто-еды: увеличьте HP, броню или порог безопасности через стратегию.']);
       logs.push(newLog('player_death', 'Вы пали. Вылазка завершена, герой вернулся к точке.'));
@@ -923,6 +1075,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         sessionXp,
         sessionGp,
         sessionLoot,
+        sortieEnergyCurrent,
+        sortieEnergyMax,
+        energyDrainMs: 0,
         lastReport: report,
         combatLog: prependLogs(logs, state.combatLog),
       });
@@ -954,6 +1109,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       sessionXp,
       sessionGp,
       sessionLoot,
+      sortieEnergyCurrent,
+      sortieEnergyMax,
+      energyDrainMs,
       combatLog: prependLogs(logs, state.combatLog),
     });
   },
@@ -1055,6 +1213,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     let nextSessionXp = state.sessionXp;
     let nextSessionGp = state.sessionGp;
     let nextSessionLoot = { ...state.sessionLoot };
+    let nextPlayerHp = state.playerHp;
+    let nextPlayerMaxHp = state.playerMaxHp;
+    let nextPlayerStats = state.playerStats;
+    let nextEnergyCurrent = state.sortieEnergyCurrent || getLiveAttributes().energy.current;
+    let nextEnergyMax = state.sortieEnergyMax || getLiveAttributes().energy.max;
 
     if (resolution.outcome === 'hit') {
       const defeated = nextEnemies.filter(e => e.hp <= 0 || !e.alive);
@@ -1072,6 +1235,15 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         nextSessionXp = reward.sessionXp;
         nextSessionGp = reward.sessionGp;
         nextSessionLoot = reward.sessionLoot;
+        nextEnergyCurrent = reward.energyCurrent;
+        nextEnergyMax = reward.energyMax;
+        if (reward.levelUps > 0) {
+          const leveledHero = liveCombatSnapshot(state.strategy);
+          nextPlayerStats = leveledHero.stats;
+          nextPlayerMaxHp = leveledHero.maxHp;
+          nextPlayerHp = Math.max(1, Math.floor(nextPlayerMaxHp * COMBAT_RECOVERY.levelUpHealRatio));
+          logs.push(newLog('info', `Новый уровень! ОЗ восстановлены до ${nextPlayerHp}.`));
+        }
         delete nextEnemyPrd[enemy.instanceId];
       }
       nextEnemies = nextEnemies.filter(e => e.alive && e.hp > 0);
@@ -1092,6 +1264,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       ...legacy,
       enemies: nextEnemies,
       selectedEnemyId: nextSelected,
+      playerHp: nextPlayerHp,
+      playerMaxHp: nextPlayerMaxHp,
+      playerStats: nextPlayerStats,
       playerPrd: resolution.nextPrd,
       enemyPrd: nextEnemyPrd,
       tacticCooldowns: {
@@ -1103,6 +1278,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       sessionXp: nextSessionXp,
       sessionGp: nextSessionGp,
       sessionLoot: nextSessionLoot,
+      sortieEnergyCurrent: nextEnergyCurrent,
+      sortieEnergyMax: nextEnergyMax,
       totalDamageDealt: s.totalDamageDealt + (resolution.outcome === 'hit' ? resolution.damage : 0),
       combatLog: prependLogs(logs, s.combatLog),
     }));
@@ -1119,6 +1296,23 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       playerHp: Math.min(playerMaxHp, playerHp + item.healAmount!),
       combatLog: prependLogs([newLog('eat', `${item.name}: +${item.healAmount} ОЗ`)], s.combatLog),
     }));
+  },
+
+  restAtCamp: () => {
+    if (get().inCombat) {
+      useNotificationsStore.getState().notifyInfo('Передышка доступна только вне боя.');
+      return;
+    }
+    const restored = restoreHeroCampResources(get().strategy);
+    set(s => ({
+      playerHp: restored.hpMax,
+      playerMaxHp: restored.hpMax,
+      sortieEnergyCurrent: restored.energyCurrent,
+      sortieEnergyMax: restored.energyMax,
+      energyDrainMs: 0,
+      combatLog: prependLogs([newLog('eat', `Передышка в лагере: ОЗ ${restored.hpMax}, энергия ${restored.energyCurrent}/${restored.energyMax}.`)], s.combatLog),
+    }));
+    useNotificationsStore.getState().notifyInfo('Герой восстановился в лагере.');
   },
 
   nextMonster: () => {
@@ -1151,11 +1345,17 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     });
   },
 
-  reset: () => set({
-    ...initialState,
-    tacticCooldowns: emptyCooldowns(),
-    playerPrd: emptyPrd(),
-    enemyPrd: {},
-    sessionLoot: {},
-  }),
+  reset: () => {
+    const energy = getLiveAttributes().energy;
+    set({
+      ...initialState,
+      tacticCooldowns: emptyCooldowns(),
+      playerPrd: emptyPrd(),
+      enemyPrd: {},
+      sessionLoot: {},
+      sortieEnergyCurrent: energy.current,
+      sortieEnergyMax: energy.max,
+      energyDrainMs: 0,
+    });
+  },
 }));

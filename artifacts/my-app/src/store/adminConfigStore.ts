@@ -51,6 +51,14 @@ export interface AdminGameRates {
   goldMultiplier: number;
   /** Множитель цены продажи предметов. */
   sellPriceMultiplier: number;
+  /** Отдельный live-рейт XP боя: меняется в админке без перезапуска. */
+  combatXpMultiplier: number;
+  /** Отдельный live-рейт дропа боя поверх общего dropRateMultiplier. */
+  combatDropRateMultiplier: number;
+  /** Отдельный live-рейт золота боя поверх общего goldMultiplier. */
+  combatGoldMultiplier: number;
+  /** Темп боевых таймеров: 1 = баланс, меньше = медленнее, больше = быстрее. */
+  combatPaceMultiplier: number;
 }
 
 export interface AdminConfigPayload {
@@ -104,6 +112,10 @@ const DEFAULT_GAME_RATES: AdminGameRates = {
   dropRateMultiplier: 1,
   goldMultiplier: 1,
   sellPriceMultiplier: 1,
+  combatXpMultiplier: 1,
+  combatDropRateMultiplier: 1,
+  combatGoldMultiplier: 1,
+  combatPaceMultiplier: 1,
 };
 
 const DEFAULT_CONTENT_TOGGLES: Record<AdminSkillToggle, boolean> = {
@@ -126,6 +138,10 @@ const normalizeRates = (raw?: Partial<AdminGameRates>): AdminGameRates => ({
   dropRateMultiplier: clamp(raw?.dropRateMultiplier ?? 1, 0, 20),
   goldMultiplier: clamp(raw?.goldMultiplier ?? 1, 0, 20),
   sellPriceMultiplier: clamp(raw?.sellPriceMultiplier ?? 1, 0, 20),
+  combatXpMultiplier: clamp(raw?.combatXpMultiplier ?? 1, 0, 20),
+  combatDropRateMultiplier: clamp(raw?.combatDropRateMultiplier ?? 1, 0, 20),
+  combatGoldMultiplier: clamp(raw?.combatGoldMultiplier ?? 1, 0, 20),
+  combatPaceMultiplier: clamp(raw?.combatPaceMultiplier ?? 1, 0.25, 3),
 });
 
 const normalizeToggles = (

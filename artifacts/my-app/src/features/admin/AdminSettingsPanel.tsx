@@ -11,8 +11,22 @@ const RATE_FIELDS: {
   min: number;
   max: number;
 }[] = [
-  { key: 'goldMultiplier', label: 'Золото с монстров', hint: 'Множитель GP из дропа монстров.', step: 0.05, min: 0, max: 20 },
+  { key: 'goldMultiplier', label: 'Золото глобально', hint: 'Базовый множитель GP. Бой дополнительно умножается на свой рейт ниже.', step: 0.05, min: 0, max: 20 },
   { key: 'sellPriceMultiplier', label: 'Цены продажи', hint: 'Множитель цены продажи всех продаваемых предметов.', step: 0.05, min: 0, max: 20 },
+];
+
+const COMBAT_RATE_FIELDS: {
+  key: 'combatXpMultiplier' | 'combatDropRateMultiplier' | 'combatGoldMultiplier' | 'combatPaceMultiplier';
+  label: string;
+  hint: string;
+  step: number;
+  min: number;
+  max: number;
+}[] = [
+  { key: 'combatXpMultiplier', label: 'Опыт боя', hint: 'Живой множитель XP за победы. 1 — hard-idle база из balance/combat.ts.', step: 0.05, min: 0, max: 20 },
+  { key: 'combatDropRateMultiplier', label: 'Дроп боя', hint: 'Дополнительный множитель шанса дропа только для монстров.', step: 0.05, min: 0, max: 20 },
+  { key: 'combatGoldMultiplier', label: 'Золото боя', hint: 'Дополнительный множитель монет только для монстров.', step: 0.05, min: 0, max: 20 },
+  { key: 'combatPaceMultiplier', label: 'Темп боя', hint: '0.5 медленнее, 1 баланс, 2 быстрее. Меняется без перезапуска.', step: 0.05, min: 0.25, max: 3 },
 ];
 
 const COMBAT_TOGGLE: { key: AdminSkillToggle; label: string; icon: string }[] = [
@@ -106,8 +120,46 @@ export function AdminSettingsPanel() {
         </div>
       </section>
 
+      {/* ── Боевая система ───────────────────────────────── */}
+      <section className="rounded-2xl p-4 sm:p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-strong)', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.25)' }}>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div>
+            <h2 className="text-sm font-display font-black text-[var(--text-primary)]">⚔️ Рейты боя</h2>
+            <p className="text-[11px] text-[var(--text-muted)] mt-0.5">Отдельные live-настройки тактических вылазок: XP, добыча, золото и скорость таймеров.</p>
+          </div>
+          <button
+            type="button"
+            onClick={resetGameRates}
+            className="p-2 rounded-xl text-[var(--text-muted)] hover:text-amber-300 hover:bg-[var(--bg-card-dark)] transition-all active:scale-95"
+            title="Сбросить рейты"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-2.5">
+          {COMBAT_RATE_FIELDS.map(field => (
+            <label key={field.key} className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[var(--bg-slot)] border border-[var(--border-default)]">
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-[var(--text-primary)]">{field.label}</div>
+                <div className="text-[10px] text-[var(--text-muted)] leading-tight mt-0.5">{field.hint}</div>
+              </div>
+              <input
+                type="number"
+                value={rates[field.key]}
+                step={field.step}
+                min={field.min}
+                max={field.max}
+                onChange={e => setGameRate(field.key, Number(e.target.value))}
+                className="w-20 bg-[var(--bg-card-dark)] border border-[var(--border-default)] rounded-xl px-2.5 py-1.5 text-right font-mono text-xs text-amber-300 focus:outline-none focus:border-amber-500"
+              />
+            </label>
+          ))}
+        </div>
+      </section>
+
       {/* ── Доступность боя ───────────────────────────────── */}
-      <section className="rounded-2xl p-4 sm:p-5" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.25)' }}>
+      <section className="rounded-2xl p-4 sm:p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-strong)', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.25)' }}>
         <div className="flex items-center justify-between gap-2 mb-3">
           <div>
             <h2 className="text-sm font-display font-black text-[var(--text-primary)]">⚔️ Доступность боя</h2>

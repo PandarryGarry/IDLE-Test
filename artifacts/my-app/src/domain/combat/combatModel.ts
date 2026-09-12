@@ -315,7 +315,7 @@ export function deriveEnemyCombatStats(monster: Monster): FighterCombatStats {
     Math.floor(damageMax * ENEMY_COMBAT_DERIVED.damageMinRatio),
   );
   const interval = clamp(
-    monster.attackInterval,
+    monster.attackInterval * COMBAT_MODEL.enemyAttackIntervalMultiplier,
     COMBAT_MODEL.minAttackIntervalMs,
     COMBAT_MODEL.maxAttackIntervalMs,
   );

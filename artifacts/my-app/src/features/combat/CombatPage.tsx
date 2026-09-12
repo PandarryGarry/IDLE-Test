@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'wouter';
 import { useShallow } from 'zustand/react/shallow';
-import { useCombatStore, type CombatEnemy, type CombatLogEntry } from '@/store/combatStore';
+import { liveCombatSnapshot, useCombatStore, type CombatEnemy, type CombatLogEntry } from '@/store/combatStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { getLiveAttributes } from '@/domain/attributes/characterAttributes';
@@ -8,16 +9,16 @@ import { COMBAT_AREAS, MONSTERS_MAP, monsterIconPath } from '@/domain/combat/mon
 import { ItemIcon } from '@/features/inventory/ItemIcon';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { getItem } from '@/domain/items';
-import { getItemVisual } from '@/shared/icons/itemIcons';
-import type { EquipSlot } from '@/data/types';
+import type { Monster } from '@/data/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { iconUrl } from '@/lib/assetUrl';
 import { formatNumber } from '@/lib/utils';
-import { COMBAT_RISK, COMBAT_STRATEGIES } from '@/data/balance/combat';
+import { COMBAT_ENERGY, COMBAT_RISK, COMBAT_STRATEGIES } from '@/data/balance/combat';
 import type { CombatStrategyId, CombatTacticId, FighterCombatStats, TargetPriority } from '@/domain/combat/combatModel';
 import {
   Activity,
   Backpack,
+  BookOpen,
   Bot,
   ChevronRight,
   Crosshair,
@@ -67,6 +68,15 @@ const ROLE_LABEL: Record<string, string> = {
   controller: 'контроль',
   boss: 'босс',
 };
+
+type CombatScreenId = 'arena' | 'hunt' | 'bestiary' | 'report';
+
+const COMBAT_SCREENS: { id: CombatScreenId; label: string; hint: string; icon: React.ReactNode }[] = [
+  { id: 'arena', label: 'Арена', hint: 'Живой бой и ручные команды', icon: <Sword aria-hidden="true" /> },
+  { id: 'hunt', label: 'Охота', hint: 'Район, цель, добыча и запас энергии', icon: <Flag aria-hidden="true" /> },
+  { id: 'bestiary', label: 'Бестиарий', hint: 'Характеристики, роли и способности мобов', icon: <BookOpen aria-hidden="true" /> },
+  { id: 'report', label: 'Отчёт', hint: 'Итоги последней вылазки', icon: <History aria-hidden="true" /> },
+];
 
 function pct(current: number, max: number): number {
   if (!Number.isFinite(current) || !Number.isFinite(max) || max <= 0) return 0;
@@ -121,16 +131,27 @@ export function CombatPage() {
     combatLog,
     totalDamageDealt,
     totalDamageTaken,
+    lastReport,
   } = useCombatStore(useShallow(s => ({
     inCombat: s.inCombat,
     combatLog: s.combatLog,
     totalDamageDealt: s.totalDamageDealt,
     totalDamageTaken: s.totalDamageTaken,
+    lastReport: s.lastReport,
   })));
 
   const combatLogRef = useRef<HTMLDivElement>(null);
   const shouldStickToBottomRef = useRef(true);
   const [showLatest, setShowLatest] = useState(false);
+  const [screen, setScreen] = useState<CombatScreenId>('hunt');
+
+  useEffect(() => {
+    if (inCombat) setScreen('arena');
+  }, [inCombat]);
+
+  useEffect(() => {
+    if (!inCombat && lastReport) setScreen('report');
+  }, [inCombat, lastReport]);
 
   const scrollLogToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     const el = combatLogRef.current;
@@ -163,28 +184,68 @@ export function CombatPage() {
   return (
     <div className="a-page combat2-page">
       <div className="a-page__scroll combat2-scroll">
-        <div className={`combat2-layout ${inCombat ? 'is-active' : 'is-idle'}`}>
-          <main className="combat2-main" aria-label="Тактическая арена">
-            <CombatStage />
-            {inCombat && <CombatCommandDeck />}
-            <CombatLogPanel
-              tCombatLog={t('combat.log')}
-              logRef={combatLogRef}
-              onScroll={handleLogScroll}
-              showLatest={showLatest}
-              onLatest={() => scrollLogToBottom()}
-              logs={combatLog}
-              totalDamageDealt={totalDamageDealt}
-              totalDamageTaken={totalDamageTaken}
-            />
-            {inCombat && <FoodPanel />}
-          </main>
+        <div className={`combat2-shell ${inCombat ? 'is-active' : 'is-idle'}`}>
+          <header className="combat2-hub-head">
+            <div>
+              <p className="combat2-kicker">Боевая система</p>
+              <h1>Тактические вылазки</h1>
+              <span>Выберите район, изучите монстра и управляйте схваткой в отдельной арене.</span>
+            </div>
+            <EquipmentSummaryLink />
+          </header>
 
-          <aside className="combat2-side" aria-label="Подготовка к вылазке">
-            <PreparationPanel />
-            <SortieReportPanel />
-            <EquipmentPaperdoll />
-          </aside>
+          <nav className="combat2-screen-tabs" aria-label="Разделы боя">
+            {COMBAT_SCREENS.map(item => (
+              <button
+                key={item.id}
+                type="button"
+                className={screen === item.id ? 'is-active' : ''}
+                onClick={() => setScreen(item.id)}
+                aria-pressed={screen === item.id}
+                title={item.hint}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+                {item.id === 'report' && lastReport && <b aria-label="Есть новый отчёт" />}
+              </button>
+            ))}
+          </nav>
+
+          <main className="combat2-screen" aria-label={COMBAT_SCREENS.find(item => item.id === screen)?.label ?? 'Бой'}>
+            {screen === 'arena' && (
+              <div className="combat2-screen-stack">
+                <CombatStage />
+                {inCombat && <CombatCommandDeck />}
+                <CombatLogPanel
+                  tCombatLog={t('combat.log')}
+                  logRef={combatLogRef}
+                  onScroll={handleLogScroll}
+                  showLatest={showLatest}
+                  onLatest={() => scrollLogToBottom()}
+                  logs={combatLog}
+                  totalDamageDealt={totalDamageDealt}
+                  totalDamageTaken={totalDamageTaken}
+                />
+                {inCombat ? <FoodPanel /> : <RecoveryPanel />}
+              </div>
+            )}
+
+            {screen === 'hunt' && (
+              <div className="combat2-screen-grid is-hunt">
+                <PreparationPanel />
+                <SortieStatusPanel />
+              </div>
+            )}
+
+            {screen === 'bestiary' && <BestiaryPanel />}
+
+            {screen === 'report' && (
+              <div className="combat2-screen-grid">
+                <SortieReportPanel />
+                <PreparationPanel />
+              </div>
+            )}
+          </main>
         </div>
       </div>
     </div>
@@ -266,6 +327,7 @@ const CombatStage = memo(function CombatStage() {
         </div>
       </div>
 
+      <MobileQuickTactics />
       <div className="combat2-duel-grid">
         <HeroCombatCard
           heroLevel={heroLevel}
@@ -287,7 +349,6 @@ const CombatStage = memo(function CombatStage() {
         />
       </div>
 
-      <MobileQuickTactics />
       <CombatTimeline
         enemies={liveEnemies}
         playerTimer={playerAttackTimer}
@@ -610,6 +671,113 @@ function CommandGroup({ title, icon, children }: { title: string; icon: React.Re
   );
 }
 
+function SortieStatusPanel() {
+  const {
+    inCombat,
+    activeAreaId,
+    sortieMonsterId,
+    killCount,
+    waveCount,
+    playerHp,
+    playerMaxHp,
+    sortieEnergyCurrent,
+    sortieEnergyMax,
+    energyDrainMs,
+    strategy,
+    restAtCamp,
+  } = useCombatStore(useShallow(s => ({
+    inCombat: s.inCombat,
+    activeAreaId: s.activeAreaId,
+    sortieMonsterId: s.sortieMonsterId,
+    killCount: s.killCount,
+    waveCount: s.waveCount,
+    playerHp: s.playerHp,
+    playerMaxHp: s.playerMaxHp,
+    sortieEnergyCurrent: s.sortieEnergyCurrent,
+    sortieEnergyMax: s.sortieEnergyMax,
+    energyDrainMs: s.energyDrainMs,
+    strategy: s.strategy,
+    restAtCamp: s.restAtCamp,
+  })));
+  const activeCharacter = useCharacterStore(s => s.activeCharacter);
+  const equipment = usePlayerStore(s => s.equipment);
+  const liveAttributes = useMemo(() => getLiveAttributes(), [activeCharacter, sortieEnergyCurrent, sortieEnergyMax]);
+  const liveHero = useMemo(() => liveCombatSnapshot(strategy), [activeCharacter, equipment, strategy]);
+  const area = activeAreaId ? COMBAT_AREAS.find(item => item.id === activeAreaId) : COMBAT_AREAS[0];
+  const target = sortieMonsterId ? MONSTERS_MAP[sortieMonsterId] : null;
+  const energyCurrent = inCombat ? sortieEnergyCurrent : liveAttributes.energy.current;
+  const energyMax = inCombat ? sortieEnergyMax : liveAttributes.energy.max;
+  const displayHpMax = inCombat ? playerMaxHp : liveHero.maxHp;
+  const displayHp = inCombat
+    ? playerHp
+    : (playerMaxHp === liveHero.maxHp && playerHp > 0 ? playerHp : liveHero.maxHp);
+  const drainLeftMs = inCombat
+    ? Math.max(0, COMBAT_ENERGY.drainIntervalMs - (energyDrainMs % COMBAT_ENERGY.drainIntervalMs))
+    : 0;
+  const expectedDurationMs = Math.max(0, energyCurrent) * COMBAT_ENERGY.drainIntervalMs;
+  const previewMonsters = area
+    ? (target ? [target] : area.monsterIds.map(id => MONSTERS_MAP[id]).filter((monster): monster is Monster => Boolean(monster)))
+    : [];
+  const dropIds = Array.from(new Set(previewMonsters.flatMap(monster => monster.drops.map(drop => drop.itemId)))).slice(0, 5);
+
+  return (
+    <section className="combat2-card combat2-sortie-status">
+      <div className="combat2-section-head">
+        <div>
+          <p className="combat2-kicker">Статус вылазки</p>
+          <h2><Timer aria-hidden="true" /> Район, цель и запас</h2>
+        </div>
+        <span className="combat2-pill">{inCombat ? 'в бою' : 'лагерь'}</span>
+      </div>
+
+      <div className="combat2-status-hero">
+        <div>
+          <span>Район</span>
+          <b>{area?.name ?? 'не выбран'}</b>
+        </div>
+        <div>
+          <span>Цель</span>
+          <b>{target?.name ?? 'смешанная охота'}</b>
+        </div>
+        <div>
+          <span>ОЗ</span>
+          <b>{formatNumber(displayHp)} / {formatNumber(displayHpMax || 1)}</b>
+        </div>
+        <div>
+          <span>Победы</span>
+          <b>{formatNumber(killCount)} · волна {formatNumber(waveCount)}</b>
+        </div>
+      </div>
+
+      <div className="combat2-energy-block">
+        <div className="combat2-health-label">
+          <span><Zap aria-hidden="true" /> Энергия вылазки</span>
+          <b>{formatNumber(energyCurrent)} / {formatNumber(energyMax)}</b>
+        </div>
+        <div className="combat2-health-track is-energy">
+          <span style={barStyle(pct(energyCurrent, energyMax))} />
+        </div>
+        <p>
+          Хватит примерно на <b>{shortDuration(expectedDurationMs)}</b>
+          {inCombat ? <> · следующий расход через <b>{shortDuration(drainLeftMs)}</b></> : <> · старт стоит {COMBAT_ENERGY.startCost} ед.</>}
+        </p>
+      </div>
+
+      <div className="combat2-loot-preview">
+        <span>Ожидаемая добыча:</span>
+        <div>
+          {dropIds.map(itemId => <ItemIcon key={itemId} itemId={itemId} size="sm" showTooltip={false} />)}
+          {dropIds.length === 0 && <small>нет данных</small>}
+        </div>
+      </div>
+
+      <button type="button" className="combat2-rest-btn" onClick={restAtCamp} disabled={inCombat}>
+        <Heart aria-hidden="true" /> {inCombat ? 'Передышка после боя' : 'Передышка в лагере'}
+      </button>
+    </section>
+  );
+}
+
 const PreparationPanel = memo(function PreparationPanel() {
   const {
     inCombat,
@@ -631,10 +799,10 @@ const PreparationPanel = memo(function PreparationPanel() {
   const heroLevel = useMemo(() => getLiveAttributes().heroLevel, [activeCharacter]);
   const foodCount = useMemo(() => foodQuantity(inventoryItems), [inventoryItems]);
 
-  const handleAreaClick = (areaId: string, minLevel = 1) => {
+  const handleAreaClick = (areaId: string, minLevel = 1, monsterId?: string) => {
     if (heroLevel < minLevel) return;
     if (inCombat) stopCombat();
-    startCombat(areaId);
+    startCombat(areaId, monsterId);
   };
 
   return (
@@ -658,12 +826,16 @@ const PreparationPanel = memo(function PreparationPanel() {
           const active = activeAreaId === area.id;
           const risk = getRiskForecast(area.id);
           return (
-            <button
+            <article
               key={area.id}
-              type="button"
+              role="button"
+              tabIndex={locked ? -1 : 0}
               className={`combat2-area ${active ? 'is-active' : ''} ${locked ? 'is-locked' : ''}`}
               onClick={() => handleAreaClick(area.id, area.combatLevelRequired ?? 1)}
-              disabled={locked}
+              onKeyDown={event => {
+                if (!locked && (event.key === 'Enter' || event.key === ' ')) handleAreaClick(area.id, area.combatLevelRequired ?? 1);
+              }}
+              aria-disabled={locked}
             >
               <div className="combat2-area-top">
                 <div>
@@ -678,7 +850,17 @@ const PreparationPanel = memo(function PreparationPanel() {
                 {area.monsterIds.map(id => {
                   const monster = MONSTERS_MAP[id];
                   if (!monster) return null;
-                  return <MonsterRosterChip key={id} monsterId={id} />;
+                  return (
+                    <MonsterRosterChip
+                      key={id}
+                      monsterId={id}
+                      disabled={locked}
+                      onHunt={(event) => {
+                        event.stopPropagation();
+                        handleAreaClick(area.id, area.combatLevelRequired ?? 1, id);
+                      }}
+                    />
+                  );
                 })}
               </div>
               {risk && !locked && (
@@ -688,7 +870,7 @@ const PreparationPanel = memo(function PreparationPanel() {
                   <span>{risk.reasons[0]}</span>
                 </div>
               )}
-            </button>
+            </article>
           );
         })}
       </div>
@@ -696,25 +878,137 @@ const PreparationPanel = memo(function PreparationPanel() {
   );
 });
 
-function MonsterRosterChip({ monsterId }: { monsterId: string }) {
+function MonsterRosterChip({
+  monsterId,
+  disabled = false,
+  onHunt,
+}: {
+  monsterId: string;
+  disabled?: boolean;
+  onHunt?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+}) {
   const monster = MONSTERS_MAP[monsterId];
   if (!monster) return null;
   const traits = (monster.traits ?? []).slice(0, 2).map(trait => TRAIT_LABEL[trait] ?? trait).join(' · ');
   const title = [monster.description, monster.abilities?.[0]?.counterplay].filter(Boolean).join(' ');
   return (
-    <span className="combat2-roster-chip" title={title}>
+    <button type="button" className="combat2-roster-chip" title={title} onClick={onHunt} disabled={disabled}>
       <img src={iconUrl(monsterIconPath(monster))} alt="" loading="lazy" decoding="async" />
       <span>
         <b>{monster.name}</b>
         <small>{ROLE_LABEL[monster.role ?? ''] ?? 'моб'} · ур. {monster.combatLevel}{traits ? ` · ${traits}` : ''}</small>
       </span>
-    </span>
+      <em>цель</em>
+    </button>
+  );
+}
+
+function BestiaryPanel() {
+  const [areaFilter, setAreaFilter] = useState<string>(COMBAT_AREAS[0]?.id ?? 'all');
+  const selectedArea = COMBAT_AREAS.find(area => area.id === areaFilter) ?? COMBAT_AREAS[0];
+  const monsters = selectedArea
+    ? selectedArea.monsterIds.map(id => MONSTERS_MAP[id]).filter((monster): monster is Monster => Boolean(monster))
+    : [];
+
+  return (
+    <section className="combat2-card combat2-bestiary">
+      <div className="combat2-section-head">
+        <div>
+          <p className="combat2-kicker">Разведка</p>
+          <h2><BookOpen aria-hidden="true" /> Бестиарий района</h2>
+        </div>
+        <span className="combat2-pill">{monsters.length} целей</span>
+      </div>
+
+      <div className="combat2-bestiary-tabs" role="tablist" aria-label="Районы бестиария">
+        {COMBAT_AREAS.map(area => (
+          <button
+            key={area.id}
+            type="button"
+            className={areaFilter === area.id ? 'is-active' : ''}
+            onClick={() => setAreaFilter(area.id)}
+          >
+            {area.name}
+          </button>
+        ))}
+      </div>
+
+      <div className="combat2-bestiary-grid">
+        {monsters.map(monster => <MonsterIntelCard key={monster.id} monster={monster} />)}
+      </div>
+    </section>
+  );
+}
+
+function MonsterIntelCard({ monster }: { monster: Monster }) {
+  const traits = monster.traits ?? [];
+  const drops = monster.drops.slice(0, 4);
+  return (
+    <article className="combat2-intel-card">
+      <div className="combat2-intel-top">
+        <MonsterPortrait monsterId={monster.id} isBoss={monster.isBoss} />
+        <div>
+          <p className="combat2-kicker">{ROLE_LABEL[monster.role ?? ''] ?? 'моб'} · ур. {monster.combatLevel}</p>
+          <h3>{monster.name}</h3>
+          <span>{monster.description}</span>
+        </div>
+      </div>
+
+      <div className="combat2-stat-grid">
+        <MiniStat label="ОЗ" value={formatNumber(monster.maxHp)} />
+        <MiniStat label="Урон" value={`до ${formatNumber(monster.maxHit)}`} />
+        <MiniStat label="Атака" value={formatNumber(monster.attackLevel)} />
+        <MiniStat label="Защита" value={formatNumber(monster.defenceLevel)} />
+      </div>
+
+      <div className="combat2-traits is-intel">
+        {traits.length === 0 && <span>без трюков</span>}
+        {traits.map(trait => <span key={trait}>{TRAIT_LABEL[trait] ?? trait}</span>)}
+      </div>
+
+      <div className="combat2-ability-list">
+        {(monster.abilities ?? []).map(ability => (
+          <div key={ability.id}>
+            <b>{ability.name}</b>
+            <span>{ability.description}</span>
+            <small>{ability.counterplay}</small>
+          </div>
+        ))}
+      </div>
+
+      <div className="combat2-intel-drops">
+        <span>Добыча</span>
+        <div>
+          {drops.map(drop => {
+            const item = getItem(drop.itemId);
+            return (
+              <small key={drop.itemId}>
+                <ItemIcon itemId={drop.itemId} size="sm" showTooltip={false} />
+                {item?.name ?? drop.itemId} · {Math.round(drop.chance * 100)}%
+              </small>
+            );
+          })}
+        </div>
+      </div>
+    </article>
   );
 }
 
 function SortieReportPanel() {
   const report = useCombatStore(s => s.lastReport);
-  if (!report) return null;
+  if (!report) {
+    return (
+      <section className="combat2-card combat2-report">
+        <div className="combat2-section-head">
+          <div>
+            <p className="combat2-kicker">Idle отчёт</p>
+            <h2><History aria-hidden="true" /> Пока пусто</h2>
+          </div>
+        </div>
+        <p className="combat2-report-summary">Завершите вылазку вручную, по усталости или после поражения — здесь появятся победы, добыча и подсказки.</p>
+      </section>
+    );
+  }
   const lootEntries = Object.entries(report.loot).slice(0, 6);
 
   return (
@@ -797,6 +1091,37 @@ function CombatLogPanel({
   );
 }
 
+function RecoveryPanel() {
+  const { strategy, sortieEnergyCurrent, sortieEnergyMax, restAtCamp } = useCombatStore(useShallow(s => ({
+    strategy: s.strategy,
+    sortieEnergyCurrent: s.sortieEnergyCurrent,
+    sortieEnergyMax: s.sortieEnergyMax,
+    restAtCamp: s.restAtCamp,
+  })));
+  const activeCharacter = useCharacterStore(s => s.activeCharacter);
+  const equipment = usePlayerStore(s => s.equipment);
+  const attributes = useMemo(() => getLiveAttributes(), [activeCharacter, sortieEnergyCurrent, sortieEnergyMax]);
+  const hero = useMemo(() => liveCombatSnapshot(strategy), [activeCharacter, equipment, strategy]);
+  return (
+    <section className="combat2-card combat2-recovery">
+      <div className="combat2-section-head is-compact">
+        <div>
+          <p className="combat2-kicker">Восстановление</p>
+          <h2><Heart aria-hidden="true" /> Лагерь</h2>
+        </div>
+      </div>
+      <p>После уровня ОЗ восстанавливаются в бою. В лагере можно полностью привести героя в порядок перед новой вылазкой.</p>
+      <div className="combat2-report-grid">
+        <MiniStat label="ОЗ после отдыха" value={formatNumber(hero.maxHp)} />
+        <MiniStat label="Энергия" value={`${formatNumber(attributes.energy.current)} / ${formatNumber(attributes.energy.max)}`} />
+      </div>
+      <button type="button" className="combat2-rest-btn" onClick={restAtCamp}>
+        <Heart aria-hidden="true" /> Передышка в лагере
+      </button>
+    </section>
+  );
+}
+
 const FoodPanel = memo(function FoodPanel() {
   const eatFood = useCombatStore(s => s.eatFood);
   const inventoryItems = useInventoryStore(s => s.items);
@@ -829,66 +1154,19 @@ const FoodPanel = memo(function FoodPanel() {
   );
 });
 
-function EquipmentPaperdoll() {
-  return (
-    <section className="combat2-card combat2-equipment">
-      <div className="combat2-section-head is-compact">
-        <div>
-          <p className="combat2-kicker">Снаряжение</p>
-          <h2><Shield aria-hidden="true" /> Боевой комплект</h2>
-        </div>
-      </div>
-      <div className="combat2-paperdoll">
-        <div className="combat2-paperdoll-grid">
-          <div className="combat2-paperdoll-spacer" />
-          <EquipSlotBox slot="helm" label="Шлем" />
-          <div className="combat2-paperdoll-spacer" />
-          <EquipSlotBox slot="cape" label="Плащ" />
-          <EquipSlotBox slot="amulet" label="Шея" />
-          <EquipSlotBox slot="quiver" label="Колчан" />
-          <EquipSlotBox slot="weapon" label="Оружие" />
-          <EquipSlotBox slot="platebody" label="Доспех" />
-          <EquipSlotBox slot="shield" label="Щит" />
-          <div className="combat2-paperdoll-spacer" />
-          <EquipSlotBox slot="platelegs" label="Поножи" />
-          <div className="combat2-paperdoll-spacer" />
-          <EquipSlotBox slot="gloves" label="Перчатки" />
-          <EquipSlotBox slot="boots" label="Сапоги" />
-          <EquipSlotBox slot="ring" label="Кольцо" />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function EquipItemVisual({ itemId, label }: { itemId: string; label: string }) {
-  const item = getItem(itemId);
-  const visual = getItemVisual(itemId);
-  return visual?.type === 'image' ? (
-    <img src={visual.value} alt={item?.name ?? label} className="combat2-equip-img" />
-  ) : (
-    <span className="combat2-equip-emoji">{visual?.value ?? '?'}</span>
-  );
-}
-
-function EquipSlotBox({ slot, label }: { slot: EquipSlot; label: string }) {
-  const itemId = usePlayerStore(s => s.equipment[slot]);
-  const unequip = usePlayerStore(s => s.unequipItem);
-  const addItem = useInventoryStore(s => s.addItem);
-
-  const handleUnequip = () => {
-    if (itemId) {
-      const removed = unequip(slot);
-      if (removed) addItem(removed, 1);
-    }
-  };
+function EquipmentSummaryLink() {
+  const equipment = usePlayerStore(s => s.equipment);
+  const equipped = Object.values(equipment).filter(Boolean).length;
+  const weaponName = equipment.weapon ? getItem(equipment.weapon)?.name : null;
 
   return (
-    <button type="button" onClick={handleUnequip} title={itemId ? `Снять: ${label}` : label} className="combat2-equip-slot">
-      <div className={`combat2-equip-cell ${itemId ? 'is-filled' : 'is-empty'}`}>
-        {itemId ? <EquipItemVisual itemId={itemId} label={label} /> : <span className="combat2-empty-dot" />}
-      </div>
-      <span className="combat2-equip-label">{label}</span>
-    </button>
+    <Link href="/hero" className="combat2-equip-summary">
+      <Shield aria-hidden="true" />
+      <span>
+        <b>Экипировка</b>
+        <small>{weaponName ? `${weaponName} · ${equipped} сл.` : `${equipped} слотов занято`}</small>
+      </span>
+      <ChevronRight aria-hidden="true" />
+    </Link>
   );
 }

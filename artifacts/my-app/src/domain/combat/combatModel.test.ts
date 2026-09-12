@@ -98,7 +98,7 @@ test('hero combat stats use the 12-substat model and strategy modifiers', () => 
   assert.equal(balanced.maxHp, 160);
   assert.ok(balanced.damageMin >= 1);
   assert.ok(balanced.damageMax > balanced.damageMin);
-  assert.ok(balanced.attackIntervalMs < 2400);
+  assert.ok(balanced.attackIntervalMs < 4200);
   assert.ok(greedy.damageMax > balanced.damageMax);
 });
 

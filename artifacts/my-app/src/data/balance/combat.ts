@@ -8,10 +8,10 @@ export const COMBAT_TICK_INTERVAL_MS = 100;
 /** Потолок догоняющих тиков за кадр — страховка после заморозки вкладки. */
 export const COMBAT_MAX_TICKS_PER_FRAME = 10;
 
-/** Интервал атаки героя без модификаторов темпа, мс. */
-export const HERO_ATTACK_INTERVAL_MS = 2400;
+/** Интервал атаки героя без модификаторов темпа, мс: бой должен быть читаемым онлайн. */
+export const HERO_ATTACK_INTERVAL_MS = 4200;
 /** Первый удар после входа в бой — с задержкой, чтобы игрок успел прочитать расклад. */
-export const HERO_FIRST_ATTACK_DELAY_MS = 1400;
+export const HERO_FIRST_ATTACK_DELAY_MS = 2800;
 
 /**
  * Пол здоровья героя: даже герой без вложений в Стойкость не должен умирать
@@ -23,8 +23,8 @@ export const DEATH_RESTORE_RATIO = 0.5;
 /** Порог авто-еды: доля HP, ниже которой герой тянется за едой. */
 export const AUTO_EAT_HP_RATIO = 0.2;
 
-/** XP героя за убийство = combatLevel × этот коэффициент × рейт админки. */
-export const HERO_XP_PER_MONSTER_LEVEL = 5;
+/** XP героя за убийство = combatLevel × этот hard-idle коэффициент × combat-рейт админки. */
+export const HERO_XP_PER_MONSTER_LEVEL = 0.75;
 
 /** Сколько записей боевого лога держим в памяти и в UI. */
 export const COMBAT_LOG_MAX_ENTRIES = 120;
@@ -56,8 +56,9 @@ export const MAX_HIT_MELEE = {
 
 /** Глобальные ограничения новой тактической модели. */
 export const COMBAT_MODEL = {
-  minAttackIntervalMs: 900,
-  maxAttackIntervalMs: 3600,
+  minAttackIntervalMs: 1500,
+  maxAttackIntervalMs: 6800,
+  enemyAttackIntervalMultiplier: 1.45,
   minHitChancePct: 18,
   maxHitChancePct: 96,
   minDamage: 1,
@@ -69,8 +70,8 @@ export const COMBAT_MODEL = {
   critDamageMultiplier: 1.5,
   onslaughtSplashRatio: 0.42,
   baseThreatSeconds: 8,
-  enemyFirstAttackDelayRatio: 0.78,
-  enemyPackOffsetMs: 320,
+  enemyFirstAttackDelayRatio: 1.16,
+  enemyPackOffsetMs: 720,
   bossThreatMultiplier: 1.45,
   packThreatMultiplier: 1.18,
 } as const;
@@ -81,7 +82,7 @@ export const HERO_COMBAT_DERIVED = {
   accuracyPerFinesse: 0.55,
   accuracyPerLuckPct: 0.08,
   attackIntervalTempoRatio: 0.55,
-  minAttackIntervalMs: 1050,
+  minAttackIntervalMs: 1800,
   armorMultiplier: 1,
   armorCapPct: 80,
   willMultiplier: 0.7,
@@ -144,25 +145,25 @@ export const COMBAT_INTENTS = {
 /** Ручные приёмы игрока и правила автоплана. */
 export const COMBAT_TACTICS = {
   guard: {
-    cooldownMs: 5600,
-    durationMs: 2200,
+    cooldownMs: 9800,
+    durationMs: 3600,
     incomingDamageMultiplier: 0.55,
     label: 'Щит',
   },
   maneuver: {
-    cooldownMs: 6400,
-    durationMs: 2400,
+    cooldownMs: 10800,
+    durationMs: 3600,
     evasionBonusPct: 24,
     label: 'Манёвр',
   },
   technique: {
-    cooldownMs: 7200,
+    cooldownMs: 12800,
     damageMultiplier: 1.55,
     accuracyBonusPct: 8,
     label: 'Приём',
   },
   pierce: {
-    cooldownMs: 8400,
+    cooldownMs: 14200,
     damageMultiplier: 1.08,
     armorPenBonusPct: 30,
     label: 'Пробой',
@@ -200,7 +201,7 @@ export const COMBAT_STRATEGIES = {
 } as const;
 
 export const COMBAT_AUTOPLAN = {
-  guardWindowMs: 650,
+  guardWindowMs: 1400,
   lowHpGuardRatio: 0.42,
   finisherHpRatio: 0.22,
   armorPierceThresholdPct: 25,
@@ -232,6 +233,21 @@ export const COMBAT_ENCOUNTERS = {
 } as const;
 
 /** Подготовительный прогноз: подписи и пороги риска для вылазки. */
+export const COMBAT_RECOVERY = {
+  levelUpHealRatio: 1,
+  levelUpEnergyRestoreRatio: 0.18,
+  campRestHealRatio: 1,
+  campRestEnergyRatio: 1,
+} as const;
+
+export const COMBAT_ENERGY = {
+  minToStart: 3,
+  startCost: 1,
+  drainIntervalMs: 30000,
+  drainPerInterval: 1,
+  exhaustedRestoreRatio: 0.35,
+} as const;
+
 export const COMBAT_RISK = {
   safeScoreMax: 34,
   tenseScoreMax: 68,
