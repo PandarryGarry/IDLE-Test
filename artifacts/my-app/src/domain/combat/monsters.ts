@@ -5,9 +5,9 @@ import type { Monster, CombatArea } from '../../data/types.ts';
  * наши руда/слитки/угли + снаряжение). Мелворовских костей/рун/руд нет.
  */
 export const MONSTERS: Monster[] = [
-  // ── Farmlands ──────────────────────────────────────────────
+  // ── Дальние фермы ──────────────────────────────────────────
   {
-    id: 'chicken', name: 'Chicken', areaId: 'farmlands',
+    id: 'chicken', name: 'Курица', areaId: 'farmlands',
     maxHp: 10, attackLevel: 1, strengthLevel: 1, defenceLevel: 1,
     attackBonus: 0, strengthBonus: 0, defenceBonus: 0,
     maxHit: 1, attackInterval: 2400,
@@ -16,7 +16,7 @@ export const MONSTERS: Monster[] = [
     gpDrop: [1, 5],
   },
   {
-    id: 'cow', name: 'Cow', areaId: 'farmlands',
+    id: 'cow', name: 'Бык', areaId: 'farmlands',
     maxHp: 25, attackLevel: 3, strengthLevel: 3, defenceLevel: 3,
     attackBonus: 0, strengthBonus: 0, defenceBonus: 0,
     maxHit: 3, attackInterval: 2400,
@@ -28,7 +28,7 @@ export const MONSTERS: Monster[] = [
     gpDrop: [3, 15],
   },
   {
-    id: 'goblin', name: 'Goblin', areaId: 'farmlands',
+    id: 'goblin', name: 'Гоблин-дозорный', areaId: 'farmlands',
     maxHp: 35, attackLevel: 5, strengthLevel: 5, defenceLevel: 3,
     attackBonus: 5, strengthBonus: 5, defenceBonus: 5,
     maxHit: 6, attackInterval: 2400,
@@ -41,7 +41,7 @@ export const MONSTERS: Monster[] = [
     gpDrop: [5, 30],
   },
   {
-    id: 'hobgoblin', name: 'Hobgoblin', areaId: 'farmlands',
+    id: 'hobgoblin', name: 'Хобгоблин-рубила', areaId: 'farmlands',
     maxHp: 80, attackLevel: 20, strengthLevel: 18, defenceLevel: 15,
     attackBonus: 15, strengthBonus: 12, defenceBonus: 10,
     maxHit: 12, attackInterval: 2400,
@@ -53,9 +53,9 @@ export const MONSTERS: Monster[] = [
     ],
     gpDrop: [15, 80],
   },
-  // ── Spider Den ─────────────────────────────────────────────
+  // ── Паучье логово ──────────────────────────────────────────
   {
-    id: 'spider', name: 'Spider', areaId: 'spider_den',
+    id: 'spider', name: 'Пещерный паук', areaId: 'spider_den',
     maxHp: 60, attackLevel: 18, strengthLevel: 12, defenceLevel: 12,
     attackBonus: 8, strengthBonus: 5, defenceBonus: 8,
     maxHit: 9, attackInterval: 2000,
@@ -67,7 +67,7 @@ export const MONSTERS: Monster[] = [
     gpDrop: [8, 50],
   },
   {
-    id: 'giant_spider', name: 'Giant Spider', areaId: 'spider_den',
+    id: 'giant_spider', name: 'Матка логова', areaId: 'spider_den',
     maxHp: 150, attackLevel: 40, strengthLevel: 35, defenceLevel: 25,
     attackBonus: 25, strengthBonus: 18, defenceBonus: 20,
     maxHit: 22, attackInterval: 2400,
@@ -79,9 +79,9 @@ export const MONSTERS: Monster[] = [
     ],
     gpDrop: [50, 200],
   },
-  // ── Undead Graveyard ────────────────────────────────────────
+  // ── Старое кладбище ────────────────────────────────────────
   {
-    id: 'skeleton', name: 'Skeleton', areaId: 'undead_graveyard',
+    id: 'skeleton', name: 'Скелет-щитник', areaId: 'undead_graveyard',
     maxHp: 120, attackLevel: 30, strengthLevel: 25, defenceLevel: 20,
     attackBonus: 20, strengthBonus: 15, defenceBonus: 15,
     maxHit: 16, attackInterval: 2400,
@@ -93,7 +93,7 @@ export const MONSTERS: Monster[] = [
     gpDrop: [20, 100],
   },
   {
-    id: 'undead_warrior', name: 'Undead Warrior', areaId: 'undead_graveyard',
+    id: 'undead_warrior', name: 'Мёртвый дружинник', areaId: 'undead_graveyard',
     maxHp: 200, attackLevel: 50, strengthLevel: 45, defenceLevel: 35,
     attackBonus: 35, strengthBonus: 28, defenceBonus: 28,
     maxHit: 26, attackInterval: 2400,
@@ -105,9 +105,9 @@ export const MONSTERS: Monster[] = [
     ],
     gpDrop: [60, 300],
   },
-  // ── Forest ─────────────────────────────────────────────────
+  // ── Тёмная чаща ────────────────────────────────────────────
   {
-    id: 'wolf', name: 'Wolf', areaId: 'forest',
+    id: 'wolf', name: 'Серый волк', areaId: 'forest',
     maxHp: 90, attackLevel: 25, strengthLevel: 22, defenceLevel: 18,
     attackBonus: 10, strengthBonus: 8, defenceBonus: 12,
     maxHit: 14, attackInterval: 2000,
@@ -118,9 +118,9 @@ export const MONSTERS: Monster[] = [
     ],
     gpDrop: [10, 60],
   },
-  // ── Lava Lake ──────────────────────────────────────────────
+  // ── Лавовый берег ──────────────────────────────────────────
   {
-    id: 'fire_elemental', name: 'Fire Elemental', areaId: 'lava_lake',
+    id: 'fire_elemental', name: 'Пепельный элементаль', areaId: 'lava_lake',
     maxHp: 350, attackLevel: 70, strengthLevel: 65, defenceLevel: 50,
     attackBonus: 50, strengthBonus: 45, defenceBonus: 40,
     maxHit: 40, attackInterval: 2400,
@@ -131,9 +131,9 @@ export const MONSTERS: Monster[] = [
     ],
     gpDrop: [100, 500],
   },
-  // ── Dragon's Lair (Boss) ────────────────────────────────────
+  // ── Драконья расселина (босс) ──────────────────────────────
   {
-    id: 'green_dragon', name: 'Green Dragon', areaId: 'dragons_lair',
+    id: 'green_dragon', name: 'Зелёный дракон', areaId: 'dragons_lair',
     maxHp: 500, attackLevel: 80, strengthLevel: 80, defenceLevel: 65,
     attackBonus: 65, strengthBonus: 60, defenceBonus: 60,
     maxHit: 50, attackInterval: 3000,
@@ -149,12 +149,48 @@ export const MONSTERS: Monster[] = [
 ];
 
 export const COMBAT_AREAS: CombatArea[] = [
-  { id: 'farmlands',        name: 'Farmlands',        monsterIds: ['chicken', 'cow', 'goblin', 'hobgoblin'],          description: 'Safe training area for beginners' },
-  { id: 'spider_den',       name: "Spider's Den",      monsterIds: ['spider', 'giant_spider'],                          combatLevelRequired: 15, description: 'Lurkers and crawlers dominate this dark cave' },
-  { id: 'undead_graveyard', name: 'Undead Graveyard', monsterIds: ['skeleton', 'undead_warrior'],                      combatLevelRequired: 25, description: 'The restless dead rise here' },
-  { id: 'forest',           name: 'Dark Forest',      monsterIds: ['wolf'],                                            combatLevelRequired: 20, description: 'Wolves hunt in the shadows' },
-  { id: 'lava_lake',        name: 'Lava Lake',        monsterIds: ['fire_elemental'],                                  combatLevelRequired: 80, description: 'Fire elementals roam the volcanic landscape' },
-  { id: 'dragons_lair',     name: "Dragon's Lair",    monsterIds: ['green_dragon'],                                    combatLevelRequired: 100, description: 'Home of the fearsome Green Dragon' },
+  {
+    id: 'farmlands',
+    name: 'Дальние фермы',
+    monsterIds: ['chicken', 'cow', 'goblin', 'hobgoblin'],
+    description: 'Разминка и первые стаи: безопасно изучать таймеры и добивания.',
+  },
+  {
+    id: 'spider_den',
+    name: 'Паучье логово',
+    monsterIds: ['spider', 'giant_spider'],
+    combatLevelRequired: 15,
+    description: 'Яд, быстрые окна и давление несколькими целями.',
+  },
+  {
+    id: 'undead_graveyard',
+    name: 'Старое кладбище',
+    monsterIds: ['skeleton', 'undead_warrior'],
+    combatLevelRequired: 25,
+    description: 'Броня и тяжёлые удары: пригодится Пробой.',
+  },
+  {
+    id: 'forest',
+    name: 'Тёмная чаща',
+    monsterIds: ['wolf'],
+    combatLevelRequired: 20,
+    description: 'Волки атакуют часто: Манёвр ценнее грубой брони.',
+  },
+  {
+    id: 'lava_lake',
+    name: 'Лавовый берег',
+    monsterIds: ['fire_elemental'],
+    combatLevelRequired: 80,
+    description: 'Высокий входящий урон и длинная вылазка для подготовленного героя.',
+  },
+  {
+    id: 'dragons_lair',
+    name: 'Драконья расселина',
+    monsterIds: ['green_dragon'],
+    combatLevelRequired: 100,
+    isDungeon: true,
+    description: 'Босс-событие с тяжёлыми телеграфами и окнами реакции.',
+  },
 ];
 
 export const MONSTERS_MAP = Object.fromEntries(MONSTERS.map(m => [m.id, m]));

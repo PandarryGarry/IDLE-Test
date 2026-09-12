@@ -8,7 +8,7 @@ src/
   core/            движок: формулы, тики, offline, реестр навыков, таблица XP
   domain/          чистая логика, без React
     attributes/    столпы, 12 подхарактеристик, нити, расчёт, иконки столпов
-    combat/        монстры + боевые формулы
+    combat/        монстры + чистая модель боя Combat 2.0 (формулы/риски/намерения)
     items/         предметы, статы экипировки, наборы
     professions/   единственное ремесло — «Сбор» (foraging) и его статы
   data/            данные и числа
@@ -44,7 +44,10 @@ Cap пакета героя ~5 с — страховка сети, не «мож
 
 **Числа — только в `data/balance/`.** В компонентах хардкода чисел нет.
 Фундамент: `balance/substats.ts`, `balance/threads.ts`, `balance/branchEffects.ts`,
-`balance/xpRates.ts`. Канон — `BALANCE_FOUNDATION.md`.
+`balance/xpRates.ts`, `balance/combat.ts`. Канон — `BALANCE_FOUNDATION.md`.
+Combat 2.0: чистые расчёты (`domain/combat/combatModel.ts`) не импортируют сторы;
+`store/combatStore.ts` — только адаптер тиков, лута, еды, уведомлений и save-safe
+runtime-состояния боя.
 
 **Импорты.** UI (`features/`, `components/`, `store/`, `hooks/`) — через `@/`.
 Чистая логика (`domain/`, `data/`, `core/`) — относительными путями с `.ts`

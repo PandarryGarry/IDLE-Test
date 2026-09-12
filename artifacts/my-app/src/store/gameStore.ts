@@ -258,7 +258,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     if (result.encounter && isSkillEnabledForAdmin('combat')) {
       useForagingStore.setState({ activeZoneId: null });
-      useCombatStore.getState().startCombat(result.encounter.areaId, result.encounter.monsterId);
+      useCombatStore.getState().startCombat(result.encounter.areaId, result.encounter.monsterId, { boss: Boolean(result.encounter.boss) });
       // Уровень 1: нападение во время сбора / появление босса — важное объявление (аудит, шаг 11).
       const ambusher = MONSTERS_MAP[result.encounter.monsterId];
       notifs.notifyAmbush(ambusher?.name ?? 'противник', Boolean(result.encounter.boss));

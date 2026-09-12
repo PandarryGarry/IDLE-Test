@@ -114,7 +114,7 @@ export function GlobalActiveBar() {
           </Link>
           <button
             type="button"
-            onClick={stopCombat}
+            onClick={() => stopCombat()}
             title={t('combat.stop')}
             className="inline-flex items-center justify-center w-5 h-5 rounded-md text-[var(--badge-red-ink)] border [border-color:var(--badge-red-edge)] hover:brightness-110 active:scale-95 transition-all"
           >

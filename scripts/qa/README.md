@@ -7,6 +7,7 @@
 | --- | --- |
 | `setup-browser.mjs` | Один раз на песочницу: Chromium из npm |
 | `hero.mjs` | Окно героя: сид + снимки вкладок Тело/Экип/Нити/Путь |
+| `combat.mjs` | Combat 2.0: подготовка → активный бой → приём → отчёт, mobile+desktop |
 | `road.mjs` | Холодный старт 0–6 + возвращение, без «Aethelia / Загрузка...» |
 | `auth.mjs login\|register` | Вход/регистрация живым UI |
 | `tour.mjs` | Полный путь: холодный 0→игра + возвращение Каеля (без облака) |
@@ -85,6 +86,8 @@ node scripts/qa/tour.mjs returning
 node scripts/qa/hero.mjs seed     # один раз: учётка + герой 30 уровня с очками
 node scripts/qa/hero.mjs          # все вкладки: мобилка 390×844 и десктоп 1280×820
 node scripts/qa/hero.mjs body     # только доска тела
+node scripts/qa/combat.mjs        # Combat 2.0: prep/active/tactic/report
+QA_BASE_URL=http://127.0.0.1:3001 QA_LEGACY_COMBAT=1 node scripts/qa/combat.mjs  # кадры «до»
 ```
 
 - Сид лежит вне репозитория: `/tmp/aethelia-qa-hero-seed.json`
