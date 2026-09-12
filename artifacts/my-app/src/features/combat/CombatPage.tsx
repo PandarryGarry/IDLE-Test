@@ -1,50 +1,157 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
-import { useCombatStore } from '@/store/combatStore';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'wouter';
+import { useShallow } from 'zustand/react/shallow';
+import { liveCombatSnapshot, useCombatStore, type CombatEnemy, type CombatLogEntry } from '@/store/combatStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { getLiveAttributes } from '@/domain/attributes/characterAttributes';
-import { useShallow } from 'zustand/react/shallow';
-import { COMBAT_AREAS, MONSTERS_MAP } from '@/domain/combat/monsters';
+import { COMBAT_AREAS, MONSTERS_MAP, monsterIconPath } from '@/domain/combat/monsters';
 import { ItemIcon } from '@/features/inventory/ItemIcon';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { getItem } from '@/domain/items';
-import { getItemVisual } from '@/shared/icons/itemIcons';
-import { EquipSlot } from '@/data/types';
+import type { Monster } from '@/data/types';
 import { useTranslation } from '@/hooks/useTranslation';
-import { 
-  Sword, 
-  Shield, 
-  Heart, 
-  Zap, 
-  Flame, 
-  Skull, 
-  Square, 
-  Check, 
-  Activity, 
-  Utensils, 
-  History,
-  Sparkles,
-  ChevronRight
-} from 'lucide-react';
+import { iconUrl } from '@/lib/assetUrl';
 import { formatNumber } from '@/lib/utils';
+import { COMBAT_ENERGY, COMBAT_RISK, COMBAT_STRATEGIES } from '@/data/balance/combat';
+import type { CombatStrategyId, CombatTacticId, FighterCombatStats, TargetPriority } from '@/domain/combat/combatModel';
+import {
+  Activity,
+  Backpack,
+  BookOpen,
+  Bot,
+  ChevronRight,
+  Crosshair,
+  Flag,
+  Heart,
+  History,
+  Shield,
+  Skull,
+  Sparkles,
+  Square,
+  Sword,
+  Timer,
+  Utensils,
+  Zap,
+} from 'lucide-react';
+
+const TACTIC_META: { id: CombatTacticId; icon: React.ReactNode; title: string; hint: string }[] = [
+  { id: 'guard', icon: <Shield aria-hidden="true" />, title: 'Щит', hint: 'Срезает следующий опасный удар. Автоплан тратит его под тяжёлый телеграф.' },
+  { id: 'maneuver', icon: <Zap aria-hidden="true" />, title: 'Манёвр', hint: 'Поднимает уворот на короткое окно и спасает от серии.' },
+  { id: 'technique', icon: <Sword aria-hidden="true" />, title: 'Приём', hint: 'Мгновенный точный удар для добивания цели.' },
+  { id: 'pierce', icon: <Crosshair aria-hidden="true" />, title: 'Пробой', hint: 'Мгновенный удар с игнором брони против стойких врагов.' },
+];
+
+const PRIORITIES: { id: TargetPriority; label: string; hint: string }[] = [
+  { id: 'dangerous', label: 'Опасный', hint: 'Сначала враг с самым тяжёлым ближайшим таймером.' },
+  { id: 'weakest', label: 'Слабый', hint: 'Быстро снимает лишние таймеры со стаи.' },
+  { id: 'armored', label: 'Броня', hint: 'Фокус стойких целей, хорошо с Пробоем.' },
+  { id: 'nearest', label: 'Ряд', hint: 'Бьёт слева направо без умного выбора.' },
+  { id: 'auto', label: 'Авто', hint: 'Командирский выбор по угрозе и окнам.' },
+];
+
+const TRAIT_LABEL: Record<string, string> = {
+  swift: 'быстрый',
+  armored: 'броня',
+  evasive: 'уход',
+  venom: 'яд',
+  pack: 'стая',
+  boss: 'босс',
+  elite: 'элита',
+};
+
+const ROLE_LABEL: Record<string, string> = {
+  fodder: 'учебный',
+  skirmisher: 'налётчик',
+  bruiser: 'громила',
+  sentinel: 'страж',
+  controller: 'контроль',
+  boss: 'босс',
+};
+
+type CombatScreenId = 'arena' | 'hunt' | 'bestiary' | 'report';
+
+const COMBAT_SCREENS: { id: CombatScreenId; label: string; hint: string; icon: React.ReactNode }[] = [
+  { id: 'arena', label: 'Арена', hint: 'Живой бой и ручные команды', icon: <Sword aria-hidden="true" /> },
+  { id: 'hunt', label: 'Охота', hint: 'Район, цель, добыча и запас энергии', icon: <Flag aria-hidden="true" /> },
+  { id: 'bestiary', label: 'Бестиарий', hint: 'Характеристики, роли и способности мобов', icon: <BookOpen aria-hidden="true" /> },
+  { id: 'report', label: 'Отчёт', hint: 'Итоги последней вылазки', icon: <History aria-hidden="true" /> },
+];
+
+function pct(current: number, max: number): number {
+  if (!Number.isFinite(current) || !Number.isFinite(max) || max <= 0) return 0;
+  return Math.max(0, Math.min(100, (current / max) * 100));
+}
+
+function barStyle(value: number): React.CSSProperties {
+  return { '--combat-bar': `${Math.max(0, Math.min(100, value))}%` } as React.CSSProperties;
+}
+
+function markerStyle(value: number): React.CSSProperties {
+  return { '--combat-marker': `${Math.max(0, Math.min(100, value))}%` } as React.CSSProperties;
+}
+
+function seconds(ms: number): string {
+  if (ms <= 0) return 'готово';
+  return `${Math.ceil(ms / 1000)}с`;
+}
+
+function shortDuration(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const min = Math.floor(total / 60);
+  const sec = total % 60;
+  return min > 0 ? `${min}м ${sec}с` : `${sec}с`;
+}
+
+function riskClass(label?: string): string {
+  if (label === 'safe') return 'is-safe';
+  if (label === 'tense') return 'is-tense';
+  if (label === 'danger') return 'is-danger';
+  return '';
+}
+
+function progressToReady(timer: number, interval: number): number {
+  if (interval <= 0) return 0;
+  return 100 - pct(timer, interval);
+}
+
+function aliveEnemies(enemies: CombatEnemy[]): CombatEnemy[] {
+  return enemies.filter(e => e.alive && e.hp > 0);
+}
+
+function foodQuantity(slots: { itemId: string; quantity: number }[]): number {
+  return slots.reduce((sum, slot) => sum + ((getItem(slot.itemId)?.healAmount ?? 0) > 0 ? Math.max(0, slot.quantity) : 0), 0);
+}
 
 export function CombatPage() {
   const { t } = useTranslation();
 
-  const inCombat = useCombatStore(s => s.inCombat);
-  const activeAreaId = useCombatStore(s => s.activeAreaId);
-  const combatLog = useCombatStore(s => s.combatLog);
-  const totalDamageDealt = useCombatStore(s => s.totalDamageDealt);
-  const totalDamageTaken = useCombatStore(s => s.totalDamageTaken);
-  const startCombat = useCombatStore(s => s.startCombat);
-  const stopCombat = useCombatStore(s => s.stopCombat);
-
-  const activeCharacter = useCharacterStore(s => s.activeCharacter);
-  const heroLevel = useMemo(() => getLiveAttributes().heroLevel, [activeCharacter]);
+  const {
+    inCombat,
+    combatLog,
+    totalDamageDealt,
+    totalDamageTaken,
+    lastReport,
+  } = useCombatStore(useShallow(s => ({
+    inCombat: s.inCombat,
+    combatLog: s.combatLog,
+    totalDamageDealt: s.totalDamageDealt,
+    totalDamageTaken: s.totalDamageTaken,
+    lastReport: s.lastReport,
+  })));
 
   const combatLogRef = useRef<HTMLDivElement>(null);
   const shouldStickToBottomRef = useRef(true);
   const [showLatest, setShowLatest] = useState(false);
+  const [screen, setScreen] = useState<CombatScreenId>('hunt');
+
+  useEffect(() => {
+    if (inCombat) setScreen('arena');
+  }, [inCombat]);
+
+  useEffect(() => {
+    if (!inCombat && lastReport) setScreen('report');
+  }, [inCombat, lastReport]);
 
   const scrollLogToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     const el = combatLogRef.current;
@@ -74,387 +181,948 @@ export function CombatPage() {
     if (atBottom) setShowLatest(false);
   };
 
-  const handleAreaClick = (areaId: string, minLevel = 1) => {
-    if (heroLevel < minLevel) return;
-    if (inCombat) stopCombat();
-    startCombat(areaId);
-  };
-
   return (
-    <div className="space-y-4">
-      {/* Mobile: Stacked; Desktop: Left Side (Areas + Paperdoll) & Right Side (Battle Arena + Log) */}
-      <div className="flex flex-col lg:flex-row gap-4">
-
-        {/* LEFT COLUMN: Areas & Equipment Paperdoll */}
-        <div className="w-full lg:w-80 xl:w-96 space-y-4 shrink-0">
-
-          {/* Combat Areas Selection */}
-          <div className="g-card border border-[var(--border-default)] p-4 rounded-3xl shadow-xl">
-            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest mb-3 flex items-center gap-1.5" style={{ color: '#ffb090', textShadow: '0 1px 4px rgba(0,0,0,0.8)', letterSpacing: '0.08em' }}>
-              <Skull className="w-3.5 h-3.5" /> {t('combat.areas')}
-            </h2>
-            
-            <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-700">
-              {COMBAT_AREAS.map(area => {
-                const isLocked = heroLevel < (area.combatLevelRequired ?? 1);
-                const isActive = activeAreaId === area.id;
-                return (
-                  <button
-                    type="button"
-                    key={area.id}
-                    onClick={() => handleAreaClick(area.id, area.combatLevelRequired ?? 1)}
-                    disabled={isLocked}
-                    className={`w-full p-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
-                      isLocked
-                        ? 'cursor-not-allowed border-[var(--border-default)] opacity-75'
-                        : isActive
-                          ? 'bg-red-500/20 border-red-500/70 shadow-[0_0_18px_rgba(239,68,68,0.25)] ring-1 ring-red-500/40 cursor-pointer'
-                          : 'bg-[var(--bg-card-dark)] hover:border-red-500/40 cursor-pointer border-[var(--border-light)] hover:bg-[var(--bg-card-dark)]'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center mb-1">
-                      <h3 className="font-bold text-xs sm:text-sm" style={{ color: isActive ? '#ff8060' : '#f5e0b0', textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}>
-                        {area.name}
-                      </h3>
-                      {isLocked ? (
-                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md" style={{ color: '#ff9070', background: 'rgba(120,30,15,0.6)', border: '1px solid rgba(255,120,80,0.4)' }}>
-                          Ур. {area.combatLevelRequired}
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-mono text-stone-500">
-                          {area.monsterIds.length} монстров
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-[var(--text-secondary)] leading-tight mb-2">{area.description}</p>
-                    
-                    {/* Monster Rosters */}
-                    <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-none">
-                      {area.monsterIds.map(mId => (
-                        <span key={mId} className="shrink-0 bg-[var(--bg-slot)] px-1.5 py-0.5 rounded-md text-[10px] font-mono border border-[var(--border-card)] text-[var(--text-primary)] font-medium">
-                          {MONSTERS_MAP[mId]?.name} ({MONSTERS_MAP[mId]?.combatLevel})
-                        </span>
-                      ))}
-                    </div>
-                  </button>
-                );
-              })}
+    <div className="a-page combat2-page">
+      <div className="a-page__scroll combat2-scroll">
+        <div className={`combat2-shell ${inCombat ? 'is-active' : 'is-idle'}`}>
+          <header className="combat2-hub-head">
+            <div>
+              <p className="combat2-kicker">Боевая система</p>
+              <h1>Тактические вылазки</h1>
+              <span>Выберите район, изучите монстра и управляйте схваткой в отдельной арене.</span>
             </div>
-          </div>
+            <EquipmentSummaryLink />
+          </header>
 
-          {/* Equipment Paperdoll (Кукла экипировки) */}
-          <div className="g-card border border-[var(--border-default)] p-4 rounded-3xl shadow-xl">
-            <h2 className="font-mono text-xs font-extrabold uppercase tracking-widest text-[var(--text-primary)] mb-3 flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-amber-400" /> {t('combat.equipment')}
-            </h2>
-            
-            {/* Кукла экипировки — 3 колонки, фиксированные ячейки */}
-            <div className="rounded-xl p-3" style={{ background: 'var(--bg-slot)', border: '1px solid var(--border-slot)' }}>
-              <div className="grid grid-cols-3 gap-y-3 gap-x-2 justify-items-center">
-                {/* Ряд 1: пусто / Шлем / пусто */}
-                <div />
-                <EquipSlotBox slot="helm"      label="Шлем" />
-                <div />
-                {/* Ряд 2: Плащ / Шея / Колчан */}
-                <EquipSlotBox slot="cape"      label="Плащ" />
-                <EquipSlotBox slot="amulet"    label="Шея" />
-                <EquipSlotBox slot="quiver"    label="Колчан" />
-                {/* Ряд 3: Оружие / Доспех / Щит */}
-                <EquipSlotBox slot="weapon"    label="Оружие" />
-                <EquipSlotBox slot="platebody" label="Доспех" />
-                <EquipSlotBox slot="shield"    label="Щит" />
-                {/* Ряд 4: пусто / Поножи / пусто */}
-                <div />
-                <EquipSlotBox slot="platelegs" label="Поножи" />
-                <div />
-                {/* Ряд 5: Перчатки / Сапоги / Кольцо */}
-                <EquipSlotBox slot="gloves"    label="Перчатки" />
-                <EquipSlotBox slot="boots"     label="Сапоги" />
-                <EquipSlotBox slot="ring"      label="Кольцо" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN: Battle Arena & Combat Log & Food */}
-        <div className="flex-1 space-y-4 min-w-0">
-
-          {/* Dynamic Combat Battle Arena */}
-          <CombatScreen />
-
-          {/* Combat Log */}
-          <div className="fantasy-card border-stone-800 rounded-3xl p-3 sm:p-4 shadow-lg flex flex-col h-60 md:h-72 min-h-0">
-            <div className="flex items-center justify-between gap-2 mb-2 px-1">
-              <h3 className="font-mono text-xs font-extrabold uppercase tracking-widest text-[var(--text-secondary)] flex items-center gap-1.5">
-                <History className="w-3.5 h-3.5 text-cyan-400" /> {t('combat.log')}
-              </h3>
-              <div className="flex items-center gap-3 text-xs font-mono">
-                <span className="text-stone-500">{t('combat.damage')}: <b className="text-emerald-400 font-bold">{formatNumber(totalDamageDealt)}</b></span>
-                <span className="text-stone-500">{t('combat.taken')}: <b className="text-red-400 font-bold">{formatNumber(totalDamageTaken)}</b></span>
-              </div>
-            </div>
-
-            <div
-              ref={combatLogRef}
-              onScroll={handleLogScroll}
-              className="relative flex-1 min-h-0 overflow-y-auto space-y-1 font-mono text-xs p-3 rounded-xl scrollbar-thin" style={{ background: 'rgba(60,30,10,0.7)', border: '2px solid #8b5020', boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.4)' }}
-            >
-              {combatLog.length === 0 && (
-                <div className="text-center py-10 text-slate-500 text-xs">
-                  Combat events will appear here during battle...
-                </div>
-              )}
-              {combatLog.slice().reverse().map((log) => (
-                <div key={log.id} className={`leading-relaxed ${
-                  log.type === 'player_attack' ? (log.damage && log.damage > 0 ? 'text-emerald-400 font-semibold' : 'text-slate-500') :
-                  log.type === 'enemy_attack' ? (log.damage && log.damage > 0 ? 'text-red-400 font-semibold' : 'text-slate-500') :
-                  log.type === 'player_death' || log.type === 'enemy_death' ? 'text-amber-300 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded' :
-                  log.type === 'eat' ? 'text-cyan-400 font-medium' : 'text-stone-500'
-                }`}>
-                  <span className="opacity-40 mr-2 text-[10px]">[{new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
-                  {log.message}
-                </div>
-              ))}
-            </div>
-
-            {showLatest && (
+          <nav className="combat2-screen-tabs" aria-label="Разделы боя">
+            {COMBAT_SCREENS.map(item => (
               <button
+                key={item.id}
                 type="button"
-                onClick={() => scrollLogToBottom()}
-                className="self-center -mt-8 mb-2 z-10 rounded-full border border-red-500/40 bg-[var(--bg-card)] px-3 py-1 text-[11px] font-bold text-red-300 shadow-xl backdrop-blur-md transition-all hover:bg-red-500/20 active:scale-95"
+                className={screen === item.id ? 'is-active' : ''}
+                onClick={() => setScreen(item.id)}
+                aria-pressed={screen === item.id}
+                title={item.hint}
               >
-                {t('combat.latest')}
+                {item.icon}
+                <span>{item.label}</span>
+                {item.id === 'report' && lastReport && <b aria-label="Есть новый отчёт" />}
               </button>
+            ))}
+          </nav>
+
+          <main className="combat2-screen" aria-label={COMBAT_SCREENS.find(item => item.id === screen)?.label ?? 'Бой'}>
+            {screen === 'arena' && (
+              <div className="combat2-screen-stack">
+                <CombatStage />
+                {inCombat && <CombatCommandDeck />}
+                <CombatLogPanel
+                  tCombatLog={t('combat.log')}
+                  logRef={combatLogRef}
+                  onScroll={handleLogScroll}
+                  showLatest={showLatest}
+                  onLatest={() => scrollLogToBottom()}
+                  logs={combatLog}
+                  totalDamageDealt={totalDamageDealt}
+                  totalDamageTaken={totalDamageTaken}
+                />
+                {inCombat ? <FoodPanel /> : <RecoveryPanel />}
+              </div>
             )}
-          </div>
 
-          {/* Quick Food Belt */}
-          {inCombat && <FoodPanel />}
+            {screen === 'hunt' && (
+              <div className="combat2-screen-grid is-hunt">
+                <PreparationPanel />
+                <SortieStatusPanel />
+              </div>
+            )}
+
+            {screen === 'bestiary' && <BestiaryPanel />}
+
+            {screen === 'report' && (
+              <div className="combat2-screen-grid">
+                <SortieReportPanel />
+                <PreparationPanel />
+              </div>
+            )}
+          </main>
         </div>
-
       </div>
     </div>
   );
 }
 
-const CombatScreen = memo(function CombatScreen() {
+const CombatStage = memo(function CombatStage() {
   const { t } = useTranslation();
-
   const {
     inCombat,
+    activeAreaId,
     currentMonster,
+    enemies,
+    selectedEnemyId,
+    currentTargetId,
     playerHp,
     playerMaxHp,
-    enemyHp,
-    enemyMaxHp,
+    playerStats,
     playerAttackTimer,
-    enemyAttackTimer,
-    autoEat,
-    autoLoot,
+    playerGuardMs,
+    playerManeuverMs,
     killCount,
+    waveCount,
     stopCombat,
-    setAutoEat,
-    setAutoLoot,
+    selectEnemy,
   } = useCombatStore(useShallow(s => ({
     inCombat: s.inCombat,
+    activeAreaId: s.activeAreaId,
     currentMonster: s.currentMonster,
+    enemies: s.enemies,
+    selectedEnemyId: s.selectedEnemyId,
+    currentTargetId: s.currentTargetId,
     playerHp: s.playerHp,
     playerMaxHp: s.playerMaxHp,
-    enemyHp: s.enemyHp,
-    enemyMaxHp: s.enemyMaxHp,
+    playerStats: s.playerStats,
     playerAttackTimer: s.playerAttackTimer,
-    enemyAttackTimer: s.enemyAttackTimer,
-    autoEat: s.autoEat,
-    autoLoot: s.autoLoot,
+    playerGuardMs: s.playerGuardMs,
+    playerManeuverMs: s.playerManeuverMs,
     killCount: s.killCount,
+    waveCount: s.waveCount,
     stopCombat: s.stopCombat,
-    setAutoEat: s.setAutoEat,
-    setAutoLoot: s.setAutoLoot,
+    selectEnemy: s.selectEnemy,
   })));
-
   const activeCharacter = useCharacterStore(s => s.activeCharacter);
   const heroLevel = useMemo(() => getLiveAttributes().heroLevel, [activeCharacter]);
+  const areaName = activeAreaId ? COMBAT_AREAS.find(a => a.id === activeAreaId)?.name : null;
 
-  const playerHpPct = Math.max(0, Math.min(100, (playerHp / playerMaxHp) * 100));
-  const enemyHpPct = enemyMaxHp > 0 ? Math.max(0, Math.min(100, (enemyHp / enemyMaxHp) * 100)) : 0;
-  
-  const playerAttackProgress = Math.max(0, Math.min(100, (1 - playerAttackTimer / 2400) * 100));
-  const enemyAttackInterval = currentMonster?.attackInterval || 2400;
-  const enemyAttackProgress = Math.max(0, Math.min(100, (1 - enemyAttackTimer / enemyAttackInterval) * 100));
-
-  return (
-    <div className="g-card border border-red-500/40 rounded-3xl p-4 sm:p-6 shadow-2xl min-h-[320px] flex flex-col relative overflow-hidden">
-      
-      {!inCombat ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-[var(--text-secondary)] p-6 text-center">
-          <div className="w-16 h-16 rounded-3xl bg-[var(--bg-card-dark)] border border-[var(--border-light)] flex items-center justify-center text-4xl mb-3 opacity-70">
-            ⚔️
-          </div>
-          <h2 className="text-lg sm:text-xl font-display font-black text-[var(--text-primary)]">{t('combat.selectArea')}</h2>
-          <p className="text-xs text-stone-500 mt-1 max-w-sm">
-            Выберите боевую локацию или подземелье слева, чтобы начать сражение.
+  if (!inCombat) {
+    return (
+      <section className="combat2-card combat2-empty-stage">
+        <div className="combat2-empty-orb">⚔️</div>
+        <div>
+          <p className="combat2-kicker">Тактическая вылазка</p>
+          <h1>Выберите зону и план</h1>
+          <p>
+            Теперь бой идёт как авто-схватка с ручными окнами: читайте намерения врагов,
+            ставьте приоритет цели и вмешивайтесь Щитом, Манёвром, Приёмом или Пробоем.
           </p>
         </div>
-      ) : (
-        <div className="h-full flex flex-col z-10">
-          
-          {/* Arena Header */}
-          <div className="flex justify-between items-center mb-6 pb-3 border-b border-[var(--border-light)]">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-              <h2 className="text-base sm:text-lg font-display font-black text-[var(--text-primary)] flex items-center gap-1.5">
-                <span className="text-red-400">{t('combat.fighting')}</span> {currentMonster?.name}
-              </h2>
-            </div>
+      </section>
+    );
+  }
 
-            <button
-              onClick={stopCombat}
-              className="px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-200 hover:text-white border border-red-500/50 font-bold rounded-2xl text-xs transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
-            >
-              <Square className="w-3.5 h-3.5 fill-current" />
-              <span>{t('combat.stop')}</span>
-            </button>
-          </div>
+  const liveEnemies = aliveEnemies(enemies);
+  const activeEnemyName = currentMonster?.name ?? liveEnemies[0]?.name ?? 'враг';
 
-          {/* Duel Display (Player vs Monster) */}
-          <div className="flex flex-col md:flex-row gap-6 items-center justify-between flex-grow py-2">
-            
-            {/* Player Side */}
-            <div className="flex-1 w-full text-center space-y-2.5 bg-[var(--bg-card-dark)] p-4 rounded-2xl border border-[var(--border-light)]">
-              <div className="flex items-center justify-between text-xs font-mono text-[var(--text-secondary)]">
-                <span className="font-bold text-[var(--text-primary)]">{t('combat.you')}</span>
-                <span className="bg-[var(--bg-card-dark)] border border-[var(--border-default)] px-2 py-0.5 rounded-md font-bold text-amber-300">
-                  Ур. {heroLevel}
-                </span>
-              </div>
-
-              <div className="text-5xl py-1 filter drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]">
-                🛡️
-              </div>
-
-              {/* Player HP Bar */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs font-mono">
-                  <span className="text-emerald-400 font-bold flex items-center gap-1">
-                    <Heart className="w-3 h-3 fill-current" /> ОЗ
-                  </span>
-                  <span className="text-[var(--text-primary)] font-bold">{playerHp} / {playerMaxHp}</span>
-                </div>
-                <div className="h-4 w-full bg-[var(--bar-track)] rounded-full overflow-hidden border border-[var(--border-light)] p-0.5 shadow-inner">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_12px_rgba(16,185,129,0.6)] transition-all duration-300"
-                    style={{ width: `${playerHpPct}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Attack Timer Bar */}
-              <div className="space-y-0.5">
-                <div className="flex justify-between text-[10px] font-mono text-stone-500">
-                  <span>Скорость атаки</span>
-                  <span>{(playerAttackTimer / 1000).toFixed(1)} сек.</span>
-                </div>
-                <div className="h-1.5 w-full bg-[var(--bar-track)] rounded-full overflow-hidden border border-[var(--border-light)]">
-                  <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-100"
-                    style={{ width: `${playerAttackProgress}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Clash Swords Icon in Center */}
-            <div className="flex flex-col items-center justify-center shrink-0">
-              <div className="w-12 h-12 rounded-2xl bg-red-500/20 border border-red-500/50 flex items-center justify-center text-2xl shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse">
-                ⚔️
-              </div>
-              <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-widest mt-1">VS</span>
-            </div>
-
-            {/* Enemy Side */}
-            <div className="flex-1 w-full text-center space-y-2.5 bg-[var(--bg-card-dark)] p-4 rounded-2xl border border-red-500/40">
-              <div className="flex items-center justify-between text-xs font-mono text-[var(--text-secondary)]">
-                <span className="font-bold text-red-300 truncate">{currentMonster?.name}</span>
-                <span className="bg-red-950/80 border border-red-500/50 px-2 py-0.5 rounded-md font-bold text-red-400">
-                  Ур. {currentMonster?.combatLevel}
-                </span>
-              </div>
-
-              <div className="text-5xl py-1 filter drop-shadow-[0_0_12px_rgba(239,68,68,0.4)]">
-                {currentMonster?.isBoss ? '🐉' : '👹'}
-              </div>
-
-              {/* Enemy HP Bar */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs font-mono">
-                  <span className="text-red-400 font-bold flex items-center gap-1">
-                    <Heart className="w-3 h-3 fill-current" /> ОЗ
-                  </span>
-                  <span className="text-[var(--text-primary)] font-bold">{enemyHp} / {enemyMaxHp}</span>
-                </div>
-                <div className="h-4 w-full bg-[var(--bar-track)] rounded-full overflow-hidden border border-[var(--border-light)] p-0.5 shadow-inner">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-red-600 to-rose-400 shadow-[0_0_12px_rgba(239,68,68,0.6)] transition-all duration-300"
-                    style={{ width: `${enemyHpPct}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Enemy Attack Timer Bar */}
-              <div className="space-y-0.5">
-                <div className="flex justify-between text-[10px] font-mono text-stone-500">
-                  <span>Скорость атаки</span>
-                  <span>{(enemyAttackTimer / 1000).toFixed(1)} сек.</span>
-                </div>
-                <div className="h-1.5 w-full bg-[var(--bar-track)] rounded-full overflow-hidden border border-[var(--border-light)]">
-                  <div
-                    className="h-full bg-gradient-to-r from-orange-500 to-amber-400 transition-all duration-100"
-                    style={{ width: `${enemyAttackProgress}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Combat Toggles & Kill Counter */}
-          <div className="mt-4 pt-3 border-t border-[var(--border-light)] flex flex-wrap gap-x-6 gap-y-2 justify-between items-center">
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 text-xs font-bold text-[var(--text-primary)] cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={autoEat}
-                  onChange={(e) => setAutoEat(e.target.checked)}
-                  className="rounded-lg bg-[var(--bg-slot)] border-[var(--border-default)] text-amber-500 focus:ring-amber-500 h-4 w-4 accent-amber-500 cursor-pointer"
-                />
-                {t('combat.autoEat')}
-              </label>
-              <label className="flex items-center gap-2 text-xs font-bold text-[var(--text-primary)] cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={autoLoot}
-                  onChange={(e) => setAutoLoot(e.target.checked)}
-                  className="rounded-lg bg-[var(--bg-slot)] border-[var(--border-default)] text-amber-500 focus:ring-amber-500 h-4 w-4 accent-amber-500 cursor-pointer"
-                />
-                {t('combat.autoLoot')}
-              </label>
-            </div>
-            
-            <div className="text-xs font-mono text-[var(--text-secondary)] flex items-center gap-1.5">
-              <Skull className="w-3.5 h-3.5 text-red-400" />
-              {t('combat.killCount')}: <span className="text-amber-300 font-bold">{formatNumber(killCount)}</span>
-            </div>
-          </div>
-
+  return (
+    <section className="combat2-card combat2-stage">
+      <div className="combat2-stage-head">
+        <div>
+          <p className="combat2-kicker">{areaName ?? 'Вылазка'} · волна {waveCount}</p>
+          <h1><Sword aria-hidden="true" /> Бой с {activeEnemyName}</h1>
         </div>
-      )}
+        <div className="combat2-stage-actions">
+          <span className="combat2-pill"><Skull aria-hidden="true" /> Побед: {formatNumber(killCount)}</span>
+          <button type="button" className="combat2-stop" onClick={() => stopCombat()}>
+            <Square aria-hidden="true" /> {t('combat.stop')}
+          </button>
+        </div>
+      </div>
 
+      <MobileQuickTactics />
+      <div className="combat2-duel-grid">
+        <HeroCombatCard
+          heroLevel={heroLevel}
+          playerHp={playerHp}
+          playerMaxHp={playerMaxHp}
+          stats={playerStats}
+          attackTimer={playerAttackTimer}
+          guardMs={playerGuardMs}
+          maneuverMs={playerManeuverMs}
+        />
+        <div className="combat2-vs" aria-hidden="true">
+          <span>VS</span>
+        </div>
+        <EnemyPack
+          enemies={liveEnemies}
+          selectedEnemyId={selectedEnemyId}
+          currentTargetId={currentTargetId}
+          onSelect={selectEnemy}
+        />
+      </div>
+
+      <CombatTimeline
+        enemies={liveEnemies}
+        playerTimer={playerAttackTimer}
+        playerInterval={playerStats?.attackIntervalMs ?? 1}
+      />
+    </section>
+  );
+});
+
+function HeroCombatCard({
+  heroLevel,
+  playerHp,
+  playerMaxHp,
+  stats,
+  attackTimer,
+  guardMs,
+  maneuverMs,
+}: {
+  heroLevel: number;
+  playerHp: number;
+  playerMaxHp: number;
+  stats: FighterCombatStats | null;
+  attackTimer: number;
+  guardMs: number;
+  maneuverMs: number;
+}) {
+  return (
+    <article className="combat2-fighter combat2-hero">
+      <div className="combat2-fighter-top">
+        <div>
+          <p className="combat2-kicker">Герой</p>
+          <h2>Вы · ур. {heroLevel}</h2>
+        </div>
+        <span className="combat2-avatar"><Shield aria-hidden="true" /></span>
+      </div>
+      <HealthBar current={playerHp} max={playerMaxHp} tone="hero" />
+      <div className="combat2-castbar">
+        <div className="combat2-castbar-label">
+          <span><Zap aria-hidden="true" /> Темп удара</span>
+          <b>{seconds(attackTimer)}</b>
+        </div>
+        <div className="combat2-mini-track"><span style={barStyle(progressToReady(attackTimer, stats?.attackIntervalMs ?? 1))} /></div>
+      </div>
+      <div className="combat2-stat-grid">
+        <MiniStat label="Урон" value={stats ? `${stats.damageMin}–${stats.damageMax}` : '—'} />
+        <MiniStat label="Броня" value={stats ? `${Math.round(stats.armorPct)}%` : '—'} />
+        <MiniStat label="Уворот" value={stats ? `${Math.round(stats.evasionPct)}%` : '—'} />
+        <MiniStat label="Крит" value={stats ? `${Math.round(stats.critChancePct)}%` : '—'} />
+      </div>
+      <div className="combat2-status-row">
+        <span className={guardMs > 0 ? 'is-on' : ''}>Щит {guardMs > 0 ? seconds(guardMs) : 'нет'}</span>
+        <span className={maneuverMs > 0 ? 'is-on' : ''}>Манёвр {maneuverMs > 0 ? seconds(maneuverMs) : 'нет'}</span>
+      </div>
+    </article>
+  );
+}
+
+function EnemyPack({
+  enemies,
+  selectedEnemyId,
+  currentTargetId,
+  onSelect,
+}: {
+  enemies: CombatEnemy[];
+  selectedEnemyId: string | null;
+  currentTargetId: string | null;
+  onSelect: (id: string | null) => void;
+}) {
+  return (
+    <div className="combat2-pack" aria-label="Вражеская линия">
+      <div className="combat2-pack-head">
+        <div>
+          <p className="combat2-kicker">Цели</p>
+          <h2>Стая {enemies.length > 1 ? `×${enemies.length}` : ''}</h2>
+        </div>
+        <Crosshair aria-hidden="true" />
+      </div>
+      <div className="combat2-enemy-list">
+        {enemies.map(enemy => (
+          <EnemyCard
+            key={enemy.instanceId}
+            enemy={enemy}
+            selected={(currentTargetId ?? selectedEnemyId) === enemy.instanceId}
+            onSelect={() => onSelect(selectedEnemyId === enemy.instanceId ? null : enemy.instanceId)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MonsterPortrait({ monsterId, isBoss = false }: { monsterId: string; isBoss?: boolean }) {
+  return (
+    <span className={`combat2-avatar combat2-monster-portrait ${isBoss ? 'is-boss' : ''}`}>
+      <img src={iconUrl(monsterIconPath(monsterId))} alt="" loading="lazy" decoding="async" />
+    </span>
+  );
+}
+
+function EnemyCard({ enemy, selected, onSelect }: { enemy: CombatEnemy; selected: boolean; onSelect: () => void }) {
+  const firstAbility = enemy.abilities?.find(ability => ability.intent === enemy.intent.kind) ?? enemy.abilities?.[0];
+  return (
+    <button type="button" className={`combat2-enemy ${selected ? 'is-selected' : ''}`} onClick={onSelect}>
+      <div className="combat2-enemy-main">
+        <MonsterPortrait monsterId={enemy.monsterId} isBoss={enemy.isBoss} />
+        <div className="combat2-enemy-copy">
+          <div className="combat2-enemy-title">
+            <b>{enemy.name}</b>
+            <span>ур. {enemy.combatLevel}</span>
+          </div>
+          <HealthBar current={enemy.hp} max={enemy.maxHp} tone="enemy" compact />
+        </div>
+      </div>
+      <div className="combat2-intent-row">
+        <span className="combat2-intent-icon">{enemy.intent.icon}</span>
+        <span>
+          <b>{firstAbility?.name ?? enemy.intent.label}</b>
+          <small>{seconds(enemy.attackTimer)} · {firstAbility?.counterplay ?? enemy.intent.hint}</small>
+        </span>
+      </div>
+      <div className="combat2-traits">
+        {enemy.isBoss && <span className="is-boss-phase">фаза {enemy.bossPhase}</span>}
+        {enemy.traits.slice(0, enemy.isBoss ? 3 : 4).map(trait => <span key={trait}>{TRAIT_LABEL[trait] ?? trait}</span>)}
+      </div>
+    </button>
+  );
+}
+
+function HealthBar({ current, max, tone, compact = false }: { current: number; max: number; tone: 'hero' | 'enemy'; compact?: boolean }) {
+  return (
+    <div className={`combat2-health ${compact ? 'is-compact' : ''}`}>
+      <div className="combat2-health-label">
+        <span><Heart aria-hidden="true" /> ОЗ</span>
+        <b>{formatNumber(current)} / {formatNumber(max)}</b>
+      </div>
+      <div className={`combat2-health-track is-${tone}`}>
+        <span style={barStyle(pct(current, max))} />
+      </div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="combat2-mini-stat">
+      <span>{label}</span>
+      <b>{value}</b>
+    </div>
+  );
+}
+
+function CombatTimeline({ enemies, playerTimer, playerInterval }: { enemies: CombatEnemy[]; playerTimer: number; playerInterval: number }) {
+  return (
+    <div className="combat2-timeline" aria-label="Шкала действий">
+      <div className="combat2-timeline-head">
+        <span><Timer aria-hidden="true" /> Шкала действий</span>
+        <b>чем правее маркер, тем ближе действие</b>
+      </div>
+      <div className="combat2-timeline-track">
+        <span className="combat2-time-marker is-hero" style={markerStyle(progressToReady(playerTimer, playerInterval))}>Вы</span>
+        {enemies.map(enemy => (
+          <span
+            key={enemy.instanceId}
+            className={`combat2-time-marker ${enemy.intent.kind === 'heavy' ? 'is-danger' : ''}`}
+            style={markerStyle(progressToReady(enemy.attackTimer, enemy.attackInterval))}
+            title={`${enemy.name}: ${enemy.intent.label}`}
+          >
+            {enemy.intent.icon}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const MobileQuickTactics = memo(function MobileQuickTactics() {
+  const { tacticCooldowns, performTactic } = useCombatStore(useShallow(s => ({
+    tacticCooldowns: s.tacticCooldowns,
+    performTactic: s.performTactic,
+  })));
+
+  return (
+    <div className="combat2-quick" aria-label="Быстрые команды">
+      {TACTIC_META.map(tactic => {
+        const cd = tacticCooldowns[tactic.id];
+        const ready = cd <= 0;
+        return (
+          <button
+            key={tactic.id}
+            type="button"
+            className={`combat2-quick-btn ${ready ? 'is-ready' : 'is-cooldown'}`}
+            onClick={() => performTactic(tactic.id)}
+            disabled={!ready}
+            title={tactic.hint}
+          >
+            <span>{tactic.icon}</span>
+            <b>{tactic.title}</b>
+            <small>{ready ? 'готово' : seconds(cd)}</small>
+          </button>
+        );
+      })}
     </div>
   );
 });
 
+const CombatCommandDeck = memo(function CombatCommandDeck() {
+  const {
+    autoEat,
+    autoLoot,
+    autoPlan,
+    strategy,
+    targetPriority,
+    tacticCooldowns,
+    setAutoEat,
+    setAutoLoot,
+    setAutoPlan,
+    setStrategy,
+    setTargetPriority,
+    performTactic,
+  } = useCombatStore(useShallow(s => ({
+    autoEat: s.autoEat,
+    autoLoot: s.autoLoot,
+    autoPlan: s.autoPlan,
+    strategy: s.strategy,
+    targetPriority: s.targetPriority,
+    tacticCooldowns: s.tacticCooldowns,
+    setAutoEat: s.setAutoEat,
+    setAutoLoot: s.setAutoLoot,
+    setAutoPlan: s.setAutoPlan,
+    setStrategy: s.setStrategy,
+    setTargetPriority: s.setTargetPriority,
+    performTactic: s.performTactic,
+  })));
+
+  return (
+    <section className="combat2-card combat2-command">
+      <div className="combat2-section-head">
+        <div>
+          <p className="combat2-kicker">Командирский слой</p>
+          <h2><Bot aria-hidden="true" /> Автобой с вмешательством</h2>
+        </div>
+        <label className="combat2-toggle">
+          <input type="checkbox" checked={autoPlan} onChange={e => setAutoPlan(e.target.checked)} />
+          <span>Автоплан</span>
+        </label>
+      </div>
+
+      <div className="combat2-tactics">
+        {TACTIC_META.map(tactic => {
+          const cd = tacticCooldowns[tactic.id];
+          const ready = cd <= 0;
+          return (
+            <button
+              key={tactic.id}
+              type="button"
+              className={`combat2-tactic ${ready ? 'is-ready' : 'is-cooldown'}`}
+              onClick={() => performTactic(tactic.id)}
+              disabled={!ready}
+              title={tactic.hint}
+            >
+              <span className="combat2-tactic-icon">{tactic.icon}</span>
+              <span>
+                <b>{tactic.title}</b>
+                <small>{ready ? tactic.hint : seconds(cd)}</small>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="combat2-command-grid">
+        <CommandGroup title="Стратегия" icon={<Flag aria-hidden="true" />}>
+          {(Object.keys(COMBAT_STRATEGIES) as CombatStrategyId[]).map(id => (
+            <button
+              key={id}
+              type="button"
+              className={`combat2-chip ${strategy === id ? 'is-active' : ''}`}
+              onClick={() => setStrategy(id)}
+            >
+              {COMBAT_STRATEGIES[id].label}
+            </button>
+          ))}
+        </CommandGroup>
+
+        <CommandGroup title="Фокус цели" icon={<Crosshair aria-hidden="true" />}>
+          {PRIORITIES.map(priority => (
+            <button
+              key={priority.id}
+              type="button"
+              className={`combat2-chip ${targetPriority === priority.id ? 'is-active' : ''}`}
+              onClick={() => setTargetPriority(priority.id)}
+              title={priority.hint}
+            >
+              {priority.label}
+            </button>
+          ))}
+        </CommandGroup>
+
+        <CommandGroup title="Автоматизация" icon={<Activity aria-hidden="true" />}>
+          <label className="combat2-toggle is-small">
+            <input type="checkbox" checked={autoEat} onChange={e => setAutoEat(e.target.checked)} />
+            <span>Авто-еда</span>
+          </label>
+          <label className="combat2-toggle is-small">
+            <input type="checkbox" checked={autoLoot} onChange={e => setAutoLoot(e.target.checked)} />
+            <span>Авто-лут</span>
+          </label>
+        </CommandGroup>
+      </div>
+    </section>
+  );
+});
+
+function CommandGroup({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="combat2-command-group">
+      <h3>{icon}{title}</h3>
+      <div className="combat2-chip-row">{children}</div>
+    </div>
+  );
+}
+
+function SortieStatusPanel() {
+  const {
+    inCombat,
+    activeAreaId,
+    sortieMonsterId,
+    killCount,
+    waveCount,
+    playerHp,
+    playerMaxHp,
+    sortieEnergyCurrent,
+    sortieEnergyMax,
+    energyDrainMs,
+    strategy,
+    restAtCamp,
+  } = useCombatStore(useShallow(s => ({
+    inCombat: s.inCombat,
+    activeAreaId: s.activeAreaId,
+    sortieMonsterId: s.sortieMonsterId,
+    killCount: s.killCount,
+    waveCount: s.waveCount,
+    playerHp: s.playerHp,
+    playerMaxHp: s.playerMaxHp,
+    sortieEnergyCurrent: s.sortieEnergyCurrent,
+    sortieEnergyMax: s.sortieEnergyMax,
+    energyDrainMs: s.energyDrainMs,
+    strategy: s.strategy,
+    restAtCamp: s.restAtCamp,
+  })));
+  const activeCharacter = useCharacterStore(s => s.activeCharacter);
+  const equipment = usePlayerStore(s => s.equipment);
+  const liveAttributes = useMemo(() => getLiveAttributes(), [activeCharacter, sortieEnergyCurrent, sortieEnergyMax]);
+  const liveHero = useMemo(() => liveCombatSnapshot(strategy), [activeCharacter, equipment, strategy]);
+  const area = activeAreaId ? COMBAT_AREAS.find(item => item.id === activeAreaId) : COMBAT_AREAS[0];
+  const target = sortieMonsterId ? MONSTERS_MAP[sortieMonsterId] : null;
+  const energyCurrent = inCombat ? sortieEnergyCurrent : liveAttributes.energy.current;
+  const energyMax = inCombat ? sortieEnergyMax : liveAttributes.energy.max;
+  const displayHpMax = inCombat ? playerMaxHp : liveHero.maxHp;
+  const displayHp = inCombat
+    ? playerHp
+    : (playerMaxHp === liveHero.maxHp && playerHp > 0 ? playerHp : liveHero.maxHp);
+  const drainLeftMs = inCombat
+    ? Math.max(0, COMBAT_ENERGY.drainIntervalMs - (energyDrainMs % COMBAT_ENERGY.drainIntervalMs))
+    : 0;
+  const expectedDurationMs = Math.max(0, energyCurrent) * COMBAT_ENERGY.drainIntervalMs;
+  const previewMonsters = area
+    ? (target ? [target] : area.monsterIds.map(id => MONSTERS_MAP[id]).filter((monster): monster is Monster => Boolean(monster)))
+    : [];
+  const dropIds = Array.from(new Set(previewMonsters.flatMap(monster => monster.drops.map(drop => drop.itemId)))).slice(0, 5);
+
+  return (
+    <section className="combat2-card combat2-sortie-status">
+      <div className="combat2-section-head">
+        <div>
+          <p className="combat2-kicker">Статус вылазки</p>
+          <h2><Timer aria-hidden="true" /> Район, цель и запас</h2>
+        </div>
+        <span className="combat2-pill">{inCombat ? 'в бою' : 'лагерь'}</span>
+      </div>
+
+      <div className="combat2-status-hero">
+        <div>
+          <span>Район</span>
+          <b>{area?.name ?? 'не выбран'}</b>
+        </div>
+        <div>
+          <span>Цель</span>
+          <b>{target?.name ?? 'смешанная охота'}</b>
+        </div>
+        <div>
+          <span>ОЗ</span>
+          <b>{formatNumber(displayHp)} / {formatNumber(displayHpMax || 1)}</b>
+        </div>
+        <div>
+          <span>Победы</span>
+          <b>{formatNumber(killCount)} · волна {formatNumber(waveCount)}</b>
+        </div>
+      </div>
+
+      <div className="combat2-energy-block">
+        <div className="combat2-health-label">
+          <span><Zap aria-hidden="true" /> Энергия вылазки</span>
+          <b>{formatNumber(energyCurrent)} / {formatNumber(energyMax)}</b>
+        </div>
+        <div className="combat2-health-track is-energy">
+          <span style={barStyle(pct(energyCurrent, energyMax))} />
+        </div>
+        <p>
+          Хватит примерно на <b>{shortDuration(expectedDurationMs)}</b>
+          {inCombat ? <> · следующий расход через <b>{shortDuration(drainLeftMs)}</b></> : <> · старт стоит {COMBAT_ENERGY.startCost} ед.</>}
+        </p>
+      </div>
+
+      <div className="combat2-loot-preview">
+        <span>Ожидаемая добыча:</span>
+        <div>
+          {dropIds.map(itemId => <ItemIcon key={itemId} itemId={itemId} size="sm" showTooltip={false} />)}
+          {dropIds.length === 0 && <small>нет данных</small>}
+        </div>
+      </div>
+
+      <button type="button" className="combat2-rest-btn" onClick={restAtCamp} disabled={inCombat}>
+        <Heart aria-hidden="true" /> {inCombat ? 'Передышка после боя' : 'Передышка в лагере'}
+      </button>
+    </section>
+  );
+}
+
+const PreparationPanel = memo(function PreparationPanel() {
+  const {
+    inCombat,
+    activeAreaId,
+    strategy,
+    startCombat,
+    stopCombat,
+    getRiskForecast,
+  } = useCombatStore(useShallow(s => ({
+    inCombat: s.inCombat,
+    activeAreaId: s.activeAreaId,
+    strategy: s.strategy,
+    startCombat: s.startCombat,
+    stopCombat: s.stopCombat,
+    getRiskForecast: s.getRiskForecast,
+  })));
+  const activeCharacter = useCharacterStore(s => s.activeCharacter);
+  const inventoryItems = useInventoryStore(s => s.items);
+  const heroLevel = useMemo(() => getLiveAttributes().heroLevel, [activeCharacter]);
+  const foodCount = useMemo(() => foodQuantity(inventoryItems), [inventoryItems]);
+
+  const handleAreaClick = (areaId: string, minLevel = 1, monsterId?: string) => {
+    if (heroLevel < minLevel) return;
+    if (inCombat) stopCombat();
+    startCombat(areaId, monsterId);
+  };
+
+  return (
+    <section className="combat2-card combat2-prep">
+      <div className="combat2-section-head">
+        <div>
+          <p className="combat2-kicker">Подготовка</p>
+          <h2><Backpack aria-hidden="true" /> План вылазки</h2>
+        </div>
+        <span className="combat2-pill">Еда: {foodCount}</span>
+      </div>
+
+      <div className="combat2-prep-note">
+        <Sparkles aria-hidden="true" />
+        <span>Стратегия сейчас: <b>{COMBAT_STRATEGIES[strategy].label}</b>. Прогноз считает стаю, телеграфы и запас еды.</span>
+      </div>
+
+      <div className="combat2-area-list">
+        {COMBAT_AREAS.map(area => {
+          const locked = heroLevel < (area.combatLevelRequired ?? 1);
+          const active = activeAreaId === area.id;
+          const risk = getRiskForecast(area.id);
+          return (
+            <article
+              key={area.id}
+              role="button"
+              tabIndex={locked ? -1 : 0}
+              className={`combat2-area ${active ? 'is-active' : ''} ${locked ? 'is-locked' : ''}`}
+              onClick={() => handleAreaClick(area.id, area.combatLevelRequired ?? 1)}
+              onKeyDown={event => {
+                if (!locked && (event.key === 'Enter' || event.key === ' ')) handleAreaClick(area.id, area.combatLevelRequired ?? 1);
+              }}
+              aria-disabled={locked}
+            >
+              <div className="combat2-area-top">
+                <div>
+                  <h3>{area.name}</h3>
+                  <p>{area.description}</p>
+                </div>
+                <span className={`combat2-risk ${riskClass(risk?.label)}`}>
+                  {locked ? `ур. ${area.combatLevelRequired}` : `${risk?.title ?? '—'} ${risk?.score ?? ''}`}
+                </span>
+              </div>
+              <div className="combat2-area-roster">
+                {area.monsterIds.map(id => {
+                  const monster = MONSTERS_MAP[id];
+                  if (!monster) return null;
+                  return (
+                    <MonsterRosterChip
+                      key={id}
+                      monsterId={id}
+                      disabled={locked}
+                      onHunt={(event) => {
+                        event.stopPropagation();
+                        handleAreaClick(area.id, area.combatLevelRequired ?? 1, id);
+                      }}
+                    />
+                  );
+                })}
+              </div>
+              {risk && !locked && (
+                <div className="combat2-area-why">
+                  <span>Idle: ~{risk.safeIdleMinutes >= COMBAT_RISK.safeIdleInfinityMinutes ? '∞' : risk.safeIdleMinutes} мин</span>
+                  <ChevronRight aria-hidden="true" />
+                  <span>{risk.reasons[0]}</span>
+                </div>
+              )}
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+});
+
+function MonsterRosterChip({
+  monsterId,
+  disabled = false,
+  onHunt,
+}: {
+  monsterId: string;
+  disabled?: boolean;
+  onHunt?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+}) {
+  const monster = MONSTERS_MAP[monsterId];
+  if (!monster) return null;
+  const traits = (monster.traits ?? []).slice(0, 2).map(trait => TRAIT_LABEL[trait] ?? trait).join(' · ');
+  const title = [monster.description, monster.abilities?.[0]?.counterplay].filter(Boolean).join(' ');
+  return (
+    <button type="button" className="combat2-roster-chip" title={title} onClick={onHunt} disabled={disabled}>
+      <img src={iconUrl(monsterIconPath(monster))} alt="" loading="lazy" decoding="async" />
+      <span>
+        <b>{monster.name}</b>
+        <small>{ROLE_LABEL[monster.role ?? ''] ?? 'моб'} · ур. {monster.combatLevel}{traits ? ` · ${traits}` : ''}</small>
+      </span>
+      <em>цель</em>
+    </button>
+  );
+}
+
+function BestiaryPanel() {
+  const [areaFilter, setAreaFilter] = useState<string>(COMBAT_AREAS[0]?.id ?? 'all');
+  const selectedArea = COMBAT_AREAS.find(area => area.id === areaFilter) ?? COMBAT_AREAS[0];
+  const monsters = selectedArea
+    ? selectedArea.monsterIds.map(id => MONSTERS_MAP[id]).filter((monster): monster is Monster => Boolean(monster))
+    : [];
+
+  return (
+    <section className="combat2-card combat2-bestiary">
+      <div className="combat2-section-head">
+        <div>
+          <p className="combat2-kicker">Разведка</p>
+          <h2><BookOpen aria-hidden="true" /> Бестиарий района</h2>
+        </div>
+        <span className="combat2-pill">{monsters.length} целей</span>
+      </div>
+
+      <div className="combat2-bestiary-tabs" role="tablist" aria-label="Районы бестиария">
+        {COMBAT_AREAS.map(area => (
+          <button
+            key={area.id}
+            type="button"
+            className={areaFilter === area.id ? 'is-active' : ''}
+            onClick={() => setAreaFilter(area.id)}
+          >
+            {area.name}
+          </button>
+        ))}
+      </div>
+
+      <div className="combat2-bestiary-grid">
+        {monsters.map(monster => <MonsterIntelCard key={monster.id} monster={monster} />)}
+      </div>
+    </section>
+  );
+}
+
+function MonsterIntelCard({ monster }: { monster: Monster }) {
+  const traits = monster.traits ?? [];
+  const drops = monster.drops.slice(0, 4);
+  return (
+    <article className="combat2-intel-card">
+      <div className="combat2-intel-top">
+        <MonsterPortrait monsterId={monster.id} isBoss={monster.isBoss} />
+        <div>
+          <p className="combat2-kicker">{ROLE_LABEL[monster.role ?? ''] ?? 'моб'} · ур. {monster.combatLevel}</p>
+          <h3>{monster.name}</h3>
+          <span>{monster.description}</span>
+        </div>
+      </div>
+
+      <div className="combat2-stat-grid">
+        <MiniStat label="ОЗ" value={formatNumber(monster.maxHp)} />
+        <MiniStat label="Урон" value={`до ${formatNumber(monster.maxHit)}`} />
+        <MiniStat label="Атака" value={formatNumber(monster.attackLevel)} />
+        <MiniStat label="Защита" value={formatNumber(monster.defenceLevel)} />
+      </div>
+
+      <div className="combat2-traits is-intel">
+        {traits.length === 0 && <span>без трюков</span>}
+        {traits.map(trait => <span key={trait}>{TRAIT_LABEL[trait] ?? trait}</span>)}
+      </div>
+
+      <div className="combat2-ability-list">
+        {(monster.abilities ?? []).map(ability => (
+          <div key={ability.id}>
+            <b>{ability.name}</b>
+            <span>{ability.description}</span>
+            <small>{ability.counterplay}</small>
+          </div>
+        ))}
+      </div>
+
+      <div className="combat2-intel-drops">
+        <span>Добыча</span>
+        <div>
+          {drops.map(drop => {
+            const item = getItem(drop.itemId);
+            return (
+              <small key={drop.itemId}>
+                <ItemIcon itemId={drop.itemId} size="sm" showTooltip={false} />
+                {item?.name ?? drop.itemId} · {Math.round(drop.chance * 100)}%
+              </small>
+            );
+          })}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function SortieReportPanel() {
+  const report = useCombatStore(s => s.lastReport);
+  if (!report) {
+    return (
+      <section className="combat2-card combat2-report">
+        <div className="combat2-section-head">
+          <div>
+            <p className="combat2-kicker">Idle отчёт</p>
+            <h2><History aria-hidden="true" /> Пока пусто</h2>
+          </div>
+        </div>
+        <p className="combat2-report-summary">Завершите вылазку вручную, по усталости или после поражения — здесь появятся победы, добыча и подсказки.</p>
+      </section>
+    );
+  }
+  const lootEntries = Object.entries(report.loot).slice(0, 6);
+
+  return (
+    <section className="combat2-card combat2-report">
+      <div className="combat2-section-head">
+        <div>
+          <p className="combat2-kicker">Idle отчёт</p>
+          <h2><History aria-hidden="true" /> Что произошло</h2>
+        </div>
+        <span className="combat2-pill">{shortDuration(report.durationMs)}</span>
+      </div>
+      <p className="combat2-report-summary">{report.summary}</p>
+      <div className="combat2-report-grid">
+        <MiniStat label="Побед" value={formatNumber(report.kills)} />
+        <MiniStat label="Волн" value={formatNumber(report.waves)} />
+        <MiniStat label="Опыт" value={`+${formatNumber(report.xp)}`} />
+        <MiniStat label="Монеты" value={`+${formatNumber(report.gp)}`} />
+      </div>
+      {lootEntries.length > 0 && (
+        <div className="combat2-report-loot">
+          {lootEntries.map(([itemId, qty]) => (
+            <span key={itemId}>
+              <ItemIcon itemId={itemId} size="sm" quantity={qty} showTooltip={false} />
+              ×{qty}
+            </span>
+          ))}
+        </div>
+      )}
+      <ul className="combat2-report-notes">
+        {report.notes.slice(0, 3).map(note => <li key={note}>{note}</li>)}
+      </ul>
+    </section>
+  );
+}
+
+function CombatLogPanel({
+  tCombatLog,
+  logRef,
+  onScroll,
+  showLatest,
+  onLatest,
+  logs,
+  totalDamageDealt,
+  totalDamageTaken,
+}: {
+  tCombatLog: string;
+  logRef: React.RefObject<HTMLDivElement | null>;
+  onScroll: () => void;
+  showLatest: boolean;
+  onLatest: () => void;
+  logs: CombatLogEntry[];
+  totalDamageDealt: number;
+  totalDamageTaken: number;
+}) {
+  return (
+    <section className="combat2-card combat2-log-card">
+      <div className="combat2-section-head">
+        <div>
+          <p className="combat2-kicker">Хроника</p>
+          <h2><History aria-hidden="true" /> {tCombatLog}</h2>
+        </div>
+        <div className="combat2-log-stats">
+          <span>Урон <b>{formatNumber(totalDamageDealt)}</b></span>
+          <span>Вход <b>{formatNumber(totalDamageTaken)}</b></span>
+        </div>
+      </div>
+      <div ref={logRef} onScroll={onScroll} className="combat2-log-list">
+        {logs.length === 0 && <div className="combat2-log-empty">События боя появятся здесь.</div>}
+        {logs.slice().reverse().map(log => (
+          <div key={log.id} className={`combat2-log-entry is-${log.type}`}>
+            <time>{new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}</time>
+            <span>{log.message}</span>
+          </div>
+        ))}
+      </div>
+      {showLatest && (
+        <button type="button" className="combat2-latest" onClick={onLatest}>К последним событиям</button>
+      )}
+    </section>
+  );
+}
+
+function RecoveryPanel() {
+  const { strategy, sortieEnergyCurrent, sortieEnergyMax, restAtCamp } = useCombatStore(useShallow(s => ({
+    strategy: s.strategy,
+    sortieEnergyCurrent: s.sortieEnergyCurrent,
+    sortieEnergyMax: s.sortieEnergyMax,
+    restAtCamp: s.restAtCamp,
+  })));
+  const activeCharacter = useCharacterStore(s => s.activeCharacter);
+  const equipment = usePlayerStore(s => s.equipment);
+  const attributes = useMemo(() => getLiveAttributes(), [activeCharacter, sortieEnergyCurrent, sortieEnergyMax]);
+  const hero = useMemo(() => liveCombatSnapshot(strategy), [activeCharacter, equipment, strategy]);
+  return (
+    <section className="combat2-card combat2-recovery">
+      <div className="combat2-section-head is-compact">
+        <div>
+          <p className="combat2-kicker">Восстановление</p>
+          <h2><Heart aria-hidden="true" /> Лагерь</h2>
+        </div>
+      </div>
+      <p>После уровня ОЗ восстанавливаются в бою. В лагере можно полностью привести героя в порядок перед новой вылазкой.</p>
+      <div className="combat2-report-grid">
+        <MiniStat label="ОЗ после отдыха" value={formatNumber(hero.maxHp)} />
+        <MiniStat label="Энергия" value={`${formatNumber(attributes.energy.current)} / ${formatNumber(attributes.energy.max)}`} />
+      </div>
+      <button type="button" className="combat2-rest-btn" onClick={restAtCamp}>
+        <Heart aria-hidden="true" /> Передышка в лагере
+      </button>
+    </section>
+  );
+}
+
 const FoodPanel = memo(function FoodPanel() {
-  const { t } = useTranslation();
   const eatFood = useCombatStore(s => s.eatFood);
   const inventoryItems = useInventoryStore(s => s.items);
 
@@ -463,88 +1131,42 @@ const FoodPanel = memo(function FoodPanel() {
     .filter(({ item }) => item && item.healAmount && item.healAmount > 0);
 
   return (
-    <div className="fantasy-card border-stone-800 rounded-3xl p-3.5 shadow-lg">
-      <h3 className="font-mono text-xs font-extrabold uppercase tracking-widest text-[var(--text-secondary)] mb-2.5 px-1 flex items-center gap-1.5">
-        <Utensils className="w-3.5 h-3.5 text-amber-400" /> {t('combat.food')}
-      </h3>
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+    <section className="combat2-card combat2-food">
+      <div className="combat2-section-head is-compact">
+        <div>
+          <p className="combat2-kicker">Пояс</p>
+          <h2><Utensils aria-hidden="true" /> Быстрая еда</h2>
+        </div>
+      </div>
+      <div className="combat2-food-row">
         {foodItems.map(({ slot, item }) => (
-          <button
-            key={slot.itemId}
-            onClick={() => eatFood(slot.itemId)}
-            className="flex items-center gap-2 shrink-0 bg-[var(--bg-card-dark)] border border-[var(--border-default)] hover:border-emerald-500 p-2 rounded-2xl transition-all active:scale-95 shadow-sm"
-          >
+          <button key={slot.itemId} type="button" onClick={() => eatFood(slot.itemId)} className="combat2-food-btn">
             <ItemIcon itemId={slot.itemId} size="sm" quantity={slot.quantity} showTooltip={false} />
-            <div className="text-left">
-              <div className="text-xs font-bold text-[var(--text-primary)] truncate max-w-[100px]">{item?.name}</div>
-              <div className="text-[11px] text-emerald-400 font-mono font-bold">+{item?.healAmount} HP</div>
-            </div>
+            <span>
+              <b>{item?.name}</b>
+              <small>+{item?.healAmount} ОЗ</small>
+            </span>
           </button>
         ))}
-        {foodItems.length === 0 && (
-          <p className="text-xs text-slate-500 py-1 px-1 font-mono">{t('combat.noFood')}</p>
-        )}
+        {foodItems.length === 0 && <p className="combat2-food-empty">Еды нет. Возьмите провизию перед опасной зоной.</p>}
       </div>
-    </div>
+    </section>
   );
 });
 
-/* Показывает картинку/эмодзи предмета внутри ячейки без лишних рамок */
-function EquipItemVisual({ itemId, label }: { itemId: string; label: string }) {
-  const item = getItem(itemId);
-  const visual = getItemVisual(itemId);
-  return visual?.type === 'image' ? (
-    <img src={visual.value} alt={item?.name ?? label}
-      className="w-[78%] h-[78%] object-contain drop-shadow-md" />
-  ) : (
-    <span className="text-2xl leading-none drop-shadow-sm">{visual?.value ?? '?'}</span>
-  );
-}
-
-function EquipSlotBox({ slot, label }: { slot: EquipSlot; label: string }) {
-  const itemId = usePlayerStore(s => s.equipment[slot]);
-  const unequip = usePlayerStore(s => s.unequipItem);
-  const addItem = useInventoryStore(s => s.addItem);
-
-  const handleUnequip = () => {
-    if (itemId) {
-      const removed = unequip(slot);
-      if (removed) addItem(removed, 1);
-    }
-  };
+function EquipmentSummaryLink() {
+  const equipment = usePlayerStore(s => s.equipment);
+  const equipped = Object.values(equipment).filter(Boolean).length;
+  const weaponName = equipment.weapon ? getItem(equipment.weapon)?.name : null;
 
   return (
-    <button
-      type="button"
-      onClick={handleUnequip}
-      title={itemId ? `Снять: ${label}` : label}
-      className="relative flex flex-col items-center gap-0.5 group"
-    >
-      {/* Ячейка */}
-      <div className={`w-16 h-16 rounded-xl border flex items-center justify-center transition-all hover:scale-105 active:scale-95 relative overflow-hidden ${
-        itemId
-          ? 'border-amber-500/50'
-          : 'border-stone-700/35'
-      }`}
-        style={{
-          background: itemId ? 'var(--accent-gold-bg)' : 'var(--bg-slot)',
-          boxShadow: itemId
-            ? '0 0 10px rgba(245,158,11,0.12), inset 0 1px 0 rgba(255,200,80,0.06)'
-            : 'inset 0 2px 5px rgba(0,0,0,0.5)',
-          borderStyle: itemId ? 'solid' : 'dashed',
-        }}
-      >
-        {itemId ? (
-          <EquipItemVisual itemId={itemId} label={label} />
-        ) : (
-          /* Пустая ячейка — только маленький индикатор, без текста */
-          <div style={{ width: 10, height: 10, borderRadius: '50%', border: '1px solid rgba(120,78,30,0.3)' }} />
-        )}
-      </div>
-      {/* Подпись под ячейкой */}
-      <span className="text-[9px] font-mono tracking-wide leading-none mt-0.5 truncate max-w-[64px] text-center" style={{ color: itemId ? '#f0d070' : '#c8a050' }}>
-        {label}
+    <Link href="/hero" className="combat2-equip-summary">
+      <Shield aria-hidden="true" />
+      <span>
+        <b>Экипировка</b>
+        <small>{weaponName ? `${weaponName} · ${equipped} сл.` : `${equipped} слотов занято`}</small>
       </span>
-    </button>
+      <ChevronRight aria-hidden="true" />
+    </Link>
   );
 }

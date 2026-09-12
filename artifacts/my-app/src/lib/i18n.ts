@@ -16,6 +16,13 @@ const ru = {
   'nav.inventory': 'Инвентарь', 
   'nav.settings': 'Настройки', 
   'nav.save': 'Сохранить',
+  // Подписи нижней панели (шаг 10): состав решён владельцем.
+  'nav.tab.city': 'Город',
+  'nav.tab.combat': 'Бой',
+  'nav.tab.world': 'Мир',
+  'nav.tab.quests': 'Квесты',
+  'nav.tab.inventory': 'Инвентарь',
+  'nav.tab.settings': 'Настройки',
 
   // ── Общий UI ─────────────────────────────────────────────────
   'ui.start': 'Начать работу', 
@@ -81,7 +88,7 @@ const ru = {
   'combat.killCount': 'Убито чудовищ',
   'combat.playerHp': 'Здоровье героя', 
   'combat.enemyHp': 'Здоровье врага',
-  'combat.selectArea': 'Выберите подземелье или локацию слева для начала охоты.',
+  'combat.selectArea': 'Выберите подземелье или локацию для начала охоты.',
   'combat.food': 'Быстрый перекус', 
   'combat.noFood': 'В сумке нет готовой еды. Приготовьте рыбу в Кулинарии!',
   'combat.damage': 'Нанесено урона', 
@@ -164,6 +171,8 @@ const ru = {
 
 const en: Partial<Record<keyof typeof ru, string>> = {
   'skill.foraging': 'Foraging',
+  'nav.tab.city': 'City', 'nav.tab.combat': 'Fight', 'nav.tab.world': 'World',
+  'nav.tab.quests': 'Quests', 'nav.tab.inventory': 'Inventory', 'nav.tab.settings': 'Settings',
   'nav.home': 'Home', 'nav.skills': 'Skills', 'nav.combat': 'Combat',
   'nav.inventory': 'Inventory', 'nav.settings': 'Settings', 'nav.save': 'Save Game',
   'foraging.start': 'Start gathering',

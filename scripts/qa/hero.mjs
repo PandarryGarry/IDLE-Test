@@ -253,13 +253,23 @@ async function openHub(page, viewport, tag) {
 
 async function clickTab(page, label) {
   const ok = await page.evaluate((want) => {
-    const el = [...document.querySelectorAll('.hero-hub__tab')]
-      .find((node) => (node.textContent || '').trim() === want);
+    // Шаг 9 аудита: вкладки хаба — примитив ATabs (.a-tabs__tab); до него был .hero-hub__tab.
+    const norm = (s) => (s || '').trim().toLowerCase();
+    const scope = document.querySelector('.hero-hub__tabs') || document;
+    const el = [...scope.querySelectorAll('.a-tabs__tab, .hero-hub__tab')]
+      .find((node) => norm(node.textContent) === norm(want));
     if (!el) return false;
     el.click();
     return true;
   }, label);
-  if (!ok) throw new Error(`нет вкладки «${label}»`);
+  if (!ok) {
+    const dump = await page.evaluate(() => ({
+      hasTabsScope: !!document.querySelector('.hero-hub__tabs'),
+      tabs: [...document.querySelectorAll('.hero-hub__tabs .a-tabs__tab, .hero-hub__tab, .a-tabs__tab')]
+        .map((n) => ({ cls: n.className, text: (n.textContent || '').trim() })),
+    })).catch(() => null);
+    throw new Error(`нет вкладки «${label}»; разметка: ${JSON.stringify(dump)}`);
+  }
   await sleep(500);
 }
 
@@ -298,33 +308,36 @@ async function runShots(browser, only) {
     await clickTab(page, 'Экип');
     await snap(page, '04-mobile-gear');
 
-    // Click on empty slot on the left
+    // Клик в пустой слот экипировки (слева). Шаг 5 аудита: ячейки — ItemCell.
     await page.evaluate(() => {
-      const emptySlot = document.querySelector('.hero-sq-slot--empty');
+      const emptySlot = document.querySelector('.hero-gear2__slots-col .item-cell--empty')
+        ?? document.querySelector('.hero-sq-slot--empty');
       emptySlot?.click();
     });
     await sleep(400);
     await snap(page, '04b-mobile-gear-left-selected');
 
-    // Click on bag item on the right
+    // Клик в предмет сумки (справа)
     await page.evaluate(() => {
-      const bagItem = document.querySelector('.hero-sq-slot--bag-item');
+      const bagItem = document.querySelector('.hero-gear2__inv-col .item-cell:not(.item-cell--empty)')
+        ?? document.querySelector('.hero-sq-slot--bag-item');
       bagItem?.click();
     });
     await sleep(400);
     await snap(page, '04c-mobile-gear-right-modal');
     await page.evaluate(() => {
       const btns = Array.from(document.querySelectorAll('button'));
-      const closeBtn = btns.find(b => b.textContent.includes('Закрыть'));
+      const closeBtn = btns.find(b => (b.textContent || '').includes('Закрыть')
+        || b.getAttribute('aria-label') === 'Закрыть');
       closeBtn?.click();
     });
     await sleep(400);
     await snap(page, '04d-mobile-gear-right-selected');
 
-    // Click on empty slot on the right
+    // Клик в пустую ячейку сумки
     await page.evaluate(() => {
-      const emptyBagSlots = document.querySelectorAll('.hero-sq-slot--empty-bag');
-      emptyBagSlots[0]?.click();
+      const emptyBagSlots = document.querySelectorAll('.hero-gear2__inv-col .item-cell--empty');
+      (emptyBagSlots[0] ?? document.querySelector('.hero-sq-slot--empty-bag'))?.click();
     });
     await sleep(400);
     await snap(page, '04e-mobile-gear-right-empty-selected');

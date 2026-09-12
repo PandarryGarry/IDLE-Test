@@ -20,6 +20,7 @@ import {
 } from '../../data/types.ts';
 import { useInventoryStore } from '../../store/inventoryStore.ts';
 import { usePlayerStore } from '../../store/playerStore.ts';
+import { migrateEquipment } from './legacyMigration.ts';
 
 let liveGearSets: GearSetsState | null = null;
 
@@ -38,7 +39,9 @@ export function createEmptyGearSets(): GearSetsState {
   };
 }
 
-/** Жёсткий парсер из save_data: чужая форма — пустые наборы, без краша. */
+/** Жёсткий парсер из save_data: чужая форма — пустые наборы, без краша.
+ *  Снаряжение внутри пресетов проходит ту же миграцию и чистку, что и
+ *  экип героя (старые id → наши тиры, неизвестное — слот пуст). */
 export function migrateGearSets(raw: unknown): GearSetsState {
   const empty = createEmptyGearSets();
   if (!raw || typeof raw !== 'object') return empty;
@@ -56,7 +59,7 @@ export function migrateGearSets(raw: unknown): GearSetsState {
           typeof candidate.name === 'string' && candidate.name
             ? candidate.name
             : `Набор ${i + 1}`,
-        equipment: normalizeEquipment(candidate.equipment),
+        equipment: migrateEquipment(normalizeEquipment(candidate.equipment)),
       };
     },
   );

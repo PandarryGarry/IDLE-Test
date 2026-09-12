@@ -1,34 +1,83 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getItem } from '@/domain/items';
 import { AdminItemEditor } from '@/features/admin/AdminItemEditor';
 import type { Item } from '@/data/types';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useCombatStore } from '@/store/combatStore';
+import { useNotificationsStore } from '@/store/notificationsStore';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { getItemRarity } from '@/features/inventory/ItemIcon';
-import { GEAR_UNIQUE_TAG_SHORT, isGearUnique } from '@/data/balance/gear';
+import { isGearUnique } from '@/data/balance/gear';
+import { BRANCHES, BRANCH_IDS, type BranchId } from '@/domain/attributes/attributes';
+import { substatDisplay } from '@/domain/attributes/characterAttributes';
 import { formatNumber } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
-import { CoinsDisplay } from '@/shared/ui/CoinsDisplay';
-import { 
-  X, 
-  Lock, 
-  Unlock, 
-  Coins, 
-  Heart, 
-  Sword, 
-  Shield, 
-  Zap, 
-  Minus, 
-  Plus, 
-  Utensils 
+import { CoinsDisplay, formatCoinsText } from '@/shared/ui/CoinsDisplay';
+import { TierBadge } from '@/shared/ui/kit/TierBadge';
+import { UniqueEmblem } from '@/shared/ui/kit/UniqueEmblem';
+import { RarityBadge, type RarityType } from '@/shared/ui/kit/RarityBadge';
+import { AWindow } from '@/shared/ui/kit/AWindow';
+import {
+  Lock,
+  Unlock,
+  Coins,
+  Heart,
+  Sword,
+  Shield,
+  Zap,
+  Star,
+  Minus,
+  Plus,
+  Utensils,
+  Trash2,
 } from 'lucide-react';
 
+/** Иконка подхарактеристики для мелких ячеек (без новых зависимостей). */
+const BONUS_ICON: Partial<Record<BranchId, React.ReactNode>> = {
+  health: <Heart className="w-3 h-3" />,
+  strike: <Sword className="w-3 h-3" />,
+  armor: <Shield className="w-3 h-3" />,
+  will: <Shield className="w-3 h-3" />,
+  evasion: <Shield className="w-3 h-3" />,
+  tempo: <Zap className="w-3 h-3" />,
+  reaction: <Zap className="w-3 h-3" />,
+  onslaught: <Zap className="w-3 h-3" />,
+  destruction: <Sword className="w-3 h-3" />,
+  luck: <Star className="w-3 h-3" />,
+  resourcefulness: <Zap className="w-3 h-3" />,
+  intuition: <Star className="w-3 h-3" />,
+};
+
+/**
+ * Мелкая ячейка характеристики (решение владельца 2026-09-12: цена/прочность
+ * и бонусы предмета — в одинаковых компактных ячейках, все поменьше).
+ */
+function MiniStat({
+  icon, label, children, tone = 'gold', title,
+}: {
+  icon?: React.ReactNode;
+  label: string;
+  children: React.ReactNode;
+  tone?: 'gold' | 'green' | 'glass';
+  title?: string;
+}) {
+  return (
+    <div title={title} className="item-mini-stat" data-tone={tone}>
+      {icon && <span className="item-mini-stat__icon">{icon}</span>}
+      <span className="item-mini-stat__body">
+        <span className="item-mini-stat__label">{label}</span>
+        <span className="item-mini-stat__value">{children}</span>
+      </span>
+    </div>
+  );
+}
+
 export function getItemTier(itemId: string, item?: Item): string {
-  // Уникальная экипировка — не ступень тировой лестницы: вместо «T12» у неё
-  // своя метка (`GEAR_UNIQUE_TAG_SHORT`), тир остаётся только в расчётах.
-  if (isGearUnique(item)) return GEAR_UNIQUE_TAG_SHORT;
+  // Правило владельца: тировый бейдж — только у экипировки (оружие, броня,
+  // бижутерия). У уника вместо бейджа только звезда-эмблема, у обычных
+  // предметов и ресурсов бейджа нет вообще — возвращаем пусто.
+  if (!item || isGearUnique(item) || !item.equipSlot) return '';
   // Тир — данное поле каталога (1..12). Ниже — эвристика только для легаси
   // предметов без поля `tier` (исчезнет по мере переноса семейств в каталог).
   if (item?.tier) return `T${item.tier}`;
@@ -50,15 +99,6 @@ export function getItemTier(itemId: string, item?: Item): string {
   if (val >= 15) return 'T2';
   return 'T1';
 }
-
-const RARITY_NAMES: Record<string, { label: string; text: string; bg: string; dot: string; border: string }> = {
-  common:    { label: 'Обычный',     text: 'text-stone-300', bg: 'bg-stone-800/80', dot: 'bg-stone-400', border: 'border-stone-700' },
-  uncommon:  { label: 'Необычный',   text: 'text-emerald-400', bg: 'bg-emerald-950/50', dot: 'bg-emerald-400', border: 'border-emerald-600/50' },
-  rare:      { label: 'Редкий',      text: 'text-blue-400', bg: 'bg-blue-950/50', dot: 'bg-blue-400', border: 'border-blue-600/50' },
-  epic:      { label: 'Эпический',   text: 'text-purple-400', bg: 'bg-purple-950/50', dot: 'bg-purple-400', border: 'border-purple-600/50' },
-  legendary: { label: 'Легендарный', text: 'text-amber-400', bg: 'bg-amber-950/50', dot: 'bg-amber-400', border: 'border-amber-600/50' },
-  mythic:    { label: 'Мифический',  text: 'text-rose-400', bg: 'bg-rose-950/50', dot: 'bg-rose-400', border: 'border-rose-600/50' },
-};
 
 const CATEGORY_NAMES: Record<string, string> = {
   weapon: 'Оружие',
@@ -88,6 +128,15 @@ const CATEGORY_NAMES: Record<string, string> = {
   foraging: 'Сбор',
 };
 
+/** Бонус предмета в единице показа: flat — очки, rating/percent — проценты. */
+function bonusText(id: BranchId, raw: number): string {
+  const d = substatDisplay(id, raw);
+  const rounded = Math.round(Math.abs(d.value) * 10) / 10;
+  const num = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  const sign = raw > 0 ? '+' : raw < 0 ? '−' : '';
+  return d.unit === 'percent' ? `${sign}${num}%` : `${sign}${num}`;
+}
+
 interface UniversalInfoModalProps {
   itemId: string | null;
   onClose: () => void;
@@ -115,22 +164,39 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
   const equipment = usePlayerStore(s => s.equipment);
   const equipItem = usePlayerStore(s => s.equipItem);
   const unequipItem = usePlayerStore(s => s.unequipItem);
+  const notifyInfo = useNotificationsStore(s => s.notifyInfo);
   
   const eatFood = useCombatStore(s => s.eatFood);
   const playerHp = useCombatStore(s => s.playerHp);
   const playerMaxHp = useCombatStore(s => s.playerMaxHp);
 
   const [sellQty, setSellQty] = useState(1);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  // «Корзина» в модалке (2026-09-12): защита от случайного клика —
+  // подтверждение живёт 3 секунды и сбрасывается при смене предмета.
+  useEffect(() => {
+    if (!confirmDelete) return;
+    const t = setTimeout(() => setConfirmDelete(false), 3000);
+    return () => clearTimeout(t);
+  }, [confirmDelete]);
+  useEffect(() => {
+    setConfirmDelete(false);
+  }, [itemId]);
 
   if (!itemId || !item) return null;
 
   const quantity = isReadOnly ? 1 : slot?.quantity ?? 1;
   const isLocked = slot?.locked ?? false;
   const tier = getItemTier(itemId, item);
-  const rarityKey = getItemRarity(itemId, item.sellValue, item.equipSlot, item.tier);
-  const rarity = RARITY_NAMES[rarityKey] || RARITY_NAMES.common;
+  const rarityKey = getItemRarity(itemId, item.sellValue, item.equipSlot, item.tier) as RarityType;
   const visual = getItemVisual(itemId);
   const categoryLabel = CATEGORY_NAMES[item.category] || item.category;
+
+  // Бонусы предмета к 12 подхарактеристикам (настоящая ось каталога;
+  // легаси combatStats не показываем — в расчёт персонажа они не входят).
+  const bonusEntries = (Object.entries(item.substatBonuses ?? {}) as [BranchId, number][])
+    .filter(([, raw]) => typeof raw === 'number' && raw !== 0)
+    .sort((a, b) => BRANCH_IDS.indexOf(a[0]) - BRANCH_IDS.indexOf(b[0]));
 
   const equippedSlot = item.equipSlot
     ? equipment[item.equipSlot] === itemId
@@ -165,71 +231,76 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
 
   const handleSell = (qty: number) => {
     if (isLocked) return;
-    sellItem(itemId, qty);
+    const sold = Math.min(qty, quantity);
+    const earned = sellItem(itemId, qty);
+    // Решение владельца 2026-09-12: цены в кнопках продажи не дублируем —
+    // заработанная сумма объявляется тостом после продажи.
+    if (earned > 0) {
+      notifyInfo(`Продано «${item.name}»${sold > 1 ? ` ×${formatNumber(sold)}` : ''} — заработано ${formatCoinsText(earned)}`);
+    }
     if (qty >= quantity) {
       onClose();
     }
   };
 
-  const currentSellPrice = (item.sellValue ?? 0) * Math.min(sellQty, quantity);
-  const totalSellPrice = (item.sellValue ?? 0) * quantity;
+  const handleDelete = () => {
+    if (isLocked) return;
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    if (removeItem(itemId, quantity)) {
+      notifyInfo(`Удалено «${item.name}»${quantity > 1 ? ` ×${formatNumber(quantity)}` : ''}`);
+      onClose();
+    } else {
+      setConfirmDelete(false);
+    }
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 select-none animate-in fade-in duration-200">
-      <div 
-        className="fixed inset-0 bg-stone-950/80 backdrop-blur-md"
-        onClick={onClose}
-      />
-
-      <div className="relative w-full max-w-[360px] sm:max-w-[400px] bg-stone-900 border border-stone-800 rounded-3xl p-4 sm:p-5 shadow-2xl z-10 space-y-4 animate-in zoom-in-95 duration-200 max-h-[86vh] overflow-y-auto">
-        
-        {/* Header Bar */}
-        <div className="flex items-center justify-between pb-2 border-b border-stone-800/80">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-black text-stone-300 uppercase tracking-wider">
-              {item.equipSlot ? 'Снаряжение' : 'Предмет'}
-            </span>
-            <span className="text-[10px] font-mono font-extrabold bg-stone-800 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded-md">
-              {tier}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            {!isReadOnly && (
-              <button
-                type="button"
-                onClick={() => lockItem(itemId, !isLocked)}
-                className={`p-2 rounded-xl transition-all active:scale-95 ${
-                  isLocked 
-                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]' 
-                    : 'text-stone-500 hover:text-stone-200 hover:bg-stone-800 border border-transparent'
-                }`}
-                title={isLocked ? 'Заперто от продажи' : 'Запереть предмет'}
-              >
-                {isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-2 rounded-xl text-stone-500 hover:text-white hover:bg-stone-800 transition-all active:scale-95"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
+    // Каркас единый — kit/AWindow (стекло эталона, шаг 8 аудита);
+    // внутренние секции попапа неизменны.
+    <AWindow
+      open
+      onClose={onClose}
+      width={400}
+      title={
+        <span className="flex items-center gap-2">
+          <span className="text-xs font-mono font-black text-[var(--ink-strong)] uppercase tracking-wider">
+            {item.equipSlot ? 'Снаряжение' : 'Предмет'}
+          </span>
+          {tier ? <TierBadge tier={tier} size="sm" /> : null}
+          {isGearUnique(item) && <UniqueEmblem size="sm" />}
+        </span>
+      }
+      headerActions={
+        !isReadOnly ? (
+          <button
+            type="button"
+            onClick={() => lockItem(itemId, !isLocked)}
+            className={`p-2 rounded-xl transition-all active:scale-95 ${
+              isLocked
+                ? '[background:var(--badge-gold-bg)] text-[var(--text-gold)] border [border-color:var(--border-accent)] [box-shadow:var(--unique-glow)]'
+                : 'text-[var(--cinematic-copy)] hover:text-[var(--cinematic-gold)] hover:[background:rgba(224,168,70,0.12)] border border-transparent'
+            }`}
+            title={isLocked ? 'Заперто от продажи' : 'Запереть предмет'}
+          >
+            {isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+          </button>
+        ) : undefined
+      }
+    >
+      <div className="space-y-4">
         {/* Hero Visual & Name Row */}
         <div className="flex items-center gap-3.5">
-          <div className="relative w-20 h-20 rounded-2xl border border-stone-700/80 bg-stone-950/80 flex items-center justify-center text-4xl shadow-inner shrink-0 overflow-hidden">
+          <div className="relative w-20 h-20 rounded-2xl border [border-color:var(--card-edge)] [background:var(--cell-frame)] flex items-center justify-center text-4xl shadow-inner shrink-0 overflow-hidden">
             {visual.type === 'image' ? (
               <img src={visual.value} alt={item.name} className="w-full h-full max-w-[80%] max-h-[80%] object-contain select-none pointer-events-none p-1" />
             ) : (
               <span className="drop-shadow-md">{visual.value}</span>
             )}
             {quantity > 1 && (
-              <span className="absolute bottom-1.5 right-1.5 z-10 bg-stone-950/95 border border-amber-500/70 text-amber-300 font-mono text-[10px] font-black px-1.5 py-0.5 rounded leading-none shadow-md pointer-events-none">
+              <span className="absolute bottom-1.5 right-1.5 z-10 [background:var(--bg-header)] border [border-color:var(--border-accent)] text-[var(--text-gold)] font-mono text-[10px] font-black px-1.5 py-0.5 rounded leading-none shadow-md pointer-events-none">
                 x{formatNumber(quantity)}
               </span>
             )}
@@ -237,186 +308,145 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 mb-1">
-              <span className={`text-[10px] font-mono font-extrabold uppercase px-2 py-0.5 rounded-full border ${rarity.bg} ${rarity.text} ${rarity.border}`}>
-                {rarity.label}
-              </span>
+              <RarityBadge rarity={rarityKey} size="sm" />
             </div>
-            <h2 className="text-base sm:text-lg font-display font-black text-stone-100 truncate">
+            <h2 className="text-base sm:text-lg font-display font-black text-[var(--ink-strong)] truncate">
               {item.name}
             </h2>
-            <p className="text-xs text-stone-500 font-medium">
+            <p className="text-xs text-[var(--ink-body)] font-medium">
               {categoryLabel}
             </p>
           </div>
         </div>
 
-        {/* Stat Pill Badges */}
-        <div className="grid grid-cols-2 gap-2 pt-1">
-          <div className="bg-stone-950/80 border border-stone-800 rounded-2xl p-2.5 flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
-              <Coins className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-[10px] text-stone-500 font-mono uppercase font-bold">Цена за 1 шт.</div>
-              <CoinsDisplay amount={item.sellValue} size="xs" />
-            </div>
-          </div>
-
-          {typeof item.maxDurability === 'number' && item.maxDurability > 0 && (
-            <div className="bg-stone-950/80 border border-stone-800 rounded-2xl p-2.5 flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
-                <Shield className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-[10px] text-stone-500 font-mono uppercase font-bold">Прочность</div>
-                <div className="text-xs font-mono font-black text-amber-300">{item.maxDurability}/{item.maxDurability}</div>
-              </div>
-            </div>
-          )}
-
-          {item.healAmount !== undefined && (
-            <div className="bg-stone-950/80 border border-emerald-500/30 rounded-2xl p-2.5 flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
-                <Heart className="w-4 h-4 fill-current" />
-              </div>
-              <div>
-                <div className="text-[10px] text-emerald-400 font-mono uppercase font-bold">Лечение</div>
-                <div className="text-xs font-mono font-black text-emerald-300">+{item.healAmount} ОЗ</div>
-              </div>
-            </div>
-          )}
-
-          {item.combatStats?.attackBonus !== undefined && item.combatStats.attackBonus > 0 && (
-            <div className="bg-stone-950/80 border border-rose-500/30 rounded-2xl p-2.5 flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-rose-500/15 border border-rose-500/40 flex items-center justify-center text-rose-400 shrink-0">
-                <Sword className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-[10px] text-rose-400 font-mono uppercase font-bold">Атака</div>
-                <div className="text-xs font-mono font-black text-rose-300">+{item.combatStats.attackBonus}</div>
-              </div>
-            </div>
-          )}
-
-          {item.combatStats?.strengthBonus !== undefined && item.combatStats.strengthBonus > 0 && (
-            <div className="bg-stone-950/80 border border-emerald-500/30 rounded-2xl p-2.5 flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
-                <Zap className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-[10px] text-emerald-400 font-mono uppercase font-bold">Сила</div>
-                <div className="text-xs font-mono font-black text-emerald-300">+{item.combatStats.strengthBonus}</div>
-              </div>
-            </div>
-          )}
-
-          {item.combatStats?.defenceBonus !== undefined && item.combatStats.defenceBonus > 0 && (
-            <div className="bg-stone-950/80 border border-blue-500/30 rounded-2xl p-2.5 flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/40 flex items-center justify-center text-blue-400 shrink-0">
-                <Shield className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-[10px] text-blue-400 font-mono uppercase font-bold">Защита</div>
-                <div className="text-xs font-mono font-black text-blue-300">+{item.combatStats.defenceBonus}</div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Description Text */}
-        <p className="text-xs text-stone-500 italic bg-stone-950/40 p-2.5 rounded-xl border border-stone-800/60 leading-relaxed">
+        {/* Описание — сразу под именем (решение владельца 2026-09-12) */}
+        <p className="text-xs text-[var(--ink-body)] italic [background:var(--card-cocoa-deep)] p-2.5 rounded-xl border [border-color:var(--card-edge)] leading-relaxed">
           {item.description ?? 'Классический предмет средневекового мира.'}
         </p>
 
+        {/* Характеристики — компактные ячейки: до четырёх в строку, без растяжения на пол-окна. */}
+        <div className="item-mini-stats">
+          <MiniStat
+            icon={<Coins className="w-3 h-3" />}
+            label="Цена"
+          >
+            <CoinsDisplay amount={item.sellValue} size="xs" className="item-mini-stat__coins" />
+          </MiniStat>
+
+          {typeof item.maxDurability === 'number' && item.maxDurability > 0 && (
+            <MiniStat
+              icon={<Shield className="w-3 h-3" />}
+              label="Прочность"
+            >
+              {item.maxDurability}/{item.maxDurability}
+            </MiniStat>
+          )}
+
+          {item.healAmount !== undefined && (
+            <MiniStat
+              icon={<Heart className="w-3 h-3 fill-current" />}
+              label="Лечение"
+              tone="green"
+            >
+              +{item.healAmount} ОЗ
+            </MiniStat>
+          )}
+
+          {bonusEntries.map(([id, raw]) => (
+            <MiniStat
+              key={id}
+              icon={BONUS_ICON[id]}
+              label={BRANCHES[id].nameRu}
+              tone="gold"
+              title={`Бонус предмета: ${raw > 0 ? '+' : ''}${raw} (${BRANCHES[id].ruleRu.split('.')[0].toLowerCase()})`}
+            >
+              {bonusText(id, raw)}
+            </MiniStat>
+          ))}
+        </div>
+
         {/* ── Админ-редактор предмета ─────────────────────────── */}
         {adminEditable && (
-          <div style={{ borderTop: '1px solid #3a2b1a', paddingTop: 10 }}>
+          <div style={{ borderTop: '1px solid var(--glass-edge)', paddingTop: 10 }}>
             <AdminItemEditor itemId={itemId} />
           </div>
         )}
 
         {/* Action Controls Section */}
         {!isReadOnly && (
-        <div className="space-y-2 pt-2 border-t border-stone-800/80">
-          
-          {item.equipSlot && (
-            <button
-              type="button"
-              onClick={isEquipped ? handleUnequip : handleEquip}
-              className={`w-full py-3 rounded-2xl font-extrabold text-xs transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg ${
-                isEquipped
-                  ? 'bg-stone-800 hover:bg-slate-700 text-rose-300 border border-rose-500/40'
-                  : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-slate-950 shadow-[0_0_20px_rgba(245,158,11,0.25)]'
-              }`}
-            >
-              <Shield className="w-4 h-4" />
-              <span>{isEquipped ? 'Снять снаряжение' : 'Надеть предмет'}</span>
-            </button>
-          )}
+        <div className="item-modal-actions">
 
-          {item.healAmount !== undefined && (
-            <button
-              type="button"
-              onClick={handleEat}
-              disabled={playerHp >= playerMaxHp}
-              className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:brightness-110 text-white font-extrabold text-xs transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.25)]"
-            >
-              <Utensils className="w-4 h-4" />
-              <span>Съесть (+{item.healAmount} ОЗ)</span>
-            </button>
+          {(item.equipSlot || item.healAmount !== undefined) && (
+            <div className="item-modal-actions__row">
+              {item.equipSlot && (
+                <button
+                  type="button"
+                  onClick={isEquipped ? handleUnequip : handleEquip}
+                  className={`item-action ${isEquipped ? 'item-action--danger-soft' : 'item-action--primary'}`}
+                >
+                  <Shield className="w-3.5 h-3.5" />
+                  <span>{isEquipped ? 'Снять' : 'Надеть'}</span>
+                </button>
+              )}
+
+              {item.healAmount !== undefined && (
+                <button
+                  type="button"
+                  onClick={handleEat}
+                  disabled={playerHp >= playerMaxHp}
+                  className="item-action item-action--green"
+                >
+                  <Utensils className="w-3.5 h-3.5" />
+                  <span>Съесть</span>
+                </button>
+              )}
+            </div>
           )}
 
           {item.canSell && (
-            <div className="space-y-2">
+            <div className="item-modal-actions__row">
               {isLocked ? (
-                <div className="w-full p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-center">
-                  <span className="text-xs font-mono font-bold text-amber-300 flex items-center justify-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5" /> Заперто — продажа заблокирована
-                  </span>
+                <div className="item-action item-action--locked" aria-label="Продажа заблокирована">
+                  <Lock className="w-3 h-3" />
+                  <span>Заперто</span>
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center gap-2">
-                    {quantity > 1 && (
-                      <div className="flex items-center bg-stone-950 border border-stone-800 rounded-2xl p-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => setSellQty(Math.max(1, sellQty - 1))}
-                          className="w-8 h-8 rounded-xl bg-stone-900 hover:bg-stone-800 flex items-center justify-center text-stone-300 active:scale-90"
-                        >
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
-                        <span className="w-10 text-center font-mono text-xs font-black text-amber-300">
-                          {sellQty}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setSellQty(Math.min(quantity, sellQty + 1))}
-                          className="w-8 h-8 rounded-xl bg-stone-900 hover:bg-stone-800 flex items-center justify-center text-stone-300 active:scale-90"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    )}
+                  {quantity > 1 && (
+                    <div className="item-sell-stepper" aria-label="Количество для продажи">
+                      <button
+                        type="button"
+                        onClick={() => setSellQty(Math.max(1, sellQty - 1))}
+                        aria-label="Меньше"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <span>{sellQty}</span>
+                      <button
+                        type="button"
+                        onClick={() => setSellQty(Math.min(quantity, sellQty + 1))}
+                        aria-label="Больше"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
 
-                    <button
-                      type="button"
-                      onClick={() => handleSell(sellQty)}
-                      className="flex-1 py-3 px-4 rounded-2xl bg-stone-800/90 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-extrabold text-xs transition-all active:scale-95 flex items-center justify-between"
-                    >
-                      <span>Продать {quantity > 1 ? `(${sellQty} шт.)` : ''}</span>
-                      <CoinsDisplay amount={currentSellPrice} size="xs" />
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleSell(sellQty)}
+                    className="item-action item-action--secondary"
+                  >
+                    <span>Продать</span>
+                  </button>
 
                   {quantity > 1 && (
                     <button
                       type="button"
                       onClick={() => handleSell(quantity)}
-                      className="w-full py-2.5 rounded-2xl bg-stone-950 border border-stone-800 hover:border-amber-500/40 text-stone-300 hover:text-amber-300 font-bold text-xs transition-all active:scale-95 flex items-center justify-between px-4 font-mono"
+                      className="item-action item-action--quiet"
                     >
-                      <span>Продать всё (x{formatNumber(quantity)})</span>
-                      <CoinsDisplay amount={totalSellPrice} size="xs" />
+                      <span>Продать все</span>
                     </button>
                   )}
                 </>
@@ -424,31 +454,56 @@ export function UniversalInfoModal({ itemId, onClose, readOnly = false, adminEdi
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full py-2.5 rounded-2xl bg-stone-950 hover:bg-stone-800 text-stone-500 hover:text-stone-200 text-xs font-semibold transition-all active:scale-95"
-          >
-            Закрыть
-          </button>
+          <div className="item-modal-actions__row item-modal-actions__row--foot">
+            {!confirmDelete ? (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isLocked}
+                title={isLocked ? 'Заперто — удаление заблокировано' : 'Удалить предмет'}
+                className="item-action item-action--icon item-action--trash"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleDelete}
+                title="Подтвердить удаление"
+                className="item-action item-action--confirm"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Удалить?</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={confirmDelete ? () => setConfirmDelete(false) : onClose}
+              className="item-action item-action--flat item-action--close"
+            >
+              {confirmDelete ? 'Отмена' : 'Закрыть'}
+            </button>
+          </div>
 
         </div>
         )}
 
         {/* Читаем из админки: нет игровых действий, только кнопка закрыть */}
         {isReadOnly && (
-          <div className="space-y-2 pt-2 border-t border-stone-800/80">
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full py-2.5 rounded-2xl bg-stone-950 hover:bg-stone-800 text-stone-500 hover:text-stone-200 text-xs font-semibold transition-all active:scale-95"
-            >
-              Закрыть
-            </button>
+          <div className="item-modal-actions">
+            <div className="item-modal-actions__row item-modal-actions__row--foot">
+              <button
+                type="button"
+                onClick={onClose}
+                className="item-action item-action--flat item-action--close"
+              >
+                Закрыть
+              </button>
+            </div>
           </div>
         )}
 
       </div>
-    </div>
+    </AWindow>
   );
 }

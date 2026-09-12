@@ -12,6 +12,8 @@
 
 1. **Цветов в коде не пишем буквами** (`#d4860a` в компоненте = нарушение).
    Только роли: `var(--glass-bg)` в CSS или `THEME.glass.bg` в TS.
+   Нарушение ловит **страж цветов**: `pnpm validate:colors` (шаг 12 плана;
+   листок легаси-запаса внутри `validate-colors.mjs` — только сокращается).
 2. **Новая роль** — сначала переменная в `:root` (секция «КАНОН „СТЕКЛО
    ТАВЕРНЫ“»), потом строка в `tokens.ts`, потом потребитель.
 3. **Один янтарь-главный** для всех primary-кнопок (`--btn-primary*`).
@@ -30,6 +32,37 @@
 
 Плюс шкалы: редкость `--rarity-*`, уник `--unique-*`, радиусы
 `--radius-tag/cell/card-canon/sheet`.
+
+## Акценты объявлений (шаги 11–12)
+
+Цветная кромка тоста и карточки колокольчика — `THEME.announce.*`
+(`--announce-levelup|mastery|combat|warning|info`). Кромки «находок»
+повторяют шкалу редкости (`THEME.rarity.*`) — язык ячеек и тостов один,
+отдельных оттенков у находок не заводим. Хром переключателей шапки —
+`THEME.chrome.*` (`--chrome-btn*`).
+
+## Роли примитивов (шаг 3 плана, секция «ШАГ 3» в `:root`)
+
+Живые краски `gameUI`/`kit` получили имена один в один (вид не менялся):
+
+| Область | Роли | Карта |
+|---|---|---|
+| Кайма общая | `--edge-light/accent` | `THEME.edge.*` |
+| Поля ввода | `--field-bg/shadow/focus-glow/error*` | `THEME.field.*` |
+| Кнопки 2/3 | `--btn-secondary/danger*/disabled*` | `THEME.button.*` |
+| Карты тёмные | `--card-cocoa-deep/select*/shadow-sm/dark/active-shadow` | `THEME.card.*` |
+| Бой | `--combat-bg/edge/shadow` | `THEME.combat.*` |
+| Модалка | `--modal-veil/bg/shadow/title-shadow` | `THEME.modal.*` |
+| Тултип | `--tooltip-bg/shadow` | `THEME.tooltip.*` |
+| Свечения | `--glow-gold-soft` | `THEME.glow.*` |
+| Пилюли | `--badge-{gold,red,green,blue,purple,gray,level}-*` | `THEME.badge.*` |
+| Теги | `--tag-{gold,brown,red,green}-*` (чернила — из пилюль) | `THEME.tag.*` |
+| Полосы | `--progress-track*`, `--bar-{color}-{from,to,glow}` | `THEME.bar.*` |
+| Пилюля статов | `--stat-bg/shadow` | `THEME.stat.*` |
+
+В `kit` роли подключаются tailwind-синтаксисом `[background:var(--…)]` /
+`text-[var(--…)]` / `border-[var(--…)]` — размеры и стекло компонентов
+при этом не трогаем.
 
 ## Как поменять цвет (пример)
 

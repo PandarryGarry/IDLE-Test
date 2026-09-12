@@ -8,11 +8,15 @@ import { getItemTier } from '@/components/modals/UniversalInfoModal';
 import { isGearUnique } from '@/data/balance/gear';
 import { formatNumber } from '@/lib/utils';
 import { TierBadge } from '@/shared/ui/kit/TierBadge';
+import { UniqueEmblem } from '@/shared/ui/kit/UniqueEmblem';
+import { THEME } from '@/styles/tokens';
 
 /**
  * ЕДИНАЯ карточка/ячейка предмета. Единственный источник правды о том,
  * как выглядит ячейка во ВСЕХ окнах (Инвентарь, Админка, пикер, «Экип», бой):
- *   - бирка тира/«УНИК» — маленький TierBadge в ПРАВОМ верхнем углу;
+ *   - бирка тира — маленький TierBadge в ПРАВОМ верхнем углу, только
+ *     у тировой экипировки; у уника вместо бирки золотая звезда-эмблема
+ *     + свечение всей ячейки; у обычных предметов и ресурсов бирки нет;
  *   - точка редкости — в ЛЕВОМ верхнем углу;
  *   - иконка/силуэт — по центру; прочность — снизу-слева; количество — снизу-справа;
  *   - фон «каштан» (--slot-wood), одинаковый радиус и тень.
@@ -20,14 +24,14 @@ import { TierBadge } from '@/shared/ui/kit/TierBadge';
  * чтобы больше не хардкодить разметку/позиции по окнам.
  */
 
-/** Цвета точки редкости, читаемые на дереве (как в инвентаре). */
+/** Точка редкости — единая шкала канона (значения = живые, вид 1:1). */
 export const ITEM_CELL_RARITY_DOT: Record<string, string> = {
-  common: '#c8a070',
-  uncommon: '#4ade80',
-  rare: '#60a5fa',
-  epic: '#c084fc',
-  legendary: '#fbbf24',
-  mythic: '#f87171',
+  common: THEME.rarity.common,
+  uncommon: THEME.rarity.uncommon,
+  rare: THEME.rarity.rare,
+  epic: THEME.rarity.epic,
+  legendary: THEME.rarity.legendary,
+  mythic: THEME.rarity.mythic,
 };
 
 export interface ItemCellProps {
@@ -116,12 +120,15 @@ export function ItemCell({
       type="button"
       onClick={onClick}
       title={title ?? item.name}
-      className={`item-cell ${rootMods} ${mods} ${className}`}
+      className={`item-cell ${rootMods} ${mods} ${unique ? 'item-cell--unique' : ''} ${className}`}
     >
-      {/* Бирка тира/уника — всегда справа-сверху */}
-      <span className="item-cell__badge">
-        <TierBadge tier={tier} size={compact ? 'xs' : 'sm'} unique={unique} />
-      </span>
+      {/* Бирка тира — только у тировой экипировки; у уника вместо неё звезда */}
+      {(tier || unique) && (
+        <span className="item-cell__badge">
+          {tier ? <TierBadge tier={tier} size={compact ? 'xs' : 'sm'} /> : null}
+          {unique && <UniqueEmblem size={compact ? 'xs' : 'sm'} />}
+        </span>
+      )}
 
       {/* Точка редкости — слева-сверху */}
       {rarity !== 'common' && (

@@ -138,7 +138,7 @@ function buildWeapons(tiers: readonly ItemTier[]): CatalogItem[] {
 /**
  * Украшения: стихии v01–v15 (кольца/браслеты — v01–v10) на тиры по канону §7-1.
  * Последние `GEAR_UNIQUE_JEWEL_COUNT` вариантов каждой семьи — УНИКАЛЬНЫЕ:
- * у них нет тировой подписи, и в фасовке они идут категорией «Уникальное».
+ * в фасовке они идут категорией «Уникальное», тирового бейджа у них нет.
  */
 function buildJewels(): CatalogItem[] {
   const out: CatalogItem[] = [];

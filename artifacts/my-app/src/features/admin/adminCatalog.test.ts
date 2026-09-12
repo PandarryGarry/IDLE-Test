@@ -19,20 +19,23 @@ test('парсит путь раздела', () => {
   assert.equal(parseAdminItemBag('/admin/items/weapons'), 'weapons');
   assert.equal(parseAdminItemBag('/admin/items/jewelry'), 'jewelry');
   assert.equal(parseAdminItemBag('/admin/items/uniques'), 'uniques');
+  assert.equal(parseAdminItemBag('/admin/items/tools'), 'tools');
+  assert.equal(parseAdminItemBag('/admin/items/other'), 'tools');
   assert.equal(parseAdminItemBag('/admin/items/nope'), 'all');
   assert.equal(parseAdminItemBag('/admin/characters'), 'all');
 });
 
 test('раскладывает экип по сумкам без пересечений', () => {
-  const bags = { weapons: 0, armor: 0, jewelry: 0, uniques: 0, craft: 0, other: 0 };
+  const bags = { weapons: 0, armor: 0, jewelry: 0, uniques: 0, craft: 0, tools: 0 };
   for (const it of GEAR_ITEMS) {
     const bag = itemBag(it);
     assert.notEqual(bag, 'all');
     bags[bag] += 1;
   }
-  assert.equal(bags.weapons + bags.armor + bags.jewelry + bags.uniques + bags.other, GEAR_ITEMS.length);
+  assert.equal(bags.weapons + bags.armor + bags.jewelry + bags.uniques + bags.tools, GEAR_ITEMS.length);
   assert.ok(bags.weapons > 100);
   assert.ok(bags.armor > 100);
+  assert.ok(bags.tools > 0);
   // Бижутерии 70 (ожерелья 15 + пояса 15 + кольца 10+10 + браслеты 10+10),
   // из них последние 5 каждой семьи уехали в «Уники».
   assert.equal(bags.jewelry, 70 - 6 * GEAR_UNIQUE_JEWEL_COUNT);
@@ -106,12 +109,47 @@ test('крафт — только предметы без слота экипа'
   assert.equal(craft.every((it) => !it.equipSlot), true);
 });
 
-test('у оружия есть фильтры «тип» и «тир»', () => {
+test('у оружия есть компактные фильтры «тип» и «тир»', () => {
   const pool = itemsInBag(CATALOG, 'weapons');
   const specs = filtersForBag('weapons', pool);
   assert.deepEqual(specs.map((s) => s.key), ['type', 'tier']);
-  assert.equal(specs[0].label, 'Тип оружия');
+  assert.deepEqual(specs.map((s) => s.label), ['Тип', 'Тир']);
   assert.ok(specs[0].options.some((o) => o.label === 'Меч'));
+});
+
+test('экипировка и бижутерия показывают только «тип» + «тир»', () => {
+  for (const bag of ['armor', 'jewelry'] as const) {
+    const pool = itemsInBag(CATALOG, bag);
+    const specs = filtersForBag(bag, pool);
+    assert.deepEqual(specs.map((s) => s.key), ['slot', 'tier']);
+    assert.deepEqual(specs.map((s) => s.label), ['Тип', 'Тир']);
+  }
+});
+
+test('инструменты — отдельная вкладка с «тип» + «тир»', () => {
+  const pool = itemsInBag(CATALOG, 'tools');
+  const specs = filtersForBag('tools', pool);
+  assert.ok(pool.length > 0);
+  assert.equal(pool.every((it) => it.equipSlot === 'quiver'), true);
+  assert.deepEqual(specs.map((s) => s.label), ['Тип', 'Тир']);
+  assert.ok(specs[0].options.some((o) => o.label === 'Стрелы'));
+});
+
+test('крафт/фарм оставляет только «профессия» без тира', () => {
+  const pool = itemsInBag(CATALOG, 'craft');
+  const specs = filtersForBag('craft', pool);
+  assert.deepEqual(specs.map((s) => s.key), ['type']);
+  assert.deepEqual(specs.map((s) => s.label), ['Профессия']);
+  assert.ok(specs[0].options.some((o) => o.label === 'Сбор'));
+  const mining = filterAdminItems(pool, 'craft', {
+    query: '',
+    type: 'mining',
+    tier: 'all',
+    weight: 'all',
+    slot: 'all',
+  });
+  assert.ok(mining.some((it) => it.category === 'ore'));
+  assert.equal(mining.some((it) => it.category === 'log'), false);
 });
 
 test('фильтр по тиру оставляет один ряд', () => {

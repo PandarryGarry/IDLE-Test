@@ -8,12 +8,14 @@ src/
   core/            движок: формулы, тики, offline, реестр навыков, таблица XP
   domain/          чистая логика, без React
     attributes/    столпы, 12 подхарактеристик, нити, расчёт, иконки столпов
-    combat/        монстры + боевые формулы
+    combat/        монстры + чистая модель боя Combat 2.0 (формулы/риски/намерения)
     items/         предметы, статы экипировки, наборы
     professions/   единственное ремесло — «Сбор» (foraging) и его статы
   data/            данные и числа
     balance/       ВСЕ числа баланса — единственный источник
                   (professions.ts теперь только foraging)
+    combat/        экосистема боя: зоны + мобы по отдельным файлам
+                  (описание, картинка, роли, способности, телеграфы)
     characters.ts  расы, аватары, манекены
   features/        экраны
     hero/ combat/ professions/ auth/ inventory/ system/
@@ -44,7 +46,11 @@ Cap пакета героя ~5 с — страховка сети, не «мож
 
 **Числа — только в `data/balance/`.** В компонентах хардкода чисел нет.
 Фундамент: `balance/substats.ts`, `balance/threads.ts`, `balance/branchEffects.ts`,
-`balance/xpRates.ts`. Канон — `BALANCE_FOUNDATION.md`.
+`balance/xpRates.ts`, `balance/combat.ts`. Канон — `BALANCE_FOUNDATION.md`.
+Combat 2.0: чистые расчёты (`domain/combat/combatModel.ts`) не импортируют сторы;
+`data/combat/mobs/*` хранит мобов как отдельные записи с картинкой/описанием/
+способностями; `store/combatStore.ts` — только адаптер тиков, лута, еды,
+уведомлений и save-safe runtime-состояния боя.
 
 **Импорты.** UI (`features/`, `components/`, `store/`, `hooks/`) — через `@/`.
 Чистая логика (`domain/`, `data/`, `core/`) — относительными путями с `.ts`
@@ -67,7 +73,12 @@ Cap пакета героя ~5 с — страховка сети, не «мож
 Новые поля сейва: нормализовать в `saveSchema`, а не читать `data.foo?.bar`
 наивной ссылкой — иначе следующий «голый» или чужой сейв снова сотрёт сумку.
 
-**Цвета** — только CSS-переменные и токены `index.css`.
+**Цвета** — только CSS-переменные и токены `index.css`. Шестнадцатеричное
+значение в коде вне `index.css` — ошибка, а не вкусовщина: за законом следит
+страж `pnpm validate:colors` (запуск из `artifacts/my-app`; листок легаси-запаса
+внутри `validate-colors.mjs` только сокращается — расширять запрещено).
+Порядок нового цвета: переменная в `:root` → строка в `styles/tokens.ts` →
+потребитель. Гайд: `src/styles/THEME_GUIDE.md`.
 
 **Картинки** — только WebP через `iconUrl()` / `getAvatarPath()`.
 

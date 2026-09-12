@@ -1,3 +1,5 @@
+export * from '@/shared/ui/kit/AWindow';
+export * from '@/shared/ui/kit/ATabs';
 export * from '@/shared/ui/kit/GameCard';
 export * from '@/shared/ui/kit/GameButton';
 export * from '@/shared/ui/kit/SquircleSlot';

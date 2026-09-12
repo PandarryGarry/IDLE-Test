@@ -8,6 +8,8 @@ import { usePlayerStore } from '../store/playerStore.ts';
 
 export interface ActionResult {
   items: { itemId: string; quantity: number }[];
+  /** Редкие находки цикла — для тостов уровня 2 (аудит, шаг 11). */
+  rareFinds?: { itemId: string; quantity: number }[];
   xpGained: number;
   masteryXpGained: number;
   bonusXp?: number;
@@ -39,6 +41,7 @@ export const skillRegistry: Record<SkillId, SkillHandler | null> = {
       const result = rollForagingCycle(actionId, playerLevel);
       return {
         items: result.items,
+        rareFinds: result.rareFinds.length ? result.rareFinds : undefined,
         xpGained: result.xp,
         masteryXpGained: result.masteryXp,
         encounter: result.encounter ?? undefined,

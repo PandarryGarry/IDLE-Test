@@ -43,9 +43,15 @@ export const THEME = {
   card: {
     cocoa:        v('card-cocoa'),
     cocoaActive:  v('card-cocoa-active'),
+    cocoaDeep:    v('card-cocoa-deep'),   // Глубокое какао панелей/вторичных кнопок
     edge:         v('card-edge'),
     edgeActive:   v('card-edge-active'),
     shadow:       v('card-shadow'),
+    shadowSm:     v('card-shadow-sm'),
+    select:       v('card-select'),       // Выбранная карточка каталога
+    selectShadow: v('card-select-shadow'),
+    dark:         v('card-dark'),         // Тёмная панель (GPanel dark)
+    activeShadow: v('card-active-shadow'),// Золотое свечение выбранной панели
   },
 
   // ─── Слой 3. Ячейка предмета ────────────────────────────
@@ -59,18 +65,137 @@ export const THEME = {
   // ─── Слой 4. Краски (чернила и золото) ──────────────────
   ink: {
     hero:   v('ink-hero'),    // Золото заголовков/выделенного
+    gold:   v('ink-gold'),    // Сплошное золото подписей и мелкой каймы
+    bright: v('ink-bright'),  // Яркие сливочные чернила (текст на тёмном)
     strong: v('ink-strong'),  // Основной текст (крем)
     body:   v('ink-body'),    // Вторичный текст
     dim:    v('ink-dim'),     // Приглушённый
+    faint:  v('ink-faint'),   // Самая тихая ступень (подписи полей)
     danger: v('ink-danger'),
   },
 
-  // ─── ОДИН янтарь-главный (все primary-кнопки игры) ──────
+  // ─── Кайма общего назначения (не карточная) ──────────────
+  edge: {
+    light:  v('edge-light'),
+    accent: v('edge-accent'),
+  },
+
+  // ─── Кнопки: ОДИН янтарь-главный + вторичная/опасная ─────
   button: {
     primary:       v('btn-primary'),
     primaryEdge:   v('btn-primary-edge'),
     primaryShadow: v('btn-primary-shadow'),
     primaryInk:    v('btn-primary-ink'),
+    secondary:     v('btn-secondary'),     // Глубокое какао
+    danger:        v('btn-danger'),
+    dangerEdge:    v('btn-danger-edge'),
+    dangerShadow:  v('btn-danger-shadow'),
+    disabled:      v('btn-disabled'),      // Выключенная главная
+    disabledInk:   v('btn-disabled-ink'),
+  },
+
+  // ─── Поля ввода ───────────────────────────────────────────
+  field: {
+    bg:        v('field-bg'),
+    shadow:    v('field-shadow'),
+    focusGlow: v('field-focus-glow'),
+    error:     v('field-error'),
+    errorInk:  v('field-error-ink'),
+  },
+
+  // ─── Бой и тревога ────────────────────────────────────────
+  combat: {
+    bg:     v('combat-bg'),
+    edge:   v('combat-edge'),
+    shadow: v('combat-shadow'),
+  },
+
+  // ─── Модалка (рецепт эталона — шаг 8, сейчас 1:1) ────────
+  modal: {
+    veil:        v('modal-veil'),
+    bg:          v('modal-bg'),
+    shadow:      v('modal-shadow'),
+    titleShadow: v('modal-title-shadow'),
+  },
+
+  // ─── Тултип ───────────────────────────────────────────────
+  tooltip: {
+    bg:     v('tooltip-bg'),
+    shadow: v('tooltip-shadow'),
+  },
+
+  // ─── Свечения ─────────────────────────────────────────────
+  glow: {
+    goldSoft: v('glow-gold-soft'),
+  },
+
+  // ─── Пилюли (значки): фон + край + чернила ────────────────
+  badge: {
+    goldBg:    v('badge-gold-bg'),
+    goldEdge:  v('border-accent'),
+    goldInk:   v('text-gold'),
+    redBg:     v('badge-red-bg'),
+    redEdge:   v('badge-red-edge'),
+    redInk:    v('badge-red-ink'),
+    greenBg:   v('badge-green-bg'),
+    greenEdge: v('accent-emerald'),
+    greenInk:  v('badge-green-ink'),
+    blueBg:    v('badge-blue-bg'),
+    blueEdge:  v('accent-sapphire'),
+    blueInk:   v('badge-blue-ink'),
+    purpleBg:    v('badge-purple-bg'),
+    purpleEdge:  v('badge-purple-edge'),
+    purpleInk:   v('badge-purple-ink'),
+    grayBg:    v('badge-gray-bg'),
+    grayEdge:  v('badge-gray-edge'),
+    grayInk:   v('text-muted'),
+    levelBg:   v('badge-level-bg'),
+    levelEdge: v('border-light'),
+    levelInk:  v('badge-level-ink'),
+  },
+
+  // ─── Теги: свои фоны/края, чернила делит с пилюлями ───────
+  tag: {
+    goldBg:   v('tag-gold-bg'),
+    goldEdge: v('tag-gold-edge'),
+    goldInk:  v('text-gold'),
+    brownBg:   v('tag-brown-bg'),
+    brownEdge: v('card-edge'),
+    brownInk:  v('text-muted'),
+    redBg:   v('tag-red-bg'),
+    redEdge: v('tag-red-edge'),
+    redInk:  v('badge-red-ink'),
+    greenBg:   v('tag-green-bg'),
+    greenEdge: v('tag-green-edge'),
+    greenInk:  v('badge-green-ink'),
+  },
+
+  // ─── Полосы прогресса: лоток + градиент и блик ────────────
+  bar: {
+    track:       v('progress-track'),
+    trackEdge:   v('progress-track-edge'),
+    trackShadow: v('progress-track-shadow'),
+    goldFrom:   v('border-accent'),
+    goldTo:     v('text-gold'),
+    goldGlow:   v('bar-gold-glow'),
+    greenFrom:  v('bar-green-from'),
+    greenTo:    v('bar-green-to'),
+    greenGlow:  v('bar-green-glow'),
+    redFrom:  v('bar-hp-from'),
+    redTo:    v('bar-hp-to'),
+    redGlow:  v('bar-red-glow'),
+    blueFrom:  v('bar-blue-from'),
+    blueTo:    v('bar-blue-to'),
+    blueGlow:  v('bar-blue-glow'),
+    purpleFrom:  v('bar-purple-from'),
+    purpleTo:    v('bar-purple-to'),
+    purpleGlow:  v('bar-purple-glow'),
+  },
+
+  // ─── Пилюля статистики ────────────────────────────────────
+  stat: {
+    bg:     v('stat-bg'),
+    shadow: v('stat-shadow'),
   },
 
   // ─── Редкость предметов (единая шкала) ──────────────────
@@ -102,6 +227,24 @@ export const THEME = {
     display: v('app-font-display'),
     sans:    v('app-font-sans'),
     mono:    v('app-font-mono'),
+  },
+
+  // ─── Объявления двух уровней (шаги 11–12): цветная кромка по типу ──
+  announce: {
+    levelup: v('announce-levelup'),   // уровень навыка — золото
+    mastery: v('announce-mastery'),   // мастерство зоны — мёд
+    combat:  v('announce-combat'),    // бой/нападение — кровь
+    warning: v('announce-warning'),   // предупреждение, сумка полна — апельсин
+    info:    v('announce-info'),      // нейтральная заметка — дерево
+  },
+
+  // ─── Хром переключателей топбара (живые значения шапки) ─
+  chrome: {
+    btn:       v('chrome-btn'),
+    btnOpen:   v('chrome-btn-open'),
+    btnEdge:   v('chrome-btn-edge'),
+    btnInk:    v('chrome-btn-ink'),
+    btnShadow: v('chrome-btn-shadow'),
   },
 
 } as const;

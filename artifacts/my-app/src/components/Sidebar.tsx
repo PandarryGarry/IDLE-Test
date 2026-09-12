@@ -12,6 +12,7 @@ import { useCharacterStore } from '@/store/characterStore';
 import { getAvatarPath, getRaceLabel } from '@/data/characters';
 import { leaveAccount } from '@/lib/authActions';
 import { GUEST_NOTICE } from '@/lib/guestMode';
+import { iconUrl } from '@/lib/assetUrl';
 
 interface NavItemProps {
   href: string;
@@ -102,16 +103,15 @@ export function Sidebar({ onCloseMobile }: { onCloseMobile?: () => void }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 16px', borderBottom: '2px solid #5a3010', cursor: 'pointer', transition: 'background 0.15s' }}
           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,134,10,0.08)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+          {/* Одобренный владельцем медальон «топор и перо» (вариант E),
+              мастер — public/assets/icons/ui/logo_medallion */}
           <img
-            src="/assets/art/emblem_pair_v2.webp"
+            src={iconUrl('ui/logo_medallion')}
             alt="Топор и Перо"
             draggable={false}
             style={{
-              width: 60, height: 60, flexShrink: 0, display: 'block',
-              borderRadius: 14, overflow: 'hidden',
-              border: '1px solid rgba(212,134,10,0.35)',
-              boxShadow: 'inset 0 0 12px rgba(0,0,0,0.5), 0 0 12px rgba(212,134,10,0.25)',
-              filter: 'drop-shadow(0 0 10px rgba(212,134,10,0.28))',
+              width: 64, height: 64, flexShrink: 0, display: 'block',
+              objectFit: 'contain',
             }}
           />
           <div>

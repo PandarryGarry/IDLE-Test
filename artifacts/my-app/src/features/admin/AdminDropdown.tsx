@@ -14,6 +14,7 @@ export function AdminDropdown({ label, value, options, onChange }: AdminDropdown
   const rootRef = useRef<HTMLDivElement>(null);
   const listId = useId();
   const current = options.find((o) => o.id === value) ?? options[0];
+  const isDefault = !current || current.id === 'all';
 
   useEffect(() => {
     if (!open) return;
@@ -35,17 +36,18 @@ export function AdminDropdown({ label, value, options, onChange }: AdminDropdown
     <div className="admin-dd" ref={rootRef}>
       <button
         type="button"
-        className={`admin-dd__btn${open ? ' is-open' : ''}`}
+        className={`admin-dd__btn${open ? ' is-open' : ''}${isDefault ? '' : ' is-active'}`}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listId}
+        title={`${label}: ${current?.label ?? 'Все'}`}
         onClick={() => setOpen((v) => !v)}
       >
         <span className="admin-dd__meta">
           <span className="admin-dd__label">{label}</span>
-          <span className="admin-dd__value">{current?.label ?? 'Все'}</span>
+          {!isDefault && <span className="admin-dd__value">{current.label}</span>}
         </span>
-        <ChevronDown size={14} aria-hidden />
+        <ChevronDown size={13} aria-hidden />
       </button>
       {open && (
         <ul id={listId} className="admin-dd__list" role="listbox">

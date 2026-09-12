@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
 import { useInventoryStore } from '@/store/inventoryStore';
-import { useNotificationsStore } from '@/store/notificationsStore';
-import { useAuthStore } from '@/store/authStore';
-import { GUEST_NOTICE } from '@/lib/guestMode';
 import { UniversalInfoModal } from '@/components/modals/UniversalInfoModal';
 import { SquircleSlot } from '@/shared/ui/kit/SquircleSlot';
 import { CoinsDisplay } from '@/shared/ui/CoinsDisplay';
-import { Search, Plus, X } from 'lucide-react';
-import { formatNumber } from '@/lib/utils';
+import { Search, X } from 'lucide-react';
+import { iconUrl } from '@/lib/assetUrl';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export function InventoryPage() {
@@ -21,108 +18,77 @@ export function InventoryPage() {
   const setSearch = useInventoryStore(s => s.setSearch);
   const activeCategory = useInventoryStore(s => s.activeCategory);
   const setCategory = useInventoryStore(s => s.setCategory);
-  const upgradeSlots = useInventoryStore(s => s.upgradeSlots);
-  const getUpgradeCost = useInventoryStore(s => s.getUpgradeCost);
-  const notifyInfo = useNotificationsStore(s => s.notifyInfo);
-  const isGuest = useAuthStore(s => s.isGuest);
 
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const filteredItems = getFilteredItems();
   const totalItems = items.filter(i => i.quantity > 0).length;
-  const upgradeCost = Math.floor(getUpgradeCost());
-
-  const handleUpgradeSlots = () => {
-    if (isGuest) {
-      notifyInfo(GUEST_NOTICE);
-      return;
-    }
-    if (gp < upgradeCost) {
-      notifyInfo(`Недостаточно монет! Нужно ${formatNumber(upgradeCost)}`);
-      return;
-    }
-    const success = upgradeSlots();
-    if (success) {
-      notifyInfo('Вместимость сумки расширена на +10 ячеек!');
-    }
-  };
-
+  // Иконки фильтров — рисованные, стиль «Стекло таверны» (ICON_STYLE_GUIDE.md).
   const CATEGORIES = [
-    { key: 'all',       label: 'Все',        icon: '📦' },
-    { key: 'equipment', label: 'Снаряжение', icon: '⚔️' },
-    { key: 'resources', label: 'Ресурсы',    icon: '🌲' },
-    { key: 'food',      label: 'Еда',        icon: '🍖' },
-    { key: 'misc',      label: 'Разное',     icon: '✨' },
+    { key: 'all',       label: 'Все',        icon: iconUrl('ui/filter_all') },
+    { key: 'equipment', label: 'Снаряжение', icon: iconUrl('ui/filter_gear') },
+    { key: 'resources', label: 'Ресурсы',    icon: iconUrl('ui/filter_resources') },
+    { key: 'food',      label: 'Еда',        icon: iconUrl('ui/filter_food') },
+    { key: 'misc',      label: 'Разное',     icon: iconUrl('ui/filter_misc') },
   ] as const;
 
   const emptySlotsCount = Math.max(0, maxSlots - filteredItems.length);
   const visibleEmptySlots = Math.min(emptySlotsCount, 15);
 
   return (
-    <div className="space-y-4 max-w-4xl mx-auto">
-      
-      {/* 1. Header Banner */}
-      <div className="rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3 shadow-xl" style={{ background: 'linear-gradient(160deg,#2a1e0e,#1a1108)', border: '1px solid #3d2e1e' }}>
-        
+    /* Рамка «один экран»: шапка и фильтры прибиты, прокручивается
+       только сетка ячеек — своим «окном». */
+    <div className="a-page max-w-4xl mx-auto w-full">
+
+      {/* 1. Header — стекло слоя 1 (причёска инвентаря, решение владельца 2026-09-12) */}
+      <div
+        className="rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3 flex items-center justify-between gap-3"
+        style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-edge)', boxShadow: 'var(--glass-shadow)', backdropFilter: 'var(--glass-filter)' }}
+      >
         {/* Title & Slot counter */}
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-red-500/20 to-amber-500/20 rounded-2xl border border-red-500/30 flex items-center justify-center text-2xl shadow-inner shrink-0">
-            🎒
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 overflow-hidden p-1.5"
+            style={{ background: 'var(--chrome-btn)', border: '1px solid var(--chrome-btn-edge)', boxShadow: 'var(--chrome-btn-shadow)' }}
+          >
+            <img src={iconUrl('menu/menu_inventory')} alt="" className="w-full h-full object-contain select-none pointer-events-none" />
           </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-display font-black text-[var(--text-primary)] flex items-center gap-2">
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-lg font-display font-black text-[var(--text-primary)] flex items-baseline gap-1.5 leading-tight">
               <span>Инвентарь</span>
-              <span className="font-mono text-xs sm:text-sm font-bold text-[var(--text-muted)] font-sans">
-                <span className="text-amber-400 font-mono font-black">{totalItems}</span> / {maxSlots}
+              <span className="font-mono text-[11px] sm:text-xs font-bold text-[var(--text-muted)]">
+                <span className="text-[var(--text-gold)] font-black">{totalItems}</span> / {maxSlots}
               </span>
             </h1>
-            <div className="text-xs font-mono text-[var(--text-muted)] mt-1 flex items-center gap-1.5">
-              <span>Кошелек:</span>
-              <CoinsDisplay amount={gp} size="sm" />
+            <div className="text-[10px] sm:text-[11px] font-mono text-[var(--text-muted)] flex items-center gap-1">
+              <span>Кошелёк:</span>
+              <CoinsDisplay amount={gp} size="xs" />
             </div>
           </div>
         </div>
 
-        {/* Upgrade Slots Button */}
-        {isGuest ? (
-          <div
-            className="px-3 py-2.5 rounded-xl font-mono font-bold text-[10px] leading-tight text-center shrink-0 text-amber-300/85"
-            style={{ background: 'rgba(212,134,10,0.12)', border: '1px solid rgba(212,134,10,0.28)' }}
-          >
-            Гость · 24 слота
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={handleUpgradeSlots}
-            className="px-4 py-2.5 rounded-xl font-extrabold text-xs transition-all active:scale-95 flex items-center gap-1.5 shrink-0 text-[var(--text-primary)]"
-            style={{ background: 'linear-gradient(135deg,#d97706,#f59e0b)', border: '1px solid #f59e0b', boxShadow: '0 2px 10px rgba(245,158,11,0.3)' }}
-            title={`Купить +10 ячеек`}
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            <span>+ Слоты</span>
-          </button>
-        )}
-
       </div>
 
-      {/* 2. Category Filter & Search Bar */}
-      <div className="flex items-center justify-between gap-2 p-1.5 rounded-xl" style={{ background: '#1c1108', border: '1px solid #3a2b1a' }}>
-        
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1">
+      {/* 2. Category Filter & Search Bar — стекло слоя 1 */}
+      <div
+        className="flex items-center justify-between gap-2 p-1 rounded-xl"
+        style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-edge)', backdropFilter: 'var(--glass-filter)' }}
+      >
+        <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-none flex-1">
           {CATEGORIES.map(({ key, label, icon }) => (
             <button
               key={key}
               onClick={() => setCategory(key as any)}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 active:scale-95 ${
+              title={label}
+              className={`flex-1 min-w-0 px-1 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 border ${
                 activeCategory === key
-                  ? 'bg-stone-800 text-amber-300 border border-amber-500/40 shadow-sm'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-dark)]'
+                  ? 'text-[var(--text-gold)] [background:var(--chrome-btn-open)] [border-color:var(--border-accent)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] border-transparent hover:[background:var(--glass-bg)]'
               }`}
             >
-              <span className="text-base">{icon}</span>
-              <span className="hidden sm:inline text-[11px]">{label}</span>
+              <img src={icon} alt="" className={`w-[18px] h-[18px] object-contain select-none pointer-events-none ${activeCategory === key ? '' : 'opacity-75'}`} />
+              <span className="hidden sm:inline">{label}</span>
             </button>
           ))}
         </div>
@@ -136,7 +102,7 @@ export function InventoryPage() {
                 placeholder="Поиск..."
                 value={searchQuery}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-32 sm:w-48 pl-2.5 pr-7 py-1.5 bg-[var(--bg-slot)] border border-[var(--border-default)] rounded-xl text-xs text-[var(--text-primary)] focus:outline-none focus:border-amber-500"
+                className="w-32 sm:w-48 pl-2.5 pr-7 py-1.5 bg-[var(--bg-slot)] border border-[var(--border-default)] rounded-xl text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--border-accent)]"
               />
               <button
                 type="button"
@@ -160,11 +126,14 @@ export function InventoryPage() {
 
       </div>
 
-      {/* 3. Squircle Inventory Slots Grid */}
-      <div className="rounded-2xl p-3 sm:p-4 min-h-[380px]" style={{ background: 'var(--bg-card)', border: '1px solid #3a2b1a', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.35)' }}>
+      {/* 3. Squircle Inventory Slots Grid — прокручиваемое окно ячеек */}
+      <div
+        className="a-page__scroll rounded-2xl p-3 sm:p-4"
+        style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-edge)', boxShadow: 'var(--glass-shadow)', backdropFilter: 'var(--glass-filter)' }}
+      >
         
         {filteredItems.length === 0 && !emptySlotsCount ? (
-          <div className="text-center py-20 text-slate-500 flex flex-col items-center gap-2">
+          <div className="text-center py-20 text-[var(--text-muted)] flex flex-col items-center gap-2">
             <div className="text-5xl opacity-30">🎒</div>
             <p className="text-xs font-mono">Сумка пуста</p>
           </div>

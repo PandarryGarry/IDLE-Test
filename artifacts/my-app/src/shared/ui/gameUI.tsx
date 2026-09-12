@@ -24,27 +24,28 @@
 
 import React, { useState, useEffect } from 'react';
 import { iconUrl } from '@/lib/assetUrl';
+import { THEME } from '@/styles/tokens';
+import { AWindow } from '@/shared/ui/kit/AWindow';
 
 /* ════════════════════════════════════════════════════════════════
-   ЦВЕТА — берём из CSS-переменных (tokens.ts → index.css)
+   ЦВЕТА — только роли канона «Стекло таверны» (THEME → index.css).
+   Краски живут в :root, здесь — лишь короткие имена для компонентов.
    Не используй hex напрямую в компонентах ниже!
 ════════════════════════════════════════════════════════════════ */
 const C = {
-  bgPanel:    'var(--bg-card)',
-  bgDark:     'linear-gradient(160deg,#7a5028,#5a3818)',
-  bgInput:    'linear-gradient(160deg,#3d2008,#2a1406)',
-  bgSlot:     'linear-gradient(160deg,#2e1608,#1e0e04)',
-  border:     '#5a3010',
-  borderAccent:'#c8880a',
-  borderLight: '#8b5020',
-  gold:       '#f0c030',
-  goldDark:   '#c8880a',
-  text:       '#fff8d0',
-  textMuted:  '#c8a050',
-  textDim:    '#8b6030',
-  shadow:     '0 4px 0 #3d1e08, 0 6px 20px rgba(10,4,0,0.35)',
-  shadowBtn:  '0 3px 0 #2a1005',
-  shadowDanger:'0 3px 0 #5a0a04',
+  bgDark:     THEME.card.cocoa,
+  bgInput:    THEME.field.bg,
+  border:     THEME.card.edge,
+  borderAccent: THEME.edge.accent,
+  borderLight: THEME.edge.light,
+  gold:       THEME.ink.gold,
+  goldDark:   THEME.edge.accent,
+  text:       THEME.ink.bright,
+  textMuted:  THEME.ink.dim,
+  textDim:    THEME.ink.faint,
+  shadow:     THEME.card.shadow,
+  shadowBtn:  THEME.button.primaryShadow,
+  shadowDanger: THEME.button.dangerShadow,
   radius:     14,
   radiusSm:   8,
   radiusMd:   10,
@@ -73,21 +74,21 @@ export function GPanel({ children, style, variant = 'default', className }: GPan
       boxShadow: C.shadow,
     },
     gold: {
-      background: 'linear-gradient(160deg,#5a3810,#3a2208)',
+      background: THEME.card.cocoaActive,
       border: `2px solid ${C.borderAccent}`,
-      boxShadow: `0 4px 0 #2a1005, 0 0 24px rgba(200,136,10,0.2)`,
+      boxShadow: THEME.card.activeShadow,
     },
     combat: {
-      background: 'linear-gradient(160deg,#5a1808,#3a0e06)',
-      border: '2px solid #c83020',
-      boxShadow: '0 4px 0 #2a0a04, 0 0 24px rgba(200,48,32,0.2)',
+      background: THEME.combat.bg,
+      border: `2px solid ${THEME.combat.edge}`,
+      boxShadow: THEME.combat.shadow,
     },
     plain: {
       background: C.bgDark,
       border: `1px solid ${C.borderLight}`,
     },
     dark: {
-      background: 'linear-gradient(160deg,#3a2008,#2a1406)',
+      background: THEME.card.dark,
       border: `2px solid ${C.border}`,
       boxShadow: C.shadow,
     },
@@ -135,23 +136,21 @@ export function GButton({
 
   const variants: Record<string, React.CSSProperties> = {
     primary: {
-      background: disabled
-        ? 'linear-gradient(180deg,#6a5028,#4a3818)'
-        : 'linear-gradient(180deg,#c8880a,#9a6008)',
-      border: '2px solid #6b4008',
-      color: disabled ? '#a07838' : '#fff8d0',
+      background: disabled ? THEME.button.disabled : THEME.button.primary,
+      border: `2px solid ${THEME.button.primaryEdge}`,
+      color: disabled ? THEME.button.disabledInk : THEME.button.primaryInk,
       boxShadow: disabled ? 'none' : C.shadowBtn,
     },
     secondary: {
-      background: 'linear-gradient(160deg,#5a3010,#3a1e08)',
+      background: THEME.button.secondary,
       border: `2px solid ${C.borderLight}`,
       color: C.textMuted,
       boxShadow: C.shadowBtn,
     },
     danger: {
-      background: 'linear-gradient(180deg,#c83020,#a02010)',
-      border: '2px solid #6b1808',
-      color: '#fff8d0',
+      background: THEME.button.danger,
+      border: `2px solid ${THEME.button.dangerEdge}`,
+      color: THEME.ink.bright,
       boxShadow: C.shadowDanger,
     },
     ghost: {
@@ -237,8 +236,8 @@ export function GInput({
         display: 'flex', alignItems: 'center', gap: 8,
         padding: '10px 12px', borderRadius: C.radiusMd,
         background: C.bgInput,
-        border: `2px solid ${error ? '#c83020' : focused ? C.borderAccent : C.border}`,
-        boxShadow: focused ? `0 0 0 2px rgba(200,136,10,0.2)` : 'inset 0 2px 4px rgba(0,0,0,0.35)',
+        border: `2px solid ${error ? THEME.field.error : focused ? C.borderAccent : C.border}`,
+        boxShadow: focused ? THEME.field.focusGlow : THEME.field.shadow,
         transition: 'border-color 0.15s, box-shadow 0.15s',
       }}>
         {icon && (
@@ -271,7 +270,7 @@ export function GInput({
       </div>
 
       {error && (
-        <span style={{ fontFamily: C.fontMono, fontSize: 10, color: '#ff7060' }}>
+        <span style={{ fontFamily: C.fontMono, fontSize: 10, color: THEME.field.errorInk }}>
           ⚠ {error}
         </span>
       )}
@@ -298,75 +297,17 @@ interface GModalProps {
 }
 
 export function GModal({ open, onClose, title, children, width = 340, closeOnOverlay = true }: GModalProps) {
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [open]);
-
-  if (!open) return null;
-
+  // Каркас единый — kit/AWindow (стекло эталона, шаг 8 аудита).
   return (
-    <>
-      {/* Оверлей */}
-      <div
-        onClick={closeOnOverlay ? onClose : undefined}
-        style={{
-          position: 'fixed', inset: 0, zIndex: 200,
-          background: 'rgba(15,8,0,0.8)',
-          backdropFilter: 'blur(4px)',
-          animation: 'fadeIn 0.15s ease',
-        }}
-      />
-
-      {/* Окно. role/aria-label — контракт QA-скриптов (scripts/qa closeModal). */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        style={{
-          position: 'fixed', zIndex: 201,
-          left: '50%', top: '50%',
-          transform: 'translate(-50%,-50%)',
-          width: `min(${typeof width === 'number' ? width + 'px' : width}, 92vw)`,
-          maxHeight: '85vh', overflowY: 'auto',
-          background: 'linear-gradient(160deg,#7a5028,#4a2c10)',
-          border: `2px solid ${C.borderAccent}`,
-          borderRadius: 20,
-          boxShadow: '0 8px 0 #2a1005, 0 12px 40px rgba(10,4,0,0.7)',
-          animation: 'slideUp 0.2s ease',
-        }}
-      >
-        {/* Шапка */}
-        {title && (
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '16px 18px 12px',
-            borderBottom: `1px solid ${C.borderLight}`,
-          }}>
-            <span style={{
-              fontFamily: C.fontDisplay, fontSize: 18, fontWeight: 900,
-              color: C.text, textShadow: '0 2px 4px rgba(0,0,0,0.5)',
-            }}>{title}</span>
-            <button
-              onClick={onClose}
-              aria-label="Закрыть"
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: C.textDim, fontSize: 20, padding: 4, lineHeight: 1,
-              }}
-            >✕</button>
-          </div>
-        )}
-
-        {/* Контент */}
-        <div style={{ padding: '14px 18px 18px' }}>
-          {children}
-        </div>
-      </div>
-    </>
+    <AWindow
+      open={open}
+      onClose={onClose}
+      title={title}
+      width={width}
+      closeOnOverlay={closeOnOverlay}
+    >
+      {children}
+    </AWindow>
   );
 }
 
@@ -383,13 +324,13 @@ interface GBadgeProps {
 }
 
 const BADGE_STYLES: Record<BadgeVariant, React.CSSProperties> = {
-  gold:   { background: 'rgba(200,136,10,0.2)', border: '1px solid #c8880a', color: '#f0c030' },
-  red:    { background: 'rgba(200,40,20,0.2)',  border: '1px solid #c82818', color: '#ff8060' },
-  green:  { background: 'rgba(30,160,80,0.2)',  border: '1px solid #1a9e5a', color: '#4ade80' },
-  blue:   { background: 'rgba(30,100,200,0.2)', border: '1px solid #1860c0', color: '#60a0ff' },
-  purple: { background: 'rgba(120,40,200,0.2)', border: '1px solid #7828c8', color: '#c080ff' },
-  gray:   { background: 'rgba(100,70,40,0.3)',  border: '1px solid #6b4020', color: '#c8a050' },
-  level:  { background: '#1e0c04',              border: '2px solid #8b5020', color: '#d4a840' },
+  gold:   { background: THEME.badge.goldBg, border: `1px solid ${THEME.badge.goldEdge}`, color: THEME.badge.goldInk },
+  red:    { background: THEME.badge.redBg,  border: `1px solid ${THEME.badge.redEdge}`,  color: THEME.badge.redInk },
+  green:  { background: THEME.badge.greenBg, border: `1px solid ${THEME.badge.greenEdge}`, color: THEME.badge.greenInk },
+  blue:   { background: THEME.badge.blueBg, border: `1px solid ${THEME.badge.blueEdge}`, color: THEME.badge.blueInk },
+  purple: { background: THEME.badge.purpleBg, border: `1px solid ${THEME.badge.purpleEdge}`, color: THEME.badge.purpleInk },
+  gray:   { background: THEME.badge.grayBg, border: `1px solid ${THEME.badge.grayEdge}`, color: THEME.badge.grayInk },
+  level:  { background: THEME.badge.levelBg, border: `2px solid ${THEME.badge.levelEdge}`, color: THEME.badge.levelInk },
 };
 
 export function GBadge({ children, variant = 'gold', size = 'md', style }: GBadgeProps) {
@@ -624,11 +565,11 @@ interface GProgressBarProps {
 }
 
 const BAR_COLORS: Record<string, { from: string; to: string; glow: string }> = {
-  gold:   { from: '#c8880a', to: '#f0c030', glow: 'rgba(240,192,48,0.5)' },
-  green:  { from: '#1a7a38', to: '#2ecc70', glow: 'rgba(46,204,112,0.5)' },
-  red:    { from: '#b02020', to: '#e04040', glow: 'rgba(224,64,64,0.5)'  },
-  blue:   { from: '#1848a0', to: '#4080e0', glow: 'rgba(64,128,224,0.5)' },
-  purple: { from: '#6020a0', to: '#a050e0', glow: 'rgba(160,80,224,0.5)' },
+  gold:   { from: THEME.bar.goldFrom, to: THEME.bar.goldTo, glow: THEME.bar.goldGlow },
+  green:  { from: THEME.bar.greenFrom, to: THEME.bar.greenTo, glow: THEME.bar.greenGlow },
+  red:    { from: THEME.bar.redFrom, to: THEME.bar.redTo, glow: THEME.bar.redGlow },
+  blue:   { from: THEME.bar.blueFrom, to: THEME.bar.blueTo, glow: THEME.bar.blueGlow },
+  purple: { from: THEME.bar.purpleFrom, to: THEME.bar.purpleTo, glow: THEME.bar.purpleGlow },
 };
 
 export function GProgressBar({ value, color = 'gold', height = 8, showLabel, label, style }: GProgressBarProps) {
@@ -644,10 +585,10 @@ export function GProgressBar({ value, color = 'gold', height = 8, showLabel, lab
         </div>
       )}
       <div style={{
-        height, background: '#1a0a04',
-        border: '1px solid #4a2810',
+        height, background: THEME.bar.track,
+        border: `1px solid ${THEME.bar.trackEdge}`,
         borderRadius: 9999, overflow: 'hidden',
-        boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)',
+        boxShadow: THEME.bar.trackShadow,
       }}>
         <div style={{
           height: '100%',
@@ -678,17 +619,17 @@ export function GDivider({ label, icon, style }: GDividerProps) {
       margin: '4px 0',
       ...style,
     }}>
-      <div style={{ flex: 1, height: 1, background: 'linear-gradient(270deg,#8b5020,transparent)' }} />
+      <div style={{ flex: 1, height: 1, background: `linear-gradient(270deg,${C.borderLight},transparent)` }} />
       {icon && <span style={{ fontSize: 12 }}>{icon}</span>}
       {label && (
         <span style={{
           fontFamily: C.fontMono, fontSize: 10, fontWeight: 900,
           textTransform: 'uppercase', letterSpacing: '0.12em',
-          color: C.gold, textShadow: '0 0 12px rgba(240,192,48,0.4)',
+          color: C.gold, textShadow: THEME.glow.goldSoft,
           whiteSpace: 'nowrap',
         }}>{label}</span>
       )}
-      <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg,#8b5020,transparent)' }} />
+      <div style={{ flex: 1, height: 1, background: `linear-gradient(90deg,${C.borderLight},transparent)` }} />
     </div>
   );
 }
@@ -713,13 +654,9 @@ export function GCard({ children, onClick, selected, disabled, style, className,
       onClick={disabled ? undefined : onClick}
       style={{
         borderRadius: C.radiusMd,
-        background: selected
-          ? 'linear-gradient(160deg,#4a2c0a,#2e1a06)'
-          : 'linear-gradient(160deg,#5a3010,#3a1e08)',
+        background: selected ? THEME.card.select : THEME.card.cocoaDeep,
         border: `2px solid ${selected ? C.borderAccent : C.border}`,
-        boxShadow: selected
-          ? `0 3px 0 #2a1005, 0 0 14px rgba(200,136,10,0.3)`
-          : '0 3px 0 #3d1e08',
+        boxShadow: selected ? THEME.card.selectShadow : THEME.card.shadowSm,
         cursor: disabled ? 'not-allowed' : onClick ? 'pointer' : 'default',
         opacity: disabled ? 0.5 : 1,
         transition: 'all 0.12s ease',
@@ -753,10 +690,10 @@ interface GTagProps {
 
 export function GTag({ children, color = 'brown' }: GTagProps) {
   const colors: Record<string, React.CSSProperties> = {
-    gold:  { background: 'rgba(200,136,10,0.15)', border: '1px solid rgba(200,136,10,0.4)', color: '#f0c030' },
-    brown: { background: 'rgba(90,48,16,0.4)',    border: '1px solid #5a3010',              color: '#c8a050' },
-    red:   { background: 'rgba(200,40,20,0.15)',  border: '1px solid rgba(200,40,20,0.4)',  color: '#ff8060' },
-    green: { background: 'rgba(30,160,80,0.15)',  border: '1px solid rgba(30,160,80,0.4)', color: '#4ade80' },
+    gold:  { background: THEME.tag.goldBg, border: `1px solid ${THEME.tag.goldEdge}`, color: THEME.tag.goldInk },
+    brown: { background: THEME.tag.brownBg, border: `1px solid ${THEME.tag.brownEdge}`, color: THEME.tag.brownInk },
+    red:   { background: THEME.tag.redBg, border: `1px solid ${THEME.tag.redEdge}`, color: THEME.tag.redInk },
+    green: { background: THEME.tag.greenBg, border: `1px solid ${THEME.tag.greenEdge}`, color: THEME.tag.greenInk },
   };
   return (
     <span style={{
@@ -832,12 +769,12 @@ export function GTooltip({ content, children, placement = 'top' }: GTooltipProps
           position: 'absolute',
           [placement === 'top' ? 'bottom' : 'top']: 'calc(100% + 6px)',
           left: '50%', transform: 'translateX(-50%)',
-          background: 'rgba(20,10,0,0.95)',
-          border: '1px solid #5a3010',
+          background: THEME.tooltip.bg,
+          border: `1px solid ${C.border}`,
           borderRadius: 8, padding: '5px 10px',
           fontFamily: C.fontMono, fontSize: 10, color: C.textMuted,
           whiteSpace: 'nowrap', zIndex: 1000,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+          boxShadow: THEME.tooltip.shadow,
           pointerEvents: 'none',
         }}>
           {content}
@@ -873,7 +810,9 @@ interface GInfoRowProps {
 export function GInfoRow({ label, value, valueColor = C.gold }: GInfoRowProps) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-      <span style={{ fontFamily: C.fontMono, fontSize: 10, color: C.textDim }}>{label}</span>
+      {/* Подпись — тёплый приглушённый крем эталона: старый серый textDim
+          на коричневом фоне окна не читался (замечание аудита §3.1, столп). */}
+      <span style={{ fontFamily: C.fontMono, fontSize: 11, color: 'var(--cinematic-copy)', letterSpacing: '0.02em' }}>{label}</span>
       <span style={{ fontFamily: C.fontMono, fontSize: 11, fontWeight: 800, color: valueColor }}>{value}</span>
     </div>
   );

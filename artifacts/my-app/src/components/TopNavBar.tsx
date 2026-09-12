@@ -6,6 +6,7 @@ import { useNotificationsStore } from '@/store/notificationsStore';
 import { manualSave } from '@/lib/saveManager';
 import { isQaMockEnabled } from '@/lib/qaMock';
 import { useTranslation } from '@/hooks/useTranslation';
+import { AlertBell } from '@/components/AlertBell';
 import { Save, Check, Globe, Menu, ShieldCheck } from 'lucide-react';
 
 export function TopNavBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) {
@@ -57,8 +58,10 @@ export function TopNavBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void 
           </button>
         </div>
 
-        {/* ── Правая: админ + язык + сохранить ── */}
+        {/* ── Правая: колокольчик + админ + язык + сохранить ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {/* Важные объявления уровня 1 (аудит, шаг 11) */}
+          <AlertBell />
           {isAdminUser && (
             <Link href="/admin" style={{
               ...btn,

@@ -2,8 +2,6 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { GEAR_ITEMS } from './gearItems.ts';
 import {
-  GEAR_UNIQUE_TAG_RU,
-  GEAR_UNIQUE_TAG_SHORT,
   gearQualityLabel,
   gearQualityShort,
   isGearUnique,
@@ -42,7 +40,7 @@ test('фасовка идёт слот → тир → семья', () => {
   assert.ok(itemMatchesGearBrowse(sample[0], EMPTY_GEAR_BROWSE));
 });
 
-test('уник — отдельная категория: метка вместо тира и своя группа', () => {
+test('уник — отдельная категория: тира нет, только звезда, группа своя', () => {
   const uniqSword = GEAR_ITEMS.find((i) => i.id === 'gear_unique_sword_1h_v01');
   const tieredSword = GEAR_ITEMS.find((i) => i.id === 'gear_sword_1h_t01');
   const uniqRing = GEAR_ITEMS.find((i) => i.id === 'gear_rings_l_v10');
@@ -53,8 +51,8 @@ test('уник — отдельная категория: метка вмест�
   assert.equal(isGearUnique(uniqRing), true, 'последний вариант кольца — уник');
   assert.equal(isGearUnique(tieredSword), false);
   assert.equal(isGearUnique(tieredRing), false);
-  assert.equal(gearQualityLabel(uniqSword), GEAR_UNIQUE_TAG_RU);
-  assert.equal(gearQualityShort(uniqSword), GEAR_UNIQUE_TAG_SHORT);
+  assert.equal(gearQualityLabel(uniqSword), '');
+  assert.equal(gearQualityShort(uniqSword), '');
   assert.equal(gearQualityLabel(tieredSword), 'Тир I');
   assert.equal(gearQualityShort(tieredRing), 'T2');
 

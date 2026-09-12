@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { SkillId, SkillState, Equipment, EquipSlot } from '@/data/types';
 import { EMPTY_EQUIPMENT, normalizeEquipment } from '@/data/types';
 import { getItem } from '@/domain/items';
+import { migrateEquipment } from '@/domain/items/legacyMigration';
 import { getLevelForXp, getXpForLevel, XP_TABLE, MAX_LEVEL } from '@/core/xpTable';
 import { useInventoryStore } from '@/store/inventoryStore';
 
@@ -181,7 +182,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     }
     set({
       skills: mergedSkills,
-      equipment: normalizeEquipment(equipment),
+      // Старые id снаряжения мапятся на наши тиры; неизвестное — слот пуст.
+      equipment: migrateEquipment(normalizeEquipment(equipment)),
     });
   },
 

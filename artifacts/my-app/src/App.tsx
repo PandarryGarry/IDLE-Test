@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Route, Switch, Router as WouterRouter, Redirect, useLocation } from 'wouter';
-import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ErrorBoundary } from '@/components/error-boundary';
 
@@ -170,7 +169,7 @@ function Router() {
   if (isGuest && isGuestBlockedPath(pathname)) return <Redirect to="/" />;
 
   return (
-    <div className="flex min-h-screen text-[var(--text-primary)] selection:bg-amber-500/30">
+    <div className="flex h-dvh overflow-hidden text-[var(--text-primary)] selection:bg-amber-500/30">
 
       {/* Канон «Стекло таверны», слой 0 «Картина»: живописный фон игры
           (полотно — --art-backdrop, вуаль — --art-veil; подложка фиксированная,
@@ -195,45 +194,52 @@ function Router() {
         </div>
       )}
 
-      {/* Main Content Area */}
-      <div className="flex-1 md:ml-[240px] min-h-screen flex flex-col overflow-x-hidden">
+      {/* Main Content Area — «один экран»: шапка и нижняя навигация
+          стоят на месте, прокручивается только контентное окно .app-main.
+          Плашка активного действия плавает над окном и не сдвигает его. */}
+      <div className="app-shell flex-1 md:ml-[240px]">
 
         {/* Unified Top Navigation */}
         <TopNavBar onOpenMobileMenu={() => setMobileMenuOpen(true)} />
 
-        {/* Global Active Progress Floating Widget */}
-        <div className="pt-2">
-          <GlobalActiveBar />
+        <div className="app-stage">
+          {/* Global Active Progress Floating Widget — плавает поверх окна */}
+          <div className="app-active-float">
+            <GlobalActiveBar />
+          </div>
+
+          {/* Page Content View — единственное прокручиваемое «окно» шелла */}
+          <main className="app-main">
+            <div className="w-full max-w-[1400px] mx-auto px-3 py-4 sm:px-4 md:px-6 lg:px-8 min-h-full flex flex-col">
+              <Switch>
+                <Route path="/" component={DashboardPage} />
+                <Route path="/foraging" component={ForagingPage} />
+                <Route path="/combat" component={CombatPage} />
+                <Route path="/hero" component={HeroHubPage} />
+                <Route path="/inventory" component={InventoryPage} />
+                <Route path="/admin" component={AdminPanelPage} />
+                <Route path="/admin/items" component={AdminPanelPage} />
+                <Route path="/admin/items/:bag" component={AdminPanelPage} />
+                <Route path="/admin/characters" component={AdminPanelPage} />
+                <Route path="/admin/professions" component={AdminPanelPage} />
+                <Route path="/admin/settings" component={AdminPanelPage} />
+                <Route path="/inventory">
+                  <Redirect to="/inventory" />
+                </Route>
+                <Route path="/settings" component={SettingsPage} />
+                <Route component={NotFound} />
+              </Switch>
+            </div>
+          </main>
         </div>
 
-        {/* Page Content View */}
-        <main className="flex-1 w-full max-w-[1400px] mx-auto px-3 py-4 pb-24 sm:px-4 md:pb-10 md:px-6 lg:px-8">
-          <Switch>
-            <Route path="/" component={DashboardPage} />
-            <Route path="/foraging" component={ForagingPage} />
-            <Route path="/combat" component={CombatPage} />
-            <Route path="/hero" component={HeroHubPage} />
-            <Route path="/inventory" component={InventoryPage} />
-            <Route path="/admin" component={AdminPanelPage} />
-            <Route path="/admin/items" component={AdminPanelPage} />
-            <Route path="/admin/items/:bag" component={AdminPanelPage} />
-            <Route path="/admin/characters" component={AdminPanelPage} />
-            <Route path="/admin/professions" component={AdminPanelPage} />
-            <Route path="/admin/settings" component={AdminPanelPage} />
-            <Route path="/inventory">
-              <Redirect to="/inventory" />
-            </Route>
-            <Route path="/settings" component={SettingsPage} />
-            <Route component={NotFound} />
-          </Switch>
-        </main>
+        {/* Mobile Bottom Quick Bar — часть рамки (в потоке), всегда видна */}
+        <div className="md:hidden shrink-0">
+          <MobileNav />
+        </div>
       </div>
 
-      {/* Mobile Bottom Quick Bar */}
-      <MobileNav className="md:hidden" />
-
       <NotificationToast />
-      <Toaster />
     </div>
   );
 }
