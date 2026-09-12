@@ -5574,16 +5574,21 @@ button.mobile-nav__item {
 }
 
 .hero-path-more__row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-sm);
+  display: grid;
+  gap: 2px;
   padding: 7px 10px;
   border-top: 1px solid color-mix(in srgb, var(--border-default) 70%, transparent);
 }
 
 .hero-path-more__row:first-of-type {
   border-top: 0;
+}
+
+.hero-path-more__row-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
 }
 
 .hero-path-more__row span {
@@ -5599,6 +5604,28 @@ button.mobile-nav__item {
   font-size: 13px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+}
+
+.hero-path-summary,
+.hero-path-more__source {
+  margin: 0;
+  color: var(--text-muted);
+  font-family: var(--app-font-mono);
+  font-size: 9px;
+  line-height: 1.25;
+}
+
+.hero-path-summary {
+  padding: 5px 8px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-header);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.hero-path-more__source[data-zero='false'] {
+  color: var(--text-secondary);
 }
 
 .hero-settings {

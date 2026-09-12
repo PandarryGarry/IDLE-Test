@@ -40,7 +40,6 @@ import { ItemCell } from '@/shared/ui/kit/ItemCell';
 import type { EquipSlot, Equipment, Item } from '@/data/types';
 import { getItemVisual } from '@/shared/icons/itemIcons';
 import { getLiveGearSets, loadGearSet, saveGearSet } from '@/domain/items/gearSets';
-import { diffCombatStats, EQUIP_STAT_META } from '@/domain/items/equipmentStats';
 import {
   computeAttributeSnapshot,
   computeSubstatDisplays,
@@ -51,6 +50,7 @@ import {
   respecPillarRanks,
   spendBranchPoint,
   spendPillarPoint,
+  substatDisplay,
   type SubstatDisplay,
 } from '@/domain/attributes/characterAttributes';
 import { NODE_RANK_CAP } from '@/data/balance/pillars';
@@ -59,7 +59,7 @@ import { BRANCH_RANK_IN_PILLAR_POINTS } from '@/data/balance/substats';
 import { xpToNextLevel } from '@/data/balance/xpRates';
 import { commitGearSets, commitHeroAttributes } from '@/lib/heroPersist';
 import { HeroBoard } from '@/features/hero/HeroBoard';
-import { CRIT_CHANCE_STUB, PATH_SHEET_BY_PILLAR, formatStrikeRange } from '@/features/hero/heroReadout';
+import { PATH_PLAQUE_SUBSTATS, PATH_SHEET_BY_PILLAR, formatStrikeRange } from '@/features/hero/heroReadout';
 import { HeroSettingsModal } from '@/features/hero/HeroSettingsModal';
 
 type HubModule = 'body' | 'gear' | 'synergies' | 'path';
@@ -188,6 +188,51 @@ function gearBonusText(value: number, unit: string): string {
   const rounded = Math.round(n * 10) / 10;
   const num = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
   return unit === 'percent' ? `${sign}${num}%` : `${sign}${num}`;
+}
+
+function rawBonusText(id: BranchId, value: number): string {
+  const display = substatDisplay(id, Math.abs(value));
+  const sign = value > 0 ? '+' : value < 0 ? '−' : '';
+  const rounded = Math.round(display.value * 10) / 10;
+  const num = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  return display.unit === 'percent' ? `${sign}${num}%` : `${sign}${num}`;
+}
+
+function itemBonusRows(item: Item | undefined): { id: BranchId; label: string; value: string; raw: number }[] {
+  if (!item?.substatBonuses) return [];
+  return (Object.entries(item.substatBonuses) as [BranchId, number][])
+    .filter(([id, raw]) => BRANCH_IDS.includes(id) && typeof raw === 'number' && raw !== 0)
+    .sort((a, b) => BRANCH_IDS.indexOf(a[0]) - BRANCH_IDS.indexOf(b[0]))
+    .map(([id, raw]) => ({ id, label: BRANCHES[id].nameRu, value: rawBonusText(id, raw), raw }));
+}
+
+function diffItemSubstatBonuses(
+  next: Item,
+  prev: Item | undefined,
+): { id: BranchId; label: string; from: string; to: string; delta: number; deltaText: string }[] {
+  const ids = new Set<BranchId>();
+  for (const [id, raw] of Object.entries(next.substatBonuses ?? {}) as [BranchId, number][]) {
+    if (BRANCH_IDS.includes(id) && typeof raw === 'number' && raw !== 0) ids.add(id);
+  }
+  for (const [id, raw] of Object.entries(prev?.substatBonuses ?? {}) as [BranchId, number][]) {
+    if (BRANCH_IDS.includes(id) && typeof raw === 'number' && raw !== 0) ids.add(id);
+  }
+  return [...ids]
+    .sort((a, b) => BRANCH_IDS.indexOf(a) - BRANCH_IDS.indexOf(b))
+    .map((id) => {
+      const to = next.substatBonuses?.[id] ?? 0;
+      const from = prev?.substatBonuses?.[id] ?? 0;
+      const delta = to - from;
+      return {
+        id,
+        label: BRANCHES[id].nameRu,
+        from: rawBonusText(id, from),
+        to: rawBonusText(id, to),
+        delta,
+        deltaText: rawBonusText(id, delta),
+      };
+    })
+    .filter((row) => row.delta !== 0);
 }
 
 function isTwoHanded(itemId: string | null): boolean {
@@ -338,7 +383,7 @@ export function HeroHubPage() {
         </button>
         {moduleId === 'body' && (
           <BodyModule
-            snapshot={displaySnapshot}
+            snapshot={snapshot}
             canSpendBranch={state.unspentBranchPoints > 0}
             onOpenPillar={id => setDetail({ kind: 'pillar', id })}
             onOpenNode={ref => setDetail(
@@ -362,7 +407,13 @@ export function HeroHubPage() {
             onOpen={id => setDetail({ kind: 'synergy', id })}
           />
         )}
-        {moduleId === 'path' && <PathModule snapshot={snapshot} />}
+        {moduleId === 'path' && (
+          <PathModule
+            bodySnapshot={snapshot}
+            finalSnapshot={displaySnapshot}
+            gearTotals={gearTotals}
+          />
+        )}
       </div>
 
       <GModal
@@ -1030,39 +1081,73 @@ function SynergiesModule({
 }
 
 function PathModule({
-  snapshot,
+  bodySnapshot,
+  finalSnapshot,
+  gearTotals,
 }: {
-  snapshot: ReturnType<typeof computeAttributeSnapshot>;
+  bodySnapshot: ReturnType<typeof computeAttributeSnapshot>;
+  finalSnapshot: ReturnType<typeof computeAttributeSnapshot>;
+  gearTotals: Record<BranchId, number>;
 }) {
-  const d = snapshot.substatDisplays;
-  const plaques = [
-    { id: 'health', label: 'Здоровье', value: formatSubstat(d.health) },
-    { id: 'strike', label: 'Удар', value: formatStrikeRange(snapshot.substats.strike) },
-    { id: 'armor', label: 'Броня', value: formatSubstat(d.armor) },
-    { id: 'evasion', label: 'Уворот', value: formatSubstat(d.evasion) },
-    { id: 'crit', label: 'Крит', value: `${CRIT_CHANCE_STUB}%` },
-    { id: 'luck', label: 'Удача', value: formatSubstat(d.luck) },
-  ] as const;
+  const d = finalSnapshot.substatDisplays;
+  const plaqueLabel: Record<BranchId, string> = {
+    health: 'HP',
+    armor: 'Броня',
+    will: 'Воля',
+    strike: 'Урон',
+    onslaught: 'Натиск',
+    destruction: 'Пробой',
+    tempo: 'Темп',
+    evasion: 'Уворот',
+    reaction: 'Руки',
+    luck: 'Удача',
+    resourcefulness: 'Находка',
+    intuition: 'Опыт',
+  };
+  const plaques = PATH_PLAQUE_SUBSTATS.map((id) => ({
+    id,
+    label: plaqueLabel[id],
+    value: id === 'strike'
+      ? formatStrikeRange(finalSnapshot.substats.strike)
+      : formatSubstat(d[id]),
+  }));
+
+  const sourceText = (id: BranchId): string => {
+    const body = bodySnapshot.substatDisplays[id];
+    const final = finalSnapshot.substatDisplays[id];
+    const equipRaw = gearTotals[id] ?? 0;
+    const equipDelta = final.value - body.value;
+    const bodyPart = id === 'strike'
+      ? `тело ${formatStrikeRange(bodySnapshot.substats.strike)}`
+      : `тело ${formatSubstat(body)}`;
+    const equipPart = equipRaw === 0
+      ? 'экип 0'
+      : id === 'strike'
+        ? `экип ${rawBonusText(id, equipRaw)}`
+        : `экип ${gearBonusText(equipDelta, final.unit)}`;
+    return `${bodyPart} · ${equipPart}`;
+  };
 
   return (
     <div className="hero-sheet">
-      <div className="hero-readout" aria-label="Главные числа тела">
+      <div className="hero-readout" aria-label="Главные итоговые числа героя">
         {plaques.map(plaque => (
           <div
             key={plaque.id}
             className="hero-plaque"
-            title={plaque.id === 'crit'
-              ? 'Заглушка 5%. Бой ещё не читает Удачу как шанс крита.'
-              : plaque.id === 'strike'
-                ? BRANCHES.strike.ruleRu
-                : BRANCHES[plaque.id as BranchId]?.ruleRu}
+            title={plaque.id === 'strike'
+              ? 'Итоговый диапазон урона: тело + снаряжение, разброс ±15% от Удара.'
+              : BRANCHES[plaque.id].ruleRu}
           >
             <span className="hero-plaque__label">{plaque.label}</span>
             <b className="hero-plaque__value">{plaque.value}</b>
           </div>
         ))}
       </div>
-      <div className="hero-path-more" aria-label="Характеристики по столпам">
+      <p className="hero-path-summary">
+        Путь = тело + экип. Нити и глубинные пассивки пока не прибавляются к числам.
+      </p>
+      <div className="hero-path-more" aria-label="Итоговые характеристики по столпам">
         {PATH_SHEET_BY_PILLAR.map(group => (
           <section
             key={group.pillar}
@@ -1072,14 +1157,25 @@ function PathModule({
             <header className="hero-path-pillar__head">
               <img src={PILLAR_ICON[group.pillar]} alt="" decoding="async" />
               <span>{PILLARS[group.pillar].nameRu}</span>
-              <b>ур. {Math.round(snapshot.finalPillars[group.pillar])}</b>
+              <b>тело {Math.round(bodySnapshot.finalPillars[group.pillar])}</b>
             </header>
-            {group.stats.map(id => (
-              <div key={id} className="hero-path-more__row" title={SUBSTATS[id].ruleRu}>
-                <span>{SUBSTATS[id].nameRu}</span>
-                <b>{id === 'strike' ? formatStrikeRange(snapshot.substats.strike) : formatSubstat(d[id])}</b>
-              </div>
-            ))}
+            {group.stats.map(id => {
+              const value = id === 'strike'
+                ? formatStrikeRange(finalSnapshot.substats.strike)
+                : formatSubstat(d[id]);
+              const equipRaw = gearTotals[id] ?? 0;
+              return (
+                <div key={id} className="hero-path-more__row" title={SUBSTATS[id].ruleRu}>
+                  <div className="hero-path-more__row-main">
+                    <span>{SUBSTATS[id].nameRu}</span>
+                    <b>{value}</b>
+                  </div>
+                  <small className="hero-path-more__source" data-zero={equipRaw === 0 ? 'true' : 'false'}>
+                    {sourceText(id)}
+                  </small>
+                </div>
+              );
+            })}
           </section>
         ))}
       </div>
@@ -1292,12 +1388,9 @@ function HeroDetailModal({
                 <GInfoRow label="Прочность" value={`${gearItem.maxDurability}/${gearItem.maxDurability}`} />
               )}
               {twoHand && <p className="hero-item-note">Двуручное: занимает обе руки.</p>}
-              {EQUIP_STAT_META
-                .map(({ key, label }) => ({ key, label, value: gearItem.combatStats?.[key] ?? 0 }))
-                .filter(r => r.value !== 0)
-                .map(r => (
-                  <GInfoRow key={r.key} label={r.label} value={r.value > 0 ? `+${r.value}` : String(r.value)} />
-                ))}
+              {itemBonusRows(gearItem).map(r => (
+                <GInfoRow key={r.id} label={r.label} value={r.value} />
+              ))}
               <GButton size="sm" fullWidth variant="secondary" onClick={handleUnequip}>
                 Снять в сумку
               </GButton>
@@ -1318,7 +1411,7 @@ function HeroDetailModal({
         const item = bagDetailItem;
         const equippedId = item.equipSlot ? equipment[item.equipSlot] : null;
         const equippedItem = equippedId ? getItem(equippedId) : undefined;
-        const deltas = item.equipSlot ? diffCombatStats(item.id, equippedId) : [];
+        const deltas = item.equipSlot ? diffItemSubstatBonuses(item, equippedItem) : [];
         const rarity = getItemRarity(item.id, item.sellValue, item.equipSlot);
         const visual = getItemVisual(item.id);
 
@@ -1350,10 +1443,9 @@ function HeroDetailModal({
             {typeof item.maxDurability === 'number' && item.maxDurability > 0 && (
               <GInfoRow label="Прочность" value={`${item.maxDurability}/${item.maxDurability}`} />
             )}
-            {EQUIP_STAT_META
-              .map(({ key, label }) => ({ key, label, value: item.combatStats?.[key] ?? 0 }))
-              .filter(r => r.value !== 0)
-              .map(r => <GInfoRow key={r.key} label={r.label} value={`+${r.value}`} />)}
+            {itemBonusRows(item).map(r => (
+              <GInfoRow key={r.id} label={r.label} value={r.value} />
+            ))}
             {item.twoHanded && (
               <p className="hero-item-note">Двуручное: занимает обе руки, что в руках — уйдёт в сумку.</p>
             )}
@@ -1362,15 +1454,13 @@ function HeroDetailModal({
                 <p className="hero-cmp__vs">Сейчас надето: {equippedItem.name}</p>
                 {deltas.map(d => (
                   <div
-                    key={d.key}
+                    key={d.id}
                     className="hero-cmp-row"
                     data-delta={d.delta > 0 ? 'up' : d.delta < 0 ? 'down' : 'same'}
                   >
                     <span>{d.label}</span>
                     <span className="hero-cmp-row__vals">{d.from} → {d.to}</span>
-                    <span className="hero-cmp-row__delta">
-                      {d.delta > 0 ? `+${d.delta}` : d.delta < 0 ? `−${Math.abs(d.delta)}` : '0'}
-                    </span>
+                    <span className="hero-cmp-row__delta">{d.deltaText}</span>
                   </div>
                 ))}
               </div>
