@@ -3,7 +3,6 @@ import {
   ALL_GEAR_TIERS,
   EQUIP_SLOT_LABELS_RU,
   formatTierLabel,
-  GEAR_WEIGHT_NAME_RU,
   isGearUnique,
 } from '../../data/balance/gear.ts';
 import { GEAR_FAMILY_LABEL_RU } from '../../domain/items/catalog/gear/gearItems.ts';
@@ -14,7 +13,7 @@ import {
 } from '../../domain/items/catalog/gear/gearBrowse.ts';
 
 /** Разделы каталога в боковом подменю «Предметы». */
-export type AdminItemBag = 'all' | 'weapons' | 'armor' | 'jewelry' | 'uniques' | 'craft' | 'other';
+export type AdminItemBag = 'all' | 'weapons' | 'armor' | 'jewelry' | 'uniques' | 'craft' | 'tools';
 
 export const ADMIN_ITEM_BAGS: readonly { id: AdminItemBag; label: string; href: string }[] = [
   { id: 'all', label: 'Все', href: '/admin' },
@@ -23,7 +22,7 @@ export const ADMIN_ITEM_BAGS: readonly { id: AdminItemBag; label: string; href: 
   { id: 'jewelry', label: 'Бижутерия', href: '/admin/items/jewelry' },
   { id: 'uniques', label: 'Уники', href: '/admin/items/uniques' },
   { id: 'craft', label: 'Крафт / фарм', href: '/admin/items/craft' },
-  { id: 'other', label: 'Прочее', href: '/admin/items/other' },
+  { id: 'tools', label: 'Инструменты', href: '/admin/items/tools' },
 ];
 
 const ARMOR_SLOTS: readonly EquipSlot[] = [
@@ -36,10 +35,12 @@ const JEWEL_SLOTS: readonly EquipSlot[] = [
 const UNIQUE_SLOTS: readonly EquipSlot[] = [
   'weapon', 'shield', 'amulet', 'belt', 'ring', 'ring2', 'bracelet', 'bracelet2',
 ];
+const TOOL_SLOTS: readonly EquipSlot[] = ['quiver'];
 
 export function parseAdminItemBag(path: string): AdminItemBag {
   const m = path.match(/^\/admin\/items\/([a-z]+)/);
   const id = m?.[1];
+  if (id === 'other') return 'tools'; // старый URL после переименования вкладки
   if (id && ADMIN_ITEM_BAGS.some((b) => b.id === id)) return id as AdminItemBag;
   return 'all';
 }
@@ -59,8 +60,9 @@ export function itemBag(item: Item): AdminItemBag {
   if (slot === 'weapon') return 'weapons';
   if (slot && (ARMOR_SLOTS as readonly string[]).includes(slot)) return 'armor';
   if (slot && (JEWEL_SLOTS as readonly string[]).includes(slot)) return 'jewelry';
+  if (slot && (TOOL_SLOTS as readonly string[]).includes(slot)) return 'tools';
   if (!slot) return 'craft';
-  return 'other';
+  return 'tools';
 }
 
 export function itemsInBag(items: readonly Item[], bag: AdminItemBag): Item[] {
@@ -102,10 +104,10 @@ export function filterAdminItems(items: readonly Item[], bag: AdminItemBag, f: A
     if (f.weight !== 'all' && it.gearWeight !== f.weight) return false;
     if (f.slot !== 'all' && it.equipSlot !== f.slot) return false;
     if (f.type !== 'all') {
-      if (bag === 'weapons' || bag === 'jewelry' || bag === 'uniques' || bag === 'other') {
+      if (bag === 'weapons' || bag === 'jewelry' || bag === 'uniques' || bag === 'tools') {
         if ((it.gearFamily ?? it.category) !== f.type) return false;
       }
-      if (bag === 'craft' && it.category !== f.type) return false;
+      if (bag === 'craft' && craftProfessionOf(it) !== f.type) return false;
     }
     return true;
   });
@@ -113,7 +115,7 @@ export function filterAdminItems(items: readonly Item[], bag: AdminItemBag, f: A
 
 /** Порядок сумок, когда смотрим «Все». */
 const BAG_RANK: Record<AdminItemBag, number> = {
-  all: 0, weapons: 1, armor: 2, jewelry: 3, uniques: 4, craft: 5, other: 6,
+  all: 0, weapons: 1, armor: 2, jewelry: 3, uniques: 4, craft: 5, tools: 6,
 };
 
 /**
@@ -159,51 +161,75 @@ function uniqueSorted(values: string[], labels: (id: string) => string): AdminFi
   return out;
 }
 
+/** Админская фасовка loose-предметов: это UX-фильтр, не gameplay-профессии. */
+type CraftProfessionId = 'foraging' | 'wood' | 'mining' | 'smithing' | 'fishing' | 'cooking' | 'hunting' | 'other';
+
+const CRAFT_PROFESSION_ORDER: readonly CraftProfessionId[] = [
+  'foraging', 'wood', 'mining', 'smithing', 'fishing', 'cooking', 'hunting', 'other',
+];
+
+const CRAFT_PROFESSION_LABEL_RU: Record<CraftProfessionId, string> = {
+  foraging: 'Сбор',
+  wood: 'Лес',
+  mining: 'Руда / камень',
+  smithing: 'Кузня',
+  fishing: 'Рыба',
+  cooking: 'Еда',
+  hunting: 'Охота',
+  other: 'Прочее',
+};
+
+function craftProfessionOf(item: Item): CraftProfessionId {
+  if (item.category === 'foraging') return 'foraging';
+  if (item.category === 'log') return 'wood';
+  if (item.category === 'ore' || item.category === 'mineral') return 'mining';
+  if (item.category === 'bar') return 'smithing';
+  if (item.category === 'raw_fish') return 'fishing';
+  if (item.category === 'cooked_fish' || item.category === 'food') return 'cooking';
+  if (item.category === 'misc' || item.category === 'bone') return 'hunting';
+  return 'other';
+}
+
+function typeSpec(
+  key: 'type' | 'slot',
+  label: string,
+  values: readonly string[],
+  labels: (id: string) => string,
+): AdminFilterSpec {
+  return {
+    key,
+    label,
+    options: uniqueSorted([...values], labels),
+  };
+}
+
 /** Какие выпадающие фильтры показать для текущего раздела. */
 export function filtersForBag(bag: AdminItemBag, pool: readonly Item[]): AdminFilterSpec[] {
   const specs: AdminFilterSpec[] = [];
   if (bag === 'weapons') {
     const types = pool.map((it) => it.gearFamily ?? it.category).sort((a, b) => a.localeCompare(b, 'ru'));
-    specs.push({
-      key: 'type',
-      label: 'Тип оружия',
-      options: uniqueSorted(types, (id) => GEAR_FAMILY_LABEL_RU[id] ?? id),
-    });
-    specs.push(tierSpec(pool, 'Тир оружия'));
+    specs.push(typeSpec('type', 'Тип', types, (id) => GEAR_FAMILY_LABEL_RU[id] ?? id));
+    specs.push(tierSpec(pool, 'Тир'));
   } else if (bag === 'armor') {
     const slots = ARMOR_SLOTS.filter((s) => pool.some((it) => it.equipSlot === s));
     specs.push({
       key: 'slot',
-      label: 'Слот',
+      label: 'Тип',
       options: [{ id: 'all', label: 'Все' }, ...slots.map((s) => ({ id: s, label: EQUIP_SLOT_LABELS_RU[s] }))],
     });
-    if (pool.some((it) => it.gearWeight)) {
-      specs.push({
-        key: 'weight',
-        label: 'Вес',
-        options: [
-          { id: 'all', label: 'Любой' },
-          { id: 'plate', label: GEAR_WEIGHT_NAME_RU.plate },
-          { id: 'leather', label: GEAR_WEIGHT_NAME_RU.leather },
-          { id: 'cloth', label: GEAR_WEIGHT_NAME_RU.cloth },
-        ],
-      });
-    }
-    specs.push(tierSpec(pool));
+    specs.push(tierSpec(pool, 'Тир'));
   } else if (bag === 'jewelry') {
     const slots = JEWEL_SLOTS.filter((s) => pool.some((it) => it.equipSlot === s));
     specs.push({
       key: 'slot',
-      label: 'Слот',
+      label: 'Тип',
       options: [{ id: 'all', label: 'Все' }, ...slots.map((s) => ({ id: s, label: EQUIP_SLOT_LABELS_RU[s] }))],
     });
-    const types = pool.map((it) => it.gearFamily ?? '').filter(Boolean);
-    specs.push({
-      key: 'type',
-      label: 'Стихия',
-      options: uniqueSorted(types, (id) => GEAR_FAMILY_LABEL_RU[id] ?? id),
-    });
-    specs.push(tierSpec(pool));
+    specs.push(tierSpec(pool, 'Тир'));
+  } else if (bag === 'tools') {
+    const types = pool.map((it) => it.gearFamily ?? it.category).sort((a, b) => a.localeCompare(b, 'ru'));
+    specs.push(typeSpec('type', 'Тип', types, (id) => GEAR_FAMILY_LABEL_RU[id] ?? RESOURCE_CATEGORY_LABEL_RU[id] ?? id));
+    specs.push(tierSpec(pool, 'Тир'));
   } else if (bag === 'uniques') {
     // У тировой подписи у uniques нет — фильтруем по слоту и по типу
     // (семья оружия / стихия украшения), а не по тиру.
@@ -214,29 +240,19 @@ export function filtersForBag(bag: AdminItemBag, pool: readonly Item[]): AdminFi
       options: [{ id: 'all', label: 'Все' }, ...slots.map((s) => ({ id: s, label: EQUIP_SLOT_LABELS_RU[s] }))],
     });
     const types = pool.map((it) => it.gearFamily ?? it.category);
-    specs.push({
-      key: 'type',
-      label: 'Тип',
-      options: uniqueSorted(types, (id) => GEAR_FAMILY_LABEL_RU[id] ?? RESOURCE_CATEGORY_LABEL_RU[id] ?? id),
-    });
+    specs.push(typeSpec('type', 'Тип', types, (id) => GEAR_FAMILY_LABEL_RU[id] ?? RESOURCE_CATEGORY_LABEL_RU[id] ?? id));
   } else if (bag === 'craft') {
-    const cats = pool.map((it) => it.category);
+    const present = new Set(pool.map(craftProfessionOf));
+    const options = CRAFT_PROFESSION_ORDER
+      .filter((id) => present.has(id))
+      .map((id) => ({ id, label: CRAFT_PROFESSION_LABEL_RU[id] }));
     specs.push({
       key: 'type',
-      label: 'Категория',
-      options: uniqueSorted(cats, (id) => RESOURCE_CATEGORY_LABEL_RU[id] ?? id),
+      label: 'Профессия',
+      options: [{ id: 'all', label: 'Все' }, ...options],
     });
-    if (pool.some((it) => typeof it.tier === 'number')) specs.push(tierSpec(pool));
-  } else if (bag === 'other') {
-    const types = pool.map((it) => it.gearFamily ?? it.category);
-    specs.push({
-      key: 'type',
-      label: 'Тип',
-      options: uniqueSorted(types, (id) => GEAR_FAMILY_LABEL_RU[id] ?? RESOURCE_CATEGORY_LABEL_RU[id] ?? id),
-    });
-    if (pool.some((it) => typeof it.tier === 'number')) specs.push(tierSpec(pool));
   } else {
-    specs.push(tierSpec(pool));
+    specs.push(tierSpec(pool, 'Тир'));
   }
   return specs;
 }

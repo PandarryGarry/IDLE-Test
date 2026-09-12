@@ -6190,12 +6190,13 @@ button.mobile-nav__item {
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.28);
 }
 .admin-items__toolbar {
+  position: relative;
+  z-index: 80;
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
   gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
+  overflow: visible;
   margin-bottom: 10px;
   padding: 5px;
   border: 1px solid var(--border-default);
@@ -6303,23 +6304,27 @@ button.mobile-nav__item {
 
 .admin-dd {
   position: relative;
-  min-width: 90px;
-  max-width: 124px;
+  min-width: 58px;
+  max-width: 112px;
   flex-shrink: 0;
 }
 .admin-dd__btn {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 5px;
   width: 100%;
-  min-height: 30px;
-  padding: 0 8px;
+  min-height: 28px;
+  padding: 0 7px;
   border: 1px solid var(--border-default);
   border-radius: 8px;
   background: var(--bg-slot);
   color: var(--text-gold);
   cursor: pointer;
+}
+.admin-dd__btn.is-active {
+  border-color: var(--border-accent);
+  background: var(--bg-card-dark);
 }
 .admin-dd__btn.is-open,
 .admin-dd__btn:hover {
@@ -6327,42 +6332,45 @@ button.mobile-nav__item {
 }
 .admin-dd__meta {
   display: flex;
-  align-items: baseline;
-  gap: 5px;
+  align-items: center;
+  gap: 4px;
   text-align: left;
   min-width: 0;
 }
 .admin-dd__label {
   flex-shrink: 0;
-  color: var(--text-muted);
+  color: var(--text-gold);
   font-family: var(--app-font-mono);
-  font-size: 8px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 .admin-dd__value {
   overflow: hidden;
+  max-width: 62px;
   color: var(--text-primary);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .admin-dd__list {
   position: absolute;
-  z-index: 20;
+  z-index: 120;
   left: 0;
-  right: 0;
   top: calc(100% + 4px);
   margin: 0;
   padding: 4px;
   list-style: none;
+  width: max-content;
+  min-width: max(100%, 9.5rem);
+  max-width: 14rem;
   max-height: 240px;
   overflow-y: auto;
   border: 1px solid var(--border-accent);
   border-radius: 10px;
-  background: #1c1108;
+  background: var(--bg-slot);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
 }
 .admin-dd__opt {
